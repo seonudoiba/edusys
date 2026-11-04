@@ -88,9 +88,19 @@ foreach ([1, 2] as $sid) {
         }
         $intCols = ['school_id' => true];
         foreach ($schema['cols'] as $c => $def) if (is_int_type($def)) $intCols[$c] = true;
+        // guest.school_id used to mean "the school this owner registered" (central database only);
+        // that link now lives in guest.registered_school_id (migration 242).
+        if ($table === 'guest') {
+            array_splice($columns, array_search('school_id', $columns) + 1, 0, ['registered_school_id']);
+            $intCols['registered_school_id'] = true;
+        }
         $out = [];
         foreach ($rows as $r) {
             $assoc = array_combine($srcCols, $r);
+            if ($table === 'guest') {
+                $legacy = isset($assoc['school_id']) ? (int) $assoc['school_id'] : 0;
+                $assoc['registered_school_id'] = ($sid === 1 && $legacy === $LEGACY_SCHOOL_2_ID) ? '2' : null;
+            }
             foreach ($shiftCols as $c => $_) if (array_key_exists($c, $assoc)) $assoc[$c] = shift($assoc[$c], $OFF);
             if ($sid === 2) foreach (CSV_TENANT_REFS[$table] ?? [] as $col) {
                 if ($assoc[$col] === null || $assoc[$col] === '') continue;

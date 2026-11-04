@@ -6,34 +6,42 @@ uploads/*
 !uploads/.gitkeep
 temp/
 
-# Extracted working copy (likely generated from a zip)
+# Generated captcha images
+backend/captcha_images/*
+!backend/captcha_images/index.html
+
+# Extracted working copy of the old per-school instance
 school_instance_extracted/
 
-# Database admin tool – avoid committing to a deployed repo (security risk)
+# Database admin tool – never commit or deploy (security risk)
 adminer.php
 
 # Stray file named "1" (often created by a mistyped shell redirect, e.g. `cmd 2>1`)
 /1
 
-# CodeIgniter logs and cache
+# CodeIgniter logs and cache (includes the tenancy-raw-sql-*.log and tenancy-security-*.log files)
 application/logs/*
 !application/logs/index.html
 application/cache/*
 !application/cache/index.html
 
-# Environment / local config (uncomment if you keep credentials here)
-# application/config/database.php
-# .env
+# Environment: credentials live in the server environment, never in the repository
+.env
+.env.*
 
-# Uncomment if these shouldn't be in the repo
+# Sample school data: real personal data, password hashes, plaintext student/parent passwords
+# and payment test keys. Generate them locally with tools/tenancy/gen_seeds.php.
+application/seeds/school_*/
+application/seeds/ORPHANS.md
+# Platform registry seeds hold applicants' names, emails and phone numbers.
+application/seeds/platform/001_school.php
+application/seeds/platform/004_subscription.php
+
+# Local reference material (old database dumps, user manual, cgi-bin)
 dbsample/
 cgi-bin/
 document/
-school_instance_extracted/
 system/*.zip
-application/
-temp/
-
 
 # OS / editor files
 .DS_Store

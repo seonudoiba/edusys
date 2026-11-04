@@ -83,7 +83,8 @@ function build_ddl($name, $t) {
 }
 
 @mkdir($outDir, 0777, true);
-foreach (glob("$outDir/*.php") as $old) unlink($old);
+// Only generated files are replaced; hand-written migrations (NNN_<change>.php, numbered after the generated ones) stay.
+foreach (glob("$outDir/[0-9][0-9][0-9]_create_*.php") as $old) unlink($old);
 $manifest = [];
 $i = 0;
 foreach ($order as $name) {

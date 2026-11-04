@@ -1,0 +1,62 @@
+# Edusys: one virtual host for the platform (edusys.ng) and every school (<subdomain>.edusys.ng).
+# Copy to /etc/apache2/sites-available/edusys.conf, adjust paths, then:
+#   a2enmod rewrite ssl headers && a2ensite edusys && apachectl configtest && systemctl reload apache2
+#
+# DNS: an A (and AAAA) record for edusys.ng and a wildcard *.edusys.ng, both pointing at this server.
+# TLS: one certificate covering edusys.ng and *.edusys.ng. Wildcards need the DNS-01 challenge, e.g.
+#   certbot certonly --manual --preferred-challenges dns -d edusys.ng -d '*.edusys.ng'
+# or a certbot DNS plugin for your DNS provider, so renewals are automatic.
+
+<VirtualHost *:80>
+    ServerName edusys.ng
+    ServerAlias www.edusys.ng *.edusys.ng
+    # Everything over HTTPS (keeps the requested host, so schools stay on their subdomain).
+    RewriteEngine On
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName edusys.ng
+    ServerAlias www.edusys.ng *.edusys.ng
+    DocumentRoot /var/www/edusys
+
+    SSLEngine on
+    SSLCertificateFile    /etc/letsencrypt/live/edusys.ng/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/edusys.ng/privkey.pem
+
+    <Directory /var/www/edusys>
+        AllowOverride All
+        Require all granted
+        Options -Indexes
+    </Directory>
+
+    # Tenancy (see SINGLE_DB_TENANCY_PLAN.md §4.1). The app reads these with getenv().
+    SetEnv EDUSYS_BASE_DOMAIN   edusys.ng
+    SetEnv EDUSYS_CENTRAL_HOST  edusys.ng,www.edusys.ng
+    SetEnv EDUSYS_FORCE_HTTPS   true
+    SetEnv EDUSYS_TENANCY_RAW_SQL throw
+
+    # Database: a dedicated MySQL user with privileges on this one database only (not root).
+    SetEnv EDUSYS_DB_HOST     127.0.0.1
+    SetEnv EDUSYS_DB_PORT     3306
+    SetEnv EDUSYS_DB_NAME     edusys
+    SetEnv EDUSYS_DB_USER     edusys_app
+    SetEnv EDUSYS_DB_PASSWORD change-me
+
+    # Platform payments (Paystack secret key from the Paystack dashboard).
+    SetEnv EDUSYS_PAYSTACK_SECRET_KEY sk_live_change_me
+
+    # Outgoing mail (set-password links, reminders, scheduled messages).
+    SetEnv EDUSYS_SMTP_HOST smtp.mailgun.org
+    SetEnv EDUSYS_SMTP_USER postmaster@edusys.ng
+    SetEnv EDUSYS_SMTP_PASS change-me
+
+    Header always set Strict-Transport-Security "max-age=31536000"
+    Header always set X-Content-Type-Options "nosniff"
+
+    ErrorLog  ${APACHE_LOG_DIR}/edusys-error.log
+    CustomLog ${APACHE_LOG_DIR}/edusys-access.log combined
+</VirtualHost>
+
+# Keep this file readable by root only: it holds the database password and the Paystack key.
+#   chmod 640 /etc/apache2/sites-available/edusys.conf
