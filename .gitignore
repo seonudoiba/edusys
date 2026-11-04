@@ -1,0 +1,42 @@
+# Zip archives
+*.zip
+
+# User uploads and temporary files
+uploads/*
+!uploads/.gitkeep
+temp/
+
+# Extracted working copy (likely generated from a zip)
+school_instance_extracted/
+
+# Database admin tool – avoid committing to a deployed repo (security risk)
+adminer.php
+
+# Stray file named "1" (often created by a mistyped shell redirect, e.g. `cmd 2>1`)
+/1
+
+# CodeIgniter logs and cache
+application/logs/*
+!application/logs/index.html
+application/cache/*
+!application/cache/index.html
+
+# Environment / local config (uncomment if you keep credentials here)
+# application/config/database.php
+# .env
+
+# Uncomment if these shouldn't be in the repo
+dbsample/
+cgi-bin/
+document/
+school_instance_extracted/
+system/*.zip
+application/
+temp/
+
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
