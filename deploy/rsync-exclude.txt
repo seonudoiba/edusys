@@ -1,0 +1,22 @@
+# Not uploaded to the server by the Deploy workflow (rsync --exclude-from, paths from the repo root).
+# Runtime folders are links to /var/www/edusys/shared (deploy/release.sh), so they are excluded too.
+/.git/
+/.github/
+/.vscode/
+/.env
+/.env.*
+/tools/
+/dbsample/
+/school_instance_extracted/
+/adminer.php
+/1
+/*.md
+/application/logs/
+/application/cache/
+/application/tmp/
+/application/backups/
+/application/seeds/school_*/
+/temp/
+# Default images ship with the code; schools' own files live in shared/uploads only.
++ /uploads/_shared/
+/uploads/*

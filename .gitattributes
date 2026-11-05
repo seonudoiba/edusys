@@ -1,0 +1,6 @@
+# Files that run on Linux must keep LF line endings, whatever the checkout platform.
+*.sh            text eol=lf
+*.yml           text eol=lf
+deploy/*.cron   text eol=lf
+deploy/*.example text eol=lf
+deploy/rsync-exclude.txt text eol=lf

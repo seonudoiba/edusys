@@ -9,7 +9,7 @@ CREATE USER IF NOT EXISTS 'edusys_app'@'127.0.0.1' IDENTIFIED BY 'change-me';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, INDEX, REFERENCES, LOCK TABLES
     ON edusys.* TO 'edusys_app'@'127.0.0.1';
 
--- Backup account (mysqldump in deploy/crontab.example).
+-- Backup account (nightly mysqldump: deploy/backup.sh). Use the same passwords in /etc/edusys/edusys.env.
 CREATE USER IF NOT EXISTS 'edusys_backup'@'127.0.0.1' IDENTIFIED BY 'change-me-too';
 GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON edusys.* TO 'edusys_backup'@'127.0.0.1';
 

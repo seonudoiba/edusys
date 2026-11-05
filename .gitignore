@@ -2,6 +2,8 @@
 *.zip
 *.tar.gz
 *.tar.bz2
+
+# Markdown (plans, notes, deployment docs, library READMEs): kept local only
 *.md
 
 

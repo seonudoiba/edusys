@@ -1,0 +1,16 @@
+# Legacy files that don't compile on PHP 8 (inherited code). CI fails on any OTHER file that
+# doesn't compile; remove a line here once its file is fixed (CI tells you when one passes).
+application/language/Swahili/app_files/google _authenticate_lang.php
+application/libraries/PHPMailer/extras/htmlfilter.php
+application/libraries/Zend/Barcode/Object/Code25.php
+application/libraries/Zend/Barcode/Object/Ean13.php
+application/libraries/Zend/Barcode/Object/Ean5.php
+application/libraries/Zend/Barcode/Object/Ean8.php
+application/libraries/Zend/Barcode/Object/Identcode.php
+application/libraries/Zend/Barcode/Object/Upca.php
+application/libraries/Zend/Barcode/Object/Upce.php
+application/libraries/Zend/Validate/Isbn.php
+application/views/class/sectionAdd.php
+application/views/feetype/feetypeEdit.php
+application/views/feetype/feetypeList.php
+application/views/reports/pdfinvoiceno.php
