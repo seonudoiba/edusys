@@ -103,8 +103,9 @@ Until then the platform admin sees the link after approving and can pass it on.
 ## 7. Scheduled jobs and backups
 
 Install `deploy/crontab.example` (edited): `cron_all run student_attendance` every 5 minutes,
-`cron_all run` daily, the nightly `mysqldump` of the shared database, and a copy of `uploads/`
-(every school's files). Backups are a platform
+`cron_all run` daily, `platform_cron reminders` daily (subscription renewal reminders and expiry
+notices, set in Platform settings), the nightly `mysqldump` of the shared database, and a copy of
+`uploads/` (every school's files). Platform settings > System health shows when each job last ran. Backups are a platform
 task: schools can no longer back up or restore from their admin panel. Test a restore on another
 server before go-live.
 
