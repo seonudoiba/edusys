@@ -1,10 +1,25 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Allow direct access to files and directories
+    # Never serve hidden files or folders (.env, .git, .vscode, ...), except ACME challenges.
+    RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
+
+    # Never serve internal folders: code, logs, generators, database dumps, working copies.
+    RewriteRule ^(application|system|tools|deploy|dbsample|school_instance_extracted|backup|temp|cgi-bin)(/|$) - [F,L]
+
+    # Never serve top-level documents, dumps, archives, scripts or the database admin tool.
+    RewriteRule ^[^/]+\.(sql|md|zip|sh|log|bak|ini|example)$ - [F,L]
+    RewriteRule ^adminer\.php$ - [F,L]
+
+    # Allow direct access to the remaining files and directories (backend/ and uploads/ assets)
+    # Uploads are stored per school (uploads/s<id>/, defaults in uploads/_shared/). Those folders
+    # are never served directly; every /uploads/... request goes to file.php, which serves the
+    # copy of the school of the host (application/controllers/Files.php).
+    RewriteRule ^uploads/(s[0-9]+|_shared)(/|$) - [F,L]
+    RewriteRule ^uploads/ file.php [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
 
-    # Redirect requests to index.php with the proper URL
+    # Everything else goes to the front controller
     RewriteRule ^(.*)$ index.php/$1 [L]
 </IfModule>

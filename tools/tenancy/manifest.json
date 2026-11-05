@@ -2123,5 +2123,111 @@
         "scope": "tenant",
         "file": "241_create_zoom_settings.php",
         "refs": []
+    },
+    {
+        "n": 245,
+        "table": "subscription_bank_transfers",
+        "scope": "platform",
+        "file": "245_create_subscription_bank_transfers.php",
+        "refs": [
+            "subscription"
+        ]
+    },
+    {
+        "n": 252,
+        "table": "platform_settings",
+        "scope": "platform",
+        "file": "252_create_platform_settings.php",
+        "refs": []
+    },
+    {
+        "n": 253,
+        "table": "platform_email_templates",
+        "scope": "platform",
+        "file": "253_create_platform_email_templates.php",
+        "refs": []
+    },
+    {
+        "n": 254,
+        "table": "platform_email_log",
+        "scope": "platform",
+        "file": "254_create_platform_email_log.php",
+        "refs": []
+    },
+    {
+        "n": 255,
+        "table": "platform_reminder_log",
+        "scope": "platform",
+        "file": "255_create_platform_reminder_log.php",
+        "refs": [
+            "subscription"
+        ]
+    },
+    {
+        "n": 256,
+        "table": "platform_impersonation_tokens",
+        "scope": "platform",
+        "file": "256_create_platform_impersonation_tokens.php",
+        "refs": [
+            "school"
+        ]
+    },
+    {
+        "n": 257,
+        "table": "platform_school_notes",
+        "scope": "platform",
+        "file": "257_create_platform_school_notes.php",
+        "refs": [
+            "school"
+        ]
+    },
+    {
+        "n": 260,
+        "table": "platform_invoices",
+        "scope": "platform",
+        "file": "260_create_platform_invoices.php",
+        "refs": [
+            "subscription"
+        ]
+    },
+    {
+        "n": 261,
+        "table": "platform_coupons",
+        "scope": "platform",
+        "file": "261_create_platform_coupons.php",
+        "refs": []
+    },
+    {
+        "n": 266,
+        "table": "platform_school_domains",
+        "scope": "platform",
+        "file": "266_create_platform_school_domains.php",
+        "refs": [
+            "school"
+        ]
+    },
+    {
+        "n": 267,
+        "table": "platform_support_tickets",
+        "scope": "platform",
+        "file": "267_create_platform_support_tickets.php",
+        "refs": [
+            "school"
+        ]
+    },
+    {
+        "n": 268,
+        "table": "platform_support_messages",
+        "scope": "platform",
+        "file": "268_create_platform_support_messages.php",
+        "refs": [
+            "platform_support_tickets"
+        ]
+    },
+    {
+        "n": 269,
+        "table": "platform_enquiries",
+        "scope": "platform",
+        "file": "269_create_platform_enquiries.php"
     }
 ]
