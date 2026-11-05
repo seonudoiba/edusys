@@ -1,0 +1,20 @@
+# Edusys over plain HTTP: only for the first setup, before the certificate exists.
+# server-setup.sh installs it as edusys-http.conf and swaps it for apache-vhost.conf.example
+# (HTTPS) when /etc/letsencrypt/live/edusys.ng/ exists. While it is active, set
+# EDUSYS_FORCE_HTTPS=false and an http:// EDUSYS_HEALTH_URL in /etc/edusys/edusys.env.
+
+<VirtualHost *:80>
+    ServerName edusys.ng
+    ServerAlias www.edusys.ng *.edusys.ng
+    DocumentRoot /var/www/edusys/current
+
+    <Directory /var/www/edusys>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    # certbot's HTTP-01 challenge for custom domains is answered from here too.
+    ErrorLog  ${APACHE_LOG_DIR}/edusys-error.log
+    CustomLog ${APACHE_LOG_DIR}/edusys-access.log combined
+</VirtualHost>

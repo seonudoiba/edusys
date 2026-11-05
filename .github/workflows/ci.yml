@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [main]   # main is tested by the Deploy workflow (it calls this one)
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and unit checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, mbstring, gd, zip, curl, intl, xml
+          coverage: none
+      - name: PHP syntax (every file the project owns)
+        run: bash tools/ci/php_lint.sh
+      - name: Tenant resolver tests
+        run: php tools/tenancy/tests/test_tenant_resolver.php
+      - name: Raw SQL is scoped to the school
+        run: php tools/tenancy/lint_raw_sql.php
+
+  integration:
+    name: Fresh install and logged-in crawl
+    needs: lint
+    runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0   # same major version as production (Ubuntu 24.04: 8.0)
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, mbstring, gd, zip, curl, intl, xml
+          coverage: none
+      - name: Migrate, seed, set up two schools, crawl both panels
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: edusys_ci
+          OUT: ${{ runner.temp }}/ci-reports
+          MAX: 400
+        run: bash tools/ci/integration.sh
+      - name: Keep the crawl reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-reports
+          path: |
+            ${{ runner.temp }}/ci-reports
+            application/logs/*.php
+            application/logs/*.log
+          if-no-files-found: ignore

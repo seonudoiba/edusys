@@ -1,0 +1,18 @@
+# Edusys scheduled jobs: /etc/cron.d/edusys (installed by server-setup.sh). One set of lines for
+# the whole platform: cron_all runs every school. deploy/run.sh loads /etc/edusys/edusys.env.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+RUN=/var/www/edusys/current/deploy/run.sh
+LOG=/var/log/edusys/cron.log
+
+# Absent marking for sections whose attendance cut-off has passed.
+*/5 * * * *  www-data  bash $RUN cron_all run student_attendance >> $LOG 2>&1
+# Daily jobs: fee reminders, event reminders, scheduled messages.
+0 6 * * *    www-data  bash $RUN cron_all run >> $LOG 2>&1
+# Platform: subscription renewal reminders, expiry notices, disabling after the grace period.
+15 6 * * *   www-data  bash $RUN platform_cron reminders >> $LOG 2>&1
+# Scheduled e-mail/SMS messages more often than daily (optional):
+# */10 * * * * www-data  bash $RUN cron_all run schedulesmsemails >> $LOG 2>&1
+
+# Nightly database dump and copy of every school's files (kept 14 days in /var/backups/edusys).
+30 2 * * *   www-data  bash /var/www/edusys/current/deploy/backup.sh >> /var/log/edusys/backup.log 2>&1

@@ -1,0 +1,70 @@
+name: Deploy
+
+# Production deployment: tests first (the CI workflow), then the code is rsynced to the server
+# and deploy/release.sh activates it (pre-migration dump, migrate, atomic switch, health check,
+# automatic rollback of the code if the site doesn't answer).
+#
+# Repository settings > Environments > "production" (add required reviewers to approve each deploy):
+#   secrets   DEPLOY_HOST         server name or IP
+#             DEPLOY_USER         deploy (created by deploy/server-setup.sh)
+#             DEPLOY_SSH_KEY      private key whose public half is in ~deploy/.ssh/authorized_keys
+#             DEPLOY_KNOWN_HOSTS  output of: ssh-keyscan -H <server>
+#   variables DEPLOY_PORT         SSH port (default 22)
+#             APP_URL             e.g. https://edusys.ng (checked from outside after the deploy)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to production
+    needs: ci
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    env:
+      APP_ROOT: /var/www/edusys
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release id
+        id: release
+        run: echo "id=$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: SSH key
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf 'Host prod\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' \
+            "${{ secrets.DEPLOY_HOST }}" "${{ secrets.DEPLOY_USER }}" "${{ vars.DEPLOY_PORT || '22' }}" > ~/.ssh/config
+
+      - name: Upload the code
+        run: |
+          rsync -az --delete --exclude-from=deploy/rsync-exclude.txt ./ "prod:$APP_ROOT/incoming/"
+
+      - name: Activate the release
+        run: ssh prod "bash $APP_ROOT/incoming/deploy/release.sh ${{ steps.release.outputs.id }}"
+
+      - name: Check the site from outside
+        if: vars.APP_URL != ''
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "${{ vars.APP_URL }}/site/login")
+          echo "${{ vars.APP_URL }}/site/login answered $code"
+          [ "$code" = 200 ]
