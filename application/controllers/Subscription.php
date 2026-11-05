@@ -27,6 +27,7 @@ class subscription extends Front_Controller
         $this->load->model('studentcourse_model');
         $this->load->model(array('subscription_model', 'plan_model', 'setting_model', 'subscription_bank_transfer_model'));
         $this->load->library('Platform_coupons');
+        $this->load->library('School_provisioner');
     }
 
     public function add()
@@ -95,6 +96,8 @@ class subscription extends Front_Controller
         }
         $this->form_validation->set_rules('phone_number', $this->lang->line('phone_number'), 'trim|required|xss_clean|regex_match[/^\+?[0-9]{1,4}?[-.\s]?[0-9]+[-.\s]?[0-9]+[-.\s]?[0-9]+$/]');
         $this->form_validation->set_rules('school_name', $this->lang->line('school_name'), 'trim|required|xss_clean');
+        $_POST['subdomain'] = School_provisioner::normalize_subdomain($this->input->post('subdomain'));
+        $this->form_validation->set_rules('subdomain', 'School address', 'required|callback_valid_subdomain', array('required' => 'Choose an address for your school.'));
         $this->form_validation->set_rules('owner_name', $this->lang->line('owner_name'), 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == false) {
@@ -145,6 +148,7 @@ class subscription extends Front_Controller
                 'status' => 0,
                 'total' => $total,
                 'school_name' => $this->input->post('school_name'),
+                'subdomain' => $this->input->post('subdomain'),
                 'email_address' => $this->input->post('email_address'),
                 'phone_number' => $this->input->post('phone_number'),
                 'owner_name' => $this->input->post('owner_name'),
@@ -352,6 +356,33 @@ class subscription extends Front_Controller
         ));
         $this->notify_platform_of_receipt($transfer);
         redirect('subscription/bank_transfer/' . $transfer['token']);
+    }
+
+    /** Form validation callback: the address the school chose is free. */
+    public function valid_subdomain($subdomain)
+    {
+        $status = $this->school_provisioner->subdomain_status((string) $subdomain);
+        if ($status !== 'ok') {
+            $this->form_validation->set_message('valid_subdomain', School_provisioner::subdomain_message($status, (string) $subdomain));
+            return false;
+        }
+        return true;
+    }
+
+    /** The sign-up page's live check of the address (JSON): available, or why not, with suggestions. */
+    public function check_subdomain()
+    {
+        $subdomain = School_provisioner::normalize_subdomain($this->input->get('name'));
+        $status = $this->school_provisioner->subdomain_status($subdomain);
+        $out = array(
+            'ok' => $status === 'ok',
+            'status' => $status,
+            'subdomain' => $subdomain,
+            'address' => $subdomain === '' ? '' : $subdomain . '.' . $this->config->item('tenancy_base_domain'),
+            'message' => School_provisioner::subdomain_message($status, $subdomain),
+            'suggestions' => in_array($status, array('taken', 'held', 'reserved'), true) ? $this->school_provisioner->subdomain_suggestions($subdomain) : array(),
+        );
+        $this->output->set_content_type('application/json')->set_header('Cache-Control: no-store')->set_output(json_encode($out));
     }
 
     /** Form validation callback: an empty coupon, or one valid for the chosen plan. */

@@ -41,8 +41,17 @@ class Subscription_activation
         $guest_password = '';
         $update_data = array();
         if (!$renewal) {
+            // The address chosen at registration, if it is still free (the platform can change it before approving).
+            $subdomain = isset($subscription['subdomain']) ? (string) $subscription['subdomain'] : '';
+            if ($subdomain !== '') {
+                $this->CI->load->library('School_provisioner');
+                if ($this->CI->school_provisioner->subdomain_status($subdomain, null, (int) $subscription['id']) !== 'ok') {
+                    $subdomain = '';
+                }
+            }
             $db->insert('school', array(
                 'school_name' => $subscription['school_name'],
+                'subdomain' => $subdomain !== '' ? $subdomain : null,
                 'email_address' => $subscription['email_address'],
                 'phone_number' => $subscription['phone_number'],
                 'payment_status' => 1,

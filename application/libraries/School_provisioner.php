@@ -130,16 +130,34 @@ class School_provisioner
      */
     public function subdomain_error($subdomain, $school_id = null)
     {
+        $status = $this->subdomain_status($subdomain, $school_id);
+        return $status === 'ok' ? null : self::subdomain_message($status, $subdomain, true);
+    }
+
+    /** Days an unpaid registration keeps the address it chose (covers a bank transfer review). */
+    const HOLD_DAYS = 7;
+
+    /**
+     * Whether a subdomain can be given to a school:
+     *   ok | empty | invalid | reserved | taken (another school has it) | held (an unpaid
+     *   registration of the last HOLD_DAYS days chose it)
+     *
+     * @param int|null $school_id       the school it is for (it may keep its own subdomain)
+     * @param int|null $subscription_id the registration it is for (its own hold doesn't count)
+     */
+    public function subdomain_status($subdomain, $school_id = null, $subscription_id = null)
+    {
+        $subdomain = (string) $subdomain;
         if ($subdomain === '') {
-            return 'Set a subdomain for the school first.';
+            return 'empty';
         }
         if (!Tenant_resolver::is_valid_label($subdomain) || $subdomain !== strtolower($subdomain)) {
-            return 'The subdomain may use lowercase letters, digits and inner hyphens (1-63 characters).';
+            return 'invalid';
         }
         $this->CI->load->library('Platform_settings');
         $reserved = array_merge((array) $this->CI->config->item('tenancy_reserved_subdomains'), $this->CI->platform_settings->extra_reserved_subdomains());
         if (in_array($subdomain, $reserved, true)) {
-            return "'$subdomain' is reserved.";
+            return 'reserved';
         }
         $db = $this->CI->db;
         $db->where('subdomain', $subdomain);
@@ -147,9 +165,70 @@ class School_provisioner
             $db->where('id !=', (int) $school_id);
         }
         if ($db->count_all_results('school') > 0) {
-            return "The subdomain '$subdomain' is already used by another school.";
+            return 'taken';
         }
-        return null;
+        $db->where('subdomain', $subdomain)->where('school_id IS NULL', null, false)->where('payment_status', 0)
+            ->where('created_at >=', date('Y-m-d H:i:s', time() - self::HOLD_DAYS * 86400));
+        if ($subscription_id) {
+            $db->where('id !=', (int) $subscription_id);
+        }
+        if ($db->count_all_results('subscription') > 0) {
+            return 'held';
+        }
+        return 'ok';
+    }
+
+    /** A sentence for a subdomain_status() result ($admin: wording for the platform team). */
+    public static function subdomain_message($status, $subdomain, $admin = false)
+    {
+        switch ($status) {
+            case 'ok':
+                return $subdomain . ' is available.';
+            case 'empty':
+                return $admin ? 'Set a subdomain for the school first.' : 'Choose an address for your school.';
+            case 'invalid':
+                return 'Use lowercase letters, digits and hyphens only (not at the start or end), up to 63 characters.';
+            case 'reserved':
+                return "'$subdomain' is reserved." . ($admin ? '' : ' Please choose another address.');
+            case 'held':
+                return $admin ? "'$subdomain' was chosen by a registration that isn't paid yet."
+                    : "'$subdomain' has just been chosen by another school. Please choose another address.";
+            default:
+                return $admin ? "The subdomain '$subdomain' is already used by another school."
+                    : "'$subdomain' is already taken. Please choose another address.";
+        }
+    }
+
+    /** Turns typed text ("Green Field School") into a subdomain candidate ("green-field-school"). */
+    public static function normalize_subdomain($text)
+    {
+        $s = strtolower(trim((string) $text));
+        $s = preg_replace('/[^a-z0-9]+/', '-', $s);
+        return substr(trim(preg_replace('/-+/', '-', $s), '-'), 0, 63);
+    }
+
+    /** Up to $count free subdomains close to $subdomain. */
+    public function subdomain_suggestions($subdomain, $count = 3)
+    {
+        $base = rtrim(substr(self::normalize_subdomain($subdomain), 0, 50), '-');
+        if ($base === '') {
+            return array();
+        }
+        $out = array();
+        foreach (array('school', 'academy', 'college', 'schools', 'edu') as $suffix) {
+            if (count($out) >= $count) {
+                break;
+            }
+            if ($this->subdomain_status("$base-$suffix") === 'ok') {
+                $out[] = "$base-$suffix";
+            }
+        }
+        for ($n = 2; count($out) < $count && $n < 30; $n++) {
+            if ($this->subdomain_status("$base$n") === 'ok') {
+                $out[] = "$base$n";
+            }
+        }
+        return $out;
     }
 
     /** Where a school is served: its subdomain, or the first central host for the platform school. */

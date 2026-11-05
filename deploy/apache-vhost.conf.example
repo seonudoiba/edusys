@@ -13,9 +13,22 @@
 <VirtualHost *:80>
     ServerName edusys.ng
     ServerAlias www.edusys.ng *.edusys.ng
-    # Everything over HTTPS (keeps the requested host, so schools stay on their subdomain).
+    DocumentRoot /var/www/edusys/current
+    <Directory /var/www/edusys>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    # Everything over HTTPS (keeps the requested host, so schools stay on their subdomain)...
+    # ...except requests a proxy already received over HTTPS: Cloudflare in "Flexible" SSL mode
+    # connects over plain HTTP and says X-Forwarded-Proto: https. Redirecting those would loop.
     RewriteEngine On
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    ErrorLog  ${APACHE_LOG_DIR}/edusys-error.log
+    CustomLog ${APACHE_LOG_DIR}/edusys-access.log combined
 </VirtualHost>
 
 <VirtualHost *:443>
