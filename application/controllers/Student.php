@@ -655,22 +655,22 @@ class Student extends Admin_Controller
             }
 
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                $img_name             = $this->media_storage->fileupload("file", "./uploads/student_images/");
+                $img_name             = $this->media_storage->fileupload("file", upload_root() . "student_images/");
                 $data_insert['image'] = "uploads/student_images/" . $img_name;
             }
 
             if (isset($_FILES["father_pic"]) && !empty($_FILES['father_pic']['name'])) {
-                $img_name                  = $this->media_storage->fileupload("father_pic", "./uploads/student_images/");
+                $img_name                  = $this->media_storage->fileupload("father_pic", upload_root() . "student_images/");
                 $data_insert['father_pic'] = "uploads/student_images/" . $img_name;
             }
 
             if (isset($_FILES["mother_pic"]) && !empty($_FILES['mother_pic']['name'])) {
-                $img_name                  = $this->media_storage->fileupload("mother_pic", "./uploads/student_images/");
+                $img_name                  = $this->media_storage->fileupload("mother_pic", upload_root() . "student_images/");
                 $data_insert['mother_pic'] = "uploads/student_images/" . $img_name;
             }
 
             if (isset($_FILES["guardian_pic"]) && !empty($_FILES['guardian_pic']['name'])) {
-                $img_name                    = $this->media_storage->fileupload("guardian_pic", "./uploads/student_images/");
+                $img_name                    = $this->media_storage->fileupload("guardian_pic", upload_root() . "student_images/");
                 $data_insert['guardian_pic'] = "uploads/student_images/" . $img_name;
             }
 
@@ -747,8 +747,8 @@ class Student extends Admin_Controller
                     $this->student_model->add($update_student);
                 }
 
-                $upload_dir_path  = $this->customlib->getFolderPath() . './uploads/student_documents/' . $insert_id . '/';
-                $upload_directory = './uploads/student_documents/' . $insert_id . '/';
+                $upload_dir_path  = upload_abs_root() . 'student_documents/' . $insert_id . '/';
+                $upload_directory = upload_root() . 'student_documents/' . $insert_id . '/';
                 if (!is_dir($upload_dir_path) && !mkdir($upload_dir_path)) {
                     die("Error creating folder $upload_dir_path");
                 }
@@ -823,7 +823,7 @@ class Student extends Admin_Controller
         } else {
             $student_id = $this->input->post('student_id');
             if (isset($_FILES["first_doc"]) && !empty($_FILES['first_doc']['name'])) {
-                $upload_dir_path = $this->customlib->getFolderPath() . './uploads/student_documents/' . $student_id . '/';
+                $upload_dir_path = upload_abs_root() . 'student_documents/' . $student_id . '/';
 
                 if (!is_dir($upload_dir_path) && !mkdir($upload_dir_path)) {
                     die("Error creating folder $upload_dir_path");
@@ -831,7 +831,7 @@ class Student extends Admin_Controller
 
                 $fileInfo    = pathinfo($_FILES["first_doc"]["name"]);
                 $first_title = $this->input->post('first_title');
-                $imp         = $this->media_storage->fileupload("first_doc", './uploads/student_documents/' . $student_id . '/');
+                $imp         = $this->media_storage->fileupload("first_doc", upload_root() . 'student_documents/' . $student_id . '/');
                 $data_img    = array('student_id' => $student_id, 'title' => $first_title, 'doc' => $imp);
                 $this->student_model->adddoc($data_img);
 
@@ -1525,22 +1525,22 @@ class Student extends Admin_Controller
             }
 
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                $img_name      = $this->media_storage->fileupload("file", "./uploads/student_images/");
+                $img_name      = $this->media_storage->fileupload("file", upload_root() . "student_images/");
                 $data['image'] = "uploads/student_images/" . $img_name;
             }
 
             if (isset($_FILES["father_pic"]) && !empty($_FILES['father_pic']['name'])) {
-                $img_name           = $this->media_storage->fileupload("father_pic", "./uploads/student_images/");
+                $img_name           = $this->media_storage->fileupload("father_pic", upload_root() . "student_images/");
                 $data['father_pic'] = "uploads/student_images/" . $img_name;
             }
 
             if (isset($_FILES["mother_pic"]) && !empty($_FILES['mother_pic']['name'])) {
-                $img_name           = $this->media_storage->fileupload("mother_pic", "./uploads/student_images/");
+                $img_name           = $this->media_storage->fileupload("mother_pic", upload_root() . "student_images/");
                 $data['mother_pic'] = "uploads/student_images/" . $img_name;
             }
 
             if (isset($_FILES["guardian_pic"]) && !empty($_FILES['guardian_pic']['name'])) {
-                $img_name             = $this->media_storage->fileupload("guardian_pic", "./uploads/student_images/");
+                $img_name             = $this->media_storage->fileupload("guardian_pic", upload_root() . "student_images/");
                 $data['guardian_pic'] = "uploads/student_images/" . $img_name;
             }
 
@@ -1754,7 +1754,7 @@ class Student extends Admin_Controller
     public function doupload($id)
     {
         $config = array(
-            'upload_path'   => "./uploads/student_images/",
+            'upload_path'   => upload_root() . "student_images/",
             'allowed_types' => "gif|jpg|png|jpeg|df",
             'overwrite'     => true,
         );

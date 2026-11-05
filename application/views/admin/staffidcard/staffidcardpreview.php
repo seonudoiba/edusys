@@ -275,7 +275,7 @@
                                 if($scan_code_type == "qrcode"){
                                     ?>
                                     
-                                    <?php if (file_exists("./uploads/staff_id_card/qrcode/default.png")) {
+                                    <?php if (file_exists(upload_root() . "staff_id_card/qrcode/default.png")) {
                                         ?>
                                         <div class="signature">
                                             <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
@@ -288,7 +288,7 @@
                                 }elseif ($scan_code_type == "barcode") {
                                     ?>
                                     
-                             <?php if (file_exists("./uploads/staff_id_card/barcodes/default.png")) {
+                             <?php if (file_exists(upload_root() . "staff_id_card/barcodes/default.png")) {
                                  ?>
                                  <div class="signature">
                                      <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
@@ -353,14 +353,14 @@
                                         if ($idcard->enable_staff_barcode) {
 
                                             if($scan_code_type == "qrcode"){
-                                                if (file_exists("./uploads/staff_id_card/qrcode/default.png")) { ?>
+                                                if (file_exists(upload_root() . "staff_id_card/qrcode/default.png")) { ?>
                                                     <div class="barcodeimg" style="width: 80%;">
                                                         <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
                                                     </div>
                                             <?php }
 
                                             }elseif ($scan_code_type == "barcode") {
-                                                if (file_exists("./uploads/staff_id_card/barcodes/default.png")) { ?>
+                                                if (file_exists(upload_root() . "staff_id_card/barcodes/default.png")) { ?>
                                                     <div class="barcodeimg" style="width: 80%;">
                                                         <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
                                                     </div>

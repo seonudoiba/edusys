@@ -66,7 +66,7 @@ class complaint_Model extends MY_Model
 
     public function image_delete($id, $img_name)
     {
-        $file = "./uploads/front_office/complaints/" . $img_name;
+        $file = upload_root() . "front_office/complaints/" . $img_name;
         unlink($file);
         $this->db->where('id', $id);
         $this->db->delete('complaint');

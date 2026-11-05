@@ -27,7 +27,7 @@ class Visitors extends Student_Controller
     public function download($id)
     {
         $visitorlist = $this->visitors_model->visitors_list($id);
-        $this->media_storage->filedownload($visitorlist['image'], "./uploads/front_office/visitors");
+        $this->media_storage->filedownload($visitorlist['image'], upload_root() . "front_office/visitors");
 
     }
 }

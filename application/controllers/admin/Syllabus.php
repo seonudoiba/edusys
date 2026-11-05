@@ -172,12 +172,12 @@ class Syllabus extends Admin_Controller
             );
 
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                $attachment_img_name = $this->media_storage->fileupload("file", "./uploads/syllabus_attachment/");
+                $attachment_img_name = $this->media_storage->fileupload("file", upload_root() . "syllabus_attachment/");
                 $data['attachment']  = $attachment_img_name;
             }
 
             if (isset($_FILES["lacture_video"]) && !empty($_FILES['lacture_video']['name'])) {
-                $lacture_video_img_name = $this->media_storage->fileupload("lacture_video", "./uploads/syllabus_attachment/lacture_video/");
+                $lacture_video_img_name = $this->media_storage->fileupload("lacture_video", upload_root() . "syllabus_attachment/lacture_video/");
                 $data['lacture_video']  = $lacture_video_img_name;
             }
 
@@ -192,7 +192,7 @@ class Syllabus extends Admin_Controller
     {
       
      $result=$this->lessonplan_model->getSyllabusById($id); 
-     $attachment_img_name = $this->media_storage->filedownload($result->attachment,"./uploads/syllabus_attachment/");
+     $attachment_img_name = $this->media_storage->filedownload($result->attachment,upload_root() . "syllabus_attachment/");
 
     }
 
@@ -200,7 +200,7 @@ class Syllabus extends Admin_Controller
     {
       
      $result=$this->lessonplan_model->getSyllabusById($id); 
-     $attachment_img_name = $this->media_storage->filedownload($result->lacture_video,"./uploads/syllabus_attachment/lacture_video/");
+     $attachment_img_name = $this->media_storage->filedownload($result->lacture_video,upload_root() . "syllabus_attachment/lacture_video/");
 
     }
 

@@ -125,7 +125,7 @@ class Dispatch_model extends MY_Model
 
     public function image_delete($id, $img_name)
     {
-        $file = "./uploads/front_office/dispatch_receive/" . $img_name;
+        $file = upload_root() . "front_office/dispatch_receive/" . $img_name;
         unlink($file);
         $this->db->where('id', $id);
         $this->db->delete('dispatch_receive');

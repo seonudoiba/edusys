@@ -38,17 +38,26 @@ class Admin extends Admin_Controller
 
     private function platform_dashboard()
     {
-        $school = $this->School_model->schoolCount();
-        $data['school_count'] = $school;
-      
-        $payment = $this->Subscription_model->payment();
-        $data['payment_count'] = $payment;
-
-        $active_school = $this->School_model->activeSchool();
-        $data['active_school_count'] = $active_school;
-
-        $unactive_school = $this->School_model->unactiveSchool();
-        $data['unactive_school_count'] = $unactive_school;
+        // What needs the platform admin's attention, then the figures.
+        $this->load->model(array('Platform_school_model', 'subscription_bank_transfer_model'));
+        $schools = $this->Platform_school_model->all();
+        $pick = function ($filter, $sort = null, $limit = 6) use ($schools) {
+            $rows = array_values(array_filter($schools, $filter));
+            if ($sort) {
+                usort($rows, $sort);
+            }
+            return array_slice($rows, 0, $limit);
+        };
+        $data['counts'] = $this->Platform_school_model->counts($schools);
+        $data['waiting'] = $pick(function ($s) { return $s['state'] === 'waiting_approval'; });
+        $data['expiring'] = $pick(function ($s) { return $s['set_up'] && in_array($s['expiry'], array('expiring', 'expired'), true); },
+            function ($a, $b) { return $a['days_left'] - $b['days_left']; });
+        $data['recent'] = array_slice($schools, 0, 6);
+        $data['pending_transfers'] = array_slice($this->subscription_bank_transfer_model->get_list('pending'), 0, 6);
+        $data['pending_transfer_count'] = $this->subscription_bank_transfer_model->count_pending();
+        $data['monthly_revenue'] = $this->Platform_school_model->monthly_revenue(6);
+        $data['total_revenue'] = $this->Platform_school_model->total_revenue();
+        $data['currency_symbol'] = $this->customlib->getSchoolCurrencyFormat();
 
         $this->load->view('layout/header', $data);
         $this->load->view('admin/platform_dashboard', $data);

@@ -24,7 +24,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
   | a PHP script and you can easily do that on your own.
   |
  */
-$config['base_url'] = 'https://edusys.ng/';
+$config['base_url'] = 'http://edusys_ng.test/';
 // $config['base_url'] = 'http://localhost/smartinnovation/';
 
 
@@ -528,7 +528,7 @@ $config['protocol'] = 'smtp';
 $config['smtp_host'] = getenv('EDUSYS_SMTP_HOST') ?: 'smtp.mailgun.org';
 $config['smtp_user'] = getenv('EDUSYS_SMTP_USER') ?: 'postmaster@edusys.ng';
 $config['smtp_pass'] = (string) getenv('EDUSYS_SMTP_PASS');
-$config['smtp_port'] = 587;
+$config['smtp_port'] = (int) (getenv('EDUSYS_SMTP_PORT') ?: 587);
 $config['mailtype'] = 'html';
 $config['charset'] = 'utf-8';
 $config['wordwrap'] = TRUE;

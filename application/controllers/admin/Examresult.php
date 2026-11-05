@@ -181,7 +181,7 @@ class Examresult extends Admin_Controller
         $stylesheet = file_get_contents(base_url() . 'backend/pdf_style.css'); // external css
         if ($template->background_img != "") {
 
-            $mpdf->SetDefaultBodyCSS('background', "url('".$this->customlib->getFolderPath()."./uploads/marksheet/" . $template->background_img . "')");
+            $mpdf->SetDefaultBodyCSS('background', "url('".upload_abs_root() . "marksheet/" . $template->background_img . "')");
             $mpdf->SetDefaultBodyCSS('background-image-resize', 6);
         }
         $mpdf->WriteHTML($stylesheet, 1); // Writing style to pdf
@@ -262,7 +262,7 @@ class Examresult extends Admin_Controller
             $stylesheet = file_get_contents(base_url() . 'backend/pdf_style.css'); // external css
             if ($template->background_img != "") {
 
-				$mpdf->SetDefaultBodyCSS('background', "url('".$this->customlib->getFolderPath()."./uploads/marksheet/" . $template->background_img . "')");
+				$mpdf->SetDefaultBodyCSS('background', "url('".upload_abs_root() . "marksheet/" . $template->background_img . "')");
                 $mpdf->SetDefaultBodyCSS('background-image-resize', 6);
             }
             $mpdf->WriteHTML($stylesheet, 1); // Writing style to pdf

@@ -105,7 +105,7 @@ class Content extends Student_Controller
 
     public function download($file)
     {
-        $this->media_storage->filedownload($this->uri->segment(7), "./uploads/school_content/material");
+        $this->media_storage->filedownload($this->uri->segment(7), upload_root() . "school_content/material");
 
     }
 

@@ -18,6 +18,22 @@
                 <a class="<?php echo set_SubSubmenu('schsettings/backendtheme'); ?>" href="<?php echo site_url('schsettings/backendtheme') ?>"><?php echo $this->lang->line('backend_theme'); ?></a>
             </li>
 
+            <li class="<?php echo set_SubSubmenu('schsettings/studentguardianpanel'); ?>">
+                <a class="<?php echo set_SubSubmenu('schsettings/studentguardianpanel'); ?>" href="<?php echo site_url('schsettings/studentguardianpanel') ?>"><?php echo $this->lang->line('student_guardian_panel'); ?></a>
+            </li>
+            <li class="<?php echo set_SubSubmenu('schsettings/fees'); ?>">
+                <a class="<?php echo set_SubSubmenu('schsettings/fees'); ?>" href="<?php echo site_url('schsettings/fees') ?>"><?php echo $this->lang->line('fees'); ?></a>
+            </li>
+            <li class="<?php echo set_SubSubmenu('schsettings/idautogeneration'); ?>">
+                <a class="<?php echo set_SubSubmenu('schsettings/idautogeneration'); ?>" href="<?php echo site_url('schsettings/idautogeneration') ?>"><?php echo $this->lang->line('id_auto_generation'); ?></a>
+            </li>
+            <li class="<?php echo set_SubSubmenu('schsettings/attendancetype'); ?>">
+                <a class="<?php echo set_SubSubmenu('schsettings/attendancetype'); ?>" href="<?php echo site_url('schsettings/attendancetype') ?>"><?php echo $this->lang->line('attendance_type'); ?></a>
+            </li>
+            <li class="<?php echo set_SubSubmenu('schsettings/miscellaneous'); ?>">
+                <a class="<?php echo set_SubSubmenu('schsettings/miscellaneous'); ?>" href="<?php echo site_url('schsettings/miscellaneous') ?>"><?php echo $this->lang->line('miscellaneous'); ?></a>
+            </li>
+
             <li class="<?php echo set_SubSubmenu('schsettings/maintenance'); ?>">
                 <a class="<?php echo set_SubSubmenu('schsettings/maintenance'); ?>" href="<?php echo site_url('schsettings/maintenance') ?>"><?php echo $this->lang->line('maintenance'); ?></a>
             </li>

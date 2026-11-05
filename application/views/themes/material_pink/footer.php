@@ -30,9 +30,9 @@ if(!empty($cookie_consent)){ ?>
                                 $top_new_tab = "target='_blank'";
                             }
                             if ($footer_menu_value['ext_url']) {
-                                $url = $footer_menu_value['ext_url_link'];
+                                $url = front_menu_url($footer_menu_value['ext_url_link']);
                             } else {
-                                $url = site_url($footer_menu_value['page_url']);
+                                $url = front_page_url($footer_menu_value);
                             }
                             ?>
 

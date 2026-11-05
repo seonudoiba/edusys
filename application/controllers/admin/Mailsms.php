@@ -289,7 +289,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['files']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["files"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], "./uploads/communicate/email_attachments/" . $img_name);
+                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], upload_root() . "communicate/email_attachments/" . $img_name);
                     $send_new_attachments[] = array('directory' => 'uploads/communicate/email_attachments/', 'attachment' => $img_name, 'attachment_name' => $file_name);
                     $myattachment_data[]    = array('attachment' => $img_name, 'attachment_name' => $file_name, 'directory' => 'uploads/communicate/email_attachments/');
                 }
@@ -420,7 +420,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['files']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["files"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], "./uploads/communicate/email_attachments/" . $img_name);
+                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], upload_root() . "communicate/email_attachments/" . $img_name);
                     $send_new_attachments[] = array('directory' => 'uploads/communicate/email_attachments/', 'attachment' => $img_name, 'attachment_name' => $file_name);
                     $myattachment_data[]    = array('attachment' => $img_name, 'attachment_name' => $file_name, 'directory' => 'uploads/communicate/email_attachments/');
                 }
@@ -549,7 +549,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['files']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["files"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], "./uploads/communicate/email_attachments/" . $img_name);
+                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], upload_root() . "communicate/email_attachments/" . $img_name);
                     $send_new_attachments[] = array('directory' => 'uploads/communicate/email_attachments/', 'attachment' => $img_name, 'attachment_name' => $file_name);
                     $myattachment_data[]    = array('attachment' => $img_name, 'attachment_name' => $file_name, 'directory' => 'uploads/communicate/email_attachments/');
                 }
@@ -1162,7 +1162,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['files']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["files"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], "./uploads/communicate/email_attachments/" . $img_name);
+                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], upload_root() . "communicate/email_attachments/" . $img_name);
                     $send_new_attachments[] = array('directory' => 'uploads/communicate/email_attachments/', 'attachment' => $img_name, 'attachment_name' => $file_name);
                     $myattachment_data[]    = array('attachment' => $img_name, 'attachment_name' => $file_name, 'directory' => 'uploads/communicate/email_attachments/');
                 }
@@ -1373,7 +1373,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['attachment']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["attachment"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["attachment"]["tmp_name"][$key], "./uploads/communicate/email_template_images/" . $img_name);
+                    move_uploaded_file($_FILES["attachment"]["tmp_name"][$key], upload_root() . "communicate/email_template_images/" . $img_name);
 
                     $new_attachment[] = array('attachment' => $img_name, 'attachment_name' => $file_name);
                 }
@@ -1478,7 +1478,7 @@ class Mailsms extends Admin_Controller
         $this->load->helper('download');
         $name     = $this->uri->segment(5);
         $ext      = explode(".", $name);
-        $filepath = "./uploads/communicate/email_template_images/" . $doc;
+        $filepath = upload_root() . "communicate/email_template_images/" . $doc;
         $data     = file_get_contents($filepath);
         force_download($name, $data);
     }
@@ -2042,7 +2042,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['files']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["files"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], "./uploads/communicate/email_attachments/" . $img_name);
+                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], upload_root() . "communicate/email_attachments/" . $img_name);
                     $myattachment_data[] = array('attachment' => $img_name, 'attachment_name' => $file_name, 'directory' => 'uploads/communicate/email_attachments/');
                 }
             }
@@ -2198,7 +2198,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['files']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["files"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], "./uploads/communicate/email_attachments/" . $img_name);
+                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], upload_root() . "communicate/email_attachments/" . $img_name);
                     $myattachment_data[] = array('attachment' => $img_name, 'attachment_name' => $file_name, 'directory' => 'uploads/communicate/email_attachments/');
                 }
             }
@@ -2318,7 +2318,7 @@ class Mailsms extends Admin_Controller
                     $file_name = $_FILES['files']['name'][$key];
                     $fileInfo  = pathinfo($_FILES["files"]["name"][$key]);
                     $img_name  = time() . rand(99, 999) . '.' . $fileInfo['extension'];
-                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], "./uploads/communicate/email_attachments/" . $img_name);
+                    move_uploaded_file($_FILES["files"]["tmp_name"][$key], upload_root() . "communicate/email_attachments/" . $img_name);
 
                     $myattachment_data[] = array('attachment' => $img_name, 'attachment_name' => $file_name, 'directory' => 'uploads/communicate/email_attachments/');
                 }

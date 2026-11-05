@@ -515,7 +515,7 @@ class Studentcourse extends Student_Controller
     public function download($doc, $section_id, $lesson_id)
     {
         $this->load->helper('download');
-        $filepath = "./uploads/course_content/" . $section_id . "/" . $lesson_id . "/" . $doc;
+        $filepath = upload_root() . "course_content/" . $section_id . "/" . $lesson_id . "/" . $doc;
         $data     = file_get_contents($filepath);
         $name     = $doc;
         force_download($name, $data);
@@ -1276,7 +1276,7 @@ class Studentcourse extends Student_Controller
             );
 
             if (isset($_FILES["photo"]) && !empty($_FILES['photo']['name'])) {
-                $uploaddir = './uploads/guest_images/';
+                $uploaddir = upload_root() . 'guest_images/';
                 if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                     die("Error creating folder $uploaddir");
                 }

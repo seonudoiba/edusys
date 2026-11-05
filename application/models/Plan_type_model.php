@@ -91,18 +91,19 @@ class plan_type_model extends MY_Model
 
     public function get_plan_type($ids = null)
     {
-        $query = $this->db->select('*')->from('plan_list')->where('status', 1);
-        
-        if ($ids != null) {
-            $ids = json_decode($ids, true);
-            
-            if (is_array($ids)) {
-                $this->db->where_in('id', $ids);
-            } else {
-                $this->db->where('id', $ids);
+        if ($ids !== null) {
+            $ids = json_decode((string) $ids, true);
+            if (is_array($ids) && !$ids) {
+                return array(); // a plan without features (where_in() with no values is invalid SQL)
             }
         }
-        $query = $query->get();
+        $query = $this->db->select('*')->from('plan_list')->where('status', 1);
+        if (is_array($ids)) {
+            $this->db->where_in('id', array_map('intval', $ids));
+        } elseif ($ids !== null && $ids !== '') {
+            $this->db->where('id', (int) $ids);
+        }
+        $query = $query->order_by('sort_order', 'asc')->order_by('id', 'asc')->get();
         
         return $query->result_array();
     }

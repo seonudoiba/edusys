@@ -1,120 +1,183 @@
 <?php
 
-if (!defined('BASEPATH')) {
-    exit('No direct script access allowed');
-}
+defined('BASEPATH') or exit('No direct script access allowed');
 
-#[AllowDynamicProperties]
+/**
+ * Subscriptions (platform admin): every sign-up and renewal with its payment, filterable,
+ * with totals and a CSV export.
+ *
+ * Status of a subscription:
+ *   pending   not paid (online payment not finished, or a bank transfer not approved yet)
+ *   active    paid and not expired (created_at + days)
+ *   expired   paid, past its days
+ * Only an unpaid subscription without a school can be deleted (abandoned sign-ups).
+ */
 class Subscription_list extends Admin_Controller
 {
+    const PERMISSION = 'subscription_list';
+    const EXPIRING_DAYS = 30;
+
     public function __construct()
     {
         // Platform feature: only on the central host (404 on school subdomains).
         Tenant::require_platform();
         parent::__construct();
-
-        $this->load->model('Subscription_model', 'Course_model');
-        $this->load->model('Plan_model');
-        $this->load->model('School_model');
-        $this->load->library('Enc_lib');
-        $this->load->model('studentcourse_model');
-        $this->load->model('setting_model');
+        $this->load->model(array('plan_model'));
+        $this->load->library('Form_token');
     }
 
     public function index()
     {
-        $data = array();
-        $data['subscription_list'] = array();
+        $this->require_privilege('can_view');
+        $this->session->set_userdata('top_menu', 'subscription');
+        $this->session->set_userdata('sub_menu', 'admin/subscription_list');
 
-        $this->db->select('*')->from('subscription');
+        $f = $this->filters();
+        $all = $this->rows();
+        $rows = array_values(array_filter($all, function ($r) use ($f) { return $this->matches($r, $f); }));
 
-        if (isset($id) && $id != null) {
-            $this->db->where('subscription.id', $id);
-        } else {
-            $this->db->order_by('subscription.created_at', 'desc');
-        }
-        $query = $this->db->get();
-        if ($id != null) {
-            $subscription_list =  $query->row_array();
-        } else {
-            $subscription_list = $query->result_array();
+        if ($this->input->get('export') === 'csv') {
+            return $this->csv($rows);
         }
 
-        $plan_list = $this->Plan_model->get();
-        
-
-        $school_list = $this->School_model->get();
-
-        $plan_lookup = [];
-        foreach ($plan_list as $plan) {
-            $plan_lookup[$plan['plan_id']] = $plan['title'];
-        }
-
-        $school_lookup = [];
-        foreach ($school_list as $school) {
-            $school_lookup[$school['id']] = $school['school_name'];
-        }
-
-        foreach ($subscription_list as $subscription) {
-            $plan_name = '';
-            $school_name = '';
-            if (isset($plan_lookup[$subscription['plan_id']])) {
-                $plan_name = $plan_lookup[$subscription['plan_id']];
+        $totals = array('count' => count($rows), 'paid' => 0, 'pending' => 0, 'revenue' => 0.0, 'outstanding' => 0.0);
+        foreach ($rows as $r) {
+            if ($r['paid']) {
+                $totals['paid']++;
+                $totals['revenue'] += (float) $r['total'];
+            } else {
+                $totals['pending']++;
+                $totals['outstanding'] += (float) $r['total'];
             }
-
-            if (isset($school_lookup[$subscription['school_id']])) {
-                $school_name = $school_lookup[$subscription['school_id']];
-            }
-
-            if ($subscription['discount_amt'] > 0) {
-                $subscription['total'] = ($subscription['price'] - $subscription['discount_amt']);
-            }
-
-            $data['subscription_list'][] = array(
-                'id' => $subscription['id'],
-                'plan_id' => $subscription['plan_id'],
-                'payment_method' => $subscription['payment_method'],
-                'payment_status' => ($subscription['payment_status'] == 1) ? 'Complete' : 'Pending',
-                'total' => $subscription['total'],
-                'plan_name' => $plan_name,
-                'school_name' => $subscription['school_name'],
-                'owner_name' => $subscription['owner_name'],
-                'created_at' => $subscription['created_at'],
-                'school_id' => $subscription['school_id'],
-            );
         }
-
+        $counts = array('all' => count($all), 'active' => 0, 'expiring' => 0, 'expired' => 0, 'pending' => 0);
+        foreach ($all as $r) {
+            $counts[$r['state']]++;
+            if ($r['expiring']) {
+                $counts['expiring']++;
+            }
+        }
+        $data = array(
+            'rows' => $rows,
+            'filters' => $f,
+            'totals' => $totals,
+            'counts' => $counts,
+            'plans' => $this->plan_model->get(),
+            'methods' => array_values(array_unique(array_map(function ($r) { return $r['method']; }, $all))),
+            'currency_symbol' => $this->customlib->getSchoolCurrencyFormat(),
+            'token' => $this->form_token->field(),
+            'message' => $this->session->flashdata('sub_msg'),
+            'error' => $this->session->flashdata('sub_error'),
+        );
         $this->load->view('layout/header');
-        $this->load->view('admin/subscription/subscriptionlist', $data);
+        $this->load->view('admin/subscription/subscriptions', $data);
         $this->load->view('layout/footer');
     }
 
-    public function delete($id)
+    public function delete($id = null)
     {
-        $array = array();
-        
-        if (!empty($id)) {
-            $this->db->where('id', $id);
-            $query = $this->db->get('subscription');
-            if ($query->num_rows() > 0) {
-                $result = $query->row_array();
-                if(isset($result['school_id']) && $result['school_id']){
-                    $this->db->where('id', $result['school_id']);
-                    $query = $this->db->get('school');
-                    if ($query->num_rows() > 0) {
-                        $array = array('status' => 'fail', 'error' => '', 'message' => 'Your school is exist, please delete school first.');
-                        echo json_encode($array);
-                        die;
-                    }
-                }    
-            }
-            
-            $this->db->where('id', $id);
-            $this->db->delete('subscription');
-
-            $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('delete_message'));
+        $this->require_privilege('can_delete');
+        $this->form_token->require_post();
+        $row = ctype_digit((string) $id) ? $this->db->where('id', (int) $id)->get('subscription')->row_array() : null;
+        if (!$row) {
+            show_404();
         }
-        echo json_encode($array);
-        die;
+        if ((int) $row['payment_status'] === 1 || !empty($row['school_id'])) {
+            $this->session->set_flashdata('sub_error', 'Only an unpaid sign-up that never became a school can be deleted.');
+        } else {
+            $this->db->where('id', (int) $row['id'])->delete('subscription'); // its bank transfer row goes with it (foreign key)
+            $this->session->set_flashdata('sub_msg', 'Deleted the unpaid sign-up of ' . $row['school_name'] . '.');
+        }
+        redirect('admin/subscription_list' . ($this->input->post('back') ? '?' . $this->input->post('back') : ''));
+    }
+
+    // ------------------------------------------------------------------ data
+
+    private function rows()
+    {
+        $rows = $this->db->select('subscription.*, plan.title AS plan_title, school.school_name AS registered_name, school.cron_flag AS school_set_up, t.id AS transfer_id, t.status AS transfer_status')
+            ->from('subscription')
+            ->join('plan', 'plan.plan_id = subscription.plan_id', 'left')
+            ->join('school', 'school.id = subscription.school_id', 'left')
+            ->join('subscription_bank_transfers t', 't.subscription_id = subscription.id', 'left')
+            ->order_by('subscription.id', 'desc')
+            ->get()->result_array();
+        $now = time();
+        foreach ($rows as &$r) {
+            $r['paid'] = (int) $r['payment_status'] === 1;
+            $r['method'] = $r['payment_method'] !== '' ? $r['payment_method'] : 'free';
+            $r['starts'] = $r['created_at'];
+            $r['ends'] = date('Y-m-d H:i:s', strtotime($r['created_at']) + (int) $r['days'] * 86400);
+            $r['days_left'] = (int) floor((strtotime($r['ends']) - $now) / 86400);
+            $r['state'] = !$r['paid'] ? 'pending' : ($r['days_left'] < 0 ? 'expired' : 'active');
+            $r['expiring'] = $r['state'] === 'active' && $r['days_left'] <= self::EXPIRING_DAYS;
+            $r['name'] = $r['registered_name'] ?: $r['school_name'];
+        }
+        return $rows;
+    }
+
+    private function filters()
+    {
+        $g = function ($k) { return trim((string) $this->input->get($k)); };
+        $date = function ($v) { return preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : ''; };
+        $status = $g('status');
+        return array(
+            'status' => in_array($status, array('active', 'expiring', 'expired', 'pending'), true) ? $status : 'all',
+            'method' => $g('method'),
+            'plan' => ctype_digit($g('plan')) ? (int) $g('plan') : 0,
+            'from' => $date($g('from')),
+            'to' => $date($g('to')),
+            'q' => $g('q'),
+        );
+    }
+
+    private function matches(array $r, array $f)
+    {
+        if ($f['status'] === 'expiring' ? !$r['expiring'] : ($f['status'] !== 'all' && $r['state'] !== $f['status'])) {
+            return false;
+        }
+        if ($f['method'] !== '' && $r['method'] !== $f['method']) {
+            return false;
+        }
+        if ($f['plan'] && (int) $r['plan_id'] !== $f['plan']) {
+            return false;
+        }
+        $day = substr($r['created_at'], 0, 10);
+        if (($f['from'] && $day < $f['from']) || ($f['to'] && $day > $f['to'])) {
+            return false;
+        }
+        if ($f['q'] !== '') {
+            $hay = strtolower($r['name'] . ' ' . $r['owner_name'] . ' ' . $r['email_address'] . ' ' . $r['phone_number'] . ' ' . $r['reference']);
+            if (strpos($hay, strtolower($f['q'])) === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function csv(array $rows)
+    {
+        $name = 'subscriptions-' . date('Y-m-d') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $name . '"');
+        header('Cache-Control: no-store');
+        $out = fopen('php://output', 'w');
+        fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+        fputcsv($out, array('ID', 'Date', 'School', 'Owner', 'Email', 'Phone', 'Plan', 'Days', 'Method', 'Price', 'Discount', 'Total', 'Payment', 'Status', 'Starts', 'Ends', 'Reference'));
+        $cell = function ($v) { $v = (string) $v; return preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v; }; // no formulas in Excel
+        foreach ($rows as $r) {
+            fputcsv($out, array_map($cell, array($r['id'], $r['created_at'], $r['name'], $r['owner_name'], $r['email_address'], $r['phone_number'],
+                $r['plan_title'], $r['days'], $r['method'], $r['price'], $r['discount_amt'], $r['total'], $r['paid'] ? 'Paid' : 'Unpaid',
+                ucfirst($r['state']), $r['starts'], $r['ends'], $r['reference'])));
+        }
+        fclose($out);
+        exit;
+    }
+
+    private function require_privilege($action)
+    {
+        if (!$this->rbac->hasPrivilege(self::PERMISSION, $action)) {
+            access_denied();
+        }
     }
 }

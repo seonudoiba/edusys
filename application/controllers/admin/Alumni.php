@@ -121,7 +121,7 @@ class Alumni extends Admin_Controller
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         } else {
 
-            $img_name = $this->media_storage->fileupload("documents", "./uploads/alumni_student_images/");
+            $img_name = $this->media_storage->fileupload("documents", upload_root() . "alumni_student_images/");
 
             $data = array(
                 'current_email' => $this->input->post('current_email'),
@@ -272,7 +272,7 @@ class Alumni extends Admin_Controller
 
             if ($this->input->post('id') == '') {
                 if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
-                    $img_name = $this->media_storage->fileupload("file", "./uploads/alumni_event_images/");
+                    $img_name = $this->media_storage->fileupload("file", upload_root() . "alumni_event_images/");
                     $file_name = $_FILES['file']['name'];
                 }
               
@@ -281,7 +281,7 @@ class Alumni extends Admin_Controller
 
                 if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
                   
-                    $img_name = $this->media_storage->fileupload("file", "./uploads/alumni_event_images/");
+                    $img_name = $this->media_storage->fileupload("file", upload_root() . "alumni_event_images/");
                     $file_name = $_FILES['file']['name'];
                 } else {
                     $img_name = $event_list['photo'];
@@ -361,9 +361,9 @@ class Alumni extends Admin_Controller
         $data['to_date'] = $this->customlib->dateformat($data['to_date']);      
         
         if ($data['photo']) {
-            $data['photo'] =   $this->media_storage->getImageURL('./uploads/alumni_event_images/' . $data['photo']);
+            $data['photo'] =   $this->media_storage->getImageURL(upload_root() . 'alumni_event_images/' . $data['photo']);
         } else {
-            $data['photo'] =   $this->media_storage->getImageURL('./uploads/no_image.png');
+            $data['photo'] =   $this->media_storage->getImageURL(upload_root() . 'no_image.png');
         }
 
         echo json_encode($data);

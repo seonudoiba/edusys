@@ -726,7 +726,7 @@ class Content extends Admin_Controller
                 $content_for[] = array('role' => $cont_avail_value);
             }
 
-            $img_name = $this->media_storage->fileupload("file", "./uploads/school_content/material/");
+            $img_name = $this->media_storage->fileupload("file", upload_root() . "school_content/material/");
 
             $data = array(
                 'title'      => $this->input->post('content_title'),
@@ -825,7 +825,7 @@ class Content extends Admin_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $insert_id . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/school_content/material/" . $img_name);
+                move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "school_content/material/" . $img_name);
                 $data_img = array('id' => $insert_id, 'file' => 'uploads/school_content/material/' . $img_name);
                 $this->content_model->add($data_img);
             }
@@ -876,7 +876,7 @@ class Content extends Admin_Controller
 
     public function download($file)
     {
-        $this->media_storage->filedownload($this->uri->segment(4), "./uploads/school_content/material");
+        $this->media_storage->filedownload($this->uri->segment(4), upload_root() . "school_content/material");
 
     }
 
@@ -913,7 +913,7 @@ class Content extends Admin_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $id . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                 $data_img = array('id' => $id, 'file_uploaded' => 'uploads/student_images/' . $img_name);
                 $this->content_model->addcontentpost($data_img);
             }

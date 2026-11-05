@@ -7,9 +7,17 @@ if (!defined('BASEPATH')) {
 class Language extends Admin_Controller
 {
 
+    /** Actions that change the languages shared by every school (table languages, language files). */
+    const PLATFORM_ACTIONS = array('create', 'delete', 'edit', 'addpharses', 'editlanguage', 'migratelang', 'editcountrycode');
+
     public function __construct()
     {
         parent::__construct();
+        // A school chooses which languages it uses; adding, deleting or editing a language is the
+        // platform's job (one copy for every school).
+        if (in_array(strtolower($this->router->fetch_method()), self::PLATFORM_ACTIONS, true) && !Tenant::is_platform()) {
+            show_error('Languages are managed by the platform. A school chooses which languages it uses on this page.', 403, 'Managed by the platform');
+        }
     }
 
     public function index()

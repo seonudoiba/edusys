@@ -67,7 +67,7 @@ class ImageResize
 
                     $fileName = $this->new_file_name;
                     //upload image path
-                    $upload_image = $this->CI->customlib->getFolderPath() .'/'. $this->dir_path . basename($fileName);
+                    $upload_image = upload_fs_path($this->dir_path . basename($fileName));
                     //upload image
                     if (move_uploaded_file($this->curr_tmp_name, $upload_image)) {
                         //thumbnail creation
@@ -106,7 +106,7 @@ class ImageResize
                                     $old_image = $imgcreatefrom($upload_image);
                                     $new_image = imagecreatetruecolor($this->thumb_width, $this->thumb_height);
                                     imagecopyresized($new_image, $old_image, $dest_x, $dest_y, 0, 0, $new_width, $new_height, $original_width, $original_height);
-                                    $imgt($new_image, $this->CI->customlib->getFolderPath() .'/'. $this->thumb_path . $thumb_name);
+                                    $imgt($new_image, upload_fs_path($this->thumb_path . $thumb_name));
                                 }
 
                             }
@@ -155,8 +155,8 @@ class ImageResize
         $this->new_file_name = $unique_name . $filename;
         $thumb_name = $unique_name . $this->thumb_marker . $filename;
 
-        if (copy($image, $this->dir_path . '/' . $this->new_file_name, stream_context_create($contextOptions))) {
-            $this->videoThumbnail($this->dir_path . '/' . $this->new_file_name, $this->CI->customlib->getFolderPath() . $this->thumb_path . '/' . $thumb_name);
+        if (copy($image, upload_fs_path($this->dir_path . '/' . $this->new_file_name), stream_context_create($contextOptions))) {
+            $this->videoThumbnail(upload_fs_path($this->dir_path . '/' . $this->new_file_name), upload_fs_path($this->thumb_path . '/' . $thumb_name));
             return json_encode(array('vid_title' => $title, 'store_name' => $this->new_file_name, 'file_type' => 'video', 'file_size' => 0, 'thumb_name' => $thumb_name, 'thumb_path' => $this->thumb_path, 'dir_path' => $this->dir_path));
         }
         return false;

@@ -164,8 +164,8 @@ class Video_tutorial extends Admin_Controller
             //================
             $img_array = array();
 
-            $dir_path               = "./uploads/video_tutorial/youtube_video/";
-            $thumb_path             = "./uploads/video_tutorial/youtube_video/thumb/";
+            $dir_path               = upload_root() . "video_tutorial/youtube_video/";
+            $thumb_path             = upload_root() . "video_tutorial/youtube_video/thumb/";
             $config['thumb_path']   = $thumb_path;
             $config['dir_path']     = $dir_path;
             $config['thumb_width']  = 300;
@@ -347,8 +347,8 @@ class Video_tutorial extends Admin_Controller
 
         if ($record) {
 
-            $destination_path = "uploads/video_tutorial/youtube_video/" . $record->img_name;
-            $thumb_path       = "uploads/video_tutorial/youtube_video/thumb/" . $record->thumb_name;
+            $destination_path = upload_fs_path("uploads/video_tutorial/youtube_video/" . $record->img_name);
+            $thumb_path       = upload_fs_path("uploads/video_tutorial/youtube_video/thumb/" . $record->thumb_name);
             $this->video_tutorial_model->remove($record_id);
             unlink($destination_path);
             unlink($thumb_path);

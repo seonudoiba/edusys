@@ -78,7 +78,7 @@ class Homework extends Student_Controller
         } else {
             $data['message'] = $this->input->post('message');
 
-            $img_name = $this->media_storage->fileupload("file", "./uploads/homework/assignment/");
+            $img_name = $this->media_storage->fileupload("file", upload_root() . "homework/assignment/");
             if ($img_name != '') {
                 $data['docs'] = $img_name;
             }
@@ -161,7 +161,7 @@ class Homework extends Student_Controller
     public function download($id)
     {
         $homework = $this->homework_model->getRecord($id);
-        $this->media_storage->filedownload($homework['document'], "./uploads/homework");
+        $this->media_storage->filedownload($homework['document'], upload_root() . "homework");
     }
 
     public function assigmnetDownload($id)
@@ -169,7 +169,7 @@ class Homework extends Student_Controller
         $userdata     = $this->customlib->getLoggedInUserData();
         $student_id   = $userdata["student_id"];
         $homeworkdocs = $this->homework_model->get_homeworkDocByIdStdid($id, $student_id);
-        $this->media_storage->filedownload($homeworkdocs[0]['docs'], "./uploads/homework/assignment");
+        $this->media_storage->filedownload($homeworkdocs[0]['docs'], upload_root() . "homework/assignment");
     }
 
     public function handle_upload($str, $is_required)
@@ -287,7 +287,7 @@ class Homework extends Student_Controller
 
         } else {
 
-            $img_name = $this->media_storage->fileupload("file", "./uploads/homework/daily_assignment/");
+            $img_name = $this->media_storage->fileupload("file", upload_root() . "homework/daily_assignment/");
 
             $data = array(
                 'title'                    => $this->input->post('title'),
@@ -351,7 +351,7 @@ class Homework extends Student_Controller
             $assignment_list = $this->homework_model->getsingledailyassignment($this->input->post('assigment_id'));
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/homework/daily_assignment/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "homework/daily_assignment/");
             } else {
                 $img_name = $assignment_list['attachment'];
             }
@@ -387,6 +387,6 @@ class Homework extends Student_Controller
     public function dailyassigmnetdownload($id)
     {
         $dailyassigmnetlist = $this->homework_model->getsingledailyassignment($id);
-        $this->media_storage->filedownload($dailyassigmnetlist['attachment'], "./uploads/homework/daily_assignment");
+        $this->media_storage->filedownload($dailyassigmnetlist['attachment'], upload_root() . "homework/daily_assignment");
     }
 }

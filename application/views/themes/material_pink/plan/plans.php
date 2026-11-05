@@ -36,7 +36,7 @@
                             <?php } ?>
 
                             <li class="grey">
-                                <a href="<?php echo base_url(); ?>subscription/add?plan_id=<?php echo $value['plan_id']; ?>" class="button">Buy Now</a>
+                                <a href="<?php echo base_url(); ?>subscription/add?plan_id=<?php echo $value['plan_id']; ?>" class="button"><?php echo ($value['oprice'] > 0 ? $value['oprice'] : $value['price']) > 0 ? 'Register your school' : 'Start free trial'; ?></a>
                             </li>
                         </ul>
                     </div>

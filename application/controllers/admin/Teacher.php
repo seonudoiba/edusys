@@ -229,7 +229,7 @@ class Teacher extends Admin_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $insert_id . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/teacher_images/" . $img_name);
+                move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "teacher_images/" . $img_name);
                 $data_img = array('id' => $insert_id, 'image' => 'uploads/teacher_images/' . $img_name);
                 $this->teacher_model->add($data_img);
             }
@@ -319,7 +319,7 @@ class Teacher extends Admin_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $id . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/teacher_images/" . $img_name);
+                move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "teacher_images/" . $img_name);
                 $data_img = array('id' => $id, 'image' => 'uploads/teacher_images/' . $img_name);
                 $this->teacher_model->add($data_img);
             }

@@ -40,7 +40,7 @@ if (!empty($image)) {
                if ($sch_setting->staff_barcode) { ?>
                 <li class="list-group-item listnoback">
                     <b><?php echo $this->lang->line('barcode'); ?></b>
-                    <?php if (file_exists("./uploads/staff_id_card/barcodes/" . $memberList->employee_id . ".png")) { ?>
+                    <?php if (file_exists(upload_root() . "staff_id_card/barcodes/" . $memberList->employee_id . ".png")) { ?>
                         <a class="pull-right text-aqua">
                             <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/' . $memberList->employee_id . '.png'); ?>" width="auto" height="auto" /></a>
                     <?php } ?>
@@ -49,7 +49,7 @@ if (!empty($image)) {
               if ($sch_setting->staff_barcode) { ?>
                 <li class="list-group-item listnoback">
                     <b><?php echo $this->lang->line('qrcode'); ?></b>
-                    <?php if (file_exists("./uploads/staff_id_card/qrcode/" . $memberList->employee_id . ".png")) { ?>
+                    <?php if (file_exists(upload_root() . "staff_id_card/qrcode/" . $memberList->employee_id . ".png")) { ?>
                         <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/' . $memberList->employee_id . '.png'); ?>" target="_blank">
                             <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/' . $memberList->employee_id . '.png'); ?>" width="auto" height="auto" class="h-50" /></a>
                     <?php } ?>

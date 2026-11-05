@@ -60,7 +60,7 @@ class Item extends Admin_Controller
     public function download($file)
     {
         $this->load->helper('download');
-        $filepath = "./uploads/inventory_items/" . $this->uri->segment(6);
+        $filepath = upload_root() . "inventory_items/" . $this->uri->segment(6);
         $data     = file_get_contents($filepath);
         $name     = $this->uri->segment();
         force_download($name, $data);
@@ -162,7 +162,7 @@ class Item extends Admin_Controller
             if (isset($_FILES["item_photo"]) && !empty($_FILES['item_photo']['name'])) {
                 $fileInfo = pathinfo($_FILES["item_photo"]["name"]);
                 $img_name = $id . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["item_photo"]["tmp_name"], "./uploads/inventory_items/" . $img_name);
+                move_uploaded_file($_FILES["item_photo"]["tmp_name"], upload_root() . "inventory_items/" . $img_name);
                 $data_img = array('id' => $id, 'item_photo' => 'uploads/inventory_items/' . $img_name);
                 $this->item_model->add($data_img);
             }

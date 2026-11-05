@@ -202,6 +202,12 @@ if (!empty($image)) {
                     </div>
                 </nav>
             </header>
+            <?php if ($this->session->userdata('impersonated_by')) { ?>
+                <div style="position:fixed;bottom:0;left:0;right:0;z-index:2000;background:#f39c12;color:#fff;text-align:center;padding:6px 10px;font-size:13px">
+                    <i class="fa fa-life-ring"></i> Support session: you opened this school's panel from the platform (<?php echo html_escape($this->session->userdata('impersonated_by')); ?>).
+                    <a href="<?php echo site_url('site/logout'); ?>" style="color:#fff;text-decoration:underline;margin-left:8px">End session</a>
+                </div>
+            <?php } ?>
 
             <?php $this->load->view('layout/sidebar');?>
 <script>

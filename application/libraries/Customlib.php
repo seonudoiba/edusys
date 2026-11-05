@@ -2049,12 +2049,12 @@ class Customlib
         $this->CI->zend->load('Zend/Barcode');
         //generate barcode
         $imageResource = Zend_Barcode::factory('code128', 'image', array('text' => $code, 'barHeight' => 20), array())->draw();
-        imagepng($imageResource, 'uploads/student_id_card/barcodes/' . $code . '.png');
+        imagepng($imageResource, upload_fs_path('uploads/student_id_card/barcodes/' . $code . '.png'));
         $barcode = 'uploads/student_id_card/barcodes/' . $code . '.png';
 
         //=============qrcode=================
         $this->CI->load->library('QR_Code');
-        $qrcode = $this->CI->qr_code->generate('uploads/student_id_card/qrcode/', $code);
+        $qrcode = $this->CI->qr_code->generate(upload_fs_path('uploads/student_id_card/qrcode/'), $code);
 
         if ($default_return_code == "barcode") {
             return $barcode;
@@ -2075,11 +2075,11 @@ class Customlib
         $this->CI->zend->load('Zend/Barcode');
         //generate barcode
         $imageResource = Zend_Barcode::factory('code128', 'image', array('text' => $code, 'barHeight' => 20), array())->draw();
-        imagepng($imageResource, 'uploads/staff_id_card/barcodes/' . $code . '.png');
+        imagepng($imageResource, upload_fs_path('uploads/staff_id_card/barcodes/' . $code . '.png'));
         $barcode = 'uploads/staff_id_card/barcodes/' . $code . '.png';
         //=============qrcode=================
         $this->CI->load->library('QR_Code');
-        $qrcode = $this->CI->qr_code->generate('uploads/staff_id_card/qrcode/', $code);
+        $qrcode = $this->CI->qr_code->generate(upload_fs_path('uploads/staff_id_card/qrcode/'), $code);
 
         if ($default_return_code == "barcode") {
             return $barcode;

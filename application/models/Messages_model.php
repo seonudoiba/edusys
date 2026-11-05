@@ -252,7 +252,7 @@ class Messages_model extends MY_Model
                             echo "Error: " . $_FILES["files"]["error"][$i] . "<br>";
                         } else {
 
-                            $uploaddir = './uploads/communicate/email_template_images/';
+                            $uploaddir = upload_root() . 'communicate/email_template_images/';
                             if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                                 die("Error creating folder $uploaddir");
                             }
@@ -302,7 +302,7 @@ class Messages_model extends MY_Model
             foreach ($attachment_list as $key => $attachment_list_value) {
                 $this->db->where('id', $attachment_list_value['id']);
                 $this->db->delete('email_template_attachment');
-                unlink(realpath('./uploads/communicate/email_template_images/' . $attachment_list_value['attachment']));
+                unlink(realpath(upload_root() . 'communicate/email_template_images/' . $attachment_list_value['attachment']));
             }
         }
 

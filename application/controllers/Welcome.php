@@ -78,6 +78,10 @@ class Welcome extends Front_Controller
     public function page($slug)
     {
         $page = $this->cms_page_model->getBySlug(urldecode($slug));
+        // A page hidden in Front CMS > Pages is not found (the home and 404 pages are always on).
+        if ($page && empty($page['is_homepage']) && $page['slug'] !== '404-page' && $page['is_active'] !== 'yes') {
+            $page = false;
+        }
         if (!$page) {
             $this->data['page'] = $this->cms_page_model->getBySlug('404-page');
         } else {
@@ -85,7 +89,7 @@ class Welcome extends Front_Controller
         }
 
         if ($page['is_homepage']) {
-            redirect('frontend');
+            redirect(base_url(), 'location', 301); // the home page lives at the site root
         }
         $this->data['active_menu'] = $slug;
         $this->data['page_side_bar'] = $this->data['page']['sidebar'];
@@ -539,29 +543,29 @@ class Welcome extends Front_Controller
                     $data['reference_no'] = $reference_no;
 
                     if (isset($_FILES["document"]) && !empty($_FILES['document']['name'])) {
-                        $img_name = $this->media_storage->fileupload("document", "./uploads/student_documents/online_admission_doc/");
+                        $img_name = $this->media_storage->fileupload("document", upload_root() . "student_documents/online_admission_doc/");
 
                         $data['document'] = $img_name;
                     }
 
                     if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                        $img_name = $this->media_storage->fileupload("file", "./uploads/student_images/online_admission_image/");
+                        $img_name = $this->media_storage->fileupload("file", upload_root() . "student_images/online_admission_image/");
                         $data['image'] = 'uploads/student_images/online_admission_image/' . $img_name;
                     }
 
                     if (isset($_FILES["father_pic"]) && !empty($_FILES['father_pic']['name'])) {
-                        $img_name = $this->media_storage->fileupload("father_pic", "./uploads/student_images/online_admission_image/");
+                        $img_name = $this->media_storage->fileupload("father_pic", upload_root() . "student_images/online_admission_image/");
                         $data['father_pic'] = 'uploads/student_images/online_admission_image/' . $img_name;
                     }
 
                     if (isset($_FILES["mother_pic"]) && !empty($_FILES['mother_pic']['name'])) {
-                        $img_name = $this->media_storage->fileupload("mother_pic", "./uploads/student_images/online_admission_image/");
+                        $img_name = $this->media_storage->fileupload("mother_pic", upload_root() . "student_images/online_admission_image/");
                         $data['mother_pic'] = 'uploads/student_images/online_admission_image/' . $img_name;
                     }
 
                     if (isset($_FILES["guardian_pic"]) && !empty($_FILES['guardian_pic']['name'])) {
 
-                        $img_name = $this->media_storage->fileupload("guardian_pic", "./uploads/student_images/online_admission_image/");
+                        $img_name = $this->media_storage->fileupload("guardian_pic", upload_root() . "student_images/online_admission_image/");
                         $data['guardian_pic'] = 'uploads/student_images/online_admission_image/' . $img_name;
                     }
                     $data['hostel_room_id'] = null;
@@ -1101,24 +1105,24 @@ class Welcome extends Front_Controller
                             $data['rte'] = $this->input->post('rte');
                         }
                         if (isset($_FILES["document"]) && !empty($_FILES['document']['name'])) {
-                            $img_name = $this->media_storage->fileupload("document", "./uploads/student_documents/online_admission_doc/");
+                            $img_name = $this->media_storage->fileupload("document", upload_root() . "student_documents/online_admission_doc/");
                             $data['document'] = $img_name;
                         }
                         if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                            $img_name = $this->media_storage->fileupload("file", "./uploads/student_images/online_admission_image/");
+                            $img_name = $this->media_storage->fileupload("file", upload_root() . "student_images/online_admission_image/");
                             $data['image'] = 'uploads/student_images/online_admission_image/' . $img_name;
                         }
                         if (isset($_FILES["father_pic"]) && !empty($_FILES['father_pic']['name'])) {
-                            $img_name = $this->media_storage->fileupload("father_pic", "./uploads/student_images/online_admission_image/");
+                            $img_name = $this->media_storage->fileupload("father_pic", upload_root() . "student_images/online_admission_image/");
                             $data['father_pic'] = 'uploads/student_images/online_admission_image/' . $img_name;
                         }
                         if (isset($_FILES["mother_pic"]) && !empty($_FILES['mother_pic']['name'])) {
-                            $img_name = $this->media_storage->fileupload("mother_pic", "./uploads/student_images/online_admission_image/");
+                            $img_name = $this->media_storage->fileupload("mother_pic", upload_root() . "student_images/online_admission_image/");
                             $data['mother_pic'] = 'uploads/student_images/online_admission_image/' . $img_name;
                         }
                         if (isset($_FILES["guardian_pic"]) && !empty($_FILES['guardian_pic']['name'])) {
 
-                            $img_name = $this->media_storage->fileupload("guardian_pic", "./uploads/student_images/online_admission_image/");
+                            $img_name = $this->media_storage->fileupload("guardian_pic", upload_root() . "student_images/online_admission_image/");
                             $data['guardian_pic'] = 'uploads/student_images/online_admission_image/' . $img_name;
                         }
 
@@ -1371,7 +1375,7 @@ class Welcome extends Front_Controller
     public function download($id)
     {
         $settinglist = $this->setting_model->get($id);
-        $this->media_storage->filedownload($settinglist['online_admission_application_form'], "./uploads/admission_form");
+        $this->media_storage->filedownload($settinglist['online_admission_application_form'], upload_root() . "admission_form");
     }
 
     public function loadCaptcha()

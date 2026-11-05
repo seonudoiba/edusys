@@ -32,7 +32,7 @@ class Dispatch extends Admin_Controller
             $this->load->view('layout/footer');
         } else {
 
-            $img_name = $this->media_storage->fileupload("file", "./uploads/front_office/dispatch_receive/");
+            $img_name = $this->media_storage->fileupload("file", upload_root() . "front_office/dispatch_receive/");
 
             $dispatch = array(
                 'reference_no' => $this->input->post('ref_no'),
@@ -84,7 +84,7 @@ class Dispatch extends Admin_Controller
 
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/front_office/dispatch_receive/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "front_office/dispatch_receive/");
             } else {
                 $img_name = $data['Dispatch_data']['image'];
             }
@@ -107,7 +107,7 @@ class Dispatch extends Admin_Controller
     {
         $dispatch_list = $this->dispatch_model->dis_rec_data($id, 'dispatch');     
 
-        $this->media_storage->filedownload($dispatch_list['image'], "./uploads/front_office/dispatch_receive");
+        $this->media_storage->filedownload($dispatch_list['image'], upload_root() . "front_office/dispatch_receive");
         
     }
 

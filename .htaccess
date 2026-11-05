@@ -12,6 +12,11 @@
     RewriteRule ^adminer\.php$ - [F,L]
 
     # Allow direct access to the remaining files and directories (backend/ and uploads/ assets)
+    # Uploads are stored per school (uploads/s<id>/, defaults in uploads/_shared/). Those folders
+    # are never served directly; every /uploads/... request goes to file.php, which serves the
+    # copy of the school of the host (application/controllers/Files.php).
+    RewriteRule ^uploads/(s[0-9]+|_shared)(/|$) - [F,L]
+    RewriteRule ^uploads/ file.php [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
 

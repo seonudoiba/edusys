@@ -3,6 +3,8 @@
 This is the go-live checklist for the first production deployment. Background and design:
 `SINGLE_DB_TENANCY_PLAN.md`. Example files: `deploy/` (never served by the web server).
 
+Local C:\Windows\System32\drivers\etc\hosts 
+
 ## 1. What goes on the server
 
 Deploy the code only. **Never upload these** (they're local material, and several hold real
@@ -22,6 +24,8 @@ The root `.htaccess` also refuses hidden files, internal folders (`application`,
 Treat that as a second line of defence, not a reason to upload them.
 
 Writable by the web server user: `uploads/`, `application/logs/`, `backend/captcha_images/`, `temp/`.
+Each school's files are in `uploads/s<id>/` (created automatically); `uploads/_shared/` holds the default
+images and comes with the code. Every `/uploads/` URL is served by `file.php`, so keep the root `.htaccess`.
 Everything else is read-only.
 
 ## 2. Server
@@ -43,7 +47,7 @@ Everything else is read-only.
    limited to this database, separate backup account). Don't use `root`.
 2. From the project directory, with the environment of step 5 loaded:
    ```
-   php index.php migrate            # creates all tables (version 243)
+   php index.php migrate            # creates all tables (version 258)
    php index.php seed run platform  # plans, languages, system roles
    ```
    The registry rows in `seeds/platform/001_school.php` and `004_subscription.php` hold
@@ -79,7 +83,7 @@ Set the variables in the Apache virtual host (`SetEnv`, see `deploy/apache-vhost
 | `EDUSYS_DB_HOST` / `_PORT` / `_NAME` / `_USER` / `_PASSWORD` | the application account |
 | `EDUSYS_TENANCY_RAW_SQL` | `throw` (refuse unscoped hand-written SQL). Use `log` only while investigating a new page |
 | `EDUSYS_PAYSTACK_SECRET_KEY` | platform Paystack secret key (no key = online payment refuses to start) |
-| `EDUSYS_SMTP_HOST` / `_USER` / `_PASS` | outgoing mail. Host and user default to `smtp.mailgun.org` / `postmaster@edusys.ng`; the password has no default |
+| `EDUSYS_SMTP_HOST` / `_PORT` / `_USER` / `_PASS` | outgoing mail. Host, port and user default to `smtp.mailgun.org` / `587` / `postmaster@edusys.ng`; the password has no default (empty = no SMTP login, e.g. a local mail catcher) |
 
 Without `EDUSYS_BASE_DOMAIN`/`EDUSYS_CENTRAL_HOST`, every web request fails closed with 503.
 No credentials are stored in the code. An unset `EDUSYS_DB_PASSWORD` means an empty password,
@@ -99,13 +103,14 @@ Until then the platform admin sees the link after approving and can pass it on.
 ## 7. Scheduled jobs and backups
 
 Install `deploy/crontab.example` (edited): `cron_all run student_attendance` every 5 minutes,
-`cron_all run` daily, and the nightly `mysqldump` of the shared database. Backups are a platform
+`cron_all run` daily, the nightly `mysqldump` of the shared database, and a copy of `uploads/`
+(every school's files). Backups are a platform
 task: schools can no longer back up or restore from their admin panel. Test a restore on another
 server before go-live.
 
 ## 8. Before opening to schools
 
-- [ ] `php index.php migrate status` shows 243 of 243.
+- [ ] `php index.php migrate status` shows 258 of 258.
 - [ ] `https://edusys.ng/` loads the platform; `https://unknown.edusys.ng/` gives 404.
 - [ ] `https://edusys.ng/.env`, `/.git/HEAD`, `/application/logs/`, `/adminer.php` give 403 (or 404).
 - [ ] Register a test school at `/plans`, pay with a Paystack **test** key, approve it in

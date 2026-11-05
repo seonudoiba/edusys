@@ -175,6 +175,79 @@ class Site extends Public_Controller
         }
     }
 
+    /**
+     * The platform opening this school's admin panel (Schools > a school > Log in as school
+     * admin). The one-time token was created on the platform host for this school; it is checked
+     * here (hash, school, unused, not expired), used up, and the session is started as that staff
+     * member, as a normal login would. Both audit trails record it.
+     */
+    public function impersonate($token = '')
+    {
+        $token = (string) $token;
+        $row = null;
+        if (preg_match('/^[0-9a-f]{64}$/', $token)) {
+            $row = $this->db->where('token_hash', hash('sha256', $token))->get('platform_impersonation_tokens')->row_array();
+        }
+        if (!$row || (int) $row['school_ref'] !== Tenant::id() || $row['used_at'] !== null || strtotime($row['expires_at']) < time()) {
+            show_error('This support link is not valid any more. Open the school again from the platform.', 403, 'Link expired');
+        }
+        // Used up before anything else, so a second request with the same token fails.
+        $this->db->where(array('id' => (int) $row['id'], 'used_at' => null))->update('platform_impersonation_tokens', array('used_at' => date('Y-m-d H:i:s')));
+        if ($this->db->affected_rows() !== 1) {
+            show_error('This support link was already used.', 403, 'Link expired');
+        }
+        $staff = $this->db->where(array('id' => (int) $row['staff_id']))->get('staff')->row();
+        $result = $staff ? $this->staff_model->getByEmail($staff->email) : null;
+        if (!$result || (int) $result->is_active !== 1) {
+            show_error('The school admin account is not active.', 403, 'Not available');
+        }
+        $this->load->model("staffroles_model");
+        $roles = $this->staffroles_model->getStaffRoles($result->id);
+        $result->roles = array($roles[0]->name => $roles[0]->role_id);
+        $this->start_admin_session($result);
+        $this->session->set_userdata('impersonated_by', $row['created_by']);
+        $this->load->library('Platform_audit');
+        $this->platform_audit->record_in_school(Tenant::id(), 'support.login', 'Platform support (' . $row['created_by'] . ') opened the admin panel as ' . $result->email);
+        redirect('admin/admin/dashboard');
+    }
+
+    /** The admin session of a staff record (the same values login() sets). */
+    private function start_admin_session($result)
+    {
+        $setting_result = $this->setting_model->get();
+        if (!empty($result->language_id)) {
+            $lang_array = array('lang_id' => $result->language_id, 'language' => $result->language);
+            $is_rtl = $result->is_rtl == 1 ? 'enabled' : 'disabled';
+        } else {
+            $lang_array = array('lang_id' => $setting_result[0]['lang_id'], 'language' => $setting_result[0]['language']);
+            $is_rtl = $setting_result[0]['is_rtl'] == 1 ? 'enabled' : 'disabled';
+        }
+        $this->session->set_userdata('admin', array(
+            'id' => $result->id,
+            'username' => trim($result->name . ' ' . $result->surname),
+            'email' => $result->email,
+            'image' => $result->image,
+            'roles' => $result->roles,
+            'date_format' => $setting_result[0]['date_format'],
+            'currency' => ($result->currency == 0) ? $setting_result[0]['currency'] : $result->currency,
+            'currency_base_price' => ($result->base_price == 0) ? $setting_result[0]['base_price'] : $result->base_price,
+            'currency_format' => $setting_result[0]['currency_format'],
+            'currency_symbol' => ($result->symbol == "0") ? $setting_result[0]['currency_symbol'] : $result->symbol,
+            'currency_place' => $setting_result[0]['currency_place'],
+            'start_month' => $setting_result[0]['start_month'],
+            'start_week' => date("w", strtotime($setting_result[0]['start_week'])),
+            'school_name' => $setting_result[0]['name'],
+            'timezone' => $setting_result[0]['timezone'],
+            'sch_name' => $setting_result[0]['name'],
+            'language' => $lang_array,
+            'is_rtl' => $is_rtl,
+            'theme' => $setting_result[0]['theme'],
+            'gender' => $result->gender,
+            'db_array' => array('base_url' => $setting_result[0]['base_url'], 'folder_path' => $setting_result[0]['folder_path'], 'db_group' => 'default'),
+            'superadmin_restriction' => $setting_result[0]['superadmin_restriction'],
+        ));
+    }
+
     public function logout()
     {
         $admin_session   = $this->session->userdata('admin');

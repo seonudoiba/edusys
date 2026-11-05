@@ -142,7 +142,7 @@ class Onlineexam extends Student_Controller
                                 $file_name        = $_FILES["attachment" . $row_value]["name"];
                                 $fileInfo         = pathinfo($_FILES["attachment" . $row_value]["name"]);
                                 $upload_file_name = time() . uniqid(rand()) . '.' . $fileInfo['extension'];
-                                move_uploaded_file($_FILES["attachment" . $row_value]["tmp_name"], "./uploads/onlinexam_images/" . $upload_file_name);
+                                move_uploaded_file($_FILES["attachment" . $row_value]["tmp_name"], upload_root() . "onlinexam_images/" . $upload_file_name);
                             }
                             $inst_array['attachment_name']        = $file_name;
                             $inst_array['attachment_upload_name'] = $upload_file_name;
@@ -201,7 +201,7 @@ class Onlineexam extends Student_Controller
     public function downloadattachment($doc)
     {
         $this->load->helper('download');
-        $filepath = "./uploads/onlinexam_images/" . $doc;
+        $filepath = upload_root() . "onlinexam_images/" . $doc;
         $data     = file_get_contents($filepath);
         $name     = $doc;
         force_download($name, $data);

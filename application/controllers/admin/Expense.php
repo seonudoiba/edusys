@@ -34,7 +34,7 @@ class Expense extends Admin_Controller
         if ($this->form_validation->run() == false) {
 
         } else {
-            $img_name = $this->media_storage->fileupload("documents", "./uploads/school_expense/");
+            $img_name = $this->media_storage->fileupload("documents", upload_root() . "school_expense/");
 
             $data = array(
                 'exp_head_id' => $this->input->post('exp_head_id'),
@@ -63,7 +63,7 @@ class Expense extends Admin_Controller
     public function download($id)
     {
         $result = $this->expense_model->get($id);
-        $this->media_storage->filedownload($result['documents'], "./uploads/school_expense");
+        $this->media_storage->filedownload($result['documents'], upload_root() . "school_expense");
     }
 
     public function handle_upload()
@@ -207,7 +207,7 @@ class Expense extends Admin_Controller
 
             if (isset($_FILES["documents"]) && $_FILES['documents']['name'] != '' && (!empty($_FILES['documents']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("documents", "./uploads/school_expense/");
+                $img_name = $this->media_storage->fileupload("documents", upload_root() . "school_expense/");
             } else {
                 $img_name = $expense['documents'];
             }

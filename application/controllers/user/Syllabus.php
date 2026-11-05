@@ -76,13 +76,13 @@ class Syllabus extends Student_Controller
     public function download($id)
     {      
         $result=$this->lessonplan_model->getSyllabusById($id); 
-        $attachment_img_name = $this->media_storage->filedownload($result->attachment,"./uploads/syllabus_attachment/");
+        $attachment_img_name = $this->media_storage->filedownload($result->attachment,upload_root() . "syllabus_attachment/");
     }
     
     public function lacture_video_download($id)
     {      
         $result=$this->lessonplan_model->getSyllabusById($id); 
-        $attachment_img_name = $this->media_storage->filedownload($result->lacture_video,"./uploads/syllabus_attachment/lacture_video/");
+        $attachment_img_name = $this->media_storage->filedownload($result->lacture_video,upload_root() . "syllabus_attachment/lacture_video/");
     }
 
     public function status()

@@ -102,7 +102,7 @@ class Apply_leave extends Student_Controller
                         $img_name = time() . "-" . uniqid(rand()) . "!" . $_FILES["files"]["name"][0];
                         
                         
-                        move_uploaded_file($_FILES["files"]["tmp_name"][0], "./uploads/student_leavedocuments/" . $img_name);
+                        move_uploaded_file($_FILES["files"]["tmp_name"][0], upload_root() . "student_leavedocuments/" . $img_name);
                         
                         $data = array('id' => $leave_id, 'docs' => $img_name);
                         $this->apply_leave_model->add($data);
@@ -127,7 +127,7 @@ class Apply_leave extends Student_Controller
     public function download($id)
     {
         $leavelist = $this->apply_leave_model->get($id, null, null);
-        $this->media_storage->filedownload($leavelist['docs'], "./uploads/student_leavedocuments");
+        $this->media_storage->filedownload($leavelist['docs'], upload_root() . "student_leavedocuments");
     }
 
     public function handle_upload($str, $var1)

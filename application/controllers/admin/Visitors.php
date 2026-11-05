@@ -65,7 +65,7 @@ class Visitors extends Admin_Controller
     public function download($id)
     {
         $result = $this->visitors_model->visitors_list($id);
-        $this->media_storage->filedownload($result['image'], "./uploads/front_office/visitors");
+        $this->media_storage->filedownload($result['image'], upload_root() . "front_office/visitors");
     }
 
     public function check_default($post_string)
@@ -161,7 +161,7 @@ class Visitors extends Admin_Controller
                 $student_session_id = $this->input->post('student_session_id');
             }
 
-            $img_name = $this->media_storage->fileupload("file", "./uploads/front_office/visitors/");
+            $img_name = $this->media_storage->fileupload("file", upload_root() . "front_office/visitors/");
 
             $visitors = array(
                 'purpose'            => $this->input->post('purpose'),
@@ -266,7 +266,7 @@ class Visitors extends Admin_Controller
 
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/front_office/visitors/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "front_office/visitors/");
             } else {
                 $img_name = $visitors_list['image'];
             }

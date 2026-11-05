@@ -19,6 +19,7 @@ class Page extends Admin_Controller
         $this->load->library('slug', $config);
         $this->load->config('ci-blog');
         $this->load->library('imageResize');
+        $this->load->library('Form_token');
     }
 
     public function index()
@@ -70,6 +71,7 @@ class Page extends Admin_Controller
                 'type'             => 'page',
                 'sidebar'          => $this->input->post('sidebar'),
                 'meta_description' => $this->input->post('meta_description'),
+                'is_active'        => 'yes', // a new page is live on the website
             );
             $data['slug']     = $this->slug->create_uri($data);
             $data['url']      = $this->config->item('ci_front_page_url') . $data['slug'];
@@ -140,6 +142,30 @@ class Page extends Admin_Controller
             $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('update_message') . '</div>');
             redirect('admin/front/page');
         }
+    }
+
+    /**
+     * Shows a page on the website or hides it (a hidden page gives the 404 page and leaves the
+     * menus). The home page and the 404 page are always on.
+     */
+    public function toggle($id = null)
+    {
+        if (!$this->rbac->hasPrivilege('pages', 'can_edit')) {
+            access_denied();
+        }
+        $this->form_token->require_post();
+        $page = ctype_digit((string) $id) ? $this->db->where('id', (int) $id)->get('front_cms_pages')->row_array() : null;
+        if (!$page) {
+            show_404();
+        }
+        if (!empty($page['is_homepage']) || $page['slug'] === '404-page') {
+            $this->session->set_flashdata('msg', '<div class="alert alert-warning text-left">The home page and the 404 page are always on.</div>');
+            redirect('admin/front/page');
+        }
+        $on = $page['is_active'] !== 'yes';
+        $this->db->where('id', (int) $page['id'])->update('front_cms_pages', array('is_active' => $on ? 'yes' : 'no'));
+        $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . html_escape($page['title']) . ($on ? ' is now on the website.' : ' is now hidden from the website.') . '</div>');
+        redirect('admin/front/page');
     }
 
     public function delete($slug)

@@ -688,7 +688,7 @@ class Staff_model extends MY_Model
         }
       
         if($file_name != ""){
-            $this->media_storage->filedelete($file_name,  "./uploads/staff_documents/" . $id);
+            $this->media_storage->filedelete($file_name,  upload_root() . "staff_documents/" . $id);
         }
      
         $this->db->where('id', $id)->update("staff", $data);

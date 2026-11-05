@@ -104,7 +104,7 @@ class Leaverequest extends Admin_Controller
 
     public function remove($id, $staff_id)
     {
-        $uploaddir = './uploads/staff_documents/' . $staff_id . '/';
+        $uploaddir = upload_root() . 'staff_documents/' . $staff_id . '/';
         $row       = $this->leaverequest_model->get_staff_leave($id);
         if ($row['document_file'] != '') {
             $this->media_storage->filedelete($row['document_file'], $uploaddir);
@@ -179,7 +179,7 @@ class Leaverequest extends Admin_Controller
             if ($total_remain >= $leave_days) {
 
                 if (isset($_FILES["userfile"]) && !empty($_FILES['userfile']['name'])) {
-                    $uploaddir = './uploads/staff_documents/' . $staff_id . '/';
+                    $uploaddir = upload_root() . 'staff_documents/' . $staff_id . '/';
                     if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                         die("Error creating folder $uploaddir");
                     }
@@ -263,7 +263,7 @@ class Leaverequest extends Admin_Controller
             if ($total_remain >= $leave_days) {
 
                 if (isset($_FILES["userfile"]) && !empty($_FILES['userfile']['name'])) {
-                    $uploaddir = './uploads/staff_documents/' . $staff_id . '/';
+                    $uploaddir = upload_root() . 'staff_documents/' . $staff_id . '/';
                     if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                         die("Error creating folder $uploaddir");
                     }

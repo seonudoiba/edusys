@@ -54,7 +54,7 @@ class Print_headerfooter extends Admin_Controller
 
                 if ($_POST['type'] == 'student_receipt') {
 
-                    $img_name = $this->media_storage->fileupload("header_image", "./uploads/print_headerfooter/student_receipt/");
+                    $img_name = $this->media_storage->fileupload("header_image", upload_root() . "print_headerfooter/student_receipt/");
 
                     $row = $this->setting_model->unlink_receiptheader();
 
@@ -63,7 +63,7 @@ class Print_headerfooter extends Admin_Controller
                     }
                 } else if ($_POST['type'] == 'online_admission_receipt') {
 
-                    $img_name = $this->media_storage->fileupload("header_image", "./uploads/print_headerfooter/online_admission_receipt/");
+                    $img_name = $this->media_storage->fileupload("header_image", upload_root() . "print_headerfooter/online_admission_receipt/");
 
                     $row = $this->setting_model->unlink_onlinereceiptheader();
                   
@@ -72,7 +72,7 @@ class Print_headerfooter extends Admin_Controller
                     }
                 } else if ($_POST['type'] == 'online_exam') {
 
-                    $img_name = $this->media_storage->fileupload("header_image", "./uploads/print_headerfooter/online_exam/");
+                    $img_name = $this->media_storage->fileupload("header_image", upload_root() . "print_headerfooter/online_exam/");
 
                     $row = $this->setting_model->get_onlineexamheader();
 
@@ -81,7 +81,7 @@ class Print_headerfooter extends Admin_Controller
                     }
                 } else {
 
-                    $img_name = $this->media_storage->fileupload("header_image", "./uploads/print_headerfooter/staff_payslip/");
+                    $img_name = $this->media_storage->fileupload("header_image", upload_root() . "print_headerfooter/staff_payslip/");
 
                     $row = $this->setting_model->unlink_payslipheader();
 

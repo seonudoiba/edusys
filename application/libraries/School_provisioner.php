@@ -58,9 +58,10 @@ class School_provisioner
         $db->trans_begin();
         try {
             $db->without_tenant(function ($db) use ($school, $code) {
-                $map = $this->load_default_data($db, (int) $school['id'], !empty($school['is_platform']));
+                // The super admin first: default rows "created by" someone point at them.
+                $admin_id = $this->create_super_admin($db, $school, $code);
+                $map = $this->load_default_data($db, (int) $school['id'], !empty($school['is_platform']), $admin_id);
                 $this->fill_settings($db, $school);
-                $this->create_super_admin($db, $school, $code);
                 $db->where('id', (int) $school['id'])->update('school', array('status' => 1, 'cron_flag' => 1));
                 return $map;
             });
@@ -75,6 +76,8 @@ class School_provisioner
             throw new RuntimeException('Setting up the school failed and was rolled back: ' . $e->getMessage(), 0, $e);
         }
         $db->db_debug = $debug;
+        // The school's upload folder (uploads/s<id>/) with its subfolders and default images.
+        upload_init_school((int) $school['id']);
 
         return array(
             'school_id' => (int) $school['id'],
@@ -128,7 +131,9 @@ class School_provisioner
         if (!Tenant_resolver::is_valid_label($subdomain) || $subdomain !== strtolower($subdomain)) {
             return 'The subdomain may use lowercase letters, digits and inner hyphens (1-63 characters).';
         }
-        if (in_array($subdomain, (array) $this->CI->config->item('tenancy_reserved_subdomains'), true)) {
+        $this->CI->load->library('Platform_settings');
+        $reserved = array_merge((array) $this->CI->config->item('tenancy_reserved_subdomains'), $this->CI->platform_settings->extra_reserved_subdomains());
+        if (in_array($subdomain, $reserved, true)) {
             return "'$subdomain' is reserved.";
         }
         $db = $this->CI->db;
@@ -167,7 +172,7 @@ class School_provisioner
      *
      * @return array table => [template id => new id]
      */
-    private function load_default_data($db, $school_id, $is_platform = false)
+    private function load_default_data($db, $school_id, $is_platform = false, $admin_id = 0)
     {
         $skipped = array();
         $files = glob(APPPATH . 'seeds/default/[0-9][0-9][0-9]_*.php');
@@ -176,25 +181,59 @@ class School_provisioner
         }
         sort($files, SORT_STRING);
         $map = array();
+        $start_year = null; // first year of the school's current academic session
         foreach ($files as $file) {
             require_once $file;
             $class = 'Seed_default_' . preg_replace('/^\d{3}_/', '', basename($file, '.php'));
             $seed = new $class();
             $table = $seed->table;
             $refs = isset($seed->references) ? $seed->references : array();
+            $typed = isset($seed->typed_references) ? $seed->typed_references : array();
+            $shift = 0;
+            if (!empty($seed->shift_years) && $start_year !== null) {
+                $shift = max(0, $start_year - (int) $seed->demo_start_year);
+            }
             $map[$table] = array();
             $self_refs = array();
             $platform_only = isset($seed->platform_only) ? array_flip($seed->platform_only) : array();
+            $school_only = isset($seed->school_only) ? array_flip($seed->school_only) : array();
             foreach ($seed->rows() as $row) {
                 $assoc = array_combine($seed->columns, $row);
                 $template_id = $assoc['id'];
-                $skip = !$is_platform && isset($platform_only[$template_id]);
+                $skip = (!$is_platform && isset($platform_only[$template_id])) || ($is_platform && isset($school_only[$template_id]));
                 foreach ($refs as $col => $ref_table) {
                     $skip = $skip || ($assoc[$col] !== null && isset($skipped[$ref_table][$assoc[$col]]));
+                }
+                // A reference whose table depends on another column (e.g. a course item: lesson or quiz).
+                foreach ($typed as $col => $spec) {
+                    list($type_col, $targets) = $spec;
+                    $value = $assoc[$col];
+                    if ($value === null || $value === '' || (string) $value === '0') {
+                        continue;
+                    }
+                    $ref_table = isset($targets[$assoc[$type_col]]) ? $targets[$assoc[$type_col]] : null;
+                    if ($ref_table === null || isset($skipped[$ref_table][$value])) {
+                        $skip = true;
+                    } elseif (!isset($map[$ref_table][$value])) {
+                        throw new RuntimeException("Default data: $table.$col refers to missing $ref_table row $value.");
+                    } else {
+                        $assoc[$col] = $map[$ref_table][$value];
+                    }
                 }
                 if ($skip) {
                     $skipped[$table][$template_id] = true;
                     continue;
+                }
+                if ($shift > 0) {
+                    foreach ($seed->shift_years as $col) {
+                        $assoc[$col] = $this->shift_date($assoc[$col], $shift);
+                    }
+                }
+                if ($is_platform && isset($seed->platform_overrides[$template_id])) {
+                    $assoc = array_merge($assoc, $seed->platform_overrides[$template_id]);
+                }
+                foreach (isset($seed->owner_columns) ? $seed->owner_columns : array() as $col) {
+                    $assoc[$col] = (int) $admin_id;
                 }
                 unset($assoc['id']);
                 foreach ($refs as $col => $ref_table) {
@@ -228,8 +267,40 @@ class School_provisioner
                 }
                 $db->where('id', $map[$table][$template_id])->update($table, $update);
             }
+            if ($table === 'sessions' && isset($seed->current_template_id)) {
+                // Everything the default data sets in "the current session" goes to the academic
+                // year the school starts in (settings, class subjects, fee groups, timetable ...).
+                $start_year = $this->current_start_year((int) $seed->start_month);
+                $name = sprintf('%d-%02d', $start_year, ($start_year + 1) % 100);
+                foreach ($seed->rows() as $row) {
+                    $session = array_combine($seed->columns, $row);
+                    if ($session['session'] === $name && isset($map['sessions'][$session['id']])) {
+                        $map['sessions'][$seed->current_template_id] = $map['sessions'][$session['id']];
+                    }
+                }
+            }
         }
         return $map;
+    }
+
+    /** First calendar year of the academic year in progress (it starts in $start_month). */
+    private function current_start_year($start_month)
+    {
+        $start_month = $start_month >= 1 && $start_month <= 12 ? $start_month : 9;
+        return (int) date('n') >= $start_month ? (int) date('Y') : (int) date('Y') - 1;
+    }
+
+    /** A demo date moved forward by $years (empty and zero dates unchanged). */
+    private function shift_date($value, $years)
+    {
+        if ($value === null || $value === '' || strpos((string) $value, '0000-00-00') === 0) {
+            return $value;
+        }
+        $ts = strtotime($value . " +$years years");
+        if ($ts === false) {
+            return $value;
+        }
+        return strlen($value) > 10 ? date('Y-m-d H:i:s', $ts) : date('Y-m-d', $ts);
     }
 
     private function fill_settings($db, array $school)
@@ -247,7 +318,8 @@ class School_provisioner
 
     private function create_super_admin($db, array $school, $code)
     {
-        $settings = $db->select('lang_id')->where('school_id', (int) $school['id'])->get('sch_settings')->row();
+        // The settings row isn't loaded yet: the language comes from the default data (a shared table).
+        $settings = (object) array('lang_id' => $this->default_setting('lang_id'));
         $name = trim((string) $school['owner_name']) !== '' ? trim((string) $school['owner_name']) : 'Super Admin';
         $staff = $this->required_defaults($db, 'staff');
         $staff = array_merge($staff, array(
@@ -271,6 +343,21 @@ class School_provisioner
             'staff_id' => $staff_id,
         ));
         $this->insert_or_fail($db, 'staff_roles', $role);
+        return $staff_id;
+    }
+
+    /** A value of the default settings row (application/seeds/default/*_sch_settings.php). */
+    private function default_setting($column)
+    {
+        $files = glob(APPPATH . 'seeds/default/[0-9][0-9][0-9]_sch_settings.php');
+        if (!$files) {
+            return null;
+        }
+        require_once $files[0];
+        $seed = new Seed_default_sch_settings();
+        $rows = $seed->rows();
+        $row = $rows ? array_combine($seed->columns, $rows[0]) : array();
+        return isset($row[$column]) ? $row[$column] : null;
     }
 
     private function insert_or_fail($db, $table, array $row)

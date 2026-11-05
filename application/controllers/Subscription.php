@@ -6,6 +6,9 @@ if (!defined('BASEPATH')) {
 
 class subscription extends Front_Controller
 {
+    /** payment_method value for a manual bank transfer (receipt reviewed by the platform admin) */
+    const BANK_TRANSFER = 'bank_transfer';
+
     public function __construct()
     {
         // Platform feature: only on the central host (404 on school subdomains).
@@ -19,7 +22,7 @@ class subscription extends Front_Controller
         $this->load->library('module_lib');
         $this->load->library('Enc_lib');
         $this->load->model('studentcourse_model');
-        $this->load->model(array('subscription_model', 'plan_model', 'setting_model'));
+        $this->load->model(array('subscription_model', 'plan_model', 'setting_model', 'subscription_bank_transfer_model'));
     }
 
     public function add()
@@ -67,7 +70,7 @@ class subscription extends Front_Controller
         ]);
 
         if ($total > 0) {
-            $this->form_validation->set_rules('payment_method', $this->lang->line('payment_method'), 'trim|required|xss_clean');
+            $this->form_validation->set_rules('payment_method', $this->lang->line('payment_method'), 'trim|required|xss_clean|in_list[paystack,' . self::BANK_TRANSFER . ']');
         }
         $this->form_validation->set_rules('phone_number', $this->lang->line('phone_number'), 'trim|required|xss_clean|regex_match[/^\+?[0-9]{1,4}?[-.\s]?[0-9]+[-.\s]?[0-9]+[-.\s]?[0-9]+$/]');
         $this->form_validation->set_rules('school_name', $this->lang->line('school_name'), 'trim|required|xss_clean');
@@ -132,6 +135,9 @@ class subscription extends Front_Controller
             if ($total > 0) {
                 if ($this->input->post('payment_method') == 'paystack') {
                     $this->initialize_payment($subscription_id);
+                } elseif ($this->input->post('payment_method') == self::BANK_TRANSFER) {
+                    $token = $this->subscription_bank_transfer_model->create($subscription_id);
+                    redirect('subscription/bank_transfer/' . $token);
                 }
             } else {
                 $this->data_set($subscription_id);
@@ -181,160 +187,14 @@ class subscription extends Front_Controller
         $this->initialize_payment($subscription_id, true);
     }
 
-    public function data_set($subscription_id, $edit = false)
+    /**
+     * Activates a subscription after payment (or for a free plan) and shows the result.
+     * Private: it must only run after the payment has been verified.
+     */
+    private function data_set($subscription_id, $edit = false)
     {
-        $update_data = array(
-            'payment_status' => 1,
-            'status' => 1,
-        );
-        $this->db->where('id', $subscription_id);
-        $this->db->update('subscription', $update_data);
-
-        $subscription_data = $this->subscription_model->get($subscription_id);
-
-        if (!$edit) {
-            $school_data = array(
-                'school_name' => $subscription_data['school_name'],
-                'email_address' => $subscription_data['email_address'],
-                'phone_number' => $subscription_data['phone_number'],
-                'payment_status' => 1,
-                'cron_flag' => 0,
-            );
-
-            $this->db->insert('school', $school_data);
-            $school_id = $this->db->insert_id();
-            $update_data = array(
-                'school_id' => $school_id,
-                'status' => 1,
-            );
-            //guest add.
-            $guest_password = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
-            $encrypt_password = $this->enc_lib->passHashEnc($guest_password);
-
-
-            $sql = "SELECT * FROM online_course_settings WHERE " . $this->db->school_filter('online_course_settings') . " ORDER BY id";
-            $query = $this->db->query($sql);
-
-            $course_setting = $query->row();
-
-            $guest_unique_id = $course_setting->guest_prefix . '' . $course_setting->guest_id_start_from;
-            $last_guest = $this->db->select('*')->order_by('id', "desc")->limit(1)->get('guest')->row();
-
-
-            if (!empty($last_guest)) {
-                $last_guest_id = str_replace($course_setting->guest_prefix, "", $last_guest->guest_unique_id);
-                $guest_unique_id = $course_setting->guest_prefix . ($last_guest_id + 1);
-            }
-            $this->db->where(array('guest_unique_id' => $guest_unique_id));
-            $query = $this->db->get('guest');
-
-            $setting_result = $this->setting_model->get();
-            $default = $setting_result[0]['lang_id'];
-
-            $data = array(
-                'guest_unique_id' => $guest_unique_id,
-                'guest_name' => $subscription_data['school_name'],
-                'email' => $subscription_data['email_address'],
-                'password' => $encrypt_password,
-                'created_at' => date("Y-m-d"),
-                'is_active' => 'yes',
-                'lang_id' => $default,
-                'currency_id' => '4',
-                // The guest row belongs to the platform school (school_id is set by the tenant layer);
-                // the school this owner registered is linked separately.
-                'registered_school_id' => $school_id,
-                'mobileno' => $subscription_data['phone_number'],
-                // 'currency_id'  => $this->customlib->getSchoolCurrency(),
-            );
-
-            $this->studentcourse_model->addguest($data);
-
-        } else {
-            $this->db->where('id', $subscription_id);
-            $query = $this->db->get('subscription');
-            $row = $query->row();
-            $school_id = $row->school_id;
-        }
-
-        $this->db->where('id', $subscription_id);
-        $this->db->update('subscription', $update_data);
-
-        //mail send for school create
-        $this->load->library('email');
-        $config = array(
-            'protocol' => $this->config->item('protocol'),
-            'smtp_host' => $this->config->item('smtp_host'),
-            'smtp_user' => $this->config->item('smtp_user'),
-            'smtp_pass' => $this->config->item('smtp_pass'),
-            'smtp_port' => $this->config->item('smtp_port'),
-            'mailtype' => $this->config->item('mailtype'),
-            'charset' => $this->config->item('charset'),
-            'wordwrap' => $this->config->item('wordwrap'),
-            'newline' => $this->config->item('newline'),
-        );
-        $this->email->initialize($config);
-        $from_email = $this->config->item('from_email');
-        $this->email->from($from_email, 'Edusys');
-
-        // Recipient's email address
-        $to_email = $subscription_data['email_address'];
-        $this->email->to($to_email);
-        $this->email->subject('Notice of  School registration on EduSyS ERP');
-
-        $message = '<DOCTYPE html>
-                <html lang="en-US">
-                <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-                <body>
-                    <p>Dear sir/medam,</p>
-                    <br>
-                    <p>Please wait while we prepare your resources. This may take a few moments.</p>
-                    <br>
-                    <p>Below are the details associated with your account:</p>
-                    <br>
-                    <b>School Name: </b>' . $subscription_data['school_name'] . ' <br>
-                    <b>Phone Number: </b>' . $subscription_data['phone_number'] . '
-                    <br>
-                    <p><b>Please note the following important details for login:</b></p>
-                    <br>
-                    <b>Email: </b>' . $subscription_data['email_address'] . ' <br>
-                    <b>Password: </b>' . $guest_password . '
-                    <br>
-                    <p>you can check your "account status, remaing days and renew payment using this login" at <a href="edusys.ng" target="_blank">login</a></p>
-                    <p>Best regards,</p>
-                    <p>The Edusys Team</p>
-                </body>
-            </html>';
-        $this->email->message($message);
-        $this->email->send();
-        // End Mail
-
-        $this->email->from($from_email, 'Edusys');
-        $this->email->to($from_email);
-        $this->email->subject('Buy Plan');
-        $message = '<DOCTYPE html>
-            <html lang="en-US">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body>
-                <p>Dear admin,</p>
-                <p>I hope you\'re doing well. This email serves to inform you that a customer has successfully purchased a plan through our system.</p>
-                <p>Customer Details:</p>
-                <ul>
-                    <li>School Name:' . $subscription_data['school_name'] . '  </li>
-                    <li>Email:' . $subscription_data['email_address'] . ' </li>
-                    <li>Phone Number:' . $subscription_data['phone_number'] . ' </li>
-                </ul>
-                Please take note of the purchase and ensure the necessary steps are followed to fulfill the customer\'s request.
-
-                If you need any further details or assistance regarding this transaction, feel free to reach out.
-
-                Best regards,
-            </body>
-            </html>';
-        $this->email->message($message);
-        $this->email->send();
+        $this->load->library('Subscription_activation');
+        $this->subscription_activation->activate((int) $subscription_id, (bool) $edit);
         if ($edit) {
             redirect('user/plan/success');
         } else {
@@ -342,7 +202,7 @@ class subscription extends Front_Controller
         }
     }
 
-    public function initialize_payment($subscription_id, $edit = false)
+    private function initialize_payment($subscription_id, $edit = false)
     {
         $callback_url = site_url('subscription/verifyPayment') . "?subscription_id={$subscription_id}";
         if ($edit) {
@@ -425,6 +285,106 @@ class subscription extends Front_Controller
         curl_close($ch);
         $decoded = json_decode((string) $response, true);
         return is_array($decoded) ? $decoded : array();
+    }
+
+    /**
+     * The school's bank transfer page (private link from save()): the platform's bank details,
+     * the amount, the review status, and the receipt upload form while a receipt is due.
+     */
+    public function bank_transfer($token = '')
+    {
+        $transfer = $this->bank_transfer_or_404($token);
+        $this->show_bank_transfer($transfer);
+    }
+
+    /** Receipt upload (POST from the bank transfer page). */
+    public function submit_receipt($token = '')
+    {
+        $transfer = $this->bank_transfer_or_404($token);
+        if ($this->input->method() !== 'post' || !in_array($transfer['status'], array('awaiting_receipt', 'rejected'), true)) {
+            redirect('subscription/bank_transfer/' . $transfer['token']);
+        }
+
+        $this->form_validation->set_rules('payer_name', 'Account name', 'trim|required|max_length[200]|xss_clean');
+        $this->form_validation->set_rules('payer_bank', 'Bank', 'trim|required|max_length[200]|xss_clean');
+        $this->form_validation->set_rules('payment_date', 'Payment date', 'trim|required|callback_valid_payment_date');
+        $this->form_validation->set_rules('amount', 'Amount paid', 'trim|required|numeric|greater_than[0]');
+        $this->form_validation->set_rules('reference', 'Transaction reference', 'trim|max_length[200]|xss_clean');
+        $upload_error = $this->subscription_bank_transfer_model->receipt_upload_error('receipt');
+        if (!$this->form_validation->run() || $upload_error !== null) {
+            return $this->show_bank_transfer($transfer, $upload_error);
+        }
+
+        $stored = $this->subscription_bank_transfer_model->store_receipt('receipt');
+        if ($stored === null) {
+            return $this->show_bank_transfer($transfer, 'The receipt could not be saved. Please try again.');
+        }
+        $this->subscription_bank_transfer_model->submit($transfer['id'], array(
+            'payer_name' => $this->input->post('payer_name'),
+            'payer_bank' => $this->input->post('payer_bank'),
+            'payment_date' => $this->input->post('payment_date'),
+            'amount' => $this->input->post('amount'),
+            'reference' => $this->input->post('reference'),
+            'receipt_file' => $stored['file'],
+            'receipt_name' => $stored['name'],
+        ));
+        $this->notify_platform_of_receipt($transfer);
+        redirect('subscription/bank_transfer/' . $transfer['token']);
+    }
+
+    /** Form validation callback: a real date, not in the future. */
+    public function valid_payment_date($date)
+    {
+        $d = DateTime::createFromFormat('Y-m-d', (string) $date);
+        if (!$d || $d->format('Y-m-d') !== $date || $date > date('Y-m-d')) {
+            $this->form_validation->set_message('valid_payment_date', 'Enter the payment date (not in the future).');
+            return false;
+        }
+        return true;
+    }
+
+    private function bank_transfer_or_404($token)
+    {
+        $transfer = $this->subscription_bank_transfer_model->get_by_token((string) $token);
+        if (!$transfer) {
+            show_404();
+        }
+        return $transfer;
+    }
+
+    private function show_bank_transfer(array $transfer, $upload_error = null)
+    {
+        $subscription = $this->subscription_model->get($transfer['subscription_id']);
+        $plan = $this->plan_model->get($subscription['plan_id']);
+        $settings = $this->setting_model->getSetting();
+        $this->data['transfer'] = $transfer;
+        $this->data['subscription'] = $subscription;
+        $this->data['plan'] = $plan;
+        $this->data['bank_instructions'] = $settings ? (string) $settings->offline_bank_payment_instruction : '';
+        $this->data['currency_symbol'] = $this->customlib->getSchoolCurrencyFormat();
+        $this->data['upload_error'] = $upload_error;
+        $this->data['active_menu'] = 'plans';
+        $this->data['setting_data'] = $this->setting_model->get();
+        $this->data['page_side_bar'] = false;
+        $this->data['featured_image'] = false;
+        $this->data['page'] = array('title' => 'Bank transfer', 'meta_title' => '', 'meta_keyword' => '', 'meta_description' => '');
+        $this->load_theme('subscription/bank_transfer');
+    }
+
+    /** Tells the platform a receipt is waiting for review (template receipt_submitted). */
+    private function notify_platform_of_receipt(array $transfer)
+    {
+        $subscription = $this->subscription_model->get($transfer['subscription_id']);
+        if (!$subscription) {
+            return;
+        }
+        $fresh = $this->subscription_bank_transfer_model->get_by_token($transfer['token']);
+        $this->load->library('Platform_mailer');
+        $this->platform_mailer->send('receipt_submitted', $this->platform_settings->get('notify_email'), array(
+            'school_name' => $subscription['school_name'],
+            'amount' => $fresh ? number_format((float) $fresh['amount'], 2) : '',
+            'review_url' => site_url('admin/subscription_bank_transfers/view/' . (int) $transfer['id']),
+        ), $subscription['school_id'] ?: null);
     }
 
     public function success()

@@ -113,7 +113,7 @@ class Courselesson extends Admin_Controller
             $this->course_model->add($updatecourse);
 
             // This is used to create new directory
-            $directory = FCPATH . '/uploads/course_content/' . $section_id . '/' . $insert_id;
+            $directory = upload_abs_root() . 'course_content/' . $section_id . '/' . $insert_id;
 
             if (!is_dir($directory)) {
                 mkdir($directory, 0777, true);
@@ -123,7 +123,7 @@ class Courselesson extends Admin_Controller
                 $lesson_attachment_image = '';
                 if (!empty($_FILES['lesson_attachment']['name'])) {
                     $ext                     = pathinfo($_FILES['lesson_attachment']['name'], PATHINFO_EXTENSION);
-                    $config['upload_path']   = "uploads/course_content/" . $section_id . "/" . $insert_id;
+                    $config['upload_path']   = upload_root() . "course_content/" . $section_id . "/" . $insert_id;
                     $config['allowed_types'] = $ext;
                     $file_name               = $_FILES['lesson_attachment']['name'];
                     $config['file_name']     = $insert_id;
@@ -175,7 +175,7 @@ class Courselesson extends Admin_Controller
             }
             if (!empty($_FILES['add_lesson_thumbnail']['name'])) {
                 $ext                     = pathinfo($_FILES['add_lesson_thumbnail']['name'], PATHINFO_EXTENSION);
-                $config['upload_path']   = "uploads/course_content/" . $section_id . "/" . $insert_id;
+                $config['upload_path']   = upload_root() . "course_content/" . $section_id . "/" . $insert_id;
                 $config['allowed_types'] = $ext;
                 $file_name               = $_FILES['add_lesson_thumbnail']['name'];
                 $config['file_name']     = $insert_id;
@@ -302,7 +302,7 @@ class Courselesson extends Admin_Controller
             $this->course_model->add($updatecourse);
 
             // This is used to create new directory
-            $directory = FCPATH . '/uploads/course_content/' . $this->input->post('lesson_section_id') . '/' . $lessonID;
+            $directory = upload_abs_root() . 'course_content/' . $this->input->post('lesson_section_id') . '/' . $lessonID;
 
             if (!is_dir($directory)) {
                 mkdir($directory, 0777, true);
@@ -311,7 +311,7 @@ class Courselesson extends Admin_Controller
             if ($lessons_type == "text" || $lessons_type == "pdf" || $lessons_type == "document") {
                 if (!empty($_FILES['lesson_attachment']['name'])) {
                     $ext                     = pathinfo($_FILES['lesson_attachment']['name'], PATHINFO_EXTENSION);
-                    $config['upload_path']   = "uploads/course_content/" . $this->input->post('lesson_section_id') . "/" . $lessonID;
+                    $config['upload_path']   = upload_root() . "course_content/" . $this->input->post('lesson_section_id') . "/" . $lessonID;
                     $config['allowed_types'] = $ext;
                     $file_name               = $_FILES['lesson_attachment']['name'];
                     $config['file_name']     = $lessonID;
@@ -369,7 +369,7 @@ class Courselesson extends Admin_Controller
 
             if (!empty($_FILES['lesson_thumbnail']['name'])) {
                 $ext                     = pathinfo($_FILES['lesson_thumbnail']['name'], PATHINFO_EXTENSION);
-                $config['upload_path']   = "uploads/course_content/" . $this->input->post('lesson_section_id') . "/" . $lessonID;
+                $config['upload_path']   = upload_root() . "course_content/" . $this->input->post('lesson_section_id') . "/" . $lessonID;
                 $config['allowed_types'] = $ext;
                 $file_name               = $_FILES['lesson_thumbnail']['name'];
                 $config['file_name']     = $lessonID;

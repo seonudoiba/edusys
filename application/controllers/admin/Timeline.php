@@ -39,7 +39,7 @@ class Timeline extends Admin_Controller
             }              
                 
             if (isset($_FILES["timeline_doc"]) && !empty($_FILES['timeline_doc']['name'])) {                    
-                $img_name = $this->media_storage->fileupload("timeline_doc", "./uploads/student_timeline/");              
+                $img_name = $this->media_storage->fileupload("timeline_doc", upload_root() . "student_timeline/");              
             } else {
                 $img_name = '';
             }
@@ -98,7 +98,7 @@ class Timeline extends Admin_Controller
             $id = $this->timeline_model->add_staff_timeline($timeline);
 
             if (isset($_FILES["timeline_doc"]) && !empty($_FILES['timeline_doc']['name'])) {
-                $uploaddir = './uploads/staff_timeline/';
+                $uploaddir = upload_root() . 'staff_timeline/';
                 if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                     die("Error creating folder $uploaddir");
                 }
@@ -123,13 +123,13 @@ class Timeline extends Admin_Controller
     public function download($timeline_id)
     {
       $doc_details=$this->timeline_model->getstudentsingletimeline($timeline_id);
-        $this->media_storage->filedownload($doc_details['document'], "./uploads/student_timeline/"); 
+        $this->media_storage->filedownload($doc_details['document'], upload_root() . "student_timeline/"); 
     }
 
     public function download_staff_timeline($timeline_id)
     {
         $doc_details=$this->timeline_model->getstaffsingletimeline($timeline_id);
-        $this->media_storage->filedownload($doc_details['document'], "./uploads/staff_timeline/"); 
+        $this->media_storage->filedownload($doc_details['document'], upload_root() . "staff_timeline/"); 
 
     }
 
@@ -249,7 +249,7 @@ class Timeline extends Admin_Controller
             $this->timeline_model->add($timeline);
 
             if (isset($_FILES["timeline_doc"]) && !empty($_FILES['timeline_doc']['name'])) {
-                $uploaddir = './uploads/student_timeline/';
+                $uploaddir = upload_root() . 'student_timeline/';
                 if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                     die("Error creating folder $uploaddir");
                 }
@@ -318,7 +318,7 @@ class Timeline extends Admin_Controller
             $this->timeline_model->add_staff_timeline($timeline);
 
             if (isset($_FILES["timeline_doc"]) && !empty($_FILES['timeline_doc']['name'])) {
-                $uploaddir = './uploads/staff_timeline/';
+                $uploaddir = upload_root() . 'staff_timeline/';
                 if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                     die("Error creating folder $uploaddir");
                 }

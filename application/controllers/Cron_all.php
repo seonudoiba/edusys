@@ -70,6 +70,9 @@ class Cron_all extends CI_Controller
             }
         }
         printf("done in %.1fs, %d failed\n", microtime(true) - $started, $failed);
+        // Shown on Platform settings > System health.
+        $this->load->library('Platform_settings');
+        $this->platform_settings->set('cron_last_' . $task, date('Y-m-d H:i:s') . ($failed ? " ($failed failed)" : ''));
         flock($lock, LOCK_UN);
         fclose($lock);
         exit($failed ? 1 : 0);

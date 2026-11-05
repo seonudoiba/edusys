@@ -2420,3 +2420,14 @@ $lang['dash_unactive_school'] = "Unactive School";
 
 //front
 $lang['school_login'] = "School Login";
+$lang['bank_transfer_payments'] = "Bank Transfer Payments";
+
+$lang['fees_setting'] = "Fees Setting";
+$lang['platform_team'] = "Platform Team";
+$lang['platform_communication'] = "Communication";
+$lang['platform_staff'] = "Staff";
+$lang['email_templates'] = "Email Templates";
+$lang['email_log'] = "Email Log";
+$lang['login_history'] = "Login History";
+$lang['waiting_for_approval'] = "Waiting for Approval";
+$lang['platform_settings_health'] = "Platform Settings & Health";

@@ -33,7 +33,7 @@ class Complaint extends Admin_Controller
             $this->load->view('admin/frontoffice/complaintview', $data);
             $this->load->view('layout/footer');
         } else {
-            $img_name  = $this->media_storage->fileupload("file", "./uploads/front_office/complaints/");
+            $img_name  = $this->media_storage->fileupload("file", upload_root() . "front_office/complaints/");
             $complaint = array(
                 'complaint_type' => $this->input->post('complaint'),
                 'source'         => $this->input->post('source'),
@@ -88,7 +88,7 @@ class Complaint extends Admin_Controller
            
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/front_office/complaints/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "front_office/complaints/");
             } else {
                 $img_name = $data['complaint_data']['image'];
             }
@@ -136,7 +136,7 @@ class Complaint extends Admin_Controller
     public function download($id)
     {
         $complaint_list = $this->complaint_Model->complaint_list($id);
-        $this->media_storage->filedownload($complaint_list['image'], "./uploads/front_office/complaints");
+        $this->media_storage->filedownload($complaint_list['image'], upload_root() . "front_office/complaints");
     }
 
     public function check_default($post_string)

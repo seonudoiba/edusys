@@ -48,6 +48,7 @@
 
     # Outgoing mail (set-password links, reminders, scheduled messages).
     SetEnv EDUSYS_SMTP_HOST smtp.mailgun.org
+    SetEnv EDUSYS_SMTP_PORT 587
     SetEnv EDUSYS_SMTP_USER postmaster@edusys.ng
     SetEnv EDUSYS_SMTP_PASS change-me
 

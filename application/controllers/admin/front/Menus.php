@@ -61,7 +61,7 @@ class Menus extends Admin_Controller
         $result                     = $this->cms_menu_model->getBySlug(urldecode($slug));
         $data['result']             = $result;
         $data['top_menu']           = urldecode($slug);
-        $listMenus                  = $this->cms_menuitems_model->getMenus($result['id']);
+        $listMenus                  = $this->cms_menuitems_model->getMenus($result['id'], 0, '', '', false);
         
         $data['listdropdown_Menus'] = $listMenus;
         $this->form_validation->set_rules('menu', $this->lang->line('menu_item'), 'trim|required|xss_clean');
@@ -123,7 +123,7 @@ class Menus extends Admin_Controller
         $data['result']   = $menu;
         $data['top_menu'] = $top_menu;
 
-        $listMenus                  = $this->cms_menuitems_model->getMenus($menu['menu_id']);
+        $listMenus                  = $this->cms_menuitems_model->getMenus($menu['menu_id'], 0, '', '', false);
         $data['listdropdown_Menus'] = $listMenus;
         $this->form_validation->set_rules('menu', $this->lang->line('menu_item'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('ext_url_link', $this->lang->line('external_url'), 'trim|xss_clean|callback_check_exists');

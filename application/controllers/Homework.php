@@ -354,7 +354,7 @@ class Homework extends Admin_Controller
                 $homeworklist = $this->homework_model->get($record_id);
 
                 if (isset($_FILES["userfile"]) && $_FILES['userfile']['name'] != '' && (!empty($_FILES['userfile']['name']))) {
-                    $img_name = $this->media_storage->fileupload("userfile", "./uploads/homework/");
+                    $img_name = $this->media_storage->fileupload("userfile", upload_root() . "homework/");
                 } else {
                     $img_name = $homeworklist['document'];
                 }
@@ -365,7 +365,7 @@ class Homework extends Admin_Controller
                     $this->media_storage->filedelete($homeworklist['document'], "uploads/homework");
                 }
             } else {
-                $img_name         = $this->media_storage->fileupload("userfile", "./uploads/homework/");
+                $img_name         = $this->media_storage->fileupload("userfile", upload_root() . "homework/");
                 $data['document'] = $img_name;
             }
 
@@ -482,7 +482,7 @@ class Homework extends Admin_Controller
         } else {
 
             if (isset($_FILES["userfile"]) && !empty($_FILES['userfile']['name'])) {
-                $uploaddir = './uploads/homework/';
+                $uploaddir = upload_root() . 'homework/';
                 if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                     die("Error creating folder $uploaddir");
                 }
@@ -535,7 +535,7 @@ class Homework extends Admin_Controller
     public function download($id)
     {
         $homework = $this->homework_model->get($id);
-        $this->media_storage->filedownload($homework['document'], "./uploads/homework");
+        $this->media_storage->filedownload($homework['document'], upload_root() . "homework");
     }
 
     public function evaluation($id)
@@ -790,7 +790,7 @@ class Homework extends Admin_Controller
     {
         $assigmnetdata['id'] = $id;
         $assigmnetlist       = $this->homework_model->get_upload_docs($assigmnetdata);
-        $this->media_storage->filedownload($assigmnetlist[0]['docs'], "./uploads/homework/assignment");
+        $this->media_storage->filedownload($assigmnetlist[0]['docs'], upload_root() . "homework/assignment");
     }
 
     public function deletehomework()
@@ -964,7 +964,7 @@ class Homework extends Admin_Controller
     public function dailyassigmnetdownload($id)
     {
         $dailyassigmnetlist = $this->homework_model->getsingledailyassignment($id);
-        $this->media_storage->filedownload($dailyassigmnetlist['attachment'], "./uploads/homework/daily_assignment");
+        $this->media_storage->filedownload($dailyassigmnetlist['attachment'], upload_root() . "homework/daily_assignment");
     }
 
     public function submitassignmentremark()

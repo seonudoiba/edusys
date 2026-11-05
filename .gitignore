@@ -4,6 +4,8 @@
 # User uploads and temporary files
 uploads/*
 !uploads/.gitkeep
+# Default images every school starts with (copied into uploads/s<id>/ when a school's folder is created)
+!uploads/_shared/
 temp/
 
 # Generated captcha images
@@ -39,6 +41,8 @@ application/seeds/platform/004_subscription.php
 
 # Local reference material (old database dumps, user manual, cgi-bin)
 dbsample/
+# Demo school export (source of the default seed's demo content; includes fake people)
+smartschool_test.json
 cgi-bin/
 document/
 system/*.zip

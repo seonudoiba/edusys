@@ -781,7 +781,7 @@ class User extends Student_Controller
 
     public function timeline_download($timeline_id, $doc)
     {
-        $this->media_storage->filedownload($this->uri->segment(4), "./uploads/student_timeline");
+        $this->media_storage->filedownload($this->uri->segment(4), upload_root() . "student_timeline");
     }
 
     public function view($id)
@@ -986,7 +986,7 @@ class User extends Student_Controller
             $student_id = $this->input->post('student_id');
 
             if (isset($_FILES["first_doc"]) && !empty($_FILES['first_doc']['name'])) {
-                $uploaddir = './uploads/student_documents/' . $student_id . '/';
+                $uploaddir = upload_root() . 'student_documents/' . $student_id . '/';
                 if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                     die("Error creating folder $uploaddir");
                 }
@@ -1311,7 +1311,7 @@ class User extends Student_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $id . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                 $data_img = array('id' => $id, 'image' => 'uploads/student_images/' . $img_name);
                 $this->student_model->add($data_img);
             }
@@ -1319,7 +1319,7 @@ class User extends Student_Controller
             if (isset($_FILES["father_pic"]) && !empty($_FILES['father_pic']['name'])) {
                 $fileInfo = pathinfo($_FILES["father_pic"]["name"]);
                 $img_name = $id . "father" . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["father_pic"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                move_uploaded_file($_FILES["father_pic"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                 $data_img = array('id' => $id, 'father_pic' => 'uploads/student_images/' . $img_name);
                 $this->student_model->add($data_img);
             }
@@ -1327,7 +1327,7 @@ class User extends Student_Controller
             if (isset($_FILES["mother_pic"]) && !empty($_FILES['mother_pic']['name'])) {
                 $fileInfo = pathinfo($_FILES["mother_pic"]["name"]);
                 $img_name = $id . "mother" . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["mother_pic"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                move_uploaded_file($_FILES["mother_pic"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                 $data_img = array('id' => $id, 'mother_pic' => 'uploads/student_images/' . $img_name);
                 $this->student_model->add($data_img);
             }
@@ -1335,7 +1335,7 @@ class User extends Student_Controller
             if (isset($_FILES["guardian_pic"]) && !empty($_FILES['guardian_pic']['name'])) {
                 $fileInfo = pathinfo($_FILES["guardian_pic"]["name"]);
                 $img_name = $id . "guardian" . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["guardian_pic"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                move_uploaded_file($_FILES["guardian_pic"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                 $data_img = array('id' => $id, 'guardian_pic' => 'uploads/student_images/' . $img_name);
                 $this->student_model->add($data_img);
             }

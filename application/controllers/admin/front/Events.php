@@ -119,8 +119,8 @@ class Events extends Admin_Controller
                     echo "Error: " . $_FILES["files"]["error"][$i] . "<br>";
                 } else {
 
-                    $destination_path = "./uploads/gallery/event_images/";
-                    $thumb_path       = "./uploads/gallery/event_images/thumb/";
+                    $destination_path = upload_root() . "gallery/event_images/";
+                    $thumb_path       = upload_root() . "gallery/event_images/thumb/";
                     $responses        = $this->imageresize->resize($_FILES["files"], $destination_path, $thumb_path);
                     if (!empty($responses)) {
 

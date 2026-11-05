@@ -460,3 +460,27 @@ function access_permission_remove_comma($m_permission_value)
     $module_permission_seprated = array_map('trim', explode(',', preg_replace('/\s+/', '', $m_permission_value)));
     return $module_permission_seprated;
 }
+
+if (!function_exists('front_menu_url')) {
+    /**
+     * Address of a front-site menu link to an external URL. A full URL (https://...) or an
+     * anchor is used as is; a path such as "plans" is resolved on the host serving the page,
+     * so the same menu works on every school's subdomain and on the central site.
+     */
+    function front_menu_url($link)
+    {
+        $link = trim((string) $link);
+        if ($link === '' || $link[0] === '#' || preg_match('~^([a-z][a-z0-9+.-]*:|//)~i', $link)) {
+            return $link;
+        }
+        return site_url(ltrim($link, '/'));
+    }
+}
+
+if (!function_exists('front_page_url')) {
+    /** Address of a front-site menu link to a page: the site root for the home page. */
+    function front_page_url(array $menu)
+    {
+        return !empty($menu['is_homepage']) ? base_url() : site_url($menu['page_url']);
+    }
+}

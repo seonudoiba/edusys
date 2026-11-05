@@ -31,7 +31,7 @@ class Income extends Admin_Controller
         $this->form_validation->set_rules('documents', $this->lang->line('documents'), 'callback_handle_upload');
         if ($this->form_validation->run() == true) {
 
-            $img_name = $this->media_storage->fileupload("documents", "./uploads/school_income/");
+            $img_name = $this->media_storage->fileupload("documents", upload_root() . "school_income/");
 
             $data = array(
                 'income_head_id' => $this->input->post('inc_head_id'),
@@ -204,7 +204,7 @@ class Income extends Admin_Controller
 
             if (isset($_FILES["documents"]) && $_FILES['documents']['name'] != '' && (!empty($_FILES['documents']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("documents", "./uploads/school_income/");
+                $img_name = $this->media_storage->fileupload("documents", upload_root() . "school_income/");
             } else {
                 $img_name = $income['documents'];
             }

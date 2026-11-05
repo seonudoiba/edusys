@@ -214,9 +214,9 @@ if($layout_type){
                                             $top_new_tab = "target='_blank'";
                                         }
                                         if ($menu_value['ext_url']) {
-                                            $url = $menu_value['ext_url_link'];
+                                            $url = front_menu_url($menu_value['ext_url_link']);
                                         } else {
-                                            $url = site_url($menu_value['page_url']);
+                                            $url = front_page_url($menu_value);
                                         }
                                         ?>
                                         <a href="<?php echo $url; ?>" <?php echo $top_new_tab; ?>><?php echo $menu_value['menu']; ?></a>
@@ -233,9 +233,9 @@ if($layout_type){
                                                     $child_new_tab = "target='_blank'";
                                                 }
                                                 if ($submenu_value['ext_url']) {
-                                                    $url = $submenu_value['ext_url_link'];
+                                                    $url = front_menu_url($submenu_value['ext_url_link']);
                                                 } else {
-                                                    $url = site_url($submenu_value['page_url']);
+                                                    $url = front_page_url($submenu_value);
                                                 }
                                                 ?>
                                                 <li><a href="<?php echo $url; ?>" <?php echo $child_new_tab; ?> ><?php echo $submenu_value['menu'] ?></a></li>

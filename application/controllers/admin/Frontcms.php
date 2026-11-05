@@ -73,7 +73,7 @@ class Frontcms extends Admin_Controller
     
             if (isset($_FILES["logo"]) && !empty($_FILES["logo"]['name'])) {
 
-                $img_name = $this->media_storage->fileupload("logo", "./uploads/school_content/logo/");
+                $img_name = $this->media_storage->fileupload("logo", upload_root() . "school_content/logo/");
 
                 if ($this->input->post('id') != '') {
 
@@ -83,12 +83,12 @@ class Frontcms extends Admin_Controller
                         $this->media_storage->filedelete($row->logo, "uploads/school_content/logo/");
                     }
                 }
-                $data['logo'] = "./uploads/school_content/logo/" .$img_name;
+                $data['logo'] = upload_root() . "school_content/logo/" .$img_name;
 
             }
             if (isset($_FILES["fav_icon"]) && !empty($_FILES["fav_icon"]['name'])) {
 
-                $img_name = $this->media_storage->fileupload("fav_icon", "./uploads/school_content/logo/");
+                $img_name = $this->media_storage->fileupload("fav_icon", upload_root() . "school_content/logo/");
 
                 if ($this->input->post('id') != '') {
                     $row = $this->frontcms_setting_model->get($this->input->post('id'));
@@ -96,7 +96,7 @@ class Frontcms extends Admin_Controller
                         $this->media_storage->filedelete($row->fav_icon, "uploads/school_content/logo/");
                     }
                 }
-                $data['fav_icon'] = "./uploads/school_content/logo/" .$img_name;
+                $data['fav_icon'] = upload_root() . "school_content/logo/" .$img_name;
             }
             $this->frontcms_setting_model->add($data);
             

@@ -51,7 +51,7 @@ class Notification extends Admin_Controller
         if ($this->form_validation->run() == false) {
 
         } else {
-            $img_name = $this->media_storage->fileupload("file", "./uploads/notice_board_images/");
+            $img_name = $this->media_storage->fileupload("file", upload_root() . "notice_board_images/");
              
             $userdata    = $this->customlib->getUserData();
             $student     = "No";
@@ -189,7 +189,7 @@ class Notification extends Admin_Controller
             
              if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/notice_board_images/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "notice_board_images/");
             } else {
                 $img_name = $notification['attachment'];
             }
@@ -225,7 +225,7 @@ class Notification extends Admin_Controller
             }
         }
         $this->notification_model->remove($id);
-        unlink("./uploads/notice_board_images/" . $usernotification['attachment']);
+        unlink(upload_root() . "notice_board_images/" . $usernotification['attachment']);
         redirect('admin/notification');
     }
 

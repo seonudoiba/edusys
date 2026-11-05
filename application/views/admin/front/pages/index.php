@@ -45,6 +45,7 @@
                                             <th><?php echo $this->lang->line('title'); ?></th>
                                             <th><?php echo $this->lang->line('url'); ?></th>
                                             <th><?php echo $this->lang->line('page_type'); ?></th>
+                                            <th>Website</th>
                                             <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
                                         </tr>
                                     </thead>
@@ -84,6 +85,16 @@
                                                             <span class="label label-default"><?php echo $this->lang->line('standard'); ?></span>
                                                         <?php } ?>
 
+                                                    </td>
+                                                    <?php $always = !empty($page['is_homepage']) || $page['slug'] === '404-page'; $live = $always || $page['is_active'] === 'yes'; ?>
+                                                    <td>
+                                                        <span class="label <?php echo $live ? 'label-success' : 'label-default'; ?>"><?php echo $always ? 'Always on' : ($live ? 'On' : 'Hidden'); ?></span>
+                                                        <?php if (!$always && $this->rbac->hasPrivilege('pages', 'can_edit')) { ?>
+                                                            <form method="post" action="<?php echo site_url('admin/front/page/toggle/' . (int) $page['id']); ?>" style="display:inline">
+                                                                <?php echo $this->form_token->field(); ?>
+                                                                <button type="submit" class="btn btn-default btn-xs"><?php echo $live ? 'Hide' : 'Enable'; ?></button>
+                                                            </form>
+                                                        <?php } ?>
                                                     </td>
                                                     <td class="mailbox-date pull-right no-print">
                                                         <?php

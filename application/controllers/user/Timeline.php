@@ -35,7 +35,7 @@ class Timeline extends Student_Controller
                 $visible = $visible_check;
             }
 
-            $img_name = $this->media_storage->fileupload("timeline_doc", "./uploads/student_timeline/");
+            $img_name = $this->media_storage->fileupload("timeline_doc", upload_root() . "student_timeline/");
 
             $timeline = array(
                 'title'         => $this->input->post('timeline_title'),
@@ -103,7 +103,7 @@ class Timeline extends Student_Controller
 
             $timeline_list = $this->timeline_model->getstudentsingletimeline($this->input->post('id'));
             if (isset($_FILES["timeline_doc"]) && $_FILES['timeline_doc']['name'] != '' && (!empty($_FILES['timeline_doc']['name']))) {
-                $img_name = $this->media_storage->fileupload("timeline_doc", "./uploads/student_timeline/");
+                $img_name = $this->media_storage->fileupload("timeline_doc", upload_root() . "student_timeline/");
             } else {
                 $img_name = $timeline_list['document'];
             }
@@ -164,7 +164,7 @@ class Timeline extends Student_Controller
     public function download($id)
     {
         $timelinelist = $this->timeline_model->getstudentsingletimeline($id);
-        $this->media_storage->filedownload($timelinelist['document'], "./uploads/student_timeline");
+        $this->media_storage->filedownload($timelinelist['document'], upload_root() . "student_timeline");
     }
 
     public function delete_timeline()

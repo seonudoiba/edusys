@@ -119,21 +119,21 @@ class studentidcard extends Admin_Controller
             );
 
             if (!empty($_FILES['background_image']['name'])) {
-                $background_img_name = $this->media_storage->fileupload("background_image", "./uploads/student_id_card/background/");
+                $background_img_name = $this->media_storage->fileupload("background_image", upload_root() . "student_id_card/background/");
             } else {
                 $background_img_name = '';
             }
             $data['background'] = $background_img_name;
 
             if (!empty($_FILES['logo_img']['name'])) {
-                $logo_img_name = $this->media_storage->fileupload("logo_img", "./uploads/student_id_card/logo/");
+                $logo_img_name = $this->media_storage->fileupload("logo_img", upload_root() . "student_id_card/logo/");
             } else {
                 $logo_img_name = '';
             }
             $data['logo'] = $logo_img_name;
 
             if (!empty($_FILES['sign_image']['name'])) {
-                $sign_img_name = $this->media_storage->fileupload("sign_image", "./uploads/student_id_card/signature/");
+                $sign_img_name = $this->media_storage->fileupload("sign_image", upload_root() . "student_id_card/signature/");
             } else {
                 $sign_img_name = '';
             }
@@ -294,7 +294,7 @@ class studentidcard extends Admin_Controller
             }
 
             if (isset($_FILES["background_image"]) && $_FILES['background_image']['name'] != '' && (!empty($_FILES['background_image']['name']))) {
-                $background         = $this->media_storage->fileupload("background_image", "./uploads/student_id_card/background/");
+                $background         = $this->media_storage->fileupload("background_image", upload_root() . "student_id_card/background/");
                 $data['background'] = $background;
             }
 
@@ -303,7 +303,7 @@ class studentidcard extends Admin_Controller
             }
 
             if (isset($_FILES["logo_img"]) && $_FILES['logo_img']['name'] != '' && (!empty($_FILES['logo_img']['name']))) {
-                $logo_img     = $this->media_storage->fileupload("logo_img", "./uploads/student_id_card/logo/");
+                $logo_img     = $this->media_storage->fileupload("logo_img", upload_root() . "student_id_card/logo/");
                 $data['logo'] = $logo_img;
             }
 
@@ -312,7 +312,7 @@ class studentidcard extends Admin_Controller
             }
 
             if (isset($_FILES["sign_image"]) && $_FILES['sign_image']['name'] != '' && (!empty($_FILES['sign_image']['name']))) {
-                $sign_image         = $this->media_storage->fileupload("sign_image", "./uploads/student_id_card/signature/");
+                $sign_image         = $this->media_storage->fileupload("sign_image", upload_root() . "student_id_card/signature/");
                 $data['sign_image'] = $sign_image;
             }
 

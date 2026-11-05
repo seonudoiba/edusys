@@ -56,7 +56,7 @@ class Onlineadmission extends Admin_Controller
 
                     if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                        $img_name = $this->media_storage->fileupload("file", "./uploads/admission_form/");
+                        $img_name = $this->media_storage->fileupload("file", upload_root() . "admission_form/");
                     } else {
                         $img_name = $this->sch_setting_detail->online_admission_application_form;
                     }
@@ -90,7 +90,7 @@ class Onlineadmission extends Admin_Controller
 
                 if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                    $img_name = $this->media_storage->fileupload("file", "./uploads/admission_form/");
+                    $img_name = $this->media_storage->fileupload("file", upload_root() . "admission_form/");
                 } else {
                     $img_name = $this->sch_setting_detail->online_admission_application_form;
                 }
@@ -186,7 +186,7 @@ class Onlineadmission extends Admin_Controller
     public function download($id)
     {
         $settinglist = $this->setting_model->get($id);         
-        $this->media_storage->filedownload($settinglist['online_admission_application_form'], "./uploads/admission_form");
+        $this->media_storage->filedownload($settinglist['online_admission_application_form'], upload_root() . "admission_form");
     }
 
 }

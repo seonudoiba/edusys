@@ -36,7 +36,7 @@ class Itemstock extends Admin_Controller
 
         } else {
 
-            $img_name = $this->media_storage->fileupload("item_photo", "./uploads/inventory_items/");
+            $img_name = $this->media_storage->fileupload("item_photo", upload_root() . "inventory_items/");
 
             $store_id = ($this->input->post('store_id')) ? $this->input->post('store_id') : null;
             
@@ -73,7 +73,7 @@ class Itemstock extends Admin_Controller
     public function download($id)
     {
         $itemlist = $this->itemstock_model->get($id);
-        $this->media_storage->filedownload($itemlist['attachment'], "./uploads/inventory_items");
+        $this->media_storage->filedownload($itemlist['attachment'], upload_root() . "inventory_items");
 
     }
 
@@ -194,7 +194,7 @@ class Itemstock extends Admin_Controller
 
             if (isset($_FILES["item_photo"]) && $_FILES['item_photo']['name'] != '' && (!empty($_FILES['item_photo']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("item_photo", "./uploads/inventory_items/");
+                $img_name = $this->media_storage->fileupload("item_photo", upload_root() . "inventory_items/");
             } else {
                 $img_name = $item['attachment'];
             }

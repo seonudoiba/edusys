@@ -125,22 +125,22 @@ class Admitcard extends Admin_Controller
 
             if (isset($_FILES["left_logo"]) && !empty($_FILES["left_logo"]['name'])) {
 
-                $img_name                 = $this->media_storage->fileupload("left_logo", "./uploads/admit_card/");
+                $img_name                 = $this->media_storage->fileupload("left_logo", upload_root() . "admit_card/");
                 $insert_data['left_logo'] = $img_name;
             }
             if (isset($_FILES["right_logo"]) && !empty($_FILES["right_logo"]['name'])) {
 
-                $img_name                  = $this->media_storage->fileupload("right_logo", "./uploads/admit_card/");
+                $img_name                  = $this->media_storage->fileupload("right_logo", upload_root() . "admit_card/");
                 $insert_data['right_logo'] = $img_name;
             }
             if (isset($_FILES["sign"]) && !empty($_FILES["sign"]['name'])) {
 
-                $img_name            = $this->media_storage->fileupload("sign", "./uploads/admit_card/");
+                $img_name            = $this->media_storage->fileupload("sign", upload_root() . "admit_card/");
                 $insert_data['sign'] = $img_name;
             }
             if (isset($_FILES["background_img"]) && !empty($_FILES["background_img"]['name'])) {
 
-                $img_name                      = $this->media_storage->fileupload("background_img", "./uploads/admit_card/");
+                $img_name                      = $this->media_storage->fileupload("background_img", upload_root() . "admit_card/");
                 $insert_data['background_img'] = $img_name;
             }
 
@@ -324,7 +324,7 @@ class Admitcard extends Admin_Controller
 
             if (isset($_FILES["left_logo"]) && $_FILES['left_logo']['name'] != '' && (!empty($_FILES['left_logo']['name']))) {
 
-                $left_img_name            = $this->media_storage->fileupload("left_logo", "./uploads/admit_card/");
+                $left_img_name            = $this->media_storage->fileupload("left_logo", upload_root() . "admit_card/");
                 $insert_data['left_logo'] = $left_img_name;
             }
 
@@ -335,7 +335,7 @@ class Admitcard extends Admin_Controller
 
             if (isset($_FILES["right_logo"]) && $_FILES['right_logo']['name'] != '' && (!empty($_FILES['right_logo']['name']))) {
 
-                $right_img_name = $this->media_storage->fileupload("right_logo", "./uploads/admit_card/");
+                $right_img_name = $this->media_storage->fileupload("right_logo", upload_root() . "admit_card/");
                 $insert_data['right_logo'] = $right_img_name;
             }
 
@@ -346,7 +346,7 @@ class Admitcard extends Admin_Controller
 
             if (isset($_FILES["sign"]) && $_FILES['sign']['name'] != '' && (!empty($_FILES['sign']['name']))) {
 
-                $sign_img_name = $this->media_storage->fileupload("sign", "./uploads/admit_card/");
+                $sign_img_name = $this->media_storage->fileupload("sign", upload_root() . "admit_card/");
                 $insert_data['sign'] = $sign_img_name;
             }
 
@@ -357,7 +357,7 @@ class Admitcard extends Admin_Controller
 
             if (isset($_FILES["background_img"]) && $_FILES['background_img']['name'] != '' && (!empty($_FILES['background_img']['name']))) {
 
-                $background_img_name = $this->media_storage->fileupload("background_img", "./uploads/admit_card/");
+                $background_img_name = $this->media_storage->fileupload("background_img", upload_root() . "admit_card/");
                 $insert_data['background_img'] = $background_img_name;
             }
 

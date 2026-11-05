@@ -144,6 +144,12 @@ class plans extends Front_Controller
         $this->data['plan_price'] = array();
 
         $this->data['plans'] = $this->plan_model->get('', true);
+        // Cheapest first (what the school pays: the offer price when there is one).
+        usort($this->data['plans'], function ($a, $b) {
+            $pa = (int) $a['oprice'] > 0 ? (int) $a['oprice'] : (int) $a['price'];
+            $pb = (int) $b['oprice'] > 0 ? (int) $b['oprice'] : (int) $b['price'];
+            return $pa <=> $pb ?: (int) $a['plan_id'] <=> (int) $b['plan_id'];
+        });
 
         if(!empty($this->data['plans'])){
             foreach($this->data['plans'] as $key => $plans){

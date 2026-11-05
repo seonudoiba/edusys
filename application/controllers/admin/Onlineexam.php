@@ -1140,7 +1140,7 @@ class Onlineexam extends Admin_Controller
     public function downloadattachment($doc)
     {
         $this->load->helper('download');
-        $filepath = "./uploads/onlinexam_images/" . $doc;
+        $filepath = upload_root() . "onlinexam_images/" . $doc;
         $data     = file_get_contents($filepath);
         $name     = $doc;
         force_download($name, $data);

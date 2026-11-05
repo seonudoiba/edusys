@@ -649,7 +649,7 @@ class Staff extends Admin_Controller
             if ($insert) {
 
                 if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                    $img_name             = $this->media_storage->fileupload("file", "./uploads/staff_images/");
+                    $img_name             = $this->media_storage->fileupload("file", upload_root() . "staff_images/");
                     $data_insert['image'] = $img_name;
                 }
 
@@ -659,7 +659,7 @@ class Staff extends Admin_Controller
                     $this->customfield_model->insertRecord($custom_value_array, $insert_id);
                 }
 
-                $upload_dir = './uploads/staff_documents/' . $staff_id . '/';
+                $upload_dir = upload_root() . 'staff_documents/' . $staff_id . '/';
                 if (!is_dir($upload_dir) && !mkdir($upload_dir)) {
                     die("Error creating folder $upload_dir");
                 }
@@ -1100,7 +1100,7 @@ class Staff extends Admin_Controller
             }
 
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-                $img_name       = $this->media_storage->fileupload("file", "./uploads/staff_images/");
+                $img_name       = $this->media_storage->fileupload("file", upload_root() . "staff_images/");
                 $data1['image'] = $img_name;
 
                 if ($staff['image'] != '') {
@@ -1139,7 +1139,7 @@ class Staff extends Admin_Controller
                 }
             }
 
-            $upload_dir = './uploads/staff_documents/' . $id . '/';
+            $upload_dir = upload_root() . 'staff_documents/' . $id . '/';
             if (!is_dir($upload_dir) && !mkdir($upload_dir)) {
                 die("Error creating folder $upload_dir");
             }

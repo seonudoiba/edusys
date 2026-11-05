@@ -67,7 +67,7 @@ class Schsettings extends Admin_Controller
 
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/school_content/logo/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "school_content/logo/");
             } else {
                 $img_name = $setting->image;
             }
@@ -100,7 +100,7 @@ class Schsettings extends Admin_Controller
 
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/school_content/admin_small_logo/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "school_content/admin_small_logo/");
             } else {
                 $img_name = $setting->admin_small_logo;
             }
@@ -132,7 +132,7 @@ class Schsettings extends Admin_Controller
 
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/school_content/admin_logo/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "school_content/admin_logo/");
             } else {
                 $img_name = $setting->admin_logo;
             }
@@ -164,7 +164,7 @@ class Schsettings extends Admin_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $fileInfo = pathinfo($_FILES["file"]["name"]);
                 $img_name = $id . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/school_content/logo" . $img_name);
+                move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "school_content/logo" . $img_name);
             }
             $data_record = array('id' => $id, 'image' => $img_name);
             $this->setting_model->add($data_record);
@@ -311,7 +311,7 @@ class Schsettings extends Admin_Controller
 
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
 
-                $img_name = $this->media_storage->fileupload("file", "./uploads/school_content/logo/app_logo/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "school_content/logo/app_logo/");
             } else {
                 $img_name = $setting->app_logo;
             }
@@ -799,7 +799,7 @@ class Schsettings extends Admin_Controller
             }
             
             if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
-                $img_name = $this->media_storage->fileupload("file", "./uploads/school_content/login_image/");
+                $img_name = $this->media_storage->fileupload("file", upload_root() . "school_content/login_image/");
             } else {
                 $img_name = $background;
             }

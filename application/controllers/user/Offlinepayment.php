@@ -64,7 +64,7 @@ class Offlinepayment extends Student_Controller
                 $insert_data['student_transport_fee_id']=($payment_session['student_transport_fee_id'] !=0) ? $payment_session['student_transport_fee_id'] : NULL ;
                 $insert_data['submit_date']=date('Y-m-d H:i:s');
 
-            $img_name = $this->media_storage->fileupload("attachment", "./uploads/offline_payments/");
+            $img_name = $this->media_storage->fileupload("attachment", upload_root() . "offline_payments/");
 
             $insert_data['attachment']=$img_name;
 
@@ -222,7 +222,7 @@ class Offlinepayment extends Student_Controller
     public function download($id)
     {
         $payment = $this->offlinePayment_model->get($id);
-        $this->media_storage->filedownload($payment->attachment, "./uploads/offline_payments/");
+        $this->media_storage->filedownload($payment->attachment, upload_root() . "offline_payments/");
     }
 
 }

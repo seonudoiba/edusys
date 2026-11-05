@@ -43,7 +43,7 @@ class Certificate extends Admin_Controller
                 $imgHeight = 0;
             } 
 
-            $picture = $this->media_storage->fileupload("background_image", "./uploads/certificate/");
+            $picture = $this->media_storage->fileupload("background_image", upload_root() . "certificate/");
 
             $data = array(
                 'certificate_name'     => $this->input->post('certificate_name'),
@@ -122,7 +122,7 @@ class Certificate extends Admin_Controller
             );
 
             if (!empty($_FILES['background_image']['name'])) {
-                $img_name = $this->media_storage->fileupload("background_image", "./uploads/certificate/");
+                $img_name = $this->media_storage->fileupload("background_image", upload_root() . "certificate/");
 
                 $data['created_for']      = 2;
                 $data['status']           = 1;

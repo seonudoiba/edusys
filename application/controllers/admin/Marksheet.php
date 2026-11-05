@@ -144,37 +144,37 @@ class Marksheet extends Admin_Controller
             );
 
             if (isset($_FILES["left_logo"]) && !empty($_FILES["left_logo"]['name'])) {
-                $left_img_name            = $this->media_storage->fileupload("left_logo", "./uploads/marksheet/");
+                $left_img_name            = $this->media_storage->fileupload("left_logo", upload_root() . "marksheet/");
                 $insert_data['left_logo'] = $left_img_name;
             }
 
             if (isset($_FILES["right_logo"]) && !empty($_FILES["right_logo"]['name'])) {
-                $right_img_name            = $this->media_storage->fileupload("right_logo", "./uploads/marksheet/");
+                $right_img_name            = $this->media_storage->fileupload("right_logo", upload_root() . "marksheet/");
                 $insert_data['right_logo'] = $right_img_name;
             }
 
             if (isset($_FILES["left_sign"]) && !empty($_FILES["left_sign"]['name'])) {
-                $left_sign_img_name       = $this->media_storage->fileupload("left_sign", "./uploads/marksheet/");
+                $left_sign_img_name       = $this->media_storage->fileupload("left_sign", upload_root() . "marksheet/");
                 $insert_data['left_sign'] = $left_sign_img_name;
             }
 
             if (isset($_FILES["middle_sign"]) && !empty($_FILES["middle_sign"]['name'])) {
-                $middle_sign_img_name       = $this->media_storage->fileupload("middle_sign", "./uploads/marksheet/");
+                $middle_sign_img_name       = $this->media_storage->fileupload("middle_sign", upload_root() . "marksheet/");
                 $insert_data['middle_sign'] = $middle_sign_img_name;
             }
 
             if (isset($_FILES["right_sign"]) && !empty($_FILES["right_sign"]['name'])) {
-                $right_sign_img_name       = $this->media_storage->fileupload("right_sign", "./uploads/marksheet/");
+                $right_sign_img_name       = $this->media_storage->fileupload("right_sign", upload_root() . "marksheet/");
                 $insert_data['right_sign'] = $right_sign_img_name;
             }
 
             if (isset($_FILES["background_img"]) && !empty($_FILES["background_img"]['name'])) {
-                $background_img_name           = $this->media_storage->fileupload("background_img", "./uploads/marksheet/");
+                $background_img_name           = $this->media_storage->fileupload("background_img", upload_root() . "marksheet/");
                 $insert_data['background_img'] = $background_img_name;
             }
 
             if (isset($_FILES["header_image"]) && !empty($_FILES["header_image"]['name'])) {
-                $header_image_name           = $this->media_storage->fileupload("header_image", "./uploads/marksheet/");
+                $header_image_name           = $this->media_storage->fileupload("header_image", upload_root() . "marksheet/");
                 $insert_data['header_image'] = $header_image_name;
             }       
 
@@ -408,7 +408,7 @@ class Marksheet extends Admin_Controller
 
             if (isset($_FILES["left_logo"]) && $_FILES['left_logo']['name'] != '' && (!empty($_FILES['left_logo']['name']))) {
 
-                $left_img_name = $this->media_storage->fileupload("left_logo", "./uploads/marksheet/");
+                $left_img_name = $this->media_storage->fileupload("left_logo", upload_root() . "marksheet/");
 
                 $insert_data['left_logo'] = $left_img_name;
             }
@@ -420,7 +420,7 @@ class Marksheet extends Admin_Controller
 
             if (isset($_FILES["right_logo"]) && $_FILES['right_logo']['name'] != '' && (!empty($_FILES['right_logo']['name']))) {
 
-                $right_logo_name = $this->media_storage->fileupload("right_logo", "./uploads/marksheet/");
+                $right_logo_name = $this->media_storage->fileupload("right_logo", upload_root() . "marksheet/");
 
                 $insert_data['right_logo'] = $right_logo_name;
             }
@@ -432,7 +432,7 @@ class Marksheet extends Admin_Controller
 
             if (isset($_FILES["left_sign"]) && $_FILES['left_sign']['name'] != '' && (!empty($_FILES['left_sign']['name']))) {
 
-                $left_sign_name = $this->media_storage->fileupload("left_sign", "./uploads/marksheet/");
+                $left_sign_name = $this->media_storage->fileupload("left_sign", upload_root() . "marksheet/");
 
                 $insert_data['left_sign'] = $left_sign_name;
             }
@@ -444,7 +444,7 @@ class Marksheet extends Admin_Controller
 
             if (isset($_FILES["middle_sign"]) && $_FILES['middle_sign']['name'] != '' && (!empty($_FILES['middle_sign']['name']))) {
 
-                $middle_sign_name = $this->media_storage->fileupload("middle_sign", "./uploads/marksheet/");
+                $middle_sign_name = $this->media_storage->fileupload("middle_sign", upload_root() . "marksheet/");
 
                 $insert_data['middle_sign'] = $middle_sign_name;
             }
@@ -456,7 +456,7 @@ class Marksheet extends Admin_Controller
 
             if (isset($_FILES["right_sign"]) && $_FILES['right_sign']['name'] != '' && (!empty($_FILES['right_sign']['name']))) {
 
-                $right_sign_name = $this->media_storage->fileupload("right_sign", "./uploads/marksheet/");
+                $right_sign_name = $this->media_storage->fileupload("right_sign", upload_root() . "marksheet/");
 
                 $insert_data['right_sign'] = $right_sign_name;
             }
@@ -468,7 +468,7 @@ class Marksheet extends Admin_Controller
 
             if (isset($_FILES["background_img"]) && $_FILES['background_img']['name'] != '' && (!empty($_FILES['background_img']['name']))) {
 
-                $background_img_name           = $this->media_storage->fileupload("background_img", "./uploads/marksheet/");
+                $background_img_name           = $this->media_storage->fileupload("background_img", upload_root() . "marksheet/");
                 $insert_data['background_img'] = $background_img_name;
             }
 
@@ -479,7 +479,7 @@ class Marksheet extends Admin_Controller
 
             if (isset($_FILES["header_image"]) && $_FILES['header_image']['name'] != '' && (!empty($_FILES['header_image']['name']))) {
 
-                $header_img_name             = $this->media_storage->fileupload("header_image", "./uploads/marksheet/");
+                $header_img_name             = $this->media_storage->fileupload("header_image", upload_root() . "marksheet/");
                 $insert_data['header_image'] = $header_img_name;
             }
 

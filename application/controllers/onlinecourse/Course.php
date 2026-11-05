@@ -254,7 +254,7 @@ class Course extends Admin_Controller
 
             if (!empty($_FILES['course_thumbnail']['name'])) {
                 $ext                     = pathinfo($_FILES['course_thumbnail']['name'], PATHINFO_EXTENSION);
-                $config['upload_path']   = 'uploads/course/course_thumbnail/';
+                $config['upload_path']   = upload_root() . 'course/course_thumbnail/';
                 $config['allowed_types'] = $ext;
                 $file_name               = $_FILES['course_thumbnail']['name'];
                 $config['file_name']     = "course_thumbnail" . $insert_id;
@@ -441,7 +441,7 @@ class Course extends Admin_Controller
             }
             if (!empty($_FILES['edit_course_thumbnail']['name'])) {
                 $ext                     = pathinfo($_FILES['edit_course_thumbnail']['name'], PATHINFO_EXTENSION);
-                $config['upload_path']   = 'uploads/course/course_thumbnail/';
+                $config['upload_path']   = upload_root() . 'course/course_thumbnail/';
                 $config['allowed_types'] = $ext;
                 $file_name               = $_FILES['edit_course_thumbnail']['name'];
                 $config['file_name']     = "edit_course_thumbnail" . $courseID;
@@ -531,7 +531,7 @@ class Course extends Admin_Controller
     public function download($doc, $section_id, $lesson_id)
     {
         $this->load->helper('download');
-        $filepath = "./uploads/course_content/" . $section_id . "/" . $lesson_id . "/" . $doc;
+        $filepath = upload_root() . "course_content/" . $section_id . "/" . $lesson_id . "/" . $doc;
         $data     = file_get_contents($filepath);
         $name     = $doc;
         force_download($name, $data);

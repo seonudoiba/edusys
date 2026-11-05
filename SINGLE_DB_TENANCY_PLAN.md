@@ -480,52 +480,94 @@ needs a test key in the environment.
 - `libraries/Paymongo.php`, a school-level payment gateway, has vendor test keys
   hard-coded. Move them to `payment_settings` when that gateway is used.
 
-### 4.7 Uploads
+### 4.7 Uploads ✅ done (phase 9)
 
-1,120 literal `uploads/` references. Stored values are mixed: `students.image`
-includes `uploads/student_images/…`, while `staff.image` is a bare filename.
+Every school has its own folder, **`uploads/s<school id>/`**. Code, database values and URLs keep
+the logical path `uploads/<folder>/<file>`; only the place on disk changed.
 
-* **Phase A ✅ (phase 7, no code change needed):** keep the shared `uploads/` tree.
-  Filenames are already timestamp + random, so collisions are unlikely.
-  `Customlib::getFolderPath()` returns the shared codebase root (phase 4), so every school
-  writes there. Images referenced by the seeded sample data may be missing; that's
-  acceptable for test data.
-* **Phase B:** per-school prefix `uploads/s<id>/…` via one helper
-  (`tenant_upload_path()`, used by `Media_storage` and the upload calls). Migrate
-  files and rewrite prefixed DB values per school. Serve private documents
-  (resumes, ID proofs, receipts) through a controller that checks the tenant instead
-  of as static files.
+**Writing and reading files** (`application/helpers/upload_helper.php`, autoloaded):
+- `upload_root()` is `./uploads/s<id>/` for the current school (`./uploads/` with no school, e.g. a
+  migration on the CLI). `upload_abs_root()` is the absolute form, `upload_fs_path($path)` maps a
+  logical or legacy path (`uploads/x`, `./uploads/x`) to the school's file.
+- The 239 `"./uploads/…"` literals were rewritten to `upload_root() . "…"` by
+  `tools/tenancy/rewrite_upload_paths.php` (tokenizer based: PHP strings only, never HTML or
+  JavaScript). The rest were fixed by hand: `Media_storage` (upload, download, delete),
+  `ImageResize` (gallery, media, video thumbnails), barcode and QR code generation, course
+  uploads, PDF backgrounds, online-admission photo copies, bank transfer receipts.
+- `Media_storage::filedownload()`/`filedelete()` built `getFolderPath() . "uploads/…"` without a
+  slash (`…/edusys_nguploads/…`), so many downloads and deletes didn't work; they go through
+  `upload_fs_path()` now.
+- A school's folder is created on first use (and by `School_provisioner`) with every upload
+  subfolder (`config/uploads.php`) and the default images from **`uploads/_shared/`** (tracked in
+  git: `no_image.png`, `default_male.jpg`, the default barcode and QR code …).
 
-### 4.8 Default data for new schools ✅ done (phase 6)
+**Serving** (`file.php` → `application/controllers/Files.php`):
+- The root `.htaccess` sends every `/uploads/…` request to `file.php`; `uploads/s<id>/` and
+  `uploads/_shared/` are refused (403). The controller serves the file from the folder of the
+  school of the host only, so another school's host gives 404.
+- **Private folders** (`config/uploads.php`: staff and student documents, leave documents,
+  timelines, offline payments, subscription receipts, income and expense documents, front office,
+  email attachments, homework, admission forms, inventory attachments) need a logged-in staff
+  member, student or parent of the same school; otherwise 404. Finer rules (a student sees only
+  their own documents) are not implemented: any logged-in user of the school can open them.
+- Images, PDF and audio/video are shown inline; any other type (HTML, SVG, office files) is sent
+  as a download, with `nosniff` and a sandboxing CSP, so an uploaded page can't run scripts on the
+  school's site. Public files are cacheable (ETag, 304); private ones `no-store`.
 
-`application/seeds/default/` holds 59 tables, one per file. They're generated from school 1 by
-`tools/tenancy/gen_default_seed.php` (regenerate; don't edit). Each file lists its
-`$references`, and `School_provisioner` inserts the rows under new ids and remaps them.
-The files are numbered in their own dependency order, which includes undeclared links
-(menu items → pages). Self-references (menu item parents) are resolved after the table is loaded.
-`seed run all` ignores this group.
+**Existing files**: `php index.php uploads_tool status | init <id|all> | copy_legacy <id|all> |
+remove_legacy`. `copy_legacy` copies the old shared tree into school folders without overwriting;
+files left in the old tree are no longer served.
 
-Contents, as agreed:
-- **Required:** permission groups, categories and student permissions; `roles_permissions`
-  (system roles); sidebar menus (192 sub-menus); sessions 2016-17 to 2029-30; 179 currencies;
-  one `sch_settings` row; email and SMS templates; notification settings; captcha;
-  online-admission and student-edit fields; attendance types; file types; module settings
-  (behaviour, online course, QR, Google Authenticator); front-CMS settings and menus.
-  The three platform permission groups (School, Plan, Subscription), their categories and
-  their menus are excluded.
-- **Starter lists:** departments, designations, leave types, student categories, houses,
-  room types, income and expense heads, inventory categories and stores, enquiry
-  reference and source, visitor purposes, complaint and content types, course categories,
-  disable reasons, grades, mark divisions, CBSE grades, terms, assessments and marksheet types.
-- **Templates, school details removed:** print header and footer, student and staff ID
-  cards, certificates, admit card and marksheet templates (names, logos, signatures,
-  backgrounds blanked); the built-in front-website pages (home, contact, complaint, 404)
-  with their menu items. The home and contact pages are emptied, because school 1's
-  versions held its marketing text, address and phone. School 1's own pages are excluded.
-- **Never:** people, money, classes, timetables, exams, logs, messages, media, and
-  credentials (`payment_settings`, `email_config`). A scan of the generated files finds
-  none of school 1's name, address, phone, email or keys.
+Verified (test database, guard in `throw` mode): uploads and deletes land in the school's folder
+(expense documents, gallery images with thumbnails, staff barcodes and QR codes); a file of one
+school is 404 on the hosts of the others; private files need a login of that school (staff or
+student), a login of another school doesn't count; `../`, encoded `..`, backslashes, the storage
+folders and hidden files are refused; SVG/HTML uploads come back as downloads.
+### 4.8 Default data for new schools ✅ done (phase 6, demo content added 2026-11-05)
 
+`application/seeds/default/` holds 109 tables, one per file, generated by
+`tools/tenancy/gen_default_seed.php` (regenerate; don't edit):
+
+```
+php tools/tenancy/gen_default_seed.php dbsample/smartschool.sql tools/tenancy/manifest.json application/seeds/default smartschool_test.json
+php tools/tenancy/copy_demo_media.php     # the media the seed refers to -> uploads/_shared/
+```
+
+- **System tables** (permissions, menus, settings, templates for email/SMS, sessions, currencies) come
+  from the central dump (school 1), school-specific values removed.
+- **School content** comes from the demo school export `smartschool_test.json` (not in git): a new
+  school starts with a working example of every module — classes, sections, subjects, subject
+  groups, timetable, lesson plans and topics, exam groups, online exams and question bank, fee
+  types/groups/amounts/discounts/reminders, transport routes/vehicles/pickup points, hostels and
+  rooms, library books, inventory items and suppliers, every front website page and menu, media
+  gallery, banners, news, events and notices, online courses (sections, lessons, quizzes), video
+  tutorials, notices, download centre, custom fields, behaviour types, and richer starter lists.
+- **Never**: people (students, parents, staff, logins) and their records (attendance, marks, fee
+  payments, income/expenses, messages, logs, leave, front-office logs), credentials, platform
+  tables, dated meetings (Google Meet/Zoom), a staff member's personal tasks, the CBSE exam
+  instances (the CBSE lists stay), demo leftovers (two test classes, test pages), the third-party
+  privacy policy page, and news about Indian holidays.
+- **Safety check**: the generator fails on any `*_id` column that is neither remapped
+  (`$references`, `$typed_references`), reset, set to the school's super admin
+  (`$owner_columns`) nor listed as a plain value — so a new school's rows can never point at another
+  school's rows. (It also caught school 1's SMS template registrations in `notification_setting`;
+  they are blanked now.)
+- **Sessions and dates**: demo content of the demo's current session is attached to the default
+  data's current session; `School_provisioner` points that session at the academic year the school
+  starts in (`start_month`), so a school set up in November 2026 starts in 2026-27, and moves the demo
+  dates (events, notices, fee due dates) forward by the same number of years.
+- **Order**: the provisioner creates the super admin before the default data, because some demo
+  rows need a "created by" staff member.
+- **Media**: the 95 files the seed refers to are in `uploads/_shared/` (copied into each new school's
+  folder, §4.7).
+- The platform school (the central website) gets none of the demo content: those rows are tagged `$school_only` and skipped for it, so it keeps the built-in pages only.
+- The front website is switched on for new schools. Each school should replace the demo text of its
+  Home, About Us and Contact pages and the demo contacts (address, phone, vehicles' drivers).
+
+Verified on an empty database: platform school and a new school set up; the new school is in 2026-27
+with 4 classes, 16 class sections, 18 class subjects, 16 timetable entries, fee setup, 16 news/events,
+38 gallery images, 4 courses; no row points at another school's row; its public site and a logged-in
+crawl of its admin area (241 pages, guard in `throw` mode) have 0 errors.
 ### 4.9 Cron and background work ✅ done (phase 7)
 
 **One runner for all schools: `php index.php cron_all run [task]`**
@@ -589,7 +631,7 @@ reports through `without_tenant()`.
 | 6 ✅ | Platform guard, `School_provisioner`, default seed, payments (§4.6, §4.8) | New school self-serves from `/plans` to its login; no folder or database is created |
 | 7 ✅ | Uploads phase A, cron CLI (§4.7, §4.9) | Images and cron jobs work for both schools |
 | 8 ✅ | Test pass (§6), DNS/TLS, first deployment (§7) | Sign-off checklist |
-| 9 | Uploads phase B, private file serving | Files isolated per school |
+| 9 ✅ | Uploads phase B, private file serving (§4.7) | Files isolated per school |
 
 ## 6. Testing ✅ test pass done (phase 8)
 

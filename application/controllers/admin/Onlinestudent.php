@@ -39,7 +39,7 @@ class Onlinestudent extends Admin_Controller
     public function download($doc)
     {
         $this->load->helper('download');
-        $filepath = "./uploads/student_documents/online_admission_doc/" . $doc;
+        $filepath = upload_root() . "student_documents/online_admission_doc/" . $doc;
         $data     = file_get_contents($filepath);
         $name     = $this->uri->segment(6);
         force_download($name, $data);
@@ -289,14 +289,14 @@ class Onlinestudent extends Admin_Controller
                 }
                 //to upload document from online student to main firl
                 if (isset($student['document']) && !empty($student['document'])) {
-                    $uploaddir = './uploads/student_documents/' . $response->student_id . '/';
+                    $uploaddir = upload_root() . 'student_documents/' . $response->student_id . '/';
                     if (!is_dir($uploaddir) && !mkdir($uploaddir)) {
                         die("Error creating folder $uploaddir");
                     }
 
                     $file_name           = basename($student['document']);
                     $img_name            = $uploaddir . $file_name;
-                    $filePath            = "./uploads/student_documents/online_admission_doc/" . $student['document'];
+                    $filePath            = upload_root() . "student_documents/online_admission_doc/" . $student['document'];
                     $destinationFilePath = $img_name;
                     copy($filePath, $destinationFilePath);
 
@@ -311,18 +311,18 @@ class Onlinestudent extends Admin_Controller
 
                         $fileInfo = pathinfo($_FILES["file"]["name"]);
                         $img_name = $response->student_id . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                        move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                         $data_img = array('id' => $response->student_id, 'image' => 'uploads/student_images/' . $img_name);
                         $this->student_model->add($data_img);
                     } else {
 
                         if ($student['image'] != "") {
-                            $filePath = $student['image'];
+                            $filePath = upload_fs_path($student['image']);
 
                             $fileInfo = pathinfo($student['image']);
                             $img_name = $response->student_id . '.' . $fileInfo['extension'];
 
-                            $uploaddir           = './uploads/student_images/' . $img_name;
+                            $uploaddir           = upload_root() . 'student_images/' . $img_name;
                             $destinationFilePath = $uploaddir;
 
                             copy($filePath, $destinationFilePath);
@@ -336,16 +336,16 @@ class Onlinestudent extends Admin_Controller
 
                         $fileInfo = pathinfo($_FILES["father_pic"]["name"]);
                         $img_name = $response->student_id . "father" . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["father_pic"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                        move_uploaded_file($_FILES["father_pic"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                         $data_img = array('id' => $response->student_id, 'father_pic' => 'uploads/student_images/' . $img_name);
                         $this->student_model->add($data_img);
                     } else {
                         if ($student['father_pic'] != "") {
 
-                            $filePath            = $student['father_pic'];
+                            $filePath            = upload_fs_path($student['father_pic']);
                             $fileInfo            = pathinfo($student['father_pic']);
                             $img_name            = $response->student_id . "father" . '.' . $fileInfo['extension'];
-                            $uploaddir           = './uploads/student_images/' . $img_name;
+                            $uploaddir           = upload_root() . 'student_images/' . $img_name;
                             $destinationFilePath = $uploaddir;
                             copy($filePath, $destinationFilePath);
                             $data_img = array('id' => $response->student_id, 'father_pic' => 'uploads/student_images/' . $img_name);
@@ -356,16 +356,16 @@ class Onlinestudent extends Admin_Controller
                     if (isset($_FILES["mother_pic"]) && !empty($_FILES['mother_pic']['name'])) {
                         $fileInfo = pathinfo($_FILES["mother_pic"]["name"]);
                         $img_name = $response->student_id . "mother" . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["mother_pic"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                        move_uploaded_file($_FILES["mother_pic"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                         $data_img = array('id' => $response->student_id, 'mother_pic' => 'uploads/student_images/' . $img_name);
                         $this->student_model->add($data_img);
                     } else {
 
                         if ($student['mother_pic'] != "") {
-                            $filePath            = $student['mother_pic'];
+                            $filePath            = upload_fs_path($student['mother_pic']);
                             $fileInfo            = pathinfo($student['mother_pic']);
                             $img_name            = $response->student_id . "mother" . '.' . $fileInfo['extension'];
-                            $uploaddir           = './uploads/student_images/' . $img_name;
+                            $uploaddir           = upload_root() . 'student_images/' . $img_name;
                             $destinationFilePath = $uploaddir;
                             copy($filePath, $destinationFilePath);
                             $data_img = array('id' => $response->student_id, 'mother_pic' => 'uploads/student_images/' . $img_name);
@@ -377,16 +377,16 @@ class Onlinestudent extends Admin_Controller
                     if (isset($_FILES["guardian_pic"]) && !empty($_FILES['guardian_pic']['name'])) {
                         $fileInfo = pathinfo($_FILES["guardian_pic"]["name"]);
                         $img_name = $response->student_id . "guardian" . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["guardian_pic"]["tmp_name"], "./uploads/student_images/" . $img_name);
+                        move_uploaded_file($_FILES["guardian_pic"]["tmp_name"], upload_root() . "student_images/" . $img_name);
                         $data_img = array('id' => $response->student_id, 'guardian_pic' => 'uploads/student_images/' . $img_name);
                         $this->student_model->add($data_img);
                     } else {
                         if ($student['guardian_pic'] != "") {
-                            $filePath = $student['guardian_pic'];
+                            $filePath = upload_fs_path($student['guardian_pic']);
                             $fileInfo = pathinfo($student['guardian_pic']);
                             $img_name = $response->student_id . "guardian" . '.' . $fileInfo['extension'];
 
-                            $uploaddir           = './uploads/student_images/' . $img_name;
+                            $uploaddir           = upload_root() . 'student_images/' . $img_name;
                             $destinationFilePath = $uploaddir;
                             copy($filePath, $destinationFilePath);
                             $data_img = array('id' => $response->student_id, 'guardian_pic' => 'uploads/student_images/' . $img_name);
@@ -401,7 +401,7 @@ class Onlinestudent extends Admin_Controller
                     if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                         $fileInfo = pathinfo($_FILES["file"]["name"]);
                         $img_name = $student['id'] . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["file"]["tmp_name"], "./uploads/student_images/online_admission_image/" . $img_name);
+                        move_uploaded_file($_FILES["file"]["tmp_name"], upload_root() . "student_images/online_admission_image/" . $img_name);
                         $data_img = array('id' => $student['id'], 'image' => 'uploads/student_images/online_admission_image/' . $img_name);
                         $this->onlinestudent_model->edit($data_img);
                     }
@@ -409,7 +409,7 @@ class Onlinestudent extends Admin_Controller
                     if (isset($_FILES["father_pic"]) && !empty($_FILES['father_pic']['name'])) {
                         $fileInfo = pathinfo($_FILES["father_pic"]["name"]);
                         $img_name = $student['id'] . "father" . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["father_pic"]["tmp_name"], "./uploads/student_images/online_admission_image/" . $img_name);
+                        move_uploaded_file($_FILES["father_pic"]["tmp_name"], upload_root() . "student_images/online_admission_image/" . $img_name);
                         $data_img = array('id' => $student['id'], 'father_pic' => 'uploads/student_images/online_admission_image/' . $img_name);
                         $this->onlinestudent_model->edit($data_img);
                     }
@@ -417,7 +417,7 @@ class Onlinestudent extends Admin_Controller
                     if (isset($_FILES["mother_pic"]) && !empty($_FILES['mother_pic']['name'])) {
                         $fileInfo = pathinfo($_FILES["mother_pic"]["name"]);
                         $img_name = $student['id'] . "mother" . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["mother_pic"]["tmp_name"], "./uploads/student_images/online_admission_image/" . $img_name);
+                        move_uploaded_file($_FILES["mother_pic"]["tmp_name"], upload_root() . "student_images/online_admission_image/" . $img_name);
                         $data_img = array('id' => $student['id'], 'mother_pic' => 'uploads/student_images/online_admission_image/' . $img_name);
                         $this->onlinestudent_model->edit($data_img);
                     }
@@ -425,7 +425,7 @@ class Onlinestudent extends Admin_Controller
                     if (isset($_FILES["guardian_pic"]) && !empty($_FILES['guardian_pic']['name'])) {
                         $fileInfo = pathinfo($_FILES["guardian_pic"]["name"]);
                         $img_name = $student['id'] . "guardian" . '.' . $fileInfo['extension'];
-                        move_uploaded_file($_FILES["guardian_pic"]["tmp_name"], "./uploads/student_images/online_admission_image/" . $img_name);
+                        move_uploaded_file($_FILES["guardian_pic"]["tmp_name"], upload_root() . "student_images/online_admission_image/" . $img_name);
                         $data_img = array('id' => $student['id'], 'guardian_pic' => 'uploads/student_images/online_admission_image/' . $img_name);
                         $this->onlinestudent_model->edit($data_img);
                     }

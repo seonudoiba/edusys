@@ -98,8 +98,11 @@
                                                         </label><small class="req"> *</small>
                                                         <select id="payment_method" name="payment_method" class="form-control">
                                                             <option value="">Select Payment Method</option>
-                                                            <option value="paystack">
+                                                            <option value="paystack" <?php echo set_select('payment_method', 'paystack'); ?>>
                                                                 <?php echo $this->lang->line('paystack_payment'); ?>
+                                                            </option>
+                                                            <option value="bank_transfer" <?php echo set_select('payment_method', 'bank_transfer'); ?>>
+                                                                Bank transfer (upload receipt)
                                                             </option>
                                                         </select>
                                                         <span class="text-danger">

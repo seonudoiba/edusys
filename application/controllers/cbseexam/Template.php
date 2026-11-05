@@ -152,35 +152,35 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["header_image"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["header_image"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["header_image"]["tmp_name"], "./uploads/cbseexam/template/header_image/" . $img_name);
+                move_uploaded_file($_FILES["header_image"]["tmp_name"], upload_root() . "cbseexam/template/header_image/" . $img_name);
                 $data['header_image'] = $img_name;
             }
             if (isset($_FILES["left_sign"]) && !empty($_FILES["left_sign"]['name'])) {
                 $time = md5($_FILES["left_sign"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["left_sign"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["left_sign"]["tmp_name"], "./uploads/cbseexam/template/left_sign/" . $img_name);
+                move_uploaded_file($_FILES["left_sign"]["tmp_name"], upload_root() . "cbseexam/template/left_sign/" . $img_name);
                 $data['left_sign'] = $img_name;
             }
             if (isset($_FILES["middle_sign"]) && !empty($_FILES["middle_sign"]['name'])) {
                 $time = md5($_FILES["middle_sign"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["middle_sign"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["middle_sign"]["tmp_name"], "./uploads/cbseexam/template/middle_sign/" . $img_name);
+                move_uploaded_file($_FILES["middle_sign"]["tmp_name"], upload_root() . "cbseexam/template/middle_sign/" . $img_name);
                 $data['middle_sign'] = $img_name;
             }
             if (isset($_FILES["right_sign"]) && !empty($_FILES["right_sign"]['name'])) {
                 $time = md5($_FILES["right_sign"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["right_sign"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["right_sign"]["tmp_name"], "./uploads/cbseexam/template/right_sign/" . $img_name);
+                move_uploaded_file($_FILES["right_sign"]["tmp_name"], upload_root() . "cbseexam/template/right_sign/" . $img_name);
                 $data['right_sign'] = $img_name;
             }
             if (isset($_FILES["background_img"]) && !empty($_FILES["background_img"]['name'])) {
                 $time = md5($_FILES["background_img"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["background_img"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["background_img"]["tmp_name"], "./uploads/cbseexam/template/background_img/" . $img_name);
+                move_uploaded_file($_FILES["background_img"]["tmp_name"], upload_root() . "cbseexam/template/background_img/" . $img_name);
                 $data['background_img'] = $img_name;
             }
 
@@ -322,7 +322,7 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["header_image"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["header_image"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["header_image"]["tmp_name"], "./uploads/cbseexam/template/header_image/" . $img_name);
+                move_uploaded_file($_FILES["header_image"]["tmp_name"], upload_root() . "cbseexam/template/header_image/" . $img_name);
                 $data['header_image'] = $img_name;
             } else {
                 $data['header_image'] = $result['header_image'];
@@ -332,7 +332,7 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["left_logo"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["left_logo"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["left_logo"]["tmp_name"], "./uploads/cbseexam/template/left_logo/" . $img_name);
+                move_uploaded_file($_FILES["left_logo"]["tmp_name"], upload_root() . "cbseexam/template/left_logo/" . $img_name);
                 $data['left_logo'] = $img_name;
             } else {
                 $data['left_logo'] = $result['left_logo'];
@@ -342,7 +342,7 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["right_logo"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["right_logo"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["right_logo"]["tmp_name"], "./uploads/cbseexam/template/right_logo/" . $img_name);
+                move_uploaded_file($_FILES["right_logo"]["tmp_name"], upload_root() . "cbseexam/template/right_logo/" . $img_name);
                 $data['right_logo'] = $img_name;
             } else {
                 $data['right_logo'] = $result['right_logo'];
@@ -352,7 +352,7 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["left_sign"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["left_sign"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["left_sign"]["tmp_name"], "./uploads/cbseexam/template/left_sign/" . $img_name);
+                move_uploaded_file($_FILES["left_sign"]["tmp_name"], upload_root() . "cbseexam/template/left_sign/" . $img_name);
                 $data['left_sign'] = $img_name;
             } else {
                 $data['left_sign'] = $result['left_sign'];
@@ -362,7 +362,7 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["middle_sign"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["middle_sign"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["middle_sign"]["tmp_name"], "./uploads/cbseexam/template/middle_sign/" . $img_name);
+                move_uploaded_file($_FILES["middle_sign"]["tmp_name"], upload_root() . "cbseexam/template/middle_sign/" . $img_name);
                 $data['middle_sign'] = $img_name;
             } else {
                 $data['middle_sign'] = $result['middle_sign'];
@@ -372,7 +372,7 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["right_sign"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["right_sign"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["right_sign"]["tmp_name"], "./uploads/cbseexam/template/right_sign/" . $img_name);
+                move_uploaded_file($_FILES["right_sign"]["tmp_name"], upload_root() . "cbseexam/template/right_sign/" . $img_name);
                 $data['right_sign'] = $img_name;
             } else {
                 $data['right_sign'] = $result['right_sign'];
@@ -382,7 +382,7 @@ class Template extends MY_Addon_CBSEController
                 $time = md5($_FILES["background_img"]['name'] . microtime());
                 $fileInfo = pathinfo($_FILES["background_img"]["name"]);
                 $img_name = $time . '.' . $fileInfo['extension'];
-                move_uploaded_file($_FILES["background_img"]["tmp_name"], "./uploads/cbseexam/template/background_img/" . $img_name);
+                move_uploaded_file($_FILES["background_img"]["tmp_name"], upload_root() . "cbseexam/template/background_img/" . $img_name);
                 $data['background_img'] = $img_name;
             } else {
                 $data['background_img'] = $result['background_img'];

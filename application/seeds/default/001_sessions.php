@@ -22,6 +22,12 @@ class Seed_default_sessions extends Seeder
     /** @var int[] template ids loaded only for the platform school (school registry, plans, subscriptions) */
     public $platform_only = [];
 
+    /** @var int template id of the current session in the default data; the provisioner points it at the academic year the school starts in */
+    public $current_template_id = 20;
+
+    /** @var int first month of the academic year */
+    public $start_month = 1;
+
     public function rows()
     {
         return [

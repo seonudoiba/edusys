@@ -44,15 +44,15 @@ class Plan_model extends MY_Model
         $this->db->trans_strict(false);
 
         $this->db->insert('plan', $data);
+        $insert_id = (int) $this->db->insert_id(); // read before the commit
 
         $this->db->trans_complete();
 
         if ($this->db->trans_status() === false) {
             $this->db->trans_rollback();
             return false;
-        } else {
-
         }
+        return $insert_id;
     }
 
     public function delete($id)

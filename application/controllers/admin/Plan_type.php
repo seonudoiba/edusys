@@ -1,102 +1,137 @@
 <?php
 
-if (!defined('BASEPATH')) {
-    exit('No direct script access allowed');
-}
+defined('BASEPATH') or exit('No direct script access allowed');
 
-#[AllowDynamicProperties]
-class plan_type extends Admin_Controller
+/**
+ * Plan features (platform admin): the lines listed on each plan's card on /plans (table
+ * plan_list). Hidden features disappear from the sign-up page; a feature used by a plan can't
+ * be deleted (hide it, or remove it from the plans first).
+ */
+class Plan_type extends Admin_Controller
 {
+    const PERMISSION = 'plan_list';
+
     public function __construct()
     {
         // Platform feature: only on the central host (404 on school subdomains).
         Tenant::require_platform();
         parent::__construct();
-
-        $this->load->model('plan_type_model');
+        $this->load->model(array('plan_type_model', 'plan_model'));
+        $this->load->library('Form_token');
     }
 
     public function index()
     {
-        $data = array();
-
-        $data['plan_list'] = $this->plan_type_model->get();
-
+        $this->require_privilege('can_view');
+        $this->session->set_userdata('top_menu', 'plan_list');
+        $this->session->set_userdata('sub_menu', 'admin/plan_type');
+        $features = $this->plan_type_model->get();
+        usort($features, function ($a, $b) { return (int) $a['sort_order'] <=> (int) $b['sort_order'] ?: (int) $a['id'] <=> (int) $b['id']; });
+        $usage = $this->usage();
+        foreach ($features as &$f) {
+            $f['plans'] = isset($usage[(int) $f['id']]) ? $usage[(int) $f['id']] : array();
+        }
+        unset($f);
+        $next = $features ? max(array_map(function ($f) { return (int) $f['sort_order']; }, $features)) + 1 : 1;
+        $data = array(
+            'features' => $features,
+            'next_order' => $next,
+            'token' => $this->form_token->field(),
+            'message' => $this->session->flashdata('feature_msg'),
+            'error' => $this->session->flashdata('feature_error'),
+        );
         $this->load->view('layout/header');
-        $this->load->view('admin/frontoffice/plan_type', $data);
+        $this->load->view('admin/plan/features', $data);
         $this->load->view('layout/footer');
     }
 
-    public function add()
+    /** Adds a feature, or renames / reorders one ($id). */
+    public function save($id = null)
     {
-        // if (!$this->rbac->hasPrivilege('admission_enquiry', 'can_add')) {
-        //     access_denied();
-        // }
-        $this->form_validation->set_rules('name', $this->lang->line('name'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('sort_order', $this->lang->line('sort_order'), 'trim|required|xss_clean');
-
-        if ($this->form_validation->run() == false) {
-            $msg = array(
-                'name' => form_error('name'),
-                'sort_order' => form_error('sort_order')
-            );
-
-            $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
-        } else {
-            $plan_type = array(
-                'name' => $this->input->post('name'),
-                'sort_order' => $this->input->post('sort_order'),
-                'status' => $this->input->post('status'),
-            );
-            $this->plan_type_model->add($plan_type);
-            $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
+        $id = ctype_digit((string) $id) ? (int) $id : null;
+        $this->require_privilege($id ? 'can_edit' : 'can_add');
+        $this->form_token->require_post();
+        if ($id) {
+            $this->feature_or_404($id);
         }
-        echo json_encode($array);
+        $name = trim((string) $this->input->post('name'));
+        $order = $this->input->post('sort_order');
+        if ($name === '' || mb_strlen($name) > 255) {
+            $this->back(null, 'Enter the feature (up to 255 characters).');
+        }
+        if (!preg_match('/^\d{1,5}$/', (string) $order)) {
+            $this->back(null, 'The order is a whole number (lower comes first).');
+        }
+        $row = array('name' => $name, 'sort_order' => (int) $order);
+        if ($id) {
+            $this->plan_type_model->plan_type_update($id, $row);
+            $this->back('Saved "' . $name . '".');
+        }
+        $row['status'] = 1;
+        $this->plan_type_model->add($row);
+        $this->back('Added "' . $name . '". Tick it on the plans that include it.');
     }
 
-    public function details($id)
+    public function toggle($id = null)
     {
-        $data['plan_type_data'] = $this->plan_type_model->get($id);
-        $this->load->view('admin/frontoffice/plantypeeditmodalview', $data);
+        $this->require_privilege('can_edit');
+        $this->form_token->require_post();
+        $f = $this->feature_or_404($id);
+        $show = (int) $f['status'] !== 1;
+        $this->plan_type_model->plan_type_update($f['id'], array('status' => $show ? 1 : 0));
+        $this->back('"' . $f['name'] . '" is now ' . ($show ? 'shown on' : 'hidden from') . ' the sign-up page.');
     }
 
-    public function editpost($id)
+    public function delete($id = null)
     {
-        // if (!$this->rbac->hasPrivilege('admission_enquiry', 'can_edit')) {
-        //     access_denied();
-        // }
-
-        $this->form_validation->set_rules('name', $this->lang->line('name'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('sort_order', $this->lang->line('sort_order'), 'trim|required|xss_clean');
-
-        if ($this->form_validation->run() == false) {
-            $msg = array(
-                'name' => form_error('name'),
-                'sort_order' => form_error('sort_order')
-            );
-
-            $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
-        } else {
-            $plan_type_update = array(
-                'name' => $this->input->post('name'),
-                'sort_order' => $this->input->post('sort_order'),
-                'status' => $this->input->post('status'),
-            );
-            $this->plan_type_model->plan_type_update($id, $plan_type_update);
-            $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('update_message'));
+        $this->require_privilege('can_delete');
+        $this->form_token->require_post();
+        $f = $this->feature_or_404($id);
+        $usage = $this->usage();
+        if (!empty($usage[(int) $f['id']])) {
+            $this->back(null, '"' . $f['name'] . '" is listed on ' . implode(', ', $usage[(int) $f['id']]) . '. Remove it from those plans or hide it.');
         }
-        echo json_encode($array);
+        $this->plan_type_model->plan_type_delete($f['id']);
+        $this->back('Deleted "' . $f['name'] . '".');
     }
 
-    public function delete($id)
+    /** feature id => names of the plans listing it */
+    private function usage()
     {
-        // if (!$this->rbac->hasPrivilege('admission_enquiry', 'can_delete')) {
-        //     access_denied();
-        // }
-        if (!empty($id)) {
-            $this->plan_type_model->plan_type_delete($id);
-            $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('delete_message'));
+        $out = array();
+        foreach ($this->plan_model->get() as $p) {
+            $ids = json_decode((string) $p['list'], true);
+            foreach (is_array($ids) ? $ids : array() as $fid) {
+                $out[(int) $fid][] = $p['title'];
+            }
         }
-        echo json_encode($array);
+        return $out;
+    }
+
+    private function feature_or_404($id)
+    {
+        $f = ctype_digit((string) $id) && (int) $id > 0 ? $this->plan_type_model->get((int) $id) : null;
+        if (empty($f) || !isset($f['id'])) {
+            show_404();
+        }
+        return $f;
+    }
+
+    private function back($message = null, $error = null)
+    {
+        if ($message !== null) {
+            $this->session->set_flashdata('feature_msg', $message);
+        }
+        if ($error !== null) {
+            $this->session->set_flashdata('feature_error', $error);
+        }
+        redirect('admin/plan_type');
+    }
+
+    private function require_privilege($action)
+    {
+        if (!$this->rbac->hasPrivilege(self::PERMISSION, $action)) {
+            access_denied();
+        }
     }
 }

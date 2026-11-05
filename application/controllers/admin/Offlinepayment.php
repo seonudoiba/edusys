@@ -146,7 +146,7 @@ class Offlinepayment extends Admin_Controller
     public function download($id)
     {
         $payment = $this->offlinePayment_model->get($id);     
-        $this->media_storage->filedownload($payment->attachment, "./uploads/offline_payments/");
+        $this->media_storage->filedownload($payment->attachment, upload_root() . "offline_payments/");
     }
 
     public function update()

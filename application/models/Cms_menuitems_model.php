@@ -136,11 +136,11 @@ class Cms_menuitems_model extends MY_Model
         }         
     }
 
-    public function getMenus($menu_id, $parent = 0, $spacing = '', $user_tree_array = '')
+    public function getMenus($menu_id, $parent = 0, $spacing = '', $user_tree_array = '', $website = true)
     {
         $parent_menu = array();
         $sub_menu    = array();
-        $this->db->select('front_cms_menu_items.*,front_cms_pages.slug as `page_slug`,front_cms_pages.url as `page_url`,front_cms_pages.is_homepage')->from('front_cms_menu_items');
+        $this->db->select('front_cms_menu_items.*,front_cms_pages.slug as `page_slug`,front_cms_pages.url as `page_url`,front_cms_pages.is_homepage,front_cms_pages.is_active as `page_is_active`')->from('front_cms_menu_items');
         $this->db->join('front_cms_pages', 'front_cms_pages.id = front_cms_menu_items.page_id', 'left');
         $this->db->where('menu_id', $menu_id);
         $this->db->order_by('parent_id ASC, weight ASC');
@@ -148,6 +148,10 @@ class Cms_menuitems_model extends MY_Model
         $result = $query->result();
 
         foreach ($result as $r_key => $obj) {
+            // A menu item of a hidden page is left out (links to other addresses always show).
+            if ($website && !empty($obj->page_id) && $obj->page_is_active !== null && $obj->page_is_active !== 'yes' && empty($obj->is_homepage)) {
+                continue;
+            }
             if(isset($obj->ext_url_link)){ 
                 if (substr($obj->ext_url_link, -16) == "online_admission") {
                     $obj->page_slug = substr($obj->ext_url_link, -16);

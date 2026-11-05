@@ -11,9 +11,11 @@
 
                         <div class="box-tools pull-right">
                             <div class="box-tools pull-right">
+                                <?php if (Tenant::is_platform()) { // adding a language is the platform's job ?>
                                 <a href="<?php echo base_url(); ?>admin/language/create" class="btn btn-primary btn-sm" data-toggle="tooltip" >
                                     <i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?>
                                 </a>
+                                <?php } ?>
                             </div>
                         </div><!-- /.box-tools -->
                     </div><!-- /.box-header -->
