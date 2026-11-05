@@ -17,6 +17,14 @@ class Platform_settings
         'reminder_days' => '30,7,1',    // days before expiry
         'expired_notice' => '1',        // email the owner when a subscription has ended
         'extra_reserved_subdomains' => '',
+        // Expiry policy: days of grace after the end date, then "warn" (banners, emails) or "disable".
+        'grace_days' => '7',
+        'expiry_action' => 'warn',
+        // Seller details printed on invoices.
+        'invoice_company' => '',        // empty: the platform name
+        'invoice_address' => '',
+        'invoice_tax_id' => '',
+        'invoice_footer' => 'Thank you for your business.',
     );
 
     /** @var CI_Controller */

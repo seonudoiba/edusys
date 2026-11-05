@@ -36,9 +36,9 @@ check('subdomain 63 chars', 'subdomain:' . str_repeat('a', 63), $type(str_repeat
 // Rejections
 check('empty host', 'reject', $type(''));
 check('null host', 'reject', $type(null));
-check('other domain', 'reject', $type('greenfield.example.com'));
-check('suffix trick', 'reject', $type('greenfieldedusys.ng'));
-check('lookalike parent', 'reject', $type('greenfield.edusys.ng.evil.com'));
+check('other domain (custom domain lookup: only verified domains resolve)', 'domain', $type('greenfield.example.com'));
+check('suffix trick (not a subdomain; custom domain lookup)', 'domain', $type('greenfieldedusys.ng'));
+check('lookalike parent (not a subdomain; custom domain lookup)', 'domain', $type('greenfield.edusys.ng.evil.com'));
 check('nested subdomain', 'reject', $type('a.b.edusys.ng'));
 check('reserved label', 'reject', $type('admin.edusys.ng'));
 check('reserved www is central only when listed', 'platform', $type('www.edusys.ng'));

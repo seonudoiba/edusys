@@ -115,6 +115,37 @@
                                         }
                                     ?>
 
+                                    <?php if (isset($amount) && $amount > 0) { ?>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="coupon_code">Coupon code</label>
+                                                    <div class="input-group">
+                                                        <input id="coupon_code" name="coupon_code" type="text" class="form-control" maxlength="40" style="text-transform:uppercase"
+                                                               value="<?php echo set_value('coupon_code'); ?>" placeholder="Optional">
+                                                        <span class="input-group-btn"><button class="btn btn-default" type="button" id="apply_coupon">Apply</button></span>
+                                                    </div>
+                                                    <span class="text-danger"><?php echo form_error('coupon_code'); ?></span>
+                                                    <span id="coupon_result" class="help-block"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <script>
+                                            (function () {
+                                                var btn = document.getElementById('apply_coupon');
+                                                btn.addEventListener('click', function () {
+                                                    var code = document.getElementById('coupon_code').value.trim(), out = document.getElementById('coupon_result');
+                                                    if (!code) { out.textContent = ''; return; }
+                                                    var url = '<?php echo site_url('subscription/check_coupon'); ?>?plan_id=' + encodeURIComponent(document.getElementById('plan_id').value) + '&code=' + encodeURIComponent(code);
+                                                    fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+                                                        out.textContent = d.message || 'This coupon code is not valid.';
+                                                        out.style.color = d.ok ? '#00a65a' : '#dd4b39';
+                                                        if (d.ok) { document.getElementById('amount').value = d.total; }
+                                                    });
+                                                });
+                                            })();
+                                        </script>
+                                    <?php } ?>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">

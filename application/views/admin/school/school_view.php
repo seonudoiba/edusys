@@ -82,7 +82,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
             </div>
         <?php } ?>
 
-        <?php if (!$s['set_up'] && empty($s['is_platform'])) { ?>
+        <?php if (!$s['set_up'] && empty($s['is_platform']) && $s['status_reason'] !== 'purged') { ?>
             <div class="box box-warning sv-setup">
                 <div class="box-header with-border"><h3 class="box-title"><i class="fa fa-rocket"></i> Approve and set up this school</h3></div>
                 <div class="box-body">
@@ -118,11 +118,13 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                         <div class="box-header with-border"><h3 class="box-title">Usage</h3></div>
                         <div class="box-body">
                             <div class="row">
-                                <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo (int) $usage['students']; ?></b><span>Active students</span></div></div>
-                                <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo (int) $usage['staff']; ?></b><span>Active staff</span></div></div>
+                                <?php $of = function ($n) { return (int) $n > 0 ? ' <small style="font-size:12px;color:#888">/ ' . number_format((int) $n) . '</small>' : ''; }; ?>
+                                <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo (int) $usage['students'] . $of($limits['max_students']); ?></b><span>Active students</span></div></div>
+                                <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo (int) $usage['staff'] . $of($limits['max_staff']); ?></b><span>Active staff</span></div></div>
                                 <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo (int) $usage['classes']; ?></b><span>Classes</span></div></div>
                                 <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo (int) $usage['sections']; ?></b><span>Sections</span></div></div>
                                 <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo (int) $usage['logins_30_days']; ?></b><span>Logins, 30 days</span></div></div>
+                                <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b><?php echo round($storage_bytes / 1048576, 1) . ((int) $limits['max_storage_mb'] > 0 ? ' <small style="font-size:12px;color:#888">/ ' . (int) $limits['max_storage_mb'] . '</small>' : ''); ?></b><span>Storage (MB)</span></div></div>
                                 <div class="col-xs-6 col-sm-4 col-lg-2"><div class="sv-stat"><b style="font-size:14px;line-height:31px"><?php echo $usage['last_login'] ? $date($usage['last_login']) : 'Never'; ?></b><span>Last login</span></div></div>
                             </div>
                         </div>
@@ -194,6 +196,25 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                         </table>
                     </div>
                 </div>
+
+                <?php if ($invoices) { ?>
+                    <div class="box box-default">
+                        <div class="box-header with-border"><h3 class="box-title">Invoices</h3></div>
+                        <div class="box-body table-responsive no-padding">
+                            <table class="table table-condensed">
+                                <?php foreach ($invoices as $inv) { ?>
+                                    <tr>
+                                        <td><b><?php echo $e($inv['invoice_no']); ?></b></td>
+                                        <td><?php echo $date($inv['issued_at']); ?></td>
+                                        <td><?php echo $e($inv['description']); ?></td>
+                                        <td class="text-right"><?php echo $money($inv['total']); ?></td>
+                                        <td class="text-right"><a class="btn btn-xs btn-default" href="<?php echo site_url('admin/billing/invoice/' . (int) $inv['id']); ?>" target="_blank">PDF</a></td>
+                                    </tr>
+                                <?php } ?>
+                            </table>
+                        </div>
+                    </div>
+                <?php } ?>
 
                 <?php if ($bank_transfers) { ?>
                     <div class="box box-default">
@@ -339,6 +360,81 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                     </div>
                 <?php } ?>
 
+                <?php if (empty($s['is_platform']) && ($can_edit || $can_delete)) { ?>
+                <div class="box box-default">
+                    <div class="box-header with-border"><h3 class="box-title">Data</h3></div>
+                    <div class="box-body">
+                        <?php if ($s['status_reason'] === 'purged') { ?>
+                            <p class="text-danger"><i class="fa fa-trash"></i> This school's data and files were purged. Its subscriptions and invoices are kept.</p>
+                        <?php } else { ?>
+                            <?php if ($can_edit) { ?>
+                                <form method="post" action="<?php echo $action('export'); ?>" style="margin-bottom:8px">
+                                    <?php echo $token; ?>
+                                    <button class="btn btn-default btn-sm" type="submit"><i class="fa fa-download"></i> Export data and files</button>
+                                    <div class="sv-muted" style="font-size:11px;margin-top:4px">An SQL file of the school's rows plus its uploads (.tar.gz).</div>
+                                </form>
+                            <?php } ?>
+                            <?php if ($can_delete && $s['state'] === 'disabled') { ?>
+                                <form method="post" action="<?php echo $action('purge'); ?>" style="border-top:1px solid #f2dede;padding-top:8px"
+                                      onsubmit="return confirm('Delete ALL data and files of <?php echo $e(addslashes($s['school_name'])); ?> for good? This cannot be undone.');">
+                                    <?php echo $token; ?>
+                                    <label style="font-weight:normal;font-size:12px">Purge for good: export first, then type <b><?php echo $e($s['subdomain']); ?></b></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" name="confirm" class="form-control" autocomplete="off" required>
+                                        <span class="input-group-btn"><button class="btn btn-danger" type="submit"><i class="fa fa-trash"></i> Purge</button></span>
+                                    </div>
+                                </form>
+                            <?php } elseif ($can_delete && $s['set_up']) { ?>
+                                <p class="sv-muted" style="font-size:11px">To delete all its data for good, disable the school first.</p>
+                            <?php } ?>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
+                <?php if (empty($s['is_platform']) && $s['subdomain']) {
+                    $cname_target = $s['subdomain'] . '.' . $this->config->item('tenancy_base_domain'); ?>
+                <div class="box box-default">
+                    <div class="box-header with-border"><h3 class="box-title">Custom domains</h3></div>
+                    <div class="box-body">
+                        <?php if (!$domains) { ?><p class="sv-muted">The school is served on its subdomain only.</p><?php } ?>
+                        <?php foreach ($domains as $d) { ?>
+                            <div style="border-bottom:1px solid #eee;padding:6px 0 8px">
+                                <b><?php echo $e($d['domain']); ?></b>
+                                <?php if ($d['verified_at']) { ?><span class="label label-success">Verified</span><?php } else { ?><span class="label label-warning">Not verified</span><?php } ?>
+                                <?php if ((int) $d['is_primary']) { ?><span class="label label-primary" title="Used in links and emails">Main address</span><?php } ?>
+                                <?php if (!$d['verified_at']) { ?>
+                                    <div class="sv-muted" style="font-size:12px;margin-top:4px">Ask the school to add <b>one</b> DNS record, then click Verify:<br>
+                                        CNAME <code><?php echo $e($d['domain']); ?></code> → <code><?php echo $e($cname_target); ?></code><br>
+                                        or TXT <code>_edusys.<?php echo $e($d['domain']); ?></code> = <code><?php echo $e($d['verify_token']); ?></code></div>
+                                <?php } ?>
+                                <?php if ($can_edit) { ?>
+                                    <div class="sv-actions" style="margin-top:4px">
+                                        <?php if (!$d['verified_at']) { ?>
+                                            <form method="post" action="<?php echo $action('verify_domain'); ?>"><?php echo $token; ?><input type="hidden" name="domain_id" value="<?php echo (int) $d['id']; ?>">
+                                                <button class="btn btn-xs btn-success" type="submit"><i class="fa fa-check"></i> Verify</button></form>
+                                        <?php } else { ?>
+                                            <form method="post" action="<?php echo $action('primary_domain'); ?>"><?php echo $token; ?><input type="hidden" name="domain_id" value="<?php echo (int) $d['id']; ?>">
+                                                <button class="btn btn-xs btn-default" type="submit"><?php echo (int) $d['is_primary'] ? 'Use the subdomain as main' : 'Make main address'; ?></button></form>
+                                        <?php } ?>
+                                        <form method="post" action="<?php echo $action('remove_domain'); ?>" onsubmit="return confirm('Remove <?php echo $e(addslashes($d['domain'])); ?>? It stops opening the school.');"><?php echo $token; ?><input type="hidden" name="domain_id" value="<?php echo (int) $d['id']; ?>">
+                                            <button class="btn btn-xs btn-link text-danger" type="submit">remove</button></form>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
+                        <?php if ($can_edit) { ?>
+                            <form method="post" action="<?php echo $action('add_domain'); ?>" style="margin-top:10px">
+                                <?php echo $token; ?>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" name="domain" class="form-control" maxlength="253" required placeholder="portal.school.com">
+                                    <span class="input-group-btn"><button class="btn btn-default" type="submit"><i class="fa fa-plus"></i> Add domain</button></span>
+                                </div>
+                                <p class="sv-muted" style="font-size:11px;margin:4px 0 0">The server also needs the domain on its web server and a TLS certificate (see DEPLOYMENT.md, custom domains).</p>
+                            </form>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
                 <div class="box box-default">
                     <div class="box-header with-border"><h3 class="box-title">Notes</h3>
                         <span class="sv-muted" style="margin-left:8px">internal, never shown to the school</span></div>

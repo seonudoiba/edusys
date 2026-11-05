@@ -78,6 +78,11 @@ class School_provisioner
         $db->db_debug = $debug;
         // The school's upload folder (uploads/s<id>/) with its subfolders and default images.
         upload_init_school((int) $school['id']);
+        // The modules its plan includes (a school without a paid plan keeps them all).
+        if (empty($school['is_platform'])) {
+            $this->CI->load->library('Plan_limits');
+            $this->CI->plan_limits->apply_modules((int) $school['id'], true);
+        }
 
         return array(
             'school_id' => (int) $school['id'],
@@ -154,6 +159,12 @@ class School_provisioner
             $hosts = (array) $this->CI->config->item('tenancy_central_hosts');
             $https = is_https() || $this->CI->config->item('tenancy_force_https');
             return ($https ? 'https' : 'http') . '://' . (isset($hosts[0]) ? $hosts[0] : 'localhost') . '/';
+        }
+        $domain = $this->CI->db->select('domain')->where(array('school_ref' => (int) $school['id'], 'is_primary' => 1))
+            ->where('verified_at IS NOT NULL', null, false)->get('platform_school_domains')->row();
+        if ($domain) {
+            $https = is_https() || $this->CI->config->item('tenancy_force_https');
+            return ($https ? 'https' : 'http') . '://' . $domain->domain . '/';
         }
         return $this->school_url($school['subdomain']);
     }

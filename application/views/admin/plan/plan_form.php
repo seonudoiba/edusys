@@ -56,6 +56,38 @@ $shown = $posted ? (bool) $this->input->post('status') : (!$p || (int) $p['statu
                                     <p class="help-block pf-days"><a href="#" data-days="30">30</a><a href="#" data-days="90">90</a><a href="#" data-days="180">180</a><a href="#" data-days="365">365</a></p>
                                 </div>
                             </div>
+                            <hr>
+                            <h4>What the plan includes</h4>
+                            <div class="row">
+                                <div class="col-sm-4 form-group">
+                                    <label for="max_students">Maximum active students</label>
+                                    <input id="max_students" name="max_students" type="number" min="0" class="form-control" value="<?php echo $val('max_students', '0'); ?>">
+                                </div>
+                                <div class="col-sm-4 form-group">
+                                    <label for="max_staff">Maximum active staff</label>
+                                    <input id="max_staff" name="max_staff" type="number" min="0" class="form-control" value="<?php echo $val('max_staff', '0'); ?>">
+                                </div>
+                                <div class="col-sm-4 form-group">
+                                    <label for="max_storage_mb">File storage (MB)</label>
+                                    <input id="max_storage_mb" name="max_storage_mb" type="number" min="0" class="form-control" value="<?php echo $val('max_storage_mb', '0'); ?>">
+                                </div>
+                            </div>
+                            <p class="help-block" style="margin-top:-8px">0 means no limit. A school at its limit can't add more until it upgrades.</p>
+                            <?php
+                            $mods_posted = $posted ? ($this->input->post('all_modules') ? null : array_map('strval', (array) $this->input->post('modules'))) : $plan_modules;
+                            $all_on = $mods_posted === null;
+                            ?>
+                            <div class="form-group">
+                                <label>Modules</label>
+                                <div class="checkbox" style="margin-top:0"><label><input type="checkbox" name="all_modules" value="1" id="all_modules" <?php echo $all_on ? 'checked' : ''; ?>> Every module</label></div>
+                                <div class="pf-features" id="module_list" style="<?php echo $all_on ? 'opacity:.45' : ''; ?>">
+                                    <?php foreach ($all_modules as $m) { ?>
+                                        <label><input type="checkbox" name="modules[]" value="<?php echo $e($m['short_code']); ?>" <?php echo ($all_on || in_array($m['short_code'], $mods_posted, true)) ? 'checked' : ''; ?> <?php echo $all_on ? 'disabled' : ''; ?>> <?php echo $e($m['name']); ?></label>
+                                    <?php } ?>
+                                </div>
+                                <p class="help-block">Modules a plan leaves out are switched off in its schools, and the schools can't switch them on.</p>
+                            </div>
+                            <hr>
                             <div class="form-group">
                                 <label>Features listed on the sign-up page</label>
                                 <a href="<?php echo site_url('admin/plan_type'); ?>" class="pull-right">Manage features</a>
@@ -118,6 +150,13 @@ $shown = $posted ? (bool) $this->input->post('status') : (!$p || (int) $p['statu
                 li.appendChild(i);
                 li.appendChild(document.createTextNode(c.getAttribute('data-name')));
                 ul.appendChild(li);
+            });
+        }
+        var all = document.getElementById('all_modules');
+        if (all) {
+            all.addEventListener('change', function () {
+                document.getElementById('module_list').style.opacity = all.checked ? .45 : 1;
+                f.querySelectorAll('input[name="modules[]"]').forEach(function (c) { c.disabled = all.checked; if (all.checked) { c.checked = true; } });
             });
         }
         f.addEventListener('input', update);

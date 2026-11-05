@@ -259,14 +259,16 @@ $rowsBy['sidebar_sub_menus'][] = [
 // Platform-only through PLATFORM_PERMISSION_GROUPS (platform_admin, school_information).
 $rowsBy['permission_group'][] = ['id' => '900010', 'school_id' => '1', 'name' => 'Platform administration', 'short_code' => 'platform_admin',
     'is_active' => '1', 'system' => '0', 'created_at' => '2026-11-05 00:00:00'];
-foreach ([['900011', '900010', 'Platform settings and emails', 'platform_settings', '1', '0', '1', '0'],
+foreach ([['900011', '900010', 'Platform settings and emails', 'platform_settings', '1', '1', '1', '1'], // add/delete: backups, enquiries (271)
           ['900012', '1202', 'Plans and features', 'plan_list', '1', '1', '1', '1'],
-          ['900013', '1204', 'Subscriptions and bank transfers', 'subscription_list', '1', '0', '0', '1']] as $c) {
+          ['900013', '1204', 'Subscriptions and bank transfers', 'subscription_list', '1', '0', '1', '1']] as $c) {
     $rowsBy['permission_category'][] = ['id' => $c[0], 'school_id' => '1', 'perm_group_id' => $c[1], 'name' => $c[2], 'short_code' => $c[3],
         'enable_view' => $c[4], 'enable_add' => $c[5], 'enable_edit' => $c[6], 'enable_delete' => $c[7], 'created_at' => '2026-11-05 00:00:00'];
 }
 foreach ([['900020', 'fa fa-users ftlayer', 'Platform Team', 'platform_team', '3', "('staff', 'can_view') || ('superadmin', 'can_view') || ('audit_trail_report', 'can_view') || ('user_log', 'can_view')"],
-          ['900021', 'fa fa-envelope-o ftlayer', 'Communication', 'platform_communication', '4', "('platform_settings', 'can_view')"]] as $m) {
+          ['900021', 'fa fa-envelope-o ftlayer', 'Communication', 'platform_communication', '4', "('platform_settings', 'can_view')"],
+          // Support (migration 271)
+          ['900041', 'fa fa-life-ring ftlayer', 'Support', 'platform_support', '5', "('platform_settings', 'can_view')"]] as $m) {
     $rowsBy['sidebar_menus'][] = ['id' => $m[0], 'school_id' => '1', 'permission_group_id' => '900010', 'icon' => $m[1], 'menu' => $m[2],
         'activate_menu' => $m[3], 'lang_key' => $m[3], 'system_level' => '0', 'level' => $m[4], 'sidebar_display' => '1',
         'access_permissions' => $m[5], 'is_active' => '1', 'created_at' => '2026-11-05 00:00:00'];
@@ -278,11 +280,25 @@ foreach ([['900030', '900020', 'platform_staff', 'platform_staff', 'admin/staff'
           ['900034', '900021', 'platform_email_templates', 'email_templates', 'admin/platform/emails', '1', "('platform_settings', 'can_view')", 'platform', 'emails,email_edit', '900010'],
           ['900035', '900021', 'platform_email_log', 'email_log', 'admin/platform/email_log', '2', "('platform_settings', 'can_view')", 'platform', 'email_log', '900010'],
           ['900036', '36', 'schools_waiting', 'waiting_for_approval', 'admin/schools?tab=waiting_approval', '3', "('schools', 'can_view')", 'schools', '', '1201'],
-          ['900037', '27', 'platform_settings', 'platform_settings_health', 'admin/platform/settings', '0', "('platform_settings', 'can_view')", 'platform', 'settings', '900010']] as $x) {
+          ['900037', '27', 'platform_settings', 'platform_settings_health', 'admin/platform/settings', '0', "('platform_settings', 'can_view')", 'platform', 'settings', '900010'],
+          // Billing (migration 265)
+          ['900038', '38', 'billing_invoices', 'invoices', 'admin/billing/invoices', '3', "('subscription_list', 'can_view')", 'billing', 'invoices', '1204'],
+          ['900039', '38', 'billing_coupons', 'coupons', 'admin/billing/coupons', '4', "('subscription_list', 'can_view')", 'billing', 'coupons,coupon', '1204'],
+          ['900040', '38', 'billing_reports', 'reports', 'admin/billing/reports', '5', "('subscription_list', 'can_view')", 'billing', 'reports', '1204'],
+          // Support and backups (migration 271)
+          ['900042', '900041', 'platform_support_desk', 'support_desk', 'admin/support_desk', '1', "('platform_settings', 'can_view')", 'support_desk', 'index,view', '900010'],
+          ['900043', '900041', 'platform_enquiries', 'website_enquiries', 'admin/enquiries', '2', "('platform_settings', 'can_view')", 'enquiries', 'index,view', '900010'],
+          ['900044', '27', 'platform_backups', 'platform_backups', 'admin/backups', '0', "('platform_settings', 'can_view')", 'backups', 'index', '900010'],
+          // Help & Support for schools (school-only, below)
+          ['900046', '900045', 'support_tickets', 'support_tickets', 'admin/support', '1', "('general_setting', 'can_view')", 'support', 'index,create,view', '15']] as $x) {
     $rowsBy['sidebar_sub_menus'][] = ['id' => $x[0], 'school_id' => '1', 'sidebar_menu_id' => $x[1], 'menu' => $x[2], 'key' => $x[2],
         'lang_key' => $x[3], 'url' => $x[4], 'level' => $x[5], 'access_permissions' => $x[6], 'permission_group_id' => $x[9],
         'activate_controller' => $x[7], 'activate_methods' => $x[8], 'addon_permission' => '', 'is_active' => '1', 'created_at' => '2026-11-05 00:00:00'];
 }
+// Help & Support (migration 271): every school but the platform (System Settings group 15).
+$rowsBy['sidebar_menus'][] = ['id' => '900045', 'school_id' => '1', 'permission_group_id' => '15', 'icon' => 'fa fa-life-ring ftlayer', 'menu' => 'Help & Support',
+    'activate_menu' => 'help_support', 'lang_key' => 'help_support', 'system_level' => '0', 'level' => '30', 'sidebar_display' => '1',
+    'access_permissions' => "('general_setting', 'can_view')", 'is_active' => '1', 'created_at' => '2026-11-05 00:00:00'];
 foreach ($rowsBy['sidebar_sub_menus'] as &$r) {
     // Platform pages added later: highlight their menu entry on the new pages too.
     if ($r['url'] === 'admin/schools') {
@@ -438,6 +454,8 @@ foreach ($tables as $t) {
         foreach ($refs as $col => $ref) {
             if ($ref !== $t && $r[$col] !== null && isset($schoolOnly[$ref][$r[$col]])) $isSchoolOnly = true;
         }
+        // Help & Support talks to the platform team: not on the platform itself (its sub menu follows by reference).
+        if ($t === 'sidebar_menus' && $r['lang_key'] === 'help_support') $isSchoolOnly = true;
         if ($isSchoolOnly) $schoolOnly[$t][$r['id']] = true;
         foreach (BLANK[$t] ?? [] as $col) {
             $r[$col] = stripos($s['cols'][$col], 'NOT NULL') === false ? null : '';

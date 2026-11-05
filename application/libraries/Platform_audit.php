@@ -25,7 +25,19 @@ class Platform_audit
 
     public function record($what, $message, $school_id = null)
     {
-        $this->CI->db->insert('logs', $this->row($what, $message, $school_id));
+        $row = $this->row($what, $message, $school_id);
+        if (class_exists('Tenant', false) && Tenant::has()) {
+            $this->CI->db->insert('logs', $row);
+            return;
+        }
+        // No school for this request (CLI jobs): the entry belongs to the platform school.
+        $this->CI->db->without_tenant(function ($db) use ($row) {
+            $platform = $db->select('id')->where('is_platform', 1)->order_by('id')->limit(1)->get('school')->row();
+            if ($platform) {
+                $row['school_id'] = (int) $platform->id;
+                $db->insert('logs', $row);
+            }
+        });
     }
 
     /** The same entry in the school's own audit trail (written across the tenant filter). */

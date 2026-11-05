@@ -34,6 +34,15 @@ class Module extends Admin_Controller
         $status = $this->input->post("status");
 
         if (!empty($id)) {
+            // A module the school's plan doesn't include can't be switched on.
+            if ((int) $status === 1 && !Tenant::is_platform()) {
+                $this->load->library('Plan_limits');
+                $group = $this->db->where('id', (int) $id)->get('permission_group')->row();
+                if ($group && !$this->plan_limits->module_allowed(Tenant::id(), $group->short_code)) {
+                    echo json_encode(array('status' => 0, 'msg' => $group->name . ' is not included in your plan. Upgrade the plan to use it.'));
+                    return;
+                }
+            }
             $data = array('id' => $id, 'is_active' => $status);
             $result = $this->module_model->changeStatus($data);
             $response = array('status' => 1, 'msg' => $this->lang->line("status_change_successfully"));

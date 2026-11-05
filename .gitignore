@@ -27,6 +27,9 @@ application/logs/*
 application/cache/*
 !application/cache/index.html
 
+# Platform > Backups default folder (EDUSYS_BACKUP_DIR moves it): whole-database dumps, never commit
+application/backups/
+
 # Environment: credentials live in the server environment, never in the repository
 .env
 .env.*
@@ -52,3 +55,6 @@ system/*.zip
 Thumbs.db
 .idea/
 .vscode/
+
+# mPDF font and temp cache (invoice PDFs)
+application/tmp/

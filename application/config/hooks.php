@@ -20,6 +20,13 @@ $hook['pre_system'][] = array(
 );
 
 // Resolve the school for this request (subdomain -> school) before any controller runs.
+// The school's plan limits (students, staff, storage), once the controller exists.
+$hook['post_controller_constructor'][] = array(
+    'class'    => 'Plan_policy_hook',
+    'function' => 'enforce',
+    'filename' => 'Plan_policy_hook.php',
+    'filepath' => 'hooks'
+);
 $hook['pre_controller'][] = array(
     'class'    => 'Tenant_hook',
     'function' => 'resolve',

@@ -328,6 +328,16 @@ if (!function_exists('main_menu_array')) {
                 'onlineadmission' => array('admissionsetting'),
                 'updater' => array('index'),
                 'sidemenu' => array('index'),
+                'backups' => array('index'),
+            ),
+
+            // Help & Support (schools) and Support (platform)
+            'help_support' => array(
+                'support' => array('index', 'create', 'view'),
+            ),
+            'platform_support' => array(
+                'support_desk' => array('index', 'view'),
+                'enquiries' => array('index', 'view'),
             ),
 
             'gmeet_live_classes' => array(

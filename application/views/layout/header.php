@@ -202,6 +202,20 @@ if (!empty($image)) {
                     </div>
                 </nav>
             </header>
+            <?php if (class_exists('Tenant', false) && Tenant::has() && !Tenant::is_platform()) {
+                $CI_limits = &get_instance(); // a library loaded from a view lives on the controller
+                $CI_limits->load->library('Plan_limits');
+                $plan_notices = $CI_limits->plan_limits->notices(Tenant::id());
+                if ($plan_notices) { $renew = $CI_limits->plan_limits->renew_url(); ?>
+                <div style="position:relative;z-index:1000;margin-left:inherit">
+                    <?php foreach ($plan_notices as $n) { ?>
+                        <div class="alert alert-<?php echo $n[0]; ?>" style="margin:0;border-radius:0;padding:7px 15px;font-size:13px">
+                            <i class="fa fa-info-circle"></i> <?php echo html_escape($n[1]); ?>
+                            <?php if ($n[2] && $renew) { ?><a href="<?php echo html_escape($renew); ?>" target="_blank" rel="noopener" style="margin-left:8px;text-decoration:underline">Renew or upgrade</a><?php } ?>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } } ?>
             <?php if ($this->session->userdata('impersonated_by')) { ?>
                 <div style="position:fixed;bottom:0;left:0;right:0;z-index:2000;background:#f39c12;color:#fff;text-align:center;padding:6px 10px;font-size:13px">
                     <i class="fa fa-life-ring"></i> Support session: you opened this school's panel from the platform (<?php echo html_escape($this->session->userdata('impersonated_by')); ?>).

@@ -185,6 +185,18 @@ class Welcome extends Front_Controller
                         $complaint_id = $this->complaint_Model->add($complaint_data);
                     }
 
+                    // The platform website's forms also land in the platform's Enquiries inbox.
+                    if (Tenant::is_platform() && in_array($record['form_name'], array('contact_us', 'complain'), true)) {
+                        $this->db->insert('platform_enquiries', array(
+                            'kind' => $record['form_name'] === 'complain' ? 'complaint' : 'contact',
+                            'name' => mb_substr(trim((string) $this->input->post('name')), 0, 255),
+                            'email' => mb_substr(trim((string) $this->input->post('email')), 0, 255),
+                            'phone' => mb_substr(trim((string) $this->input->post('contact_no')), 0, 50),
+                            'subject' => mb_substr(trim((string) ($this->input->post('subject') ?: ($record['form_name'] === 'complain' ? 'Complaint' : 'Contact'))), 0, 255),
+                            'message' => (string) $this->input->post('description'),
+                        ));
+                    }
+
                     $email_subject = $record['email_title'];
                     $mail_body = "";
                     unset($record['email_title']);

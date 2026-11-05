@@ -52,11 +52,46 @@ class Subscription_activation
             $update_data = array('school_id' => $school_id, 'status' => 1);
             $guest_password = $this->create_guest($subscription, $school_id);
         }
+        if ($renewal && !empty($subscription['school_id'])) {
+            $this->renewed((int) $subscription['school_id'], $subscription);
+        }
         if ($update_data) {
             $db->where('id', (int) $subscription_id)->update('subscription', $update_data);
         }
+        // A coupon's use counts once, when the subscription is paid (abandoned sign-ups don't use it up).
+        if (!empty($subscription['coupon_code']) && !(int) $subscription['coupon_counted']) {
+            $db->where('code', $subscription['coupon_code'])->set('used_count', 'used_count + 1', false)->update('platform_coupons');
+            $db->where('id', (int) $subscription_id)->update('subscription', array('coupon_counted' => 1));
+        }
         $this->send_emails($subscription, $guest_password);
+        $this->CI->load->library('Platform_invoices');
+        $this->CI->platform_invoices->issue((int) $subscription_id);
         return true;
+    }
+
+    /**
+     * A renewal of a school already set up: the new period starts when the current one ends (an
+     * early renewal doesn't lose the days left); the plan's modules are applied (newly included
+     * ones switched on when the plan changed); a school disabled for expiry is enabled again.
+     */
+    private function renewed($school_id, array $subscription)
+    {
+        $db = $this->CI->db;
+        $previous = $db->where(array('school_id' => $school_id, 'payment_status' => 1, 'id <>' => (int) $subscription['id']))
+            ->order_by('id', 'desc')->limit(1)->get('subscription')->row_array();
+        if ($previous) {
+            $ends = strtotime($previous['created_at']) + (int) $previous['days'] * 86400;
+            if ($ends > time()) {
+                $db->where('id', (int) $subscription['id'])->update('subscription', array('created_at' => date('Y-m-d H:i:s', $ends)));
+            }
+        }
+        $this->CI->load->library('Plan_limits');
+        $plan_changed = !$previous || (int) $previous['plan_id'] !== (int) $subscription['plan_id'];
+        $this->CI->plan_limits->apply_modules($school_id, $plan_changed);
+        $school = $db->where('id', $school_id)->get('school')->row_array();
+        if ($school && (int) $school['status'] !== 1 && $school['status_reason'] === 'expired') {
+            $db->where('id', $school_id)->update('school', array('status' => 1, 'status_reason' => null));
+        }
     }
 
     /** The owner's platform guest account (account status, days left, renewals). Returns its password. */

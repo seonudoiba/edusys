@@ -201,6 +201,7 @@ $count++;
             data: {'id': rowid, 'status': status, 'role': role},
             dataType: "json",
             success: function (data) {
+                if (data.status == 0) { errorMsg(data.msg); window.setTimeout(function () { window.location.reload(); }, 2500); return; }
                 successMsg(data.msg);
                 window.location.reload();
             }

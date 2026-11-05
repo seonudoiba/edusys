@@ -13,6 +13,7 @@ class Tenant_resolver
 {
     const LOOKUP_PLATFORM = 'platform';   // central host: the is_platform school
     const LOOKUP_SUBDOMAIN = 'subdomain'; // <label>.<base domain>
+    const LOOKUP_DOMAIN = 'domain';       // another host: a school's verified custom domain
     const REJECT = 'reject';              // not one of ours: 404
 
     /** @var string */
@@ -57,7 +58,14 @@ class Tenant_resolver
             return $result;
         }
         $suffix = '.' . $this->base_domain;
-        if ($this->base_domain === '' || substr($host, -strlen($suffix)) !== $suffix) {
+        if ($this->base_domain === '' || $host === $this->base_domain) {
+            return $result;
+        }
+        if (substr($host, -strlen($suffix)) !== $suffix) {
+            // Not under the base domain: maybe a school's own domain (looked up, verified ones only).
+            if (strpos($host, '.') !== false && preg_match('/^[a-z0-9.-]+$/', $host) && !filter_var($host, FILTER_VALIDATE_IP)) {
+                $result['type'] = self::LOOKUP_DOMAIN;
+            }
             return $result;
         }
         $label = substr($host, 0, -strlen($suffix));

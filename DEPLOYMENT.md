@@ -40,6 +40,12 @@ Everything else is read-only.
 2. One certificate for `edusys.ng` and `*.edusys.ng`. Wildcards require the DNS-01 challenge; use a
    certbot DNS plugin for your DNS provider so renewal is automatic (`deploy/apache-vhost.conf.example`).
 3. School subdomains are single labels: `greenfield.edusys.ng` works, `a.b.edusys.ng` is refused.
+4. Custom domains (Schools > a school > Custom domains): the school points its domain at the server
+   (a CNAME to `<subdomain>.edusys.ng`, or an A record plus the TXT record `_edusys.<domain>` shown
+   on the page) and the platform clicks Verify. Only verified domains open a school. The server must
+   also answer for the domain: a catch-all Apache vhost (`ServerAlias *` in a vhost loaded after the
+   main one, same document root and environment) and a certificate per domain, e.g.
+   `certbot --apache -d portal.school.com` (HTTP-01 works once DNS points at the server).
 
 ## 4. Database
 
@@ -47,7 +53,7 @@ Everything else is read-only.
    limited to this database, separate backup account). Don't use `root`.
 2. From the project directory, with the environment of step 5 loaded:
    ```
-   php index.php migrate            # creates all tables (version 258)
+   php index.php migrate            # creates all tables (version 271)
    php index.php seed run platform  # plans, languages, system roles
    ```
    The registry rows in `seeds/platform/001_school.php` and `004_subscription.php` hold
@@ -83,6 +89,7 @@ Set the variables in the Apache virtual host (`SetEnv`, see `deploy/apache-vhost
 | `EDUSYS_DB_HOST` / `_PORT` / `_NAME` / `_USER` / `_PASSWORD` | the application account |
 | `EDUSYS_TENANCY_RAW_SQL` | `throw` (refuse unscoped hand-written SQL). Use `log` only while investigating a new page |
 | `EDUSYS_PAYSTACK_SECRET_KEY` | platform Paystack secret key (no key = online payment refuses to start) |
+| `EDUSYS_BACKUP_DIR` | optional: where Platform > Backups writes (default `application/backups/`) |
 | `EDUSYS_SMTP_HOST` / `_PORT` / `_USER` / `_PASS` | outgoing mail. Host, port and user default to `smtp.mailgun.org` / `587` / `postmaster@edusys.ng`; the password has no default (empty = no SMTP login, e.g. a local mail catcher) |
 
 Without `EDUSYS_BASE_DOMAIN`/`EDUSYS_CENTRAL_HOST`, every web request fails closed with 503.
@@ -109,9 +116,17 @@ notices, set in Platform settings), the nightly `mysqldump` of the shared databa
 task: schools can no longer back up or restore from their admin panel. Test a restore on another
 server before go-live.
 
+System Settings > Backups (platform) also takes a full dump from the browser (`.sql.gz`, written in
+PHP). Files go to `EDUSYS_BACKUP_DIR` (default `application/backups/`, never served and ignored by
+git); set it to a folder the web server can write, ideally on another disk, and still copy backups
+off the server. The cron `mysqldump` stays the main backup for large databases. Restores are done on
+the server only (`gunzip -c FILE.sql.gz | mysql ...`). For one school, use Schools > a school > Data:
+Export (its rows as SQL plus its `uploads/s<id>/` files, `.tar.gz`) and, for a disabled school,
+Purge (deletes its data and files for good; the school row, subscriptions and invoices stay).
+
 ## 8. Before opening to schools
 
-- [ ] `php index.php migrate status` shows 258 of 258.
+- [ ] `php index.php migrate status` shows 271 of 271.
 - [ ] `https://edusys.ng/` loads the platform; `https://unknown.edusys.ng/` gives 404.
 - [ ] `https://edusys.ng/.env`, `/.git/HEAD`, `/application/logs/`, `/adminer.php` give 403 (or 404).
 - [ ] Register a test school at `/plans`, pay with a Paystack **test** key, approve it in

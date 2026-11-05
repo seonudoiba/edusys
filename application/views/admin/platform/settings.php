@@ -48,6 +48,30 @@ $v = function ($k) use ($values) { return html_escape((string) $values[$k]); };
                             <p class="help-block">Comma separated, e.g. 30,7,1. Sent by the daily job (<code>php index.php platform_cron reminders</code>).</p></div>
                         <div class="checkbox"><label><input type="checkbox" name="expired_notice" value="1" <?php echo $values['expired_notice'] === '0' ? '' : 'checked'; ?>> Email the owner when the subscription has ended</label></div>
                         <hr>
+                        <h4>When a subscription ends</h4>
+                        <div class="row">
+                            <div class="col-sm-4 form-group"><label for="grace_days">Grace period (days)</label>
+                                <input id="grace_days" name="grace_days" type="number" min="0" max="365" class="form-control" value="<?php echo $values['grace_days'] !== null && $values['grace_days'] !== '' ? $v('grace_days') : '7'; ?>"></div>
+                            <div class="col-sm-8 form-group"><label for="expiry_action">After the grace period</label>
+                                <select id="expiry_action" name="expiry_action" class="form-control">
+                                    <option value="warn" <?php echo $values['expiry_action'] === 'disable' ? '' : 'selected'; ?>>Warn only (banner for the school, emails)</option>
+                                    <option value="disable" <?php echo $values['expiry_action'] === 'disable' ? 'selected' : ''; ?>>Disable the school until it renews</option>
+                                </select>
+                                <p class="help-block">A disabled school is enabled again automatically when it renews. Its data is kept.</p></div>
+                        </div>
+                        <hr>
+                        <h4>Invoices</h4>
+                        <div class="row">
+                            <div class="col-sm-6 form-group"><label for="invoice_company">Company name</label>
+                                <input id="invoice_company" name="invoice_company" class="form-control" maxlength="150" value="<?php echo $v('invoice_company'); ?>" placeholder="the platform name"></div>
+                            <div class="col-sm-6 form-group"><label for="invoice_tax_id">Tax ID / RC number</label>
+                                <input id="invoice_tax_id" name="invoice_tax_id" class="form-control" maxlength="60" value="<?php echo $v('invoice_tax_id'); ?>"></div>
+                        </div>
+                        <div class="form-group"><label for="invoice_address">Address</label>
+                            <textarea id="invoice_address" name="invoice_address" class="form-control" rows="2" maxlength="500"><?php echo $v('invoice_address'); ?></textarea></div>
+                        <div class="form-group"><label for="invoice_footer">Footer</label>
+                            <input id="invoice_footer" name="invoice_footer" class="form-control" maxlength="500" value="<?php echo $v('invoice_footer') ?: 'Thank you for your business.'; ?>"></div>
+                        <hr>
                         <div class="form-group"><label for="extra_reserved_subdomains">Extra reserved subdomains</label>
                             <textarea id="extra_reserved_subdomains" name="extra_reserved_subdomains" class="form-control" rows="2" placeholder="e.g. blog, shop, careers"><?php echo $v('extra_reserved_subdomains'); ?></textarea>
                             <p class="help-block">Schools can't use these, on top of the built-in list (www, admin, api, mail ...).</p></div>

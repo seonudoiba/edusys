@@ -219,6 +219,8 @@ class Platform_school_model extends CI_Model
         }
         if (!empty($s['is_platform'])) {
             $s['state'] = 'active';
+        } elseif (isset($s['status_reason']) && $s['status_reason'] === 'purged') {
+            $s['state'] = 'disabled'; // data deleted (Schools > a school > Data > Purge); kept for the accounts
         } elseif ($s['set_up']) {
             $s['state'] = $s['enabled'] ? 'active' : 'disabled';
         } else {

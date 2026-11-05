@@ -21,7 +21,7 @@ class Plan extends Admin_Controller
         Tenant::require_platform();
         parent::__construct();
         $this->load->model(array('plan_model', 'plan_type_model'));
-        $this->load->library('Form_token');
+        $this->load->library(array('Form_token', 'Plan_limits', 'Platform_audit'));
     }
 
     public function index()
@@ -81,6 +81,9 @@ class Plan extends Admin_Controller
         $this->form_validation->set_rules('price', 'Price', 'trim|required|is_natural');
         $this->form_validation->set_rules('oprice', 'Offer price', 'trim|is_natural|callback_check_offer');
         $this->form_validation->set_rules('days', 'Duration', 'trim|required|is_natural_no_zero|less_than_equal_to[3650]');
+        foreach (array('max_students' => 'Maximum students', 'max_staff' => 'Maximum staff', 'max_storage_mb' => 'Storage') as $field => $label) {
+            $this->form_validation->set_rules($field, $label, 'trim|is_natural|less_than_equal_to[10000000]');
+        }
         if (!$this->form_validation->run()) {
             return $this->show_form($plan);
         }
@@ -96,10 +99,17 @@ class Plan extends Admin_Controller
             'days' => (int) $this->input->post('days'),
             'list' => json_encode(array_map('strval', $features)),
             'status' => $this->input->post('status') ? 1 : 0,
+            'modules' => $this->posted_modules(),
+            'max_students' => (int) $this->input->post('max_students'),
+            'max_staff' => (int) $this->input->post('max_staff'),
+            'max_storage_mb' => (int) $this->input->post('max_storage_mb'),
         );
         if ($id) {
             $this->plan_model->plan_update($id, $row);
-            $this->session->set_flashdata('plan_msg', 'Saved "' . $row['title'] . '". Changes apply to new sign-ups; current subscriptions keep their days and price.');
+            $changed = $this->apply_to_schools($id);
+            $this->platform_audit->record('plan.edit', 'Edited the plan "' . $row['title'] . '"');
+            $this->session->set_flashdata('plan_msg', 'Saved "' . $row['title'] . '". Price and days apply to new sign-ups; modules and limits apply to its schools now'
+                . ($changed ? ' (' . $changed . ' module' . ($changed == 1 ? '' : 's') . ' switched off in schools on this plan).' : '.'));
         } else {
             $this->plan_model->add($row);
             $this->session->set_flashdata('plan_msg', 'Added "' . $row['title'] . '"' . ($row['status'] ? ': it is now on the sign-up page.' : ' (hidden from the sign-up page).'));
@@ -133,6 +143,10 @@ class Plan extends Admin_Controller
             'days' => (int) $plan['days'],
             'list' => $plan['list'] ?: '[]',
             'status' => 0,
+            'modules' => $plan['modules'],
+            'max_students' => (int) $plan['max_students'],
+            'max_staff' => (int) $plan['max_staff'],
+            'max_storage_mb' => (int) $plan['max_storage_mb'],
         );
         $new_id = $this->plan_model->add($copy);
         $this->session->set_flashdata('plan_msg', 'Copied as "' . $copy['title'] . '" (hidden). Edit it, then show it.');
@@ -174,8 +188,11 @@ class Plan extends Admin_Controller
         $this->menu();
         $features = $this->plan_type_model->get();
         usort($features, function ($a, $b) { return (int) $a['sort_order'] <=> (int) $b['sort_order'] ?: (int) $a['id'] <=> (int) $b['id']; });
+        $modules = json_decode((string) ($plan ? $plan['modules'] : ''), true);
         $data = array(
             'plan' => $plan,
+            'all_modules' => $this->plan_limits->all_modules(),
+            'plan_modules' => is_array($modules) ? $modules : null,
             'selected' => $plan ? $this->feature_ids($plan) : array(),
             'features' => $features,
             'currency_symbol' => $this->customlib->getSchoolCurrencyFormat(),
@@ -184,6 +201,29 @@ class Plan extends Admin_Controller
         $this->load->view('layout/header');
         $this->load->view('admin/plan/plan_form', $data);
         $this->load->view('layout/footer');
+    }
+
+    /** JSON of the modules ticked, or null for "every module". */
+    private function posted_modules()
+    {
+        if ($this->input->post('all_modules')) {
+            return null;
+        }
+        $known = array_column($this->plan_limits->all_modules(), 'short_code');
+        return json_encode(array_values(array_intersect((array) $this->input->post('modules'), $known)));
+    }
+
+    /** Applies the plan's modules to the schools whose current plan it is. Returns modules switched off. */
+    private function apply_to_schools($plan_id)
+    {
+        $changed = 0;
+        foreach ($this->db->select('id')->where(array('is_platform' => 0, 'cron_flag' => 1))->get('school')->result() as $school) {
+            $current = $this->plan_limits->current($school->id);
+            if ($current['plan'] && (int) $current['plan']['plan_id'] === (int) $plan_id) {
+                $changed += $this->plan_limits->apply_modules($school->id, false);
+            }
+        }
+        return $changed;
     }
 
     /** Per plan: active subscriptions (paid, not expired), paid and pending counts, revenue. */

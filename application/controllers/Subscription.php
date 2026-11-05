@@ -6,6 +6,9 @@ if (!defined('BASEPATH')) {
 
 class subscription extends Front_Controller
 {
+    /** @var array the plan being signed up for (coupon validation) */
+    private $signup_plan = array();
+
     /** payment_method value for a manual bank transfer (receipt reviewed by the platform admin) */
     const BANK_TRANSFER = 'bank_transfer';
 
@@ -23,6 +26,7 @@ class subscription extends Front_Controller
         $this->load->library('Enc_lib');
         $this->load->model('studentcourse_model');
         $this->load->model(array('subscription_model', 'plan_model', 'setting_model', 'subscription_bank_transfer_model'));
+        $this->load->library('Platform_coupons');
     }
 
     public function add()
@@ -58,12 +62,29 @@ class subscription extends Front_Controller
     public function save()
     {
 
-        $plan = $this->plan_model->get($this->input->post('plan_id'));
+        $plan_id = (int) $this->input->post('plan_id');
+        $plan = $plan_id > 0 ? $this->plan_model->get($plan_id) : null;
+        if (empty($plan) || !isset($plan['plan_id']) || (int) $plan['status'] !== 1) {
+            show_404(); // only a plan shown on the sign-up page can be chosen
+        }
         $discount = 0;
         if ($plan['oprice'] > 0) {
             $discount = ($plan['price'] - $plan['oprice']);
         }
         $total = $plan['price'] - $discount;
+        // A coupon (checked again here, whatever the page showed).
+        $this->signup_plan = $plan;
+        $coupon = null;
+        $code = Platform_coupons::normalize($this->input->post('coupon_code'));
+        if ($code !== '') {
+            $coupon = $this->platform_coupons->find($code);
+            if ($this->platform_coupons->error($coupon, $plan) === null) {
+                $off = $this->platform_coupons->discount($coupon, $total);
+                $discount += $off;
+                $total -= $off;
+            }
+        }
+        $this->form_validation->set_rules('coupon_code', 'Coupon', 'trim|callback_valid_coupon');
         $this->form_validation->set_rules('email_address', $this->lang->line('email_address'), 'trim|required|xss_clean|valid_email|callback_check_email_exists', [
             'required' => 'The %s is a required field.',
             'valid_email' => 'Please enter a valid %s.'
@@ -119,6 +140,7 @@ class subscription extends Front_Controller
                 'price' => $plan['price'],
                 'days' => $plan['days'],
                 'discount_amt' => $discount,
+                'coupon_code' => $coupon && $this->platform_coupons->error($coupon, $plan) === null ? $coupon['code'] : null,
                 'payment_method' => ($total > 0) ? $this->input->post('payment_method') : '',
                 'status' => 0,
                 'total' => $total,
@@ -330,6 +352,58 @@ class subscription extends Front_Controller
         ));
         $this->notify_platform_of_receipt($transfer);
         redirect('subscription/bank_transfer/' . $transfer['token']);
+    }
+
+    /** Form validation callback: an empty coupon, or one valid for the chosen plan. */
+    public function valid_coupon($code)
+    {
+        if (Platform_coupons::normalize($code) === '') {
+            return true;
+        }
+        $error = $this->platform_coupons->error($this->platform_coupons->find($code), $this->signup_plan);
+        if ($error !== null) {
+            $this->form_validation->set_message('valid_coupon', $error);
+            return false;
+        }
+        return true;
+    }
+
+    /** The sign-up page's "Apply" button: the price with a coupon (JSON). */
+    public function check_coupon()
+    {
+        $plan_id = (int) $this->input->get('plan_id');
+        $plan = $plan_id > 0 ? $this->plan_model->get($plan_id) : null;
+        $out = array('ok' => false);
+        if (!empty($plan) && isset($plan['plan_id']) && (int) $plan['status'] === 1) {
+            $base = (float) ((int) $plan['oprice'] > 0 ? $plan['oprice'] : $plan['price']);
+            $coupon = $this->platform_coupons->find($this->input->get('code'));
+            $error = $this->platform_coupons->error($coupon, $plan);
+            if ($error !== null) {
+                $out['message'] = $error;
+            } else {
+                $off = $this->platform_coupons->discount($coupon, $base);
+                $out = array('ok' => true, 'discount' => $off, 'total' => $base - $off,
+                    'message' => 'Coupon applied: ' . number_format($off, 2) . ' off.' . ($base - $off <= 0 ? ' This plan is now free.' : ''));
+            }
+        }
+        $this->output->set_content_type('application/json')->set_output(json_encode($out));
+    }
+
+    /** An invoice, for the owner (private link in the receipt email). */
+    public function invoice($token = '')
+    {
+        $invoice = preg_match('/^[0-9a-f]{40}$/', (string) $token) ? $this->db->where('token', $token)->get('platform_invoices')->row_array() : null;
+        if (!$invoice) {
+            show_404();
+        }
+        $this->load->library('Platform_invoices');
+        $pdf = $this->platform_invoices->pdf($invoice);
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . $invoice['invoice_no'] . '.pdf"');
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
+        echo $pdf;
+        exit;
     }
 
     /** Form validation callback: a real date, not in the future. */

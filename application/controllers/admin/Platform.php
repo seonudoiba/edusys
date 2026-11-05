@@ -72,6 +72,9 @@ class Platform extends Admin_Controller
                 break;
             }
         }
+        if (!ctype_digit($in('grace_days')) || (int) $in('grace_days') > 365) {
+            $errors[] = 'The grace period is a number of days (0 to 365).';
+        }
         if ($errors) {
             $this->session->set_flashdata('platform_error', implode(' ', $errors));
             redirect('admin/platform/settings');
@@ -85,6 +88,12 @@ class Platform extends Admin_Controller
         $s->set('expired_notice', $this->input->post('expired_notice') ? '1' : '0');
         $s->set('reminder_days', implode(',', array_unique(array_map('intval', $days))));
         $s->set('extra_reserved_subdomains', implode(', ', array_unique($reserved)));
+        $s->set('grace_days', (string) (int) $in('grace_days'));
+        $s->set('expiry_action', $in('expiry_action') === 'disable' ? 'disable' : 'warn');
+        $s->set('invoice_company', mb_substr($in('invoice_company'), 0, 150));
+        $s->set('invoice_address', mb_substr($in('invoice_address'), 0, 500));
+        $s->set('invoice_tax_id', mb_substr($in('invoice_tax_id'), 0, 60));
+        $s->set('invoice_footer', mb_substr($in('invoice_footer'), 0, 500));
         $this->platform_audit->record('settings.save', 'Saved the platform settings');
         $this->session->set_flashdata('platform_msg', 'Settings saved.');
         redirect('admin/platform/settings');

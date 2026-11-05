@@ -59,6 +59,11 @@ $can_delete = $this->rbac->hasPrivilege('plan_list', 'can_delete');
                         <?php if ($offer) { ?><s><?php echo $money($p['price']); ?></s><?php } ?>
                         <span>/ <?php echo (int) $p['days']; ?> days</span>
                     </div>
+                    <?php $mods = json_decode((string) $p['modules'], true); $lim = function ($n, $what) { return (int) $n > 0 ? number_format((int) $n) . ' ' . $what : 'Unlimited ' . $what; }; ?>
+                    <div style="padding:0 16px 8px;font-size:12px;color:#555">
+                        <?php echo $lim($p['max_students'], 'students'); ?> · <?php echo $lim($p['max_staff'], 'staff'); ?> · <?php echo (int) $p['max_storage_mb'] > 0 ? number_format((int) $p['max_storage_mb']) . ' MB' : 'unlimited storage'; ?><br>
+                        <?php echo is_array($mods) ? count($mods) . ' modules' : 'Every module'; ?>
+                    </div>
                     <ul class="pl-feat">
                         <?php if (!$p['feature_names']) { ?><li class="text-muted">No features listed</li><?php } ?>
                         <?php foreach ($p['feature_names'] as $f) { ?><li><i class="fa fa-check"></i><?php echo $e($f); ?></li><?php } ?>

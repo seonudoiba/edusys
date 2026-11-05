@@ -35,6 +35,7 @@ class Platform_cron extends CI_Controller
 
         $schools = $this->db->where(array('is_platform' => 0, 'cron_flag' => 1, 'status' => 1))->get('school')->result_array();
         $sent = 0;
+        $disabled = 0;
         foreach ($schools as $school) {
             $sub = $this->db->select('subscription.*, plan.title AS plan_title')
                 ->from('subscription')->join('plan', 'plan.plan_id = subscription.plan_id', 'left')
@@ -62,6 +63,15 @@ class Platform_cron extends CI_Controller
                     $this->db->insert('platform_reminder_log', array('subscription_id' => (int) $sub['id'], 'reminder' => 'expired'));
                     $sent++;
                 }
+                // Expiry policy "disable": after the grace period the school is disabled until it renews.
+                $grace_ends = $expires + max(0, (int) $settings->get('grace_days')) * 86400;
+                if ($settings->get('expiry_action') === 'disable' && time() > $grace_ends) {
+                    $this->db->where('id', (int) $school['id'])->update('school', array('status' => 0, 'status_reason' => 'expired'));
+                    $this->platform_mailer->send('school_disabled', $to, $vars, $school['id']);
+                    $this->load->library('Platform_audit');
+                    $this->platform_audit->record('school.expired', 'Disabled ' . $school['school_name'] . ': subscription ended ' . date('d M Y', $expires) . ', grace period over', $school['id']);
+                    $disabled++;
+                }
                 continue;
             }
             if (!$remind) {
@@ -86,6 +96,6 @@ class Platform_cron extends CI_Controller
             $sent++;
         }
         $settings->set('cron_last_reminders', date('Y-m-d H:i:s'));
-        echo "reminders: $sent sent for " . count($schools) . " schools\n";
+        echo "reminders: $sent sent for " . count($schools) . " schools, $disabled disabled after the grace period\n";
     }
 }

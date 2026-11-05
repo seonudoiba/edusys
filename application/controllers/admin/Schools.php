@@ -22,7 +22,7 @@ class Schools extends Admin_Controller
         Tenant::require_platform();
         parent::__construct();
         $this->load->model(array('School_model', 'Subscription_model', 'Guest_model', 'Platform_school_model', 'plan_model'));
-        $this->load->library(array('School_provisioner', 'Platform_audit', 'Platform_mailer'));
+        $this->load->library(array('School_provisioner', 'Platform_audit', 'Platform_mailer', 'Plan_limits'));
     }
 
     // ------------------------------------------------------------------ pages
@@ -92,6 +92,10 @@ class Schools extends Admin_Controller
             'activity' => $this->platform_audit->for_school($school['id']),
             'modules' => $school['set_up'] && empty($school['is_platform']) ? $this->Platform_school_model->modules($school['id']) : array(),
             'emails' => $this->db->where('school_ref', (int) $school['id'])->order_by('id', 'desc')->limit(10)->get('platform_email_log')->result_array(),
+            'limits' => $this->plan_limits->current($school['id']),
+            'domains' => $this->db->where('school_ref', (int) $school['id'])->order_by('id')->get('platform_school_domains')->result_array(),
+            'storage_bytes' => $school['set_up'] ? $this->plan_limits->storage_bytes($school['id']) : 0,
+            'invoices' => $this->db->where('school_ref', (int) $school['id'])->order_by('id', 'desc')->get('platform_invoices')->result_array(),
         );
         $this->load->view('layout/header', $data);
         $this->load->view('admin/school/school_view', $data);
@@ -192,6 +196,9 @@ class Schools extends Admin_Controller
         if ($school['set_up']) {
             $this->back($school['id'], null, 'This school is already set up.');
         }
+        if ($school['status_reason'] === 'purged') {
+            $this->back($school['id'], null, 'This school was purged; register it again as a new school instead.');
+        }
         $subdomain = strtolower(trim((string) $this->input->post('subdomain')));
         if ($subdomain !== '' && $subdomain !== (string) $school['subdomain']) {
             $error = $this->school_provisioner->subdomain_error($subdomain, (int) $school['id']);
@@ -272,6 +279,9 @@ class Schools extends Admin_Controller
         if ($paid) {
             $this->db->where('id', (int) $paid['id'])->set('days', 'days + ' . $days, false)->update('subscription');
             $this->platform_audit->record('subscription.extend', "Extended the subscription by $days days", $school['id']);
+            if ($school['status_reason'] === 'expired' && $this->plan_limits->current($school['id'])['state'] !== 'lapsed') {
+                $this->db->where('id', (int) $school['id'])->update('school', array('status' => 1, 'status_reason' => null));
+            }
             $this->back($school['id'], "Subscription extended by $days days.");
         }
         $plan_id = (int) $this->input->post('plan_id');
@@ -298,6 +308,9 @@ class Schools extends Admin_Controller
             'days' => $days,
         ));
         $this->db->where('id', (int) $school['id'])->update('school', array('payment_status' => 1));
+        if ($school['set_up']) {
+            $this->plan_limits->apply_modules($school['id'], true);
+        }
         $this->platform_audit->record('subscription.manual', "Recorded a manual subscription: {$plan['title']}, $days days", $school['id']);
         $this->back($school['id'], "Subscription recorded: {$plan['title']}, $days days (no payment collected).");
     }
@@ -411,6 +424,207 @@ class Schools extends Admin_Controller
         $this->back($school['id'], $module['name'] . ($on ? ' switched on.' : ' switched off.'));
     }
 
+    // ------------------------------------------------------------------ data export and purge
+
+    /**
+     * Downloads the school's data: an SQL file of its rows and, when it has uploaded files, its
+     * uploads folder (.tar.gz). For handing data back to a school or archiving it before a purge.
+     */
+    public function export($id = null)
+    {
+        $this->require_privilege('can_edit');
+        $school = $this->checked_post($id);
+        if (!empty($school['is_platform'])) {
+            $this->back($school['id'], null, 'Back up the platform from Platform > Backups instead.');
+        }
+        $this->load->library('Data_dump');
+        @set_time_limit(0);
+        $base = 'school-' . (int) $school['id'] . '-' . ($school['subdomain'] ?: 'export') . '-' . date('Ymd-His');
+        $tmp = rtrim(str_replace('\\', '/', sys_get_temp_dir()), '/') . '/' . $base . '-' . bin2hex(random_bytes(4));
+        $sql = $tmp . '.sql.gz';
+        try {
+            $counts = $this->data_dump->school($school['id'], $sql);
+        } catch (Exception $ex) {
+            @unlink($sql);
+            $this->back($school['id'], null, 'The export failed: ' . $ex->getMessage());
+        }
+        $download = $sql;
+        $name = $base . '.sql.gz';
+        $uploads = FCPATH . 'uploads/s' . (int) $school['id'];
+        if (is_dir($uploads)) {
+            try {
+                $tar = new PharData($tmp . '.tar');
+                $tar->addFile($sql, $base . '.sql.gz');
+                $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($uploads, FilesystemIterator::SKIP_DOTS));
+                foreach ($files as $file) {
+                    if ($file->isFile()) {
+                        $local = 'uploads/' . str_replace('\\', '/', substr($file->getPathname(), strlen($uploads) + 1));
+                        $tar->addFile($file->getPathname(), $local);
+                    }
+                }
+                $tar->compress(Phar::GZ);
+                unset($tar);
+                @unlink($tmp . '.tar');
+                $download = $tmp . '.tar.gz';
+                $name = $base . '.tar.gz';
+            } catch (Exception $ex) {
+                // Files could not be packed (no Phar, too large...): hand over the SQL alone.
+                @unlink($tmp . '.tar');
+                @unlink($tmp . '.tar.gz');
+            }
+        }
+        $this->platform_audit->record('school.export', 'Exported the data of ' . $school['school_name'] . ' (' . array_sum($counts) . ' rows' . ($download !== $sql ? ', with files' : '') . ')', $school['id']);
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/gzip');
+        header('Content-Disposition: attachment; filename="' . $name . '"');
+        header('Content-Length: ' . filesize($download));
+        header('Cache-Control: no-store');
+        readfile($download);
+        @unlink($sql);
+        @unlink($tmp . '.tar.gz');
+        exit;
+    }
+
+    /**
+     * Deletes all of a disabled school's data and files for good. The school row stays (marked
+     * purged, without its subdomain) with its subscriptions and invoices, for the accounts.
+     */
+    public function purge($id = null)
+    {
+        $this->require_privilege('can_delete');
+        $school = $this->checked_post($id);
+        if (!empty($school['is_platform'])) {
+            $this->back($school['id'], null, 'The platform school can\'t be purged.');
+        }
+        if ($school['status_reason'] === 'purged' || (string) $school['subdomain'] === '') {
+            $this->back($school['id'], null, 'This school has already been purged.');
+        }
+        if ($school['enabled'] || $school['state'] !== 'disabled') {
+            $this->back($school['id'], null, 'Disable the school first; only a disabled school can be purged.');
+        }
+        if (strtolower(trim((string) $this->input->post('confirm'))) !== strtolower((string) $school['subdomain'])) {
+            $this->back($school['id'], null, 'Type the school\'s subdomain exactly to confirm the purge.');
+        }
+        $this->load->library('Data_dump');
+        @set_time_limit(0);
+        $rows = $this->data_dump->purge_school($school['id']);
+        $files = $this->remove_tree(FCPATH . 'uploads/s' . (int) $school['id']);
+        @unlink(APPPATH . 'cache/storage_s' . (int) $school['id'] . '.txt');
+        $this->db->where('id', (int) $school['id'])->update('school', array(
+            'status' => 0, 'cron_flag' => 0, 'subdomain' => null, 'status_reason' => 'purged',
+        ));
+        $this->platform_audit->record('school.purge', 'Purged ' . $school['school_name'] . ' (' . $rows . ' rows, ' . $files . ' files; subdomain ' . $school['subdomain'] . ' released)', $school['id']);
+        $this->back($school['id'], 'Purged: ' . $rows . ' rows and ' . $files . ' files deleted. The subdomain ' . $school['subdomain'] . ' is free again.');
+    }
+
+    /** Deletes a folder and its contents; returns the number of files removed. */
+    private function remove_tree($dir)
+    {
+        if (!is_dir($dir)) {
+            return 0;
+        }
+        $n = 0;
+        $items = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($items as $item) {
+            if ($item->isDir()) {
+                @rmdir($item->getPathname());
+            } elseif (@unlink($item->getPathname())) {
+                $n++;
+            }
+        }
+        @rmdir($dir);
+        return $n;
+    }
+
+    // ------------------------------------------------------------------ custom domains
+
+    /** Adds a domain the school will be served on (it works once verified). */
+    public function add_domain($id = null)
+    {
+        $this->require_privilege('can_edit');
+        $school = $this->checked_post($id);
+        $domain = strtolower(trim((string) $this->input->post('domain')));
+        $domain = preg_replace('~^https?://~', '', rtrim($domain, '/'));
+        $base = (string) $this->config->item('tenancy_base_domain');
+        if (!preg_match('/^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/', $domain)) {
+            $this->back($school['id'], null, 'Enter a domain like portal.greenfield.com (no http://, no path).');
+        }
+        if ($domain === $base || substr($domain, -strlen('.' . $base)) === '.' . $base || in_array($domain, (array) $this->config->item('tenancy_central_hosts'), true)) {
+            $this->back($school['id'], null, 'That is one of the platform\'s own addresses; schools get their subdomain automatically.');
+        }
+        if ($this->db->where('domain', $domain)->count_all_results('platform_school_domains') > 0) {
+            $this->back($school['id'], null, $domain . ' is already added (to this or another school).');
+        }
+        $this->db->insert('platform_school_domains', array('school_ref' => (int) $school['id'], 'domain' => $domain, 'verify_token' => bin2hex(random_bytes(16))));
+        $this->platform_audit->record('domain.add', 'Added the domain ' . $domain . ' to ' . $school['school_name'], $school['id']);
+        $this->back($school['id'], 'Added ' . $domain . '. Ask the school to create the DNS record shown, then click Verify.');
+    }
+
+    /** Checks the DNS record that proves the school controls the domain. */
+    public function verify_domain($id = null)
+    {
+        $this->require_privilege('can_edit');
+        $school = $this->checked_post($id);
+        $d = $this->domain_row($school, (int) $this->input->post('domain_id'));
+        $target = $school['subdomain'] . '.' . $this->config->item('tenancy_base_domain');
+        $ok = false;
+        foreach ((array) @dns_get_record('_edusys.' . $d['domain'], DNS_TXT) as $r) {
+            if (isset($r['txt']) && trim($r['txt']) === $d['verify_token']) {
+                $ok = true;
+            }
+        }
+        foreach ((array) @dns_get_record($d['domain'], DNS_CNAME) as $r) {
+            if (isset($r['target']) && strtolower(rtrim($r['target'], '.')) === strtolower($target)) {
+                $ok = true;
+            }
+        }
+        if (!$ok) {
+            $this->back($school['id'], null, 'The DNS record for ' . $d['domain'] . ' was not found yet. DNS changes can take up to an hour; try again later.');
+        }
+        $this->db->where('id', (int) $d['id'])->update('platform_school_domains', array('verified_at' => date('Y-m-d H:i:s')));
+        $this->platform_audit->record('domain.verify', 'Verified the domain ' . $d['domain'] . ' for ' . $school['school_name'], $school['id']);
+        $this->back($school['id'], $d['domain'] . ' is verified and serves the school (it still needs a TLS certificate on the server for https).');
+    }
+
+    /** Uses a verified domain in links and emails instead of the subdomain (or stops doing so). */
+    public function primary_domain($id = null)
+    {
+        $this->require_privilege('can_edit');
+        $school = $this->checked_post($id);
+        $d = $this->domain_row($school, (int) $this->input->post('domain_id'));
+        if (!$d['verified_at']) {
+            $this->back($school['id'], null, 'Verify the domain first.');
+        }
+        $on = !(int) $d['is_primary'];
+        $this->db->where('school_ref', (int) $school['id'])->update('platform_school_domains', array('is_primary' => 0));
+        if ($on) {
+            $this->db->where('id', (int) $d['id'])->update('platform_school_domains', array('is_primary' => 1));
+        }
+        $this->platform_audit->record('domain.primary', ($on ? 'Made ' . $d['domain'] . ' the main address of ' : 'Made the subdomain the main address of ') . $school['school_name'], $school['id']);
+        $this->back($school['id'], $on ? $d['domain'] . ' is now used in links and emails.' : 'Links and emails use the subdomain again.');
+    }
+
+    public function remove_domain($id = null)
+    {
+        $this->require_privilege('can_edit');
+        $school = $this->checked_post($id);
+        $d = $this->domain_row($school, (int) $this->input->post('domain_id'));
+        $this->db->where('id', (int) $d['id'])->delete('platform_school_domains');
+        $this->platform_audit->record('domain.remove', 'Removed the domain ' . $d['domain'] . ' from ' . $school['school_name'], $school['id']);
+        $this->back($school['id'], 'Removed ' . $d['domain'] . '; it no longer opens the school.');
+    }
+
+    private function domain_row(array $school, $domain_id)
+    {
+        $d = $this->db->where(array('id' => $domain_id, 'school_ref' => (int) $school['id']))->get('platform_school_domains')->row_array();
+        if (!$d) {
+            $this->back($school['id'], null, 'Domain not found.');
+        }
+        return $d;
+    }
+
     // ------------------------------------------------------------------ validation callbacks
 
     /** Form validation: an empty subdomain may be set later; a non-empty one must be usable. */
@@ -465,7 +679,8 @@ class Schools extends Admin_Controller
         if (!empty($school['is_platform'])) {
             return $this->school_provisioner->url_for($school);
         }
-        return $school['subdomain'] ? $this->school_provisioner->school_url($school['subdomain']) : null;
+        // Its primary custom domain when it has one, else its subdomain.
+        return $school['subdomain'] ? $this->school_provisioner->url_for($school) : null;
     }
 
     /** A POST from a school page with its form token. */

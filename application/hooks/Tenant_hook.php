@@ -17,7 +17,7 @@ require_once APPPATH . 'libraries/Tenant_resolver.php';
 class Tenant_hook
 {
     /** Columns read from `school` for the tenant context. */
-    const COLUMNS = 'id, school_name, subdomain, is_platform, status';
+    const COLUMNS = 'school.id, school.school_name, school.subdomain, school.is_platform, school.status';
 
     /** `school.status` value of a school that may be served. */
     const STATUS_ACTIVE = 1;
@@ -51,6 +51,10 @@ class Tenant_hook
         $db->select(self::COLUMNS)->from('school');
         if ($match['type'] === Tenant_resolver::LOOKUP_PLATFORM) {
             $db->where('is_platform', 1);
+        } elseif ($match['type'] === Tenant_resolver::LOOKUP_DOMAIN) {
+            // A school's own domain, only once it is verified (Schools > a school > Domains).
+            $db->join('platform_school_domains d', 'd.school_ref = school.id')
+                ->where('d.domain', $match['host'])->where('d.verified_at IS NOT NULL', null, false)->where('school.is_platform', 0);
         } else {
             $db->where('subdomain', $match['subdomain']);
         }

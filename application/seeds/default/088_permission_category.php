@@ -310,9 +310,9 @@ class Seed_default_permission_category extends Seeder
             [12003, 1201, 'School list', 'schools', 1, 1, 1, 1, '2024-12-23 07:14:26'],
             [12004, 1202, 'Plan', 'plan', 1, 1, 1, 1, '2024-12-24 05:45:13'],
             [12005, 1204, 'Subscription', 'subscription', 1, 1, 1, 1, '2024-12-24 05:53:20'],
-            [900011, 900010, 'Platform settings and emails', 'platform_settings', 1, 0, 1, 0, '2026-11-05 00:00:00'],
+            [900011, 900010, 'Platform settings and emails', 'platform_settings', 1, 1, 1, 1, '2026-11-05 00:00:00'],
             [900012, 1202, 'Plans and features', 'plan_list', 1, 1, 1, 1, '2026-11-05 00:00:00'],
-            [900013, 1204, 'Subscriptions and bank transfers', 'subscription_list', 1, 0, 0, 1, '2026-11-05 00:00:00'],
+            [900013, 1204, 'Subscriptions and bank transfers', 'subscription_list', 1, 0, 1, 1, '2026-11-05 00:00:00'],
         ];
     }
 }
