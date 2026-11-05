@@ -1,5 +1,9 @@
 # Zip archives
 *.zip
+*.tar.gz
+*.tar.bz2
+*.md
+
 
 # User uploads and temporary files
 uploads/*
@@ -58,3 +62,4 @@ Thumbs.db
 
 # mPDF font and temp cache (invoice PDFs)
 application/tmp/
+
