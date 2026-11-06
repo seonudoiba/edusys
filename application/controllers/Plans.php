@@ -1,166 +1,85 @@
 <?php
-if (!defined('BASEPATH')) {
-    exit('No direct script access allowed');
-}
 
-class plans extends Front_Controller
+defined('BASEPATH') or exit('No direct script access allowed');
+
+/**
+ * The platform's public sales pages: /product, /plans (pricing) and /plans/quote (large schools).
+ * Always in the platform's own design, whatever theme is selected.
+ */
+class Plans extends Front_Controller
 {
     public function __construct()
     {
         // Platform feature: only on the central host (404 on school subdomains).
         Tenant::require_platform();
         parent::__construct();
+        $this->load->library(array('Plan_pricing', 'Platform_settings', 'Platform_mailer', 'captchalib', 'School_provisioner'));
+        $this->theme_path = 'platform';
+    }
 
-        $this->setting = $this->setting_model->get();
-        $this->thumbnail_path = $this->config->item('course_thumbnail_path');
-        $this->load->library('cart');
-        $this->load->library('captchalib');
-        $this->load->library('module_lib');
-        $this->load->model(array('subscription_model', 'plan_model', 'setting_model', 'plan_type_model'));
+    private function page($title, $description, $active)
+    {
+        $this->data['active_menu'] = $active;
+        $this->data['page_side_bar'] = false;
+        $this->data['featured_image'] = false;
+        $this->data['page'] = array('title' => $title, 'meta_title' => $title, 'meta_keyword' => '', 'meta_description' => $description);
+        $this->data['setting_data'] = $this->setting_model->get();
     }
 
     public function index()
     {
-
-        // $this->load->library('email');
-
-        // // $config = array(
-        // //     'protocol' => $this->config->item('protocol'),
-        // //     'smtp_host' => $this->config->item('smtp_host'),
-        // //     'smtp_user' => $this->config->item('smtp_user'),
-        // //     'smtp_pass' => $this->config->item('smtp_pass'),
-        // //     'smtp_port' => $this->config->item('smtp_port'),
-        // //     'mailtype' => $this->config->item('mailtype'),
-        // //     'charset' => $this->config->item('charset'),
-        // //     'wordwrap' => $this->config->item('wordwrap'),
-        // //     'newline' => $this->config->item('newline'),
-        // // );
-        // $config = array(
-        //     'protocol' => 'smtp',
-        //     'smtp_host' => 'smtp.mailgun.org',
-        //     'smtp_user' => 'postmaster@mail.educatechild.in',
-        //     'smtp_pass' => '',
-        //     'smtp_port' => '587',
-        //     'mailtype' => $this->config->item('mailtype'),
-        //     'charset' => $this->config->item('charset'),
-        //     'wordwrap' => $this->config->item('wordwrap'),
-        //     'newline' => $this->config->item('newline'),
-        // );
-        // // Initialize the email library with the config settings
-        // $this->email->initialize($config);
-
-        // // Sender's email address
-
-        // //user's mail
-        // // $from_email = $this->config->item('from_mail');
-        // $from_email = 'vraj92291@gmail.com';
-        // $this->email->from($from_email, 'smartinnovation');
-
-        // // // Recipient's email address
-        // $to_email = 'sejalsabhaya36.hitinfotech@gmail.com';
-        // // $to_email = $subscription_data['email_address'];
-        // $this->email->to($to_email);
-
-        // // // Subject of the email
-        // $this->email->subject('School Register And School Create.');
-
-        // // // Body of the email
-        // // $message = '<p>This is a test email sent from CodeIgniter.</p>';
-        // $message = '<DOCTYPE html>
-        //     <html lang="en-US">
-
-        //     <head>
-        //         <meta charset="UTF-8">
-        //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        //     </head>
-
-        //     <body>
-        //         <p>Dear sir/medam,</p>
-        //         <p>Please wait while we prepare your resources.This may take a few moments.</p>
-        //         <p>Below are the details associated with your account:</p>
-        //         <ul>
-        //             <li><b>School Name: </b>test </li>
-        //             <li><b>Phone Number: </b>test</li>
-
-        //             <p><b>Please note the following important details for login:</b></p>
-
-        //             <li><b>Email: </b>test</li>
-        //             <li><b>Password: </b>test</li>
-        //         </ul>                            
-        //         <p>Best regards,</p>
-        //         <p>The Smartinnovation Team</p>
-        //     </body>
-
-        //     </html>';
-        // $this->email->message($message);
-
-        // // Send the email
-        // if ($this->email->send()) {
-        //     echo 'Email sent successfully!';
-        //     die;
-        // } else {
-        //     echo 'Email sending failed. Please check your configuration.';
-        //     die;
-        // }
-
-        
-        // $this->load->library('mails');
-        // $test = $this->mails->send(array(
-        //     'to' => 'bhavhirani007@gmail.com',
-        //     'subject' => 'School Register And School Create.',
-        //     'html' => "hello". date('Y-M-d H:i:s a'),
-        // ));
-        // var_dump($test);
-        // die;
-
-        // $this->load->library('mails');
-        // $test = $this->mails->send(array(
-        //     'to' => 'vrajpatel38.hitinfotech@gmail.com',
-        //     'from' => 'support@innovationcode.in',
-        //     'sender' => 'hitinfotech',
-        //     'subject' => 'School Register And School Create.',
-        //     'text' => 'School Register And School Create.',
-        //     'html' => "hello". date('Y-M-d H:i:s a'),
-        // ));
-
-    //     $this->load->library('mails'); 
-    // $this->mails->to = 'vrajpatel38.hitinfotech@gmail.com'; // Set recipient
-    // $this->mails->from = 'sejalsabhaya36.hitinfotech@gmail.com'; // Set the sender
-    // $this->mails->sender = 'your-name'; // Set the sender's name or email
-    // $this->mails->subject = 'School Register And School Create.'; // Set the subject
-    // $this->mails->html = "hello " . date('Y-M-d H:i:s a'); // HTML message content
-
-        // var_dump($test);
-        // die;
-
-        $this->data['active_menu'] = 'Plans';
-        $page = array('title' => 'Plans', 'meta_title' => '', 'meta_keyword' => '', 'meta_description' => '');
-        $this->data['page_side_bar'] = false;
-        $this->data['featured_image'] = false;
-        $this->data['page'] = $page;
-
-        $this->data['setting_data'] = $this->setting_model->get();
-
-        $this->data['plan_price'] = array();
-
-        $this->data['plans'] = $this->plan_model->get('', true);
-        // Cheapest first (what the school pays: the offer price when there is one).
-        usort($this->data['plans'], function ($a, $b) {
-            $pa = (int) $a['oprice'] > 0 ? (int) $a['oprice'] : (int) $a['price'];
-            $pb = (int) $b['oprice'] > 0 ? (int) $b['oprice'] : (int) $b['price'];
-            return $pa <=> $pb ?: (int) $a['plan_id'] <=> (int) $b['plan_id'];
-        });
-
-        if(!empty($this->data['plans'])){
-            foreach($this->data['plans'] as $key => $plans){
-                $list = $plans['list'];
-                unset($this->data['plans'][$key]['list']);  
-                $this->data['plans'][$key]['list'] = array();
-                $this->data['plans'][$key]['list'] = $this->plan_type_model->get_plan_type($list);  // Assign the value to 'listed'
-            }
-        }
-        // $this->data['plan_list'] = $this->plan_type_model->get_plan_type();
+        $this->page('Pricing', 'EduSYS is priced per student, per term, with a one-time implementation and training fee.', 'plans');
+        $this->data['bands'] = $this->plan_pricing->bands();
         $this->load_theme('plan/plans');
     }
 
+    public function product()
+    {
+        $this->page('The product', 'Everything a school runs on: admissions, fees, attendance, examinations, staff, communication and its own website.', 'product');
+        $this->load_theme('product');
+    }
+
+    /** Where school owners sign in: renewals, top-ups and their subscription. */
+    public function account()
+    {
+        $this->page('School owners', 'Sign in to see your EduSYS subscription, renew it, or pay for more students.', 'account');
+        $this->load_theme('plan/account');
+    }
+
+    /** Schools above the largest band: the request lands in Support > Website Enquiries. */
+    public function quote()
+    {
+        $this->page('Request a quote', 'A custom quote for schools with more than 3,000 students.', 'plans');
+        $this->data['errors'] = array();
+        $this->data['sent'] = (bool) $this->session->flashdata('quote_sent');
+        if ($this->input->method() === 'post') {
+            $in = function ($k, $max) { return mb_substr(trim(strip_tags((string) $this->input->post($k))), 0, $max); };
+            $row = array('school_name' => $in('school_name', 255), 'name' => $in('name', 255), 'email' => $in('email', 255), 'phone' => $in('phone', 50),
+                'students' => (int) $this->input->post('students'), 'message' => $in('message', 5000));
+            $errors = array();
+            // A hidden field: people leave it empty, form-filling robots don't.
+            if (trim((string) $this->input->post('website')) !== '') {
+                $this->session->set_flashdata('quote_sent', 1);
+                redirect('plans/quote');
+            }
+            if ($row['school_name'] === '') { $errors[] = 'Enter the name of your school.'; }
+            if ($row['name'] === '') { $errors[] = 'Enter your name.'; }
+            if (!filter_var($row['email'], FILTER_VALIDATE_EMAIL)) { $errors[] = 'Enter a valid email address.'; }
+            if ($row['students'] < 1) { $errors[] = 'Enter the number of students.'; }
+            if (!$errors) {
+                $this->db->insert('platform_enquiries', $row + array('kind' => 'quote', 'subject' => 'Quote request: ' . $row['school_name']));
+                $id = (int) $this->db->insert_id();
+                $this->platform_mailer->send('quote_request', $this->platform_settings->get('notify_email'), array(
+                    'school_name' => $row['school_name'], 'students' => number_format($row['students']), 'name' => $row['name'], 'email' => $row['email'],
+                    'phone' => $row['phone'], 'message' => $row['message'],
+                    'enquiry_url' => $this->school_provisioner->url_for(array('is_platform' => 1)) . 'admin/enquiries/view/' . $id,
+                ));
+                $this->session->set_flashdata('quote_sent', 1);
+                redirect('plans/quote');
+            }
+            $this->data['errors'] = $errors;
+        }
+        $this->data['students'] = (int) ($this->input->post('students') ?: $this->input->get('students'));
+        $this->load_theme('plan/quote');
+    }
 }

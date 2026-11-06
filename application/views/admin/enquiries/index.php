@@ -17,7 +17,8 @@ $flash = $this->session->flashdata('enquiry_msg');
                         <?php } ?>
                     </select>
                     <select name="kind" class="form-control input-sm" style="max-width:160px">
-                        <option value="">Contact and complaints</option>
+                        <option value="">All types</option>
+                        <option value="quote" <?php echo $kind === 'quote' ? 'selected' : ''; ?>>Quote requests</option>
                         <option value="contact" <?php echo $kind === 'contact' ? 'selected' : ''; ?>>Contact only</option>
                         <option value="complaint" <?php echo $kind === 'complaint' ? 'selected' : ''; ?>>Complaints only</option>
                     </select>
@@ -36,7 +37,7 @@ $flash = $this->session->flashdata('enquiry_msg');
                                 <td><?php echo $e($r['name']); ?><div class="text-muted" style="font-size:11px"><?php echo $e($r['email']); ?></div></td>
                                 <td><a href="<?php echo site_url('admin/enquiries/view/' . (int) $r['id']); ?>"><?php echo $e($r['subject'] ?: '(no subject)'); ?></a>
                                     <div class="text-muted" style="font-size:11px"><?php echo $e(mb_strimwidth($r['message'], 0, 120, '…')); ?></div></td>
-                                <td><?php echo $r['kind'] === 'complaint' ? '<span class="label label-danger">Complaint</span>' : '<span class="label label-default">Contact</span>'; ?></td>
+                                <td><?php echo $r['kind'] === 'complaint' ? '<span class="label label-danger">Complaint</span>' : ($r['kind'] === 'quote' ? '<span class="label label-success">Quote</span>' : '<span class="label label-default">Contact</span>'); ?></td>
                                 <td><span class="label <?php echo $st[1]; ?>"><?php echo $e($st[0]); ?></span></td>
                             </tr>
                         <?php } ?>

@@ -517,6 +517,9 @@ class Course extends Front_Controller
 
     public function guestlogin()
     {
+        if ($this->input->method() === 'get' && Tenant::is_platform()) {
+            redirect('account');
+        }
         $data = array();
         $data['title'] = 'Login';
         $site = $this->setting_model->get();

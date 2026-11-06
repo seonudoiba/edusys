@@ -163,6 +163,10 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                                             <?php } ?>
                                         </select>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="student_count">Students paid for <span class="sv-muted">(empty: no limit)</span></label>
+                                        <input id="student_count" name="student_count" type="number" min="1" class="form-control">
+                                    </div>
                                 <?php } ?>
                                 <div class="form-group">
                                     <label for="days"><?php echo $s['paid_subscription'] ? 'Extend by' : 'Days'; ?></label>

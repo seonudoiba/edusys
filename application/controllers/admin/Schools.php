@@ -289,9 +289,11 @@ class Schools extends Admin_Controller
         if (empty($plan) || !isset($plan['plan_id'])) {
             $this->back($school['id'], null, 'Choose the plan for this subscription.');
         }
+        $manual_students = max(0, (int) $this->input->post('student_count'));
         $this->db->insert('subscription', array(
             'plan_id' => (int) $plan['plan_id'],
             'school_id' => (int) $school['id'],
+            'student_count' => $manual_students > 0 ? $manual_students : null, // the school's limit; empty: no limit
             'end_date' => date('Y-m-d H:i:s', strtotime("+$days days")),
             'price' => 0,
             'discount_amt' => 0,

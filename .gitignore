@@ -66,3 +66,6 @@ Thumbs.db
 # mPDF font and temp cache (invoice PDFs)
 application/tmp/
 
+
+# Signed client documents: never commit
+/Plan Sample.pdf

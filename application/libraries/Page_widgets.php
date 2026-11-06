@@ -62,7 +62,7 @@ class Page_widgets
             )),
             'courses' => array('label' => 'Online courses', 'icon' => 'fa-laptop', 'group' => 'dynamic', 'hint' => 'Needs the Online Course module', 'fields' => array('title' => $title('Online courses'), 'count' => $count(3), 'columns' => $columns)),
             // ------- the platform's own website
-            'plans' => array('label' => 'Pricing plans', 'icon' => 'fa-tags', 'group' => 'platform', 'hint' => 'From Plans', 'fields' => array('title' => $title('Plans and pricing'), 'columns' => $columns)),
+            'plans' => array('label' => 'Pricing table', 'icon' => 'fa-tags', 'group' => 'platform', 'hint' => 'From Subscription > Pricing Bands', 'fields' => array('title' => $title('Pricing'))),
             'platform_stats' => array('label' => 'Number of schools', 'icon' => 'fa-university', 'group' => 'platform', 'hint' => 'Live count of schools', 'fields' => array('label' => array('type' => 'text', 'label' => 'Label', 'default' => 'Schools on the platform'))),
             'register' => array('label' => 'Register-a-school button', 'icon' => 'fa-rocket', 'group' => 'platform', 'hint' => 'Links to the plans page', 'fields' => array(
                 'title' => $title('Bring your school online'),
@@ -403,17 +403,8 @@ class Page_widgets
                 return $db->select('title, slug, course_thumbnail')->where('status', 1)->where('front_side_visibility', 'yes')
                     ->order_by('id', 'desc')->limit((int) $s['count'])->get('online_courses')->result_array();
             case 'plans':
-                $this->CI->load->model(array('plan_model', 'plan_type_model'));
-                $plans = $this->CI->plan_model->get('', true);
-                usort($plans, function ($a, $b) {
-                    $pa = (int) $a['oprice'] > 0 ? (int) $a['oprice'] : (int) $a['price'];
-                    $pb = (int) $b['oprice'] > 0 ? (int) $b['oprice'] : (int) $b['price'];
-                    return $pa <=> $pb ?: (int) $a['plan_id'] <=> (int) $b['plan_id'];
-                });
-                foreach ($plans as $k => $p) {
-                    $plans[$k]['list'] = $this->CI->plan_type_model->get_plan_type($p['list']);
-                }
-                return $plans;
+                $this->CI->load->library('Plan_pricing');
+                return $this->CI->plan_pricing->bands();
             case 'platform_stats':
                 return array('schools' => $db->where(array('is_platform' => 0, 'cron_flag' => 1, 'status' => 1))->count_all_results('school'));
         }

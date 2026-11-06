@@ -1,163 +1,105 @@
-<?php $this->load->view('layout/course_css.php'); ?>
 <?php
-$currency_symbol = $this->customlib->getSchoolCurrencyFormat();
-$result =   $this->customlib->getLoggedInUserData();
+/* The school owner's account: the subscription, renewal for the next period, and top-ups. */
+$e = function ($v) { return html_escape((string) $v); };
+$naira = function ($v) { return '&#8358;' . number_format((float) $v); };
+$sub = $current;
+$flash = $this->session->flashdata('plan_error');
+$has_counts = $sub && !empty($sub['student_count']);
 ?>
 <div class="content-wrapper">
-  <section class="content">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="box box-primary">
-        <div class="subscription-info">
-                <?php if ($plan_data): // Check if plan_data exists ?>
-                    <div class="subscription-details">
-                        <h3>Subscription Details</h3>
-                        <p><strong>Created At:</strong> <?php echo $plan_data['created_at']; ?></p>
-                        <?php if (isset($plan_data['remaining_days']) && $plan_data['remaining_days'] >= 0): ?>
-                          <p><strong>Remaining Days:</strong> <?php echo $plan_data['remaining_days']; ?></p>
-                        <?php endif; ?>
-                        <p><strong>Status:</strong> <?php echo $plan_data['status']; ?></p>
-                    </div>
-                <?php endif; ?>
-                <?php if (isset($plan_data['remaining_days']) && $plan_data['remaining_days'] < 1): ?>
-                  <div class="row">
-                    <div class="container spaceb50">
-                      <div class="row">
-                        <div class="col-md-12">
-                          <?php
-                          $totalPlans = count($plans);
-                          $columnsPerRow = 12 / $totalPlans;
-                          $columnClass = "col-md-" . (12 / $totalPlans);
-                          
-                          foreach ($plans as $key => $value) {
-                          ?>
-                            <div class="columns <?php echo $columnClass; ?>">
-                              <ul class="price">
-                                <li class="header">
-                                  <?php echo $value['title']; ?>
-                                  <div class="pricesell vh-center" style="color:white;">
-                                    <?php if ($value['oprice'] != 0) { ?>
-                                      <span><del>₹<?php echo $value['price']; ?></del></span>
-                                    <?php } ?>
-                                    ₹<?php echo $value['oprice']; ?>
-                                  </div>
-                                </li>
-                                <?php if ($value['text']) { ?>
-                                  <li class="grey"><?php echo $value['text']; ?></li>
-                                <?php } ?>
-
-                                <?php foreach ($value['list'] as $key_ => $value_) { ?>
-                                  <li style="font-size: 14px;">
-                                    <?php echo $value_['name']; ?>
-                                  </li>
-                                <?php } ?>
-
-                                <li class="grey d-flex justify-content-center" style="flex-wrap:wrap;gap:6px">
-                                  <?php // One button per online gateway the platform has keys for.
-                                  $CI_pg = &get_instance();
-                                  $CI_pg->load->library('Payment_gateways');
-                                  $renew_methods = $CI_pg->payment_gateways->platform_enabled();
-                                  if (!$renew_methods) { ?>
-                                    <span>Online payment is not available: contact us to renew by bank transfer.</span>
-                                  <?php }
-                                  foreach ($renew_methods as $method_id => $method_name) { ?>
-                                    <a href="<?php echo base_url(); ?>subscription/edit?plan_id=<?php echo (int) $value['plan_id']; ?>&school_id=<?php echo (int) $school_id; ?>&method=<?php echo html_escape($method_id); ?>"
-                                      class="button"><?php echo count($renew_methods) > 1 ? 'Pay with ' . html_escape($method_name) : 'Buy Now'; ?></a>
-                                  <?php } ?>
-                                </li>
-                              </ul>
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <?php if ($flash) { ?><div class="alert alert-danger"><?php echo $e($flash); ?></div><?php } ?>
+                <div class="box box-primary">
+                    <div class="box-header with-border"><h3 class="box-title">Your subscription</h3></div>
+                    <div class="box-body">
+                        <?php if (!$sub) { ?>
+                            <p class="text-muted">No subscription has been paid yet.</p>
+                        <?php } else { ?>
+                            <div class="row">
+                                <div class="col-sm-3"><small class="text-muted">Status</small><br><b><?php echo $e($status); ?></b></div>
+                                <div class="col-sm-3"><small class="text-muted">Ends</small><br><b><?php echo $e(date('j M Y', $ends)); ?></b><?php if ($days_left >= 0) { ?> <span class="text-muted">(<?php echo (int) $days_left; ?> days)</span><?php } ?></div>
+                                <div class="col-sm-3"><small class="text-muted">Active students</small><br><b><?php echo number_format($active); ?></b><?php if ($has_counts) { ?> <span class="text-muted">of <?php echo number_format((int) $sub['student_count']); ?> paid for</span><?php } ?></div>
+                                <?php if ($has_counts) { ?><div class="col-sm-3"><small class="text-muted">Rate</small><br><b><?php echo $naira($sub['rate_per_term']); ?></b> <span class="text-muted">per student, per term</span></div><?php } ?>
                             </div>
-                          <?php } ?>
-                        </div>
-                      </div>
+                        <?php } ?>
                     </div>
-                  </div>
-                <?php endif; ?>
+                </div>
+                <?php if (!$methods) { ?>
+                    <div class="alert alert-warning">Online payment isn't available right now. Please contact <?php echo $e($support); ?> to renew or add students by bank transfer.</div>
+                <?php } ?>
             </div>
         </div>
-      </div>
-    </div>
-  </section>
+        <?php if ($methods) { ?>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="box box-default">
+                    <div class="box-header with-border"><h3 class="box-title">Renew</h3></div>
+                    <form method="get" action="<?php echo site_url('subscription/edit'); ?>">
+                        <div class="box-body">
+                            <p class="text-muted">The next period starts when the current one ends, so renewing early doesn't lose any days. There is no setup fee.</p>
+                            <div class="form-group"><label for="r_students">Students to pay for</label>
+                                <input id="r_students" name="students" type="number" min="<?php echo max(1, $active); ?>" required class="form-control" value="<?php echo max($active, $has_counts ? (int) $sub['student_count'] : 0, 1); ?>"></div>
+                            <div class="form-group"><label for="r_period">Pay</label>
+                                <select id="r_period" name="period" class="form-control">
+                                    <?php foreach (Plan_pricing::PERIODS as $k => $l) { ?><option value="<?php echo $k; ?>" <?php echo $has_counts && $sub['billing_period'] === $k ? 'selected' : ''; ?>><?php echo $l === 'Yearly' ? 'Yearly (3 terms)' : 'Each term'; ?></option><?php } ?>
+                                </select></div>
+                            <div class="form-group"><label for="r_method">Payment method</label>
+                                <select id="r_method" name="method" class="form-control"><?php foreach ($methods as $k => $l) { ?><option value="<?php echo $e($k); ?>"><?php echo $e($l); ?></option><?php } ?></select></div>
+                            <p><b id="r_total"></b></p>
+                        </div>
+                        <div class="box-footer"><button class="btn btn-primary" type="submit">Continue to payment</button></div>
+                    </form>
+                </div>
+            </div>
+            <?php if ($has_counts && $days_left >= 1) { ?>
+                <div class="col-md-6">
+                    <div class="box box-default">
+                        <div class="box-header with-border"><h3 class="box-title">Add students</h3></div>
+                        <form method="get" action="<?php echo site_url('subscription/topup'); ?>">
+                            <div class="box-body">
+                                <p class="text-muted">Pay for the extra students at your current rate, for the <?php echo (int) $topup_terms; ?> term<?php echo $topup_terms === 1 ? '' : 's'; ?> left. Your end date stays the same.</p>
+                                <div class="form-group"><label for="t_students">New total of students</label>
+                                    <input id="t_students" name="students" type="number" min="<?php echo (int) $sub['student_count'] + 1; ?>" required class="form-control" value="<?php echo (int) $sub['student_count'] + 1; ?>"></div>
+                                <div class="form-group"><label for="t_method">Payment method</label>
+                                    <select id="t_method" name="method" class="form-control"><?php foreach ($methods as $k => $l) { ?><option value="<?php echo $e($k); ?>"><?php echo $e($l); ?></option><?php } ?></select></div>
+                                <p><b id="t_total"></b></p>
+                            </div>
+                            <div class="box-footer"><button class="btn btn-primary" type="submit">Continue to payment</button></div>
+                        </form>
+                    </div>
+                </div>
+            <?php } ?>
+        </div>
+        <script>
+            (function () {
+                var bands = <?php echo json_encode($bands, JSON_HEX_TAG | JSON_HEX_AMP); ?>, agreed = <?php echo $has_counts && !empty($sub['quote_id']) ? (float) $sub['rate_per_term'] : 'null'; ?>;
+                var fmt = function (n) { return '₦' + Math.round(n).toLocaleString('en-NG'); };
+                var rate = function (n) {
+                    if (agreed) { return agreed; }
+                    for (var i = 0; i < bands.length; i++) {
+                        var b = bands[i];
+                        if (n >= +b.min_students && (b.max_students === null || n <= +b.max_students)) { return b.rate_per_term === null ? null : +b.rate_per_term; }
+                    }
+                    return null;
+                };
+                var $ = function (id) { return document.getElementById(id); };
+                function renew() {
+                    var n = +$('r_students').value, r = rate(n);
+                    $('r_total').textContent = r === null ? 'Please contact us for a quote at this size.' : 'Total: ' + fmt(n * r * ($('r_period').value === 'year' ? 3 : 1));
+                }
+                $('r_students').addEventListener('input', renew);
+                $('r_period').addEventListener('change', renew);
+                renew();
+                if ($('t_students')) {
+                    var paid = <?php echo $has_counts ? (int) $sub['student_count'] : 0; ?>, cur = <?php echo $has_counts ? (float) $sub['rate_per_term'] : 0; ?>, terms = <?php echo (int) $topup_terms; ?>;
+                    var top = function () { var extra = +$('t_students').value - paid; $('t_total').textContent = extra > 0 ? 'Total: ' + fmt(extra * cur * terms) : ''; };
+                    $('t_students').addEventListener('input', top);
+                    top();
+                }
+            })();
+        </script>
+        <?php } ?>
+    </section>
 </div>
-
-<style>
-    * {
-        box-sizing: border-box;
-    }
-
-    .columns {
-        float: left;
-        padding: 8px;
-    }
-
-    .price {
-        list-style-type: none;
-        border: 1px solid #eee;
-        margin: 0;
-        padding: 0;
-        -webkit-transition: 0.3s;
-        transition: 0.3s;
-    }
-
-    .price:hover {
-        box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.2);
-    }
-
-    .price .header {
-        background-color: #111;
-        color: white;
-        font-size: 25px;
-    }
-
-    .price li {
-        border-bottom: 1px solid #eee;
-        padding: 20px;
-        text-align: center;
-    }
-
-    .price .grey {
-        background-color: #eee;
-        font-size: 20px;
-    }
-
-    .button {
-        background-color: #04AA6D;
-        border: none;
-        color: white;
-        padding: 10px 25px;
-        text-align: center;
-        text-decoration: none;
-        font-size: 18px;
-    }
-
-    /* Subscription info box styles */
-    .subscription-info {
-        background-color: #f9f9f9;
-        padding: 20px;
-        margin-top: 30px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .subscription-info h3 {
-        font-size: 24px;
-        margin-bottom: 15px;
-    }
-
-    .subscription-details p {
-        font-size: 18px;
-        margin: 5px 0;
-    }
-
-    .subscription-details p strong {
-        color: #333;
-    }
-
-    /* Responsive layout for small screens */
-    @media only screen and (max-width: 600px) {
-        .columns {
-            width: 100%;
-        }
-    }
-</style>

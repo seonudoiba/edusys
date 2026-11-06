@@ -64,9 +64,11 @@ class School_provisioner
                 $this->fill_settings($db, $school);
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';
-                $starter = json_encode(Page_widgets::starter_home(!empty($school['is_platform'])));
-                $db->where(array('school_id' => (int) $school['id'], 'is_homepage' => 1))
-                    ->update('front_cms_pages', array('builder_layout' => $starter, 'builder_draft' => $starter));
+                if (empty($school['is_platform'])) { // the platform's homepage is the 'platform' theme's
+                    $starter = json_encode(Page_widgets::starter_home(false));
+                    $db->where(array('school_id' => (int) $school['id'], 'is_homepage' => 1))
+                        ->update('front_cms_pages', array('builder_layout' => $starter, 'builder_draft' => $starter));
+                }
                 $db->where('id', (int) $school['id'])->update('school', array('status' => 1, 'cron_flag' => 1));
                 return $map;
             });
