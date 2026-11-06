@@ -54,6 +54,10 @@ class Plan_limits
             $out['max_staff'] = (int) $plan['max_staff'];
             $out['max_storage_mb'] = (int) $plan['max_storage_mb'];
         }
+        // Per-student subscriptions: the limit is what was paid for.
+        if ($sub && !empty($sub['student_count'])) {
+            $out['max_students'] = (int) $sub['student_count'];
+        }
         if ($sub) {
             $expires = strtotime($sub['created_at']) + (int) $sub['days'] * 86400;
             $grace = max(0, (int) $this->CI->platform_settings->get('grace_days'));
@@ -125,6 +129,11 @@ class Plan_limits
             return null;
         }
         $left = max(0, $max - $used);
+        if ($what === 'students' && !empty($c['subscription']['student_count'])) {
+            return 'Your subscription covers ' . number_format($max) . ' students and you have ' . number_format($used)
+                . ($count > 1 ? ", so these $count can't all be added ($left left)" : '')
+                . '. Your school owner can pay for more students (a top-up) at ' . $this->renew_url() . ', or deactivate some students first.';
+        }
         $label = $what === 'students' ? 'active students' : 'active staff';
         return "Your plan ({$c['plan']['title']}) allows $max $label; you have $used"
             . ($count > 1 ? " and this adds $count ($left left)" : '') . '. Upgrade the plan, or deactivate some first.';

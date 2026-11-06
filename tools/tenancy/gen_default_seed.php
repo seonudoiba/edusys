@@ -12,6 +12,12 @@ require __DIR__ . '/config.php';
 ini_set('memory_limit', '1G');
 
 [$_, $centralFile, $manifestFile, $outDir] = $argv;
+// Without the demo file this would write a much smaller seed and delete the rest: refuse.
+if (!isset($argv[4]) || !is_file($argv[4])) {
+    fwrite(STDERR, "The demo data file is required (argument 4) and was not found. Nothing changed.
+");
+    exit(1);
+}
 $demoFile = $argv[4] ?? null;
 $manifest = json_decode(file_get_contents($manifestFile), true);
 $order = array_column($manifest, 'n', 'table');
@@ -285,6 +291,8 @@ foreach ([['900030', '900020', 'platform_staff', 'platform_staff', 'admin/staff'
           ['900038', '38', 'billing_invoices', 'invoices', 'admin/billing/invoices', '3', "('subscription_list', 'can_view')", 'billing', 'invoices', '1204'],
           ['900039', '38', 'billing_coupons', 'coupons', 'admin/billing/coupons', '4', "('subscription_list', 'can_view')", 'billing', 'coupons,coupon', '1204'],
           ['900040', '38', 'billing_reports', 'reports', 'admin/billing/reports', '5', "('subscription_list', 'can_view')", 'billing', 'reports', '1204'],
+          // Pricing bands (migration 276)
+          ['900047', '38', 'billing_bands', 'pricing_bands', 'admin/billing/bands', '2', "('subscription_list', 'can_view')", 'billing', 'bands', '1204'],
           // Support and backups (migration 271)
           ['900042', '900041', 'platform_support_desk', 'support_desk', 'admin/support_desk', '1', "('platform_settings', 'can_view')", 'support_desk', 'index,view', '900010'],
           ['900043', '900041', 'platform_enquiries', 'website_enquiries', 'admin/enquiries', '2', "('platform_settings', 'can_view')", 'enquiries', 'index,view', '900010'],

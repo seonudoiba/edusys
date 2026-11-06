@@ -18,6 +18,49 @@ class Billing extends Admin_Controller
         $this->load->model('plan_model');
     }
 
+    // ------------------------------------------------------------------ pricing bands
+
+    public function bands()
+    {
+        $this->require_privilege('can_view');
+        $this->session->set_userdata('top_menu', 'subscription');
+        $this->session->set_userdata('sub_menu', 'admin/billing/bands');
+        $this->load->library('Plan_pricing');
+        $this->load->view('layout/header');
+        $this->load->view('admin/billing/bands', array('bands' => $this->plan_pricing->bands(), 'token' => $this->form_token->field(),
+            'message' => $this->session->flashdata('billing_msg'), 'error' => $this->session->flashdata('billing_error')));
+        $this->load->view('layout/footer');
+    }
+
+    /** New prices apply to new payments; what schools have already paid doesn't change. */
+    public function save_bands()
+    {
+        $this->require_privilege('can_edit');
+        $this->form_token->require_post();
+        $this->load->library('Plan_pricing');
+        $changes = array();
+        foreach ($this->plan_pricing->bands() as $b) {
+            $id = (int) $b['id'];
+            $setup = (float) $this->input->post('setup_' . $id);
+            $rate = $b['rate_per_term'] === null ? null : (float) $this->input->post('rate_' . $id);
+            if ($setup < 0 || ($rate !== null && $rate <= 0)) {
+                $this->session->set_flashdata('billing_error', 'Rates must be above zero and setup fees can\'t be negative. Nothing was saved.');
+                redirect('admin/billing/bands');
+            }
+            if ((float) $b['setup_fee'] !== $setup || ($rate !== null && (float) $b['rate_per_term'] !== $rate)) {
+                $changes[$id] = array('rate_per_term' => $rate, 'setup_fee' => $setup);
+            }
+        }
+        foreach ($changes as $id => $row) {
+            $this->db->where('id', $id)->update('platform_plan_bands', $row);
+        }
+        if ($changes) {
+            $this->platform_audit->record('billing.bands', 'Changed the pricing bands');
+        }
+        $this->session->set_flashdata('billing_msg', $changes ? 'Prices saved. They apply to new payments.' : 'Nothing changed.');
+        redirect('admin/billing/bands');
+    }
+
     // ------------------------------------------------------------------ invoices
 
     public function invoices()

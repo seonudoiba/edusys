@@ -47,7 +47,7 @@ class Platform_invoices
                 'school_ref' => $sub['school_id'] ? (int) $sub['school_id'] : null,
                 'bill_to_name' => mb_substr(trim(($school ? $school['school_name'] : $sub['school_name']) . ' (' . $sub['owner_name'] . ')'), 0, 255),
                 'bill_to_email' => mb_substr((string) ($school ? $school['email_address'] : $sub['email_address']), 0, 255),
-                'description' => mb_substr(($sub['plan_title'] ?: 'Subscription') . ' - ' . (int) $sub['days'] . ' days', 0, 255),
+                'description' => mb_substr($this->line($sub), 0, 255),
                 'price' => (float) $sub['price'],
                 'discount' => (float) $sub['discount_amt'],
                 'total' => (float) $sub['total'],
@@ -73,6 +73,13 @@ class Platform_invoices
             }
         }
         return null;
+    }
+
+    private function line(array $sub)
+    {
+        $this->CI->load->library('Plan_pricing');
+        $line = Plan_pricing::describe($sub, 'NGN ');
+        return $line ?: (($sub['plan_title'] ?: 'Subscription') . ' - ' . (int) $sub['days'] . ' days');
     }
 
     public function send_receipt(array $invoice, array $sub = null)

@@ -76,6 +76,9 @@ class Subscription_activation
             $db->where('code', $subscription['coupon_code'])->set('used_count', 'used_count + 1', false)->update('platform_coupons');
             $db->where('id', (int) $subscription_id)->update('subscription', array('coupon_counted' => 1));
         }
+        if (!empty($subscription['quote_id'])) {
+            $db->where('id', (int) $subscription['quote_id'])->update('platform_quotes', array('status' => 'used'));
+        }
         $this->send_emails($subscription, $guest_password);
         $this->CI->load->library('Platform_invoices');
         $this->CI->platform_invoices->issue((int) $subscription_id);
@@ -90,6 +93,9 @@ class Subscription_activation
     private function renewed($school_id, array $subscription)
     {
         $db = $this->CI->db;
+        if (isset($subscription['kind']) && $subscription['kind'] === 'topup') {
+            return; // more students in the same period: the end date doesn't move
+        }
         $previous = $db->where(array('school_id' => $school_id, 'payment_status' => 1, 'id <>' => (int) $subscription['id']))
             ->order_by('id', 'desc')->limit(1)->get('subscription')->row_array();
         if ($previous) {

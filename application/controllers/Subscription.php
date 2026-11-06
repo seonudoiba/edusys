@@ -8,6 +8,7 @@ class subscription extends Front_Controller
 {
     /** @var array the plan being signed up for (coupon validation) */
     private $signup_plan = array();
+    private $signup_price = array();
 
     /** payment_method value for a manual bank transfer (receipt reviewed by the platform admin) */
     const BANK_TRANSFER = 'bank_transfer';
@@ -28,53 +29,59 @@ class subscription extends Front_Controller
         $this->load->model(array('subscription_model', 'plan_model', 'setting_model', 'subscription_bank_transfer_model'));
         $this->load->library('Platform_coupons');
         $this->load->library('School_provisioner');
-        $this->load->library(array('Payment_gateways', 'Platform_settings'));
+        $this->load->library(array('Payment_gateways', 'Platform_settings', 'Plan_pricing'));
+        $this->theme_path = 'platform'; // the platform's own design, whatever theme is selected
     }
 
+    /** The registration form: school details, students, how often to pay, and the live price. */
     public function add()
     {
-        //$data = array();
+        $quote = $this->plan_pricing->quote($this->input->get('quote'));
+        if ($this->input->get('quote') && !$quote) {
+            show_error('This quote has expired or has already been used. Please contact us for a new one.', 410, 'Quote not available');
+        }
+        $students = $quote ? (int) $quote['students'] : max(0, (int) $this->input->get('students'));
+        if (!$quote && $students > 0 && $this->plan_pricing->price($students, 'year')['needs_quote']) {
+            redirect('plans/quote?students=' . $students);
+        }
+        $this->show_form($quote, $students, (string) $this->input->get('period'));
+    }
+
+    private function show_form($quote, $students, $period)
+    {
+        $page = array('title' => 'Register your school', 'meta_title' => 'Register your school', 'meta_keyword' => '', 'meta_description' => '');
         $this->data['active_menu'] = 'plans';
-        $page = array('title' => '', 'meta_title' => '', 'meta_keyword' => '', 'meta_description' => '');
         $this->data['page_side_bar'] = false;
         $this->data['featured_image'] = false;
         $this->data['page'] = $page;
-
-        $plan_id = $this->input->get('plan_id');
-        if (!$plan_id) {
-            $plan_id = $this->session->flashdata('plan_id');
-        }
-        $this->data['plan_id'] = $plan_id;
-
-        $plan = $this->plan_model->get($plan_id);
-
-        $discount = 0;
-        $this->data['amount'] = $plan['price'];
-        $this->data['days'] = $plan['days'];
-        if ($plan['oprice'] > 0) {
-            $discount = ($plan['price'] - $plan['oprice']);
-            $this->data['amount'] = ($plan['price'] - $discount);
-        }
-
         $this->data['setting_data'] = $this->setting_model->get();
         $this->data['online_methods'] = $this->payment_gateways->platform_enabled();
-
+        $this->data['bands'] = $this->plan_pricing->bands();
+        $this->data['quote'] = $quote;
+        $this->data['students'] = $students;
+        $this->data['period'] = isset(Plan_pricing::PERIODS[$period]) ? $period : 'year';
         $this->load_theme('subscription/subscriptionform');
     }
 
     public function save()
     {
-
-        $plan_id = (int) $this->input->post('plan_id');
-        $plan = $plan_id > 0 ? $this->plan_model->get($plan_id) : null;
-        if (empty($plan) || !isset($plan['plan_id']) || (int) $plan['status'] !== 1) {
-            show_404(); // only a plan shown on the sign-up page can be chosen
+        $plan = $this->plan_pricing->plan();
+        if (empty($plan)) {
+            show_error('Pricing is not set up on this server.', 503, 'Registration unavailable');
         }
+        $token = (string) $this->input->post('quote');
+        $quote = $token !== '' ? $this->plan_pricing->quote($token) : null;
+        if ($token !== '' && !$quote) {
+            show_error('This quote has expired or has already been used. Please contact us for a new one.', 410, 'Quote not available');
+        }
+        $students = (int) $this->input->post('student_count');
+        $period = (string) $this->input->post('billing_period');
+        $this->signup_price = $this->plan_pricing->price($students, $period, true, $quote);
+        if ($this->signup_price['needs_quote']) {
+            redirect('plans/quote?students=' . $students);
+        }
+        $total = $this->signup_price['total'];
         $discount = 0;
-        if ($plan['oprice'] > 0) {
-            $discount = ($plan['price'] - $plan['oprice']);
-        }
-        $total = $plan['price'] - $discount;
         // A coupon (checked again here, whatever the page showed).
         $this->signup_plan = $plan;
         $coupon = null;
@@ -82,147 +89,187 @@ class subscription extends Front_Controller
         if ($code !== '') {
             $coupon = $this->platform_coupons->find($code);
             if ($this->platform_coupons->error($coupon, $plan) === null) {
-                $off = $this->platform_coupons->discount($coupon, $total);
-                $discount += $off;
-                $total -= $off;
+                $discount = $this->platform_coupons->discount($coupon, $total);
             }
         }
+        $payable = max(0, $total - $discount);
+        $this->form_validation->set_rules('student_count', 'Number of students', 'callback_valid_price');
         $this->form_validation->set_rules('coupon_code', 'Coupon', 'trim|callback_valid_coupon');
         $this->form_validation->set_rules('email_address', $this->lang->line('email_address'), 'trim|required|xss_clean|valid_email|callback_check_email_exists', [
             'required' => 'The %s is a required field.',
             'valid_email' => 'Please enter a valid %s.'
         ]);
-
-        if ($total > 0) {
+        if ($payable > 0) {
             $this->form_validation->set_rules('payment_method', $this->lang->line('payment_method'), 'trim|required|xss_clean|in_list[' . implode(',', array_merge(array_keys($this->payment_gateways->platform_enabled()), array(self::BANK_TRANSFER))) . ']');
         }
-        $this->form_validation->set_rules('phone_number', $this->lang->line('phone_number'), 'trim|required|xss_clean|regex_match[/^\+?[0-9]{1,4}?[-.\s]?[0-9]+[-.\s]?[0-9]+[-.\s]?[0-9]+$/]');
+        $this->form_validation->set_rules('phone_number', $this->lang->line('phone_number'), 'trim|required|xss_clean|regex_match[/^\+?(?=(?:\D*\d){7,15}\D*$)[0-9\s().\-]+$/]');
         $this->form_validation->set_rules('school_name', $this->lang->line('school_name'), 'trim|required|xss_clean');
         $_POST['subdomain'] = School_provisioner::normalize_subdomain($this->input->post('subdomain'));
         $this->form_validation->set_rules('subdomain', 'School address', 'required|callback_valid_subdomain', array('required' => 'Choose an address for your school.'));
         $this->form_validation->set_rules('owner_name', $this->lang->line('owner_name'), 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == false) {
-            $this->session->set_flashdata('plan_id', $this->input->post('plan_id'));
-
-            $msg = array(
-                'title' => form_error('title'),
-                'text' => form_error('text'),
-                'plan_type_list' => form_error('plan_type_list'),
-            );
-
-            $data = array(
-                'error_messages' => $msg,
-                'status' => 'fail',
-                'message' => 'There were some validation errors.'
-            );
-
-            $plan = $this->plan_model->get($this->input->post('plan_id'));
-            $this->data['amount'] = $plan['price'];
-            $this->data['active_menu'] = 'online_admission';
-            $this->data['setting_data'] = $this->setting_model->get();
-            $this->data['online_methods'] = $this->payment_gateways->platform_enabled();
-            $this->data['page_side_bar'] = false;
-            $this->data['featured_image'] = false;
-            $page = array('title' => '', 'meta_title' => '', 'meta_keyword' => '', 'meta_description' => '');
-            $this->data['page'] = $page;
-
-            $this->load_theme('subscription/subscriptionform');
-        } else {
-            $currentDate = new DateTime();
-            $currentDate->modify('+1 year');
-            $end_date = $currentDate->format('Y-m-d');
-
-            // $plan = $this->plan_model->get($this->input->post('plan_id'));
-            // $discount = 0;
-            // if ($plan['oprice'] > 0) {
-            //     $discount = ($plan['price'] - $plan['oprice']);
-            // }
-            // $total = $plan['price'] - $discount;
-
-            $data = array(
-                'plan_id' => $this->input->post('plan_id'),
-                'end_date' => $end_date,
-                'price' => $plan['price'],
-                'days' => $plan['days'],
-                'discount_amt' => $discount,
-                'coupon_code' => $coupon && $this->platform_coupons->error($coupon, $plan) === null ? $coupon['code'] : null,
-                'payment_method' => ($total > 0) ? $this->input->post('payment_method') : '',
-                'status' => 0,
-                'total' => $total,
-                'school_name' => $this->input->post('school_name'),
-                'subdomain' => $this->input->post('subdomain'),
-                'email_address' => $this->input->post('email_address'),
-                'phone_number' => $this->input->post('phone_number'),
-                'owner_name' => $this->input->post('owner_name'),
-                'cron_flag' => 0,
-            );
-
-            $subscription_id = $this->subscription_model->add($data);
-
-            $this->session->set_flashdata('msg', 'Subscription added successfully');
-            if ($total > 0) {
-                if (Payment_gateways::known($this->input->post('payment_method'))) {
-                    $this->initialize_payment($subscription_id);
-                } elseif ($this->input->post('payment_method') == self::BANK_TRANSFER) {
-                    $token = $this->subscription_bank_transfer_model->create($subscription_id);
-                    redirect('subscription/bank_transfer/' . $token);
-                }
-            } else {
-                $this->data_set($subscription_id);
-            }
-
+            return $this->show_form($quote, $students, $period);
+        }
+        $p = $this->signup_price;
+        $subscription_id = $this->subscription_model->add(array(
+            'plan_id' => $plan['plan_id'],
+            'kind' => 'new',
+            'student_count' => $p['students'],
+            'billing_period' => $p['period'],
+            'rate_per_term' => $p['rate'],
+            'terms' => $p['terms'],
+            'setup_fee' => $p['setup'],
+            'quote_id' => $quote ? (int) $quote['id'] : null,
+            'end_date' => date('Y-m-d', strtotime('+' . $p['days'] . ' days')),
+            'price' => $total,
+            'days' => $p['days'],
+            'discount_amt' => $discount,
+            'coupon_code' => $coupon && $this->platform_coupons->error($coupon, $plan) === null ? $coupon['code'] : null,
+            'payment_method' => ($payable > 0) ? $this->input->post('payment_method') : '',
+            'status' => 0,
+            'total' => $payable,
+            'school_name' => $this->input->post('school_name'),
+            'subdomain' => $this->input->post('subdomain'),
+            'email_address' => $this->input->post('email_address'),
+            'phone_number' => $this->input->post('phone_number'),
+            'owner_name' => $this->input->post('owner_name'),
+            'cron_flag' => 0,
+        ));
+        if ($payable <= 0) {
+            return $this->data_set($subscription_id);
+        }
+        if (Payment_gateways::known($this->input->post('payment_method'))) {
+            return $this->initialize_payment($subscription_id);
+        }
+        if ($this->input->post('payment_method') == self::BANK_TRANSFER) {
+            $token = $this->subscription_bank_transfer_model->create($subscription_id);
+            redirect('subscription/bank_transfer/' . $token);
         }
     }
 
+    /** Form validation callback: the number of students has a price. */
+    public function valid_price($value)
+    {
+        if (empty($this->signup_price['ok'])) {
+            $this->form_validation->set_message('valid_price', $this->signup_price['error'] ?: 'Check the number of students.');
+            return false;
+        }
+        return true;
+    }
+
+    /** Renewal from the owner's account: the next period for the students the school has now. No setup fee. */
     public function edit()
     {
-        $student_data = $this->session->userdata('student');
-        $plan_id = $this->input->get('plan_id');
-        $school_id = $student_data['school_id'];
-        $this->db->where('id', $school_id);
-        $query = $this->db->get('school');
-        $row = $query->row();
-
-        $plan = $this->plan_model->get($plan_id);
-        // Renewal: the online method picked on the plans page (any the platform has keys for).
-        $methods = $this->payment_gateways->platform_enabled();
-        $method = (string) $this->input->get('method');
-        if (!isset($methods[$method])) {
-            $method = key($methods);
+        list($school_id, $row, $current) = $this->renewal_context();
+        $method = $this->chosen_method();
+        $used = $this->active_students($school_id);
+        $students = (int) $this->input->get('students');
+        if ($students < $used) {
+            $this->renewal_error('The school has ' . number_format($used) . ' active students: pay for at least that many, or deactivate some first.');
         }
-        if (!$method || empty($plan['plan_id']) || (int) $plan['status'] !== 1) {
-            show_error('Online payment is not available. Please contact us to renew by bank transfer.', 503, 'Payment unavailable');
+        // A rate agreed in a quote stays agreed.
+        $agreed = $current && !empty($current['quote_id']) ? $current['rate_per_term'] : null;
+        $p = $this->plan_pricing->price($students, (string) $this->input->get('period'), false, null, $agreed);
+        if (!$p['ok']) {
+            $this->renewal_error($p['error'] . ($p['needs_quote'] ? ' Please contact us to renew.' : ''));
         }
-        $currentDate = new DateTime();
-        $currentDate->modify('+1 year');
-        $end_date = $currentDate->format('Y-m-d');
-        $discount = 0;
-        if ($plan['oprice'] > 0) {
-            $discount = ($plan['price'] - $plan['oprice']);
-        }
-        $total = $plan['price'] - $discount;
-
-        $data = array(
-            'plan_id' => $plan_id,
-            'end_date' => $end_date,
-            'price' => $plan['price'],
-            'discount_amt' => $discount,
+        $plan = $this->plan_pricing->plan();
+        $id = $this->subscription_model->add(array(
+            'plan_id' => $plan['plan_id'],
+            'kind' => 'renewal',
+            'student_count' => $p['students'],
+            'billing_period' => $p['period'],
+            'rate_per_term' => $p['rate'],
+            'terms' => $p['terms'],
+            'setup_fee' => 0,
+            'end_date' => date('Y-m-d', strtotime('+' . $p['days'] . ' days')),
+            'price' => $p['total'],
+            'discount_amt' => 0,
             'payment_method' => $method,
-            // 'payment_status' => 0,
             'status' => 0,
-            'total' => $total,
+            'total' => $p['total'],
             'school_name' => $row->school_name,
             'email_address' => $row->email_address,
             'phone_number' => $row->phone_number,
             'cron_flag' => 1,
             'school_id' => $school_id,
-            'days' => 365
-        );
+            'days' => $p['days'],
+        ));
+        $this->initialize_payment($id, true);
+    }
 
-        $subscription_id = $this->subscription_model->add($data);
+    /** More students before the period ends: the extra students for the terms left, same end date. */
+    public function topup()
+    {
+        list($school_id, $row, $current) = $this->renewal_context();
+        $method = $this->chosen_method();
+        if (!$current) {
+            $this->renewal_error('There is no subscription to top up.');
+        }
+        $t = $this->plan_pricing->topup($current, (int) $this->input->get('students'));
+        if (!$t['ok']) {
+            $this->renewal_error($t['error']);
+        }
+        $id = $this->subscription_model->add(array(
+            'plan_id' => $current['plan_id'],
+            'kind' => 'topup',
+            'student_count' => $t['students'],
+            'billing_period' => $current['billing_period'],
+            'rate_per_term' => $t['rate'],
+            'terms' => $t['terms'],
+            'setup_fee' => 0,
+            'quote_id' => $current['quote_id'],
+            'end_date' => date('Y-m-d', strtotime('+' . $t['days'] . ' days')),
+            'price' => $t['total'],
+            'discount_amt' => 0,
+            'payment_method' => $method,
+            'status' => 0,
+            'total' => $t['total'],
+            'school_name' => $row->school_name,
+            'email_address' => $row->email_address,
+            'phone_number' => $row->phone_number,
+            'cron_flag' => 1,
+            'school_id' => $school_id,
+            'days' => $t['days'], // from today: the end date stays where it is
+        ));
+        $this->initialize_payment($id, true);
+    }
 
-        $this->initialize_payment($subscription_id, true);
+    /** [school id, school row, latest paid subscription] of the logged-in owner, or back to login. */
+    private function renewal_context()
+    {
+        $student_data = $this->session->userdata('student');
+        $school_id = isset($student_data['school_id']) ? (int) $student_data['school_id'] : 0;
+        $row = $school_id ? $this->db->where('id', $school_id)->get('school')->row() : null;
+        if (!$row) {
+            redirect('course/guestlogin');
+        }
+        $current = $this->db->where(array('school_id' => $school_id, 'payment_status' => 1))->order_by('id', 'desc')->limit(1)->get('subscription')->row_array();
+        return array($school_id, $row, $current);
+    }
+
+    private function chosen_method()
+    {
+        $methods = $this->payment_gateways->platform_enabled();
+        $method = (string) $this->input->get('method');
+        if (!isset($methods[$method])) {
+            $this->renewal_error('Choose a payment method. If none is offered, please contact us to pay by bank transfer.');
+        }
+        return $method;
+    }
+
+    private function active_students($school_id)
+    {
+        return (int) $this->db->without_tenant(function ($db) use ($school_id) {
+            return $db->where(array('school_id' => (int) $school_id, 'is_active' => 'yes'))->count_all_results('students');
+        });
+    }
+
+    private function renewal_error($message)
+    {
+        $this->session->set_flashdata('plan_error', $message);
+        redirect('user/plan/planlist');
     }
 
     /**
@@ -427,19 +474,19 @@ class subscription extends Front_Controller
     /** The sign-up page's "Apply" button: the price with a coupon (JSON). */
     public function check_coupon()
     {
-        $plan_id = (int) $this->input->get('plan_id');
-        $plan = $plan_id > 0 ? $this->plan_model->get($plan_id) : null;
-        $out = array('ok' => false);
-        if (!empty($plan) && isset($plan['plan_id']) && (int) $plan['status'] === 1) {
-            $base = (float) ((int) $plan['oprice'] > 0 ? $plan['oprice'] : $plan['price']);
+        $quote = $this->plan_pricing->quote($this->input->get('quote'));
+        $p = $this->plan_pricing->price((int) $this->input->get('students'), (string) $this->input->get('period'), true, $quote);
+        $plan = $this->plan_pricing->plan();
+        $out = array('ok' => false, 'message' => $p['error']);
+        if ($p['ok'] && $plan) {
             $coupon = $this->platform_coupons->find($this->input->get('code'));
             $error = $this->platform_coupons->error($coupon, $plan);
             if ($error !== null) {
                 $out['message'] = $error;
             } else {
-                $off = $this->platform_coupons->discount($coupon, $base);
-                $out = array('ok' => true, 'discount' => $off, 'total' => $base - $off,
-                    'message' => 'Coupon applied: ' . number_format($off, 2) . ' off.' . ($base - $off <= 0 ? ' This plan is now free.' : ''));
+                $off = $this->platform_coupons->discount($coupon, $p['total']);
+                $out = array('ok' => true, 'discount' => $off, 'total' => $p['total'] - $off,
+                    'message' => 'Coupon applied: ' . number_format($off, 2) . ' off.');
             }
         }
         $this->output->set_content_type('application/json')->set_output(json_encode($out));

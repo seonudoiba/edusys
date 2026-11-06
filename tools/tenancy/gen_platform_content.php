@@ -113,25 +113,79 @@ foreach (array('logo' => 'edusys-front-logo', 'fav_icon' => 'edusys-favicon') as
     }
 }
 
+// ---------------------------------------------------------------- the website's copy (version 2)
+$copy = array (
+  'about-us' => 
+  array (
+    'title' => 'About Hypercom',
+    'description' => '<p class="lede">Hypercom Network Ltd is an integrated information technology company established in 2000 by Chief Joshua A. Denila. We work with businesses of every size, from small enterprises to large corporations, on telecoms, internet technology and green energy.</p>
+<h2>EduSYS</h2>
+<p>EduSYS is our school management platform. A school\'s administration is the same work every term: admissions, fees, attendance, results, keeping parents informed. EduSYS puts that work in one place and automates what repeats, so that a school can give its attention to teaching.</p>
+<p>Each school runs on its own web address, with its own data, staff and branding.</p>
+<h2>Where to find us</h2>
+<p>Our head office is at 14 Akinremi Street, Ikeja, Lagos. We also have an office at 1 Melcut Road, Okapa, Udu, Warri.</p>',
+  ),
+  'edusys-solar-computer-lab' => 
+  array (
+    'title' => 'Computer laboratories',
+    'description' => '<p class="lede">Through the Hypercom school compute programme, your school gets a fully managed computer laboratory.</p>
+<p>To find out more, call <a href="tel:+2348033836341">+234 803 383 6341</a> or email <a href="mailto:info@hypercom.net.ng">info@hypercom.net.ng</a>.</p>',
+  ),
+  'contact-us' => 
+  array (
+    'title' => 'Contact',
+    'description' => '<div class="facts">
+<div><h3>Lagos</h3><p>1st Floor, 14 Akinremi Street<br>Ikeja, Lagos</p></div>
+<div><h3>Warri</h3><p>1 Melcut Road, Okapa<br>Udu, Warri</p></div>
+<div><h3>Talk to us</h3><p><a href="tel:+2348033836341">+234 803 383 6341</a><br><a href="mailto:info@hypercom.net.ng">info@hypercom.net.ng</a></p><p>Monday to Friday, 9am to 4pm<br>Saturday, 9am to 12pm</p></div>
+</div>
+<h2>Send us a message</h2>
+[form-builder:contact_us]
+<iframe class="map" src="https://www.google.com/maps?q=14%20Akinremi%20Street%2C%20Ikeja%2C%20Lagos%2C%20Nigeria&amp;output=embed" loading="lazy" title="Map of our Lagos office"></iframe>',
+  ),
+);
+foreach ($pages as $i => $p) {
+    if (isset($copy[$p['slug']])) {
+        $pages[$i] = array_merge($p, $copy[$p['slug']]);
+    }
+}
+$front['theme'] = 'platform';
+
 // ---------------------------------------------------------------- menus (page = a slug, or link = an address)
 $menus = array(
     'main-menu' => array(
-        array('menu' => 'Home', 'page' => 'home', 'slug' => 'home'),
-        array('menu' => 'Plan', 'link' => 'plans', 'slug' => 'plans'),
-        array('menu' => 'About Us', 'page' => 'about-us', 'slug' => 'about-us'),
-        array('menu' => 'EduSyS Laboratory', 'page' => 'edusys-solar-computer-lab', 'slug' => 'edusys-laboratory'),
+        array('menu' => 'Product', 'link' => 'product', 'slug' => 'product'),
+        array('menu' => 'Pricing', 'link' => 'plans', 'slug' => 'plans'),
+        array('menu' => 'Laboratories', 'page' => 'edusys-solar-computer-lab', 'slug' => 'laboratories'),
+        array('menu' => 'About', 'page' => 'about-us', 'slug' => 'about-us'),
         array('menu' => 'Contact', 'page' => 'contact-us', 'slug' => 'contact'),
     ),
     'bottom-menu' => array(
-        array('menu' => 'Home', 'page' => 'home', 'slug' => 'home-1'),
-        array('menu' => 'About Us', 'page' => 'about-us', 'slug' => 'about-us-1'),
-        array('menu' => 'Contact Us', 'page' => 'contact-us', 'slug' => 'contact-us'),
+        array('menu' => 'Product', 'link' => 'product', 'slug' => 'product-1'),
+        array('menu' => 'Pricing', 'link' => 'plans', 'slug' => 'plans-1'),
+        array('menu' => 'About', 'page' => 'about-us', 'slug' => 'about-us-1'),
+        array('menu' => 'Contact', 'page' => 'contact-us', 'slug' => 'contact-us'),
         array('menu' => 'Privacy Policy', 'page' => 'privacy-policy', 'slug' => 'privacy-policy'),
         array('menu' => 'Terms of Service', 'page' => 'terms-of-service', 'slug' => 'terms-of-service'),
     ),
 );
 
-$json = json_encode(array('version' => 1, 'identity' => $identity, 'front' => $front, 'pages' => $pages, 'menus' => $menus, 'files' => $files),
+// ---------------------------------------------------------------- the slider (Front CMS > Banner)
+$banners = array();
+$rows = $db->query("SELECT m.* FROM front_cms_program_photos pp JOIN front_cms_media_gallery m ON m.id = pp.media_gallery_id
+    JOIN front_cms_programs p ON p.id = pp.program_id WHERE p.school_id = $sid AND p.type = 'banner' ORDER BY pp.id");
+$n = 0;
+while ($m = $rows->fetch_assoc()) {
+    $n++;
+    $img = $add('./' . $m['dir_path'] . $m['img_name'], 'edusys-banner-' . $n);
+    $thumb = $add('./' . $m['thumb_path'] . $m['thumb_name'], 'edusys-banner-thumb-' . $n);
+    if ($img) {
+        $banners[] = array('image' => $m['image'], 'dir_path' => $m['dir_path'], 'thumb_path' => $m['thumb_path'], 'img_name' => $img,
+            'thumb_name' => $thumb ?: $img, 'file_type' => $m['file_type'], 'file_size' => $m['file_size']);
+    }
+}
+
+$json = json_encode(array('version' => 2, 'identity' => $identity, 'front' => $front, 'pages' => $pages, 'menus' => $menus, 'banners' => $banners, 'files' => $files),
     JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 file_put_contents($out . '/content.json', $json);
 printf("content.json: %d KB, %d pages, %d files\n", strlen($json) / 1024, count($pages), count($files));

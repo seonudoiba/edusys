@@ -59,7 +59,7 @@ step "Platform website content (twice: the second run must change nothing)"
 "$PHP" index.php seed content
 "$PHP" index.php seed content | grep -q 'already applied'
 [ "$(sql "$EDUSYS_DB_NAME" -e "SELECT COUNT(*) FROM front_cms_pages WHERE school_id = $platform_id AND slug IN ('about-us', 'privacy-policy', 'terms-of-service', 'edusys-solar-computer-lab')")" = 4 ] || { echo "Platform pages were not added"; exit 1; }
-[ "$(sql "$EDUSYS_DB_NAME" -e "SELECT COUNT(*) FROM front_cms_pages WHERE is_homepage = 1 AND builder_layout IS NOT NULL")" = 2 ] || { echo "Starter homepages are missing"; exit 1; }
+[ "$(sql "$EDUSYS_DB_NAME" -e "SELECT COUNT(*) FROM front_cms_pages WHERE is_homepage = 1 AND builder_layout IS NOT NULL")" = 1 ] || { echo "The school's starter homepage is missing"; exit 1; }
 
 # Known passwords for the two super admins (test database only).
 hash=$("$PHP" -r 'echo password_hash("Ci#Pass123", PASSWORD_DEFAULT);')

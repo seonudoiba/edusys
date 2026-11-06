@@ -409,6 +409,9 @@ $(document).on('submit','.class_search_form',function(e){
 
 });
 
+// Show every student when the page opens; the filters narrow it down from there.
+$("form.class_search_form button[value=search_full]").trigger('click');
+
     });
     function resetFields(search_type){
 

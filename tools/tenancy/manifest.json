@@ -2238,5 +2238,19 @@
         "refs": [
             "school"
         ]
+    },
+    {
+        "n": 276,
+        "table": "platform_plan_bands",
+        "scope": "platform",
+        "file": "276_add_student_band_pricing.php",
+        "refs": []
+    },
+    {
+        "n": 276,
+        "table": "platform_quotes",
+        "scope": "platform",
+        "file": "276_add_student_band_pricing.php",
+        "refs": []
     }
 ]

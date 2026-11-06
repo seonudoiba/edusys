@@ -30,7 +30,7 @@ class Enquiries extends Admin_Controller
         if (isset(self::STATUSES[$status])) {
             $db->where('status', $status);
         }
-        if (in_array($kind, array('contact', 'complaint'), true)) {
+        if (in_array($kind, array('contact', 'complaint', 'quote'), true)) {
             $db->where('kind', $kind);
         }
         if ($q !== '') {
@@ -92,6 +92,39 @@ class Enquiries extends Admin_Controller
         ));
         $this->platform_audit->record('enquiry.reply', 'Replied to the website enquiry #' . (int) $row['id'] . ' from ' . $row['email']);
         $this->back($row['id'], 'Reply sent to ' . $row['email'] . '.');
+    }
+
+    /** A price for a large school: emails a private link it registers and pays with. */
+    public function send_quote($id = null)
+    {
+        $this->require_privilege('can_edit');
+        $this->form_token->require_post();
+        $row = $this->row_or_404($id);
+        $this->load->library('Plan_pricing');
+        $students = (int) $this->input->post('students');
+        $rate = (float) $this->input->post('rate');
+        $setup = (float) $this->input->post('setup');
+        if ($students < 1 || $rate <= 0 || $setup < 0) {
+            $this->back($row['id'], null, 'Enter the students, the rate per student per term, and the setup fee.');
+        }
+        if (!filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
+            $this->back($row['id'], null, 'This enquiry has no valid email address.');
+        }
+        $token = bin2hex(random_bytes(20));
+        $expires = date('Y-m-d', strtotime('+' . Plan_pricing::QUOTE_VALID_DAYS . ' days'));
+        $this->db->insert('platform_quotes', array('token' => $token, 'enquiry_id' => (int) $row['id'], 'school_name' => $row['school_name'] ?: $row['name'],
+            'contact_name' => $row['name'], 'email' => $row['email'], 'phone' => $row['phone'], 'students' => $students, 'rate_per_term' => $rate,
+            'setup_fee' => $setup, 'expires_at' => $expires));
+        $url = site_url('subscription/add?quote=' . $token);
+        $ok = $this->platform_mailer->send('quote_ready', $row['email'], array('name' => $row['name'], 'school_name' => $row['school_name'] ?: $row['name'],
+            'students' => number_format($students), 'rate' => 'NGN ' . number_format($rate, 2), 'setup' => 'NGN ' . number_format($setup, 2),
+            'expires' => date('j F Y', strtotime($expires)), 'quote_url' => $url));
+        $admin = (array) $this->session->userdata('admin');
+        $this->db->where('id', (int) $row['id'])->update('platform_enquiries', array('status' => 'replied', 'reply' => 'Quote: ' . number_format($students)
+            . ' students at NGN ' . number_format($rate, 2) . ' per term, setup NGN ' . number_format($setup, 2) . ". Link: $url",
+            'replied_by' => isset($admin['username']) ? $admin['username'] : '', 'replied_at' => date('Y-m-d H:i:s')));
+        $this->platform_audit->record('enquiry.quote', 'Sent a quote to ' . $row['email']);
+        $this->back($row['id'], $ok ? 'Quote sent to ' . $row['email'] . '.' : 'Saved, but the email could not be sent. Send the school this link: ' . $url);
     }
 
     public function status($id = null)

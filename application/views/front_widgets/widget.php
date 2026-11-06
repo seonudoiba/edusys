@@ -112,24 +112,15 @@ switch ($type) {
         break;
 
     case 'plans':
-        if (!$d) { $out = $empty('No active plans. Add them in Plans.'); break; }
-        $symbol = $this->customlib->getSchoolCurrencyFormat();
-        $out .= (!empty($s['title']) ? '<h2 class="pw-center">' . $e($s['title']) . '</h2>' : '') . '<div class="pw-grid" style="--pw-cols:' . (int) $s['columns'] . '">';
-        foreach ($d as $p) {
-            $pays = (float) ($p['oprice'] > 0 ? $p['oprice'] : $p['price']);
-            $out .= '<div class="pw-plan"><h3>' . html_escape($p['title']) . '</h3><div class="pw-price">';
-            if ($p['oprice'] > 0) {
-                $out .= '<del>' . html_escape($symbol) . amountFormat($p['price']) . '</del>';
-            }
-            $out .= $pays > 0 ? html_escape($symbol) . amountFormat($pays) : 'Free';
-            $out .= '</div><ul>';
-            foreach ((array) $p['list'] as $feature) {
-                $out .= '<li>' . html_escape($feature['name']) . '</li>';
-            }
-            $out .= '</ul><a class="btn btn-primary" href="' . html_escape(site_url('subscription/add?plan_id=' . (int) $p['plan_id'])) . '">'
-                . ($pays > 0 ? 'Register your school' : 'Start free trial') . '</a></div>';
+        if (!$d) { $out = $empty('No pricing bands.'); break; }
+        $money = function ($v) { return '&#8358;' . number_format((float) $v); };
+        $out .= (!empty($s['title']) ? '<h2 class="pw-center">' . $e($s['title']) . '</h2>' : '') . '<div class="table-responsive"><table class="table"><thead><tr><th>Students</th><th>Per student, per term</th><th>One-time setup</th></tr></thead><tbody>';
+        foreach ($d as $b) {
+            $range = $b['max_students'] === null ? number_format((int) $b['min_students']) . '+' : number_format((int) $b['min_students']) . '&ndash;' . number_format((int) $b['max_students']);
+            $custom = $b['rate_per_term'] === null;
+            $out .= '<tr><td>' . $range . '</td><td>' . ($custom ? 'Custom quote' : $money($b['rate_per_term'])) . '</td><td>' . ($custom ? 'From ' : '') . $money($b['setup_fee']) . '</td></tr>';
         }
-        $out .= '</div>';
+        $out .= '</tbody></table></div>';
         break;
 
     case 'platform_stats':

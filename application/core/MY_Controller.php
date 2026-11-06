@@ -311,6 +311,10 @@ class Front_Controller extends CI_Controller
 
     protected function load_theme($content = null, $layout = true)
     {
+        // The platform theme only has its public pages (the course pages keep the standard design).
+        if ($content !== null && !is_file(VIEWPATH . THEMES_DIR . '/' . $this->theme_path . '/' . $content . '.php')) {
+            $this->theme_path = 'material_pink';
+        }
         $this->data['main_menus'] = '';
         $this->data['school_setting'] = $this->school_details;
         $this->data['front_setting'] = $this->front_setting;

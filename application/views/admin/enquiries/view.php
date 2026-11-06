@@ -23,6 +23,18 @@ $action = function ($name) use ($r) { return site_url('admin/enquiries/' . $name
                             </div>
                         <?php } ?>
                     </div>
+                    <?php if ($can_edit && $r['kind'] === 'quote') { ?>
+                        <div class="box-footer" style="background:#f7fbf7">
+                            <h4 style="margin-top:0">Send a quote</h4>
+                            <p class="text-muted">The school gets a private link, valid for 30 days, to register and pay at this price.</p>
+                            <form method="post" action="<?php echo $action('send_quote'); ?>" class="row"><?php echo $token; ?>
+                                <div class="col-sm-3"><label>Students</label><input name="students" type="number" min="1" required class="form-control" value="<?php echo (int) $r['students']; ?>"></div>
+                                <div class="col-sm-3"><label>Per student, per term (NGN)</label><input name="rate" type="number" min="1" step="0.01" required class="form-control"></div>
+                                <div class="col-sm-3"><label>Setup fee (NGN)</label><input name="setup" type="number" min="0" step="0.01" required class="form-control" value="750000"></div>
+                                <div class="col-sm-3"><label>&nbsp;</label><button class="btn btn-primary btn-block" type="submit">Send quote</button></div>
+                            </form>
+                        </div>
+                    <?php } ?>
                     <?php if ($can_edit) { ?>
                         <div class="box-footer">
                             <form method="post" action="<?php echo $action('reply'); ?>">
@@ -45,7 +57,8 @@ $action = function ($name) use ($r) { return site_url('admin/enquiries/' . $name
                             <dt>From</dt><dd><?php echo $e($r['name']); ?></dd>
                             <dt>Email</dt><dd><?php echo $r['email'] ? '<a href="mailto:' . $e($r['email']) . '">' . $e($r['email']) . '</a>' : '—'; ?></dd>
                             <dt>Phone</dt><dd><?php echo $e($r['phone']) ?: '—'; ?></dd>
-                            <dt>Type</dt><dd><?php echo $r['kind'] === 'complaint' ? 'Complaint' : 'Contact'; ?></dd>
+                            <dt>Type</dt><dd><?php echo $r['kind'] === 'complaint' ? 'Complaint' : ($r['kind'] === 'quote' ? 'Quote request' : 'Contact'); ?></dd>
+                            <?php if ($r['kind'] === 'quote') { ?><dt>School</dt><dd><?php echo $e($r['school_name']); ?></dd><dt>Students</dt><dd><?php echo number_format((int) $r['students']); ?></dd><?php } ?>
                             <dt>Received</dt><dd><?php echo $e(date('d M Y H:i', strtotime($r['created_at']))); ?></dd>
                         </dl>
                         <?php if ($can_edit) { ?>

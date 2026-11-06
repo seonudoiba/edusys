@@ -20,7 +20,7 @@ class Seed_default_sidebar_sub_menus extends Seeder
     public $references = ['sidebar_menu_id' => 'sidebar_menus', 'permission_group_id' => 'permission_group'];
 
     /** @var int[] template ids loaded only for the platform school (school registry, plans, subscriptions) */
-    public $platform_only = [215, 216, 217, 218, 219, 900001, 900030, 900031, 900032, 900033, 900034, 900035, 900036, 900037, 900038, 900039, 900040, 900042, 900043, 900044];
+    public $platform_only = [215, 216, 217, 218, 219, 900001, 900030, 900031, 900032, 900033, 900034, 900035, 900036, 900037, 900038, 900039, 900040, 900042, 900047, 900043, 900044];
 
     /** @var int[] template ids not loaded for the platform school (demo school content) */
     public $school_only = [900046];
@@ -298,6 +298,7 @@ class Seed_default_sidebar_sub_menus extends Seeder
             [900038, 38, 'billing_invoices', 'billing_invoices', 'invoices', 'admin/billing/invoices', 3, '(\'subscription_list\', \'can_view\')', 1204, 'billing', 'invoices', '', 1, '2026-11-05 00:00:00'],
             [900039, 38, 'billing_coupons', 'billing_coupons', 'coupons', 'admin/billing/coupons', 4, '(\'subscription_list\', \'can_view\')', 1204, 'billing', 'coupons,coupon', '', 1, '2026-11-05 00:00:00'],
             [900040, 38, 'billing_reports', 'billing_reports', 'reports', 'admin/billing/reports', 5, '(\'subscription_list\', \'can_view\')', 1204, 'billing', 'reports', '', 1, '2026-11-05 00:00:00'],
+            [900047, 38, 'billing_bands', 'billing_bands', 'pricing_bands', 'admin/billing/bands', 2, '(\'subscription_list\', \'can_view\')', 1204, 'billing', 'bands', '', 1, '2026-11-05 00:00:00'],
             [900042, 900041, 'platform_support_desk', 'platform_support_desk', 'support_desk', 'admin/support_desk', 1, '(\'platform_settings\', \'can_view\')', 900010, 'support_desk', 'index,view', '', 1, '2026-11-05 00:00:00'],
             [900043, 900041, 'platform_enquiries', 'platform_enquiries', 'website_enquiries', 'admin/enquiries', 2, '(\'platform_settings\', \'can_view\')', 900010, 'enquiries', 'index,view', '', 1, '2026-11-05 00:00:00'],
             [900044, 27, 'platform_backups', 'platform_backups', 'platform_backups', 'admin/backups', 0, '(\'platform_settings\', \'can_view\')', 900010, 'backups', 'index', '', 1, '2026-11-05 00:00:00'],
