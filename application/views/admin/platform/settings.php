@@ -102,7 +102,9 @@ $v = function ($k) use ($values) { return html_escape((string) $values[$k]); };
                             <dt>Mail</dt><dd><?php echo $e($h['smtp_host']); ?> <span class="ps-muted">login <?php echo $e($h['smtp_login']); ?> · from <?php echo $e($h['from_email']); ?></span><br>
                                 <span class="ps-muted">last 7 days:</span> <?php echo (int) $h['mail_sent']; ?> sent, <?php echo $h['mail_failed'] ? '<span class="text-danger">' . (int) $h['mail_failed'] . ' failed</span>' : '0 failed'; ?>
                                 · <a href="<?php echo site_url('admin/platform/email_log'); ?>">email log</a></dd>
-                            <dt>Paystack</dt><dd><?php echo $ok($h['paystack'] === 'live key', $h['paystack']); ?></dd>
+                            <?php foreach ($h['gateways'] as $gw => $gw_status) { ?>
+                                <dt><?php echo html_escape(Payment_gateways::name($gw)); ?></dt><dd><?php echo $ok($gw_status === 'live key' || $gw_status === 'live', $gw_status); ?></dd>
+                            <?php } ?>
                             <dt>Disk</dt><dd><?php echo $size($h['disk_free']); ?> free of <?php echo $size($h['disk_total']); ?></dd>
                             <dt>Scheduled jobs</dt><dd>
                                 <?php if (!$h['cron']) { ?><span class="label label-warning">Never ran</span> <span class="ps-muted">install the crontab (DEPLOYMENT.md §7)</span>

@@ -162,6 +162,7 @@ $config['tenancy_tenant_tables'] = array(
     'online_course_section',
     'online_course_settings',
     'online_courses',
+    'online_fee_payments',
     'onlineexam',
     'onlineexam_attempts',
     'onlineexam_questions',

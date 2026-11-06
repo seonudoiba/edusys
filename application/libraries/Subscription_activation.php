@@ -36,7 +36,11 @@ class Subscription_activation
         if (!$subscription || (int) $subscription['payment_status'] === 1) {
             return false;
         }
-        $db->where('id', (int) $subscription_id)->update('subscription', array('payment_status' => 1, 'status' => 1));
+        // Claim it: if two confirmations arrive at once (return page + reload), only one activates.
+        $db->where('id', (int) $subscription_id)->where('payment_status', 0)->update('subscription', array('payment_status' => 1, 'status' => 1));
+        if ($db->affected_rows() !== 1) {
+            return false;
+        }
 
         $guest_password = '';
         $update_data = array();

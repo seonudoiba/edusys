@@ -2229,5 +2229,14 @@
         "table": "platform_enquiries",
         "scope": "platform",
         "file": "269_create_platform_enquiries.php"
+    },
+    {
+        "n": 273,
+        "table": "online_fee_payments",
+        "scope": "tenant",
+        "file": "273_create_online_fee_payments.php",
+        "refs": [
+            "school"
+        ]
     }
 ]

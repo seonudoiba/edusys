@@ -23,14 +23,21 @@ class Payhere extends Front_Controller
         $status_code      = $_POST['status_code'];
         $md5sig           = $_POST['md5sig'];
 
-        $merchant_secret = $PayFast_details->api_secret_key; // Replace with your Merchant Secret (Can be found on your PayHere account's Settings page)
+        $merchant_secret = $payhere_details ? trim((string) $payhere_details->api_secret_key) : '';
+        if ($merchant_secret === '') {
+            log_message('error', 'PayHere notification refused: no merchant secret configured');
+            set_status_header(403);
+            exit('refused');
+        } // Replace with your Merchant Secret (Can be found on your PayHere account's Settings page)
 
         $local_md5sig = strtoupper(md5($merchant_id . $order_id . $payhere_amount . $payhere_currency . $status_code . strtoupper(md5($merchant_secret))));
         $status       = 0;
-        if (($local_md5sig === $md5sig) and ($status_code == 2)) {
+        // Only a correctly signed "2" (success) counts; the else branch used to copy the posted code anyway.
+        if (hash_equals($local_md5sig, strtoupper((string) $md5sig)) && $status_code == 2) {
             $status = $status_code;
         } else {
-            $status = $status_code;
+            log_message('error', 'PayHere notification not accepted: bad signature or not successful (order ' . $order_id . ')');
+            $status = 0;
         }
 
         if ($status == 2) {
