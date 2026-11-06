@@ -2366,7 +2366,6 @@ class Report extends Admin_Controller
             foreach ($resultlist->data as $resultlist_key => $student) {
                 $studentlist      = $this->user_model->getUserLoginDetails($student->id);
                 $student_username = $studentlist["username"];
-                $student_password = $studentlist["password"];
 
                 $viewbtn = "<a  href='" . base_url() . "student/view/" . $student->id . "'>" . $this->customlib->getFullName($student->firstname, $student->middlename, $student->lastname, $sch_setting->middlename, $sch_setting->lastname) . "</a>";
 
@@ -2376,12 +2375,6 @@ class Report extends Admin_Controller
 
                 if (isset($student_username)) {
                     $row[] = $student_username;
-                } else {
-                    $row[] = "";
-                }
-
-                if (isset($student_password)) {
-                    $row[] = $student_password;
                 } else {
                     $row[] = "";
                 }
@@ -2424,7 +2417,6 @@ class Report extends Admin_Controller
             foreach ($resultlist->data as $resultlist_key => $student) {
                 $parentlist      = $this->user_model->getParentLoginDetails($student->id);
                 $parent_username = $parentlist["username"];
-                $parent_password = $parentlist["password"];
 
                 $viewbtn = "<a  href='" . base_url() . "student/view/" . $student->id . "'>" . $this->customlib->getFullName($student->firstname, $student->middlename, $student->lastname, $sch_setting->middlename, $sch_setting->lastname) . "</a>";
 
@@ -2434,12 +2426,6 @@ class Report extends Admin_Controller
 
                 if (isset($parent_username)) {
                     $row[] = $parent_username;
-                } else {
-                    $row[] = "";
-                }
-
-                if (isset($parent_password)) {
-                    $row[] = $parent_password;
                 } else {
                     $row[] = "";
                 }

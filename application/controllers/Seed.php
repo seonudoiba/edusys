@@ -186,6 +186,14 @@ class Seed extends CI_Controller
             if ($this->db->trans_status() === false) {
                 throw new RuntimeException('Transaction failed.');
             }
+            // School seeds carry plain passwords from older data.
+            $this->db->without_tenant(function ($db) {
+                $rows = $db->select('id, password')->where('password IS NOT NULL', null, false)->where('password <>', '')
+                    ->where("password NOT LIKE '\$2y\$%'", null, false)->get('users')->result_array();
+                foreach ($rows as $row) {
+                    $db->where('id', (int) $row['id'])->update('users', array('password' => password_hash($row['password'], PASSWORD_DEFAULT), 'must_change_password' => 1));
+                }
+            });
             $this->db->trans_commit();
             echo "Done: $total rows.\n";
         } catch (Throwable $e) {

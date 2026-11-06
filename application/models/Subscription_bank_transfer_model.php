@@ -182,7 +182,7 @@ class Subscription_bank_transfer_model extends CI_Model
     private function receipt_dir()
     {
         $dir = upload_abs_root() . 'subscription_receipts/';
-        if (!is_dir($dir) && !@mkdir($dir, 0755, true)) {
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true)) {
             log_message('error', 'Cannot create ' . $dir);
             return null;
         }

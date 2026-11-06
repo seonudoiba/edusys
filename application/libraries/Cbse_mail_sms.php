@@ -14,7 +14,7 @@ class Cbse_mail_sms
         $this->CI->load->library('customlib');
         $this->sch_setting = $this->CI->setting_model->getSetting();
         $this->config_mailsms = $this->CI->config->item('mailsms');
-        $this->_is_mail_config = $this->CI->emailconfig_model->getActiveEmail();
+        $this->_is_mail_config = $this->CI->emailconfig_model->getSendingConfig();
     }
 
     public function mailsms($send_for, $sender_details)

@@ -626,7 +626,7 @@ class User extends Student_Controller
 
             $data['title'] = 'Change Password';
             $this->form_validation->set_rules('current_pass', 'Current password', 'trim|required|xss_clean');
-            $this->form_validation->set_rules('new_pass', 'New password', 'trim|required|xss_clean|matches[confirm_pass]');
+            $this->form_validation->set_rules('new_pass', 'New password', 'trim|required|min_length[8]|xss_clean|matches[confirm_pass]');
             $this->form_validation->set_rules('confirm_pass', 'Confirm password', 'trim|required|xss_clean');       
             
             if ($this->form_validation->run() == false) {
@@ -648,23 +648,14 @@ class User extends Student_Controller
                     'id'       => $sessionData['id'],
                     'password' => $this->input->post('new_pass'),
                 );
-                $query1 = $this->user_model->checkOldPass($data_array);
-                if ($query1) {
-                    $query2 = $this->user_model->saveNewPass($newdata);
-                    if ($query2) {
-
-                        $this->session->set_flashdata('success_msg', 'Password changed successfully');
-                        $this->load->view('layout/student/header', $data);
-                        $this->load->view('user/change_password', $data);
-                        $this->load->view('layout/student/footer', $data);
-                    }
+                if ($this->input->post('new_pass') === $this->input->post('current_pass')) {
+                    $this->session->set_flashdata('msg', '<div class="alert alert-danger">Choose a password different from your current one.</div>');
+                } elseif ($this->user_model->checkOldPass($data_array) && $this->user_model->saveNewPass($newdata)) {
+                    $this->session->set_flashdata('msg', '<div class="alert alert-success">Password changed successfully.</div>');
                 } else {
-
-                    $this->session->set_flashdata('error_msg', 'Invalid current password');
-                    $this->load->view('layout/student/header', $data);
-                    $this->load->view('user/change_password', $data);
-                    $this->load->view('layout/student/footer', $data);
+                    $this->session->set_flashdata('msg', '<div class="alert alert-danger">Invalid current password.</div>');
                 }
+                redirect('user/user/changepass');
             }
         }
     }

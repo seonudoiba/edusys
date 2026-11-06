@@ -334,7 +334,7 @@ class Site extends Public_Controller
         
         if ($user) {
             //if the code is valid then display the password reset form
-            $this->form_validation->set_rules('password', $this->lang->line('password'), 'required');
+            $this->form_validation->set_rules('password', $this->lang->line('password'), 'required|min_length[8]');
             $this->form_validation->set_rules('confirm_password', $this->lang->line('confirm_password'), 'required|matches[password]');
             if ($this->form_validation->run() == false) {
                 
@@ -348,6 +348,7 @@ class Site extends Public_Controller
                 $update_record = array(
                     'id'                => $user->id,
                     'password'          => $this->enc_lib->passHashEnc($password),
+                    'must_change_password' => 0,
                     'verification_code' => "",
                 );
 
@@ -395,7 +396,7 @@ class Site extends Public_Controller
 
         if ($user) {
             //if the code is valid then display the password reset form
-            $this->form_validation->set_rules('password', $this->lang->line('password'), 'required');
+            $this->form_validation->set_rules('password', $this->lang->line('password'), 'required|min_length[8]');
             $this->form_validation->set_rules('confirm_password', $this->lang->line('confirm_password'), 'required|matches[password]');
             if ($this->form_validation->run() == false) {
 

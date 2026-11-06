@@ -14,6 +14,7 @@
                                 <?php if ($this->session->flashdata('msg')) { ?>
                                     <?php echo $this->session->flashdata('msg') ?>
                                 <?php } ?>  
+                                <?php echo validation_errors('<div class="alert alert-danger">', '</div>'); ?>
                                 <?php echo $this->customlib->getCSRF(); ?>
                                 <div class="form-group <?php
                                 if (form_error('current_pass')) {

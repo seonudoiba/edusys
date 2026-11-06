@@ -3204,60 +3204,31 @@ $currency_symbol = $admin_session['currency_symbol'];
         });
     });
 
-    function send_password() {
-        var base_url = '<?php echo base_url() ?>';
-        var student_session_id = '<?php echo $student['student_session_id']; ?>';
-        var student_id = '<?php echo $student['id']; ?>';
-        var username = '<?php echo $student['username']; ?>';
-        var password = '<?php echo $student['password']; ?>';
-        var contact_no = '<?php echo $student['mobileno']; ?>';
-        var email = '<?php echo $student['email']; ?>';
-        var admission_no = '<?php echo $student['admission_no']; ?>';
-
+    function reset_login(url, who) {
+        if (!confirm('Create a new password for the ' + who + '? The current password will stop working.')) {
+            return;
+        }
         $.ajax({
             type: "post",
-            url: base_url + "student/sendpassword",
-            data: {
-                student_id: student_id,
-                username: username,
-                password: password,
-                contact_no: contact_no,
-                email: email,
-                admission_no: admission_no,
-                student_session_id: student_session_id
-            },
+            url: '<?php echo base_url() ?>' + url,
+            dataType: 'json',
+            data: { student_id: '<?php echo $student['id']; ?>' },
             success: function(response) {
-                successMsg('<?php echo $this->lang->line('message_successfully_sent'); ?>');
+                if (!response.status) {
+                    errorMsg(response.message);
+                    return;
+                }
+                alert('Username: ' + response.username + '\nNew password: ' + response.password + '\n\nThis password is only shown now. It has also been sent by email or SMS if those details are on file. It must be changed at the next sign-in.');
             }
         });
     }
 
-    function send_parent_password() {
-        var base_url = '<?php echo base_url() ?>';
-        var student_id = '<?php echo $student['id']; ?>';
-        var student_session_id = '<?php echo $student['student_session_id']; ?>';
-        var username = '<?php echo $guardian_credential['username']; ?>';
-        var password = '<?php echo $guardian_credential['password']; ?>';
-        var contact_no = '<?php echo $student['guardian_phone']; ?>';
-        var email = '<?php echo $student['guardian_email']; ?>';
-        var admission_no = '<?php echo $student['admission_no']; ?>';
+    function send_password() {
+        reset_login('student/sendpassword', 'student');
+    }
 
-        $.ajax({
-            type: "post",
-            url: base_url + "student/send_parent_password",
-            data: {
-                student_id: student_id,
-                username: username,
-                password: password,
-                contact_no: contact_no,
-                email: email,
-                admission_no: admission_no,
-                student_session_id: student_session_id
-            },
-            success: function(response) {
-                successMsg('<?php echo $this->lang->line('message_successfully_sent'); ?>');
-            }
-        });
+    function send_parent_password() {
+        reset_login('student/send_parent_password', 'parent');
     }
 
     $(document).on('click', '.schedule_modal', function() {
@@ -3283,7 +3254,6 @@ $currency_symbol = $admin_session['currency_symbol'];
                 data += '<tr>';
                 data += '<th>' + "<?php echo $this->lang->line('user_type'); ?>" + '</th>';
                 data += '<th class="text text-center">' + "<?php echo $this->lang->line('username'); ?>" + '</th>';
-                data += '<th class="text text-center">' + "<?php echo $this->lang->line('password'); ?>" + '</th>';
                 data += '</tr>';
                 data += '</thead>';
                 data += '<tbody>';
@@ -3292,7 +3262,6 @@ $currency_symbol = $admin_session['currency_symbol'];
                     data += '<td><b>' + (obj.role) + '</b></td>';
                     data += '<input type=hidden name=userid id=userid value=' + obj.id + '>';
                     data += '<td class="text text-center">' + obj.username + '</td> ';
-                    data += '<td class="text text-center">' + obj.password + '</td> ';
                     data += '</tr>';
                 });
                 data += '</tbody>';

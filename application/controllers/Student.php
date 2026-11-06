@@ -1005,16 +1005,42 @@ class Student extends Admin_Controller
 
     public function sendpassword()
     {
-        $student_login_detail = array('id' => $this->input->post('student_id'), 'credential_for' => 'student', 'username' => $this->input->post('username'), 'password' => $this->input->post('password'), 'contact_no' => $this->input->post('contact_no'), 'email' => $this->input->post('email'), 'admission_no' => $this->input->post('admission_no'),'student_session_id' => $this->input->post('student_session_id'));
-
-        $msg = $this->mailsmsconf->mailsms('student_login_credential', $student_login_detail);
+        $this->send_new_password('student');
     }
 
     public function send_parent_password()
     {
-        $parent_login_detail = array('id' => $this->input->post('student_id'), 'credential_for' => 'parent', 'username' => $this->input->post('username'), 'password' => $this->input->post('password'), 'contact_no' => $this->input->post('contact_no'), 'email' => $this->input->post('email'), 'admission_no' => $this->input->post('admission_no'),'student_session_id' => $this->input->post('student_session_id'));
+        $this->send_new_password('parent');
+    }
 
-        $msg = $this->mailsmsconf->mailsms('student_login_credential', $parent_login_detail);
+    /**
+     * A new password, because the old one can't be read back: sent by email and SMS where the school has
+     * those details, and returned once so the school can hand it over (many students have no email).
+     */
+    private function send_new_password($for)
+    {
+        if (!$this->rbac->hasPrivilege('disable_student', 'can_view')) {
+            access_denied();
+        }
+        $student_id = (int) $this->input->post('student_id');
+        $student = $this->student_model->get($student_id);
+        $login = !$student ? null : ($for === 'student' ? $this->user_model->getUserLoginDetails($student_id) : $this->user_model->getParentLoginDetails($student_id));
+        if (empty($login['id'])) {
+            echo json_encode(array('status' => 0, 'message' => 'This ' . $for . ' has no login.'));
+            return;
+        }
+        $password = $this->user_model->set_temporary_password($login['id']);
+        $this->mailsmsconf->mailsms('student_login_credential', array(
+            'id' => $student_id,
+            'credential_for' => $for,
+            'username' => $login['username'],
+            'password' => $password,
+            'contact_no' => $for === 'student' ? $student['mobileno'] : $student['guardian_phone'],
+            'email' => $for === 'student' ? $student['email'] : $student['guardian_email'],
+            'admission_no' => $student['admission_no'],
+            'student_session_id' => $student['student_session_id'],
+        ));
+        echo json_encode(array('status' => 1, 'username' => $login['username'], 'password' => $password));
     }
 
     public function import()
@@ -2145,7 +2171,12 @@ class Student extends Admin_Controller
 
                 if (($message_to == 1 && $notification_type == 2) || ($message_to == 1 && $notification_type == 3) || ($message_to == 3 && $notification_type == 3) || ($message_to == 3 && $notification_type == 2)) {
 
-                    $student_login_detail = array('display_name' => $student_detail[0]->firstname . ' ' . $student_detail[0]->lastname, 'id' => $students_value, 'credential_for' => 'student', 'username' => $student_detail[0]->username, 'password' => $student_detail[0]->password, 'contact_no' => $student_detail[0]->mobileno, 'email' => $student_detail[0]->email, 'student_session_id' => $student_detail[0]->student_session_id, 'admission_no' => $student_detail[0]->admission_no);
+                    // Sending login details means a new password; only for someone who can receive it.
+                    if (trim((string) $student_detail[0]->email) === '' && trim((string) $student_detail[0]->mobileno) === '') {
+                        continue;
+                    }
+                    $student_user = $this->user_model->getUserLoginDetails($students_value);
+                    $student_login_detail = array('display_name' => $student_detail[0]->firstname . ' ' . $student_detail[0]->lastname, 'id' => $students_value, 'credential_for' => 'student', 'username' => $student_detail[0]->username, 'password' => $this->user_model->set_temporary_password($student_user['id']), 'contact_no' => $student_detail[0]->mobileno, 'email' => $student_detail[0]->email, 'student_session_id' => $student_detail[0]->student_session_id, 'admission_no' => $student_detail[0]->admission_no);
 
                     $this->mailsmsconf->bulkmailsms('student_login_credential', $student_login_detail);
                 }
@@ -2161,7 +2192,10 @@ class Student extends Admin_Controller
 
                     $parent_detail = $this->user_model->read_single_child($student_detail[0]->parent_id);
 
-                    $parent_login_detail = array('display_name' => $student_detail[0]->firstname . ' ' . $student_detail[0]->lastname, 'id' => $students_value, 'credential_for' => 'parent', 'username' => $parent_detail->username, 'password' => $parent_detail->password, 'contact_no' => $student_detail[0]->guardian_phone, 'email' => $student_detail[0]->guardian_email, 'student_session_id' => $student_detail[0]->student_session_id, 'admission_no' => $student_detail[0]->admission_no);
+                    if (!$parent_detail || (trim((string) $student_detail[0]->guardian_email) === '' && trim((string) $student_detail[0]->guardian_phone) === '')) {
+                        continue;
+                    }
+                    $parent_login_detail = array('display_name' => $student_detail[0]->firstname . ' ' . $student_detail[0]->lastname, 'id' => $students_value, 'credential_for' => 'parent', 'username' => $parent_detail->username, 'password' => $this->user_model->set_temporary_password($parent_detail->id), 'contact_no' => $student_detail[0]->guardian_phone, 'email' => $student_detail[0]->guardian_email, 'student_session_id' => $student_detail[0]->student_session_id, 'admission_no' => $student_detail[0]->admission_no);
 
                     $this->mailsmsconf->bulkmailsms('student_login_credential', $parent_login_detail);
 

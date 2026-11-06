@@ -477,6 +477,7 @@ class Staff extends Admin_Controller
 
             $data_insert = array(
                 'password'        => $this->enc_lib->passHashEnc($password),
+                'must_change_password' => 1,
                 'employee_id'     => $employee_id,
                 'name'            => $name,
                 'email'           => $email,
@@ -1374,7 +1375,7 @@ class Staff extends Admin_Controller
     {
         $sessionData = $this->session->userdata('admin');
         $userdata    = $this->customlib->getUserData();
-        $this->form_validation->set_rules('new_pass', $this->lang->line('new_password'), 'trim|required|xss_clean|matches[confirm_pass]');
+        $this->form_validation->set_rules('new_pass', $this->lang->line('new_password'), 'trim|required|min_length[8]|xss_clean|matches[confirm_pass]');
         $this->form_validation->set_rules('confirm_pass', $this->lang->line('confirm_password'), 'trim|required|xss_clean');
         if ($this->form_validation->run() == false) {
 
@@ -1390,6 +1391,8 @@ class Staff extends Admin_Controller
                 $newdata = array(
                     'id'       => $id,
                     'password' => $this->enc_lib->passHashEnc($this->input->post('new_pass')),
+                    // Set by someone else: the staff member chooses their own at the next sign-in.
+                    'must_change_password' => (int) $id === (int) $sessionData['id'] ? 0 : 1,
                 );
 
                 $query2 = $this->admin_model->saveNewPass($newdata);

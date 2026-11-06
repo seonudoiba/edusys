@@ -21,6 +21,7 @@
                                     ?>
                                 <?php } ?>                       
                                 <?php
+                                echo validation_errors('<div class="alert alert-danger">', '</div>');
                                 if (isset($error_message)) {
                                     echo $error_message;
                                 }

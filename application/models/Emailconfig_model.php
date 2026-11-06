@@ -89,6 +89,31 @@ class Emailconfig_model extends MY_Model
         }
     }
 
+    /**
+     * The settings this school's emails go out with: its own SMTP or SES account, or the platform's mail
+     * server when it has none (sendmail isn't available on the hosted platform). Never shown on the settings page, which uses getActiveEmail().
+     */
+    public function getSendingConfig()
+    {
+        $own = $this->getActiveEmail();
+        if ($own && ($own->email_type === 'aws_ses' || ($own->email_type === 'smtp' && trim((string) $own->smtp_server) !== ''))) {
+            return $own;
+        }
+        $pass = (string) $this->config->item('smtp_pass');
+        $port = (int) $this->config->item('smtp_port');
+        return (object) array(
+            'email_type' => 'smtp',
+            'smtp_server' => $this->config->item('smtp_host'),
+            'smtp_port' => $port,
+            'smtp_username' => $this->config->item('smtp_user'),
+            'smtp_password' => $pass,
+            'ssl_tls' => $port === 465 ? 'ssl' : ($pass !== '' ? 'tls' : ''),
+            'smtp_auth' => $pass !== '',
+            'from_email' => $this->config->item('from_email'),
+            'platform_default' => true,
+        );
+    }
+
     public function getActiveEmail()
     {
         $this->db->select()->from('email_config');

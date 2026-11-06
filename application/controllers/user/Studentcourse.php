@@ -1175,7 +1175,7 @@ class Studentcourse extends Student_Controller
     public function updateguestpass()
     {
         $this->form_validation->set_rules('current_pass', 'Current password', 'trim|required|xss_clean');
-        $this->form_validation->set_rules('new_pass', 'New password', 'trim|required|xss_clean|matches[confirm_pass]');
+        $this->form_validation->set_rules('new_pass', 'New password', 'trim|required|min_length[8]|xss_clean|matches[confirm_pass]');
         $this->form_validation->set_rules('confirm_pass', 'Confirm password', 'trim|required|xss_clean');
         if ($this->form_validation->run() == false) {
 
@@ -1200,6 +1200,7 @@ class Studentcourse extends Student_Controller
             $newdata = array(
                 'id'       => $sessionData['id'],
                 'password' => $this->enc_lib->passHashEnc($this->input->post('new_pass')),
+                'must_change_password' => 0,
             );
             $query1 = $this->studentcourse_model->checkOldPass($data_array);
 
