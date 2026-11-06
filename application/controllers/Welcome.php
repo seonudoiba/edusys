@@ -66,6 +66,9 @@ class Welcome extends Front_Controller
             $this->data['banner_images'] = $this->cms_program_model->front_cms_program_photos($result[0]['id']);
         }
         $this->data['setting_data'] = $setting_data;
+        if ($this->data['page'] && $this->apply_builder($this->data['page'])) {
+            unset($this->data['banner_images']); // the layout has its own banner widget
+        }
 
         if ($this->module_lib->hasModule('online_course')) {
             $this->load->model('course_model');
@@ -79,7 +82,7 @@ class Welcome extends Front_Controller
     {
         $page = $this->cms_page_model->getBySlug(urldecode($slug));
         // A page hidden in Front CMS > Pages is not found (the home and 404 pages are always on).
-        if ($page && empty($page['is_homepage']) && $page['slug'] !== '404-page' && $page['is_active'] !== 'yes') {
+        if ($page && empty($page['is_homepage']) && $page['slug'] !== '404-page' && $page['is_active'] !== 'yes' && !$this->builder_preview()) {
             $page = false;
         }
         if (!$page) {
@@ -91,8 +94,12 @@ class Welcome extends Front_Controller
         if ($page['is_homepage']) {
             redirect(base_url(), 'location', 301); // the home page lives at the site root
         }
+        if ($page) {
+            $this->apply_builder($page);
+            $this->data['page'] = $page;
+        }
         $this->data['active_menu'] = $slug;
-        $this->data['page_side_bar'] = $this->data['page']['sidebar'];
+        $this->data['page_side_bar'] = !empty($this->data['page']['builder_html']) ? 0 : $this->data['page']['sidebar'];
         $setting_data = $this->setting_model->get();
         $this->data['setting_data'] = $setting_data;
 
@@ -216,6 +223,38 @@ class Welcome extends Front_Controller
         }
 
         $this->load_theme('pages/page');
+    }
+
+    /** ?preview=1 for an admin who may see pages: the draft layout (and hidden pages) instead of the published ones. */
+    private function builder_preview()
+    {
+        if (!$this->input->get('preview') || !$this->session->has_userdata('admin')) {
+            return false;
+        }
+        $this->load->library('rbac');
+        return $this->rbac->hasPrivilege('pages', 'can_view');
+    }
+
+    /**
+     * A page built with the page builder: its widgets, rendered with fresh data, become the page's
+     * description, which every theme shows as it is. Returns true when the page uses a layout.
+     */
+    private function apply_builder(array &$page)
+    {
+        $preview = $this->builder_preview();
+        $layout = $preview && !empty($page['builder_draft']) ? $page['builder_draft'] : (isset($page['builder_layout']) ? $page['builder_layout'] : null);
+        if ($layout === null || $layout === '') {
+            return false;
+        }
+        $this->load->library('Page_widgets');
+        $page['description'] = $this->page_widgets->render($layout, $preview);
+        $page['builder_html'] = 1;
+        $page['category_content'] = array();
+        $this->data['page_side_bar'] = 0;
+        if ($preview) {
+            $this->output->set_header('X-Robots-Tag: noindex');
+        }
+        return true;
     }
 
     public function ajaxPaginationData()

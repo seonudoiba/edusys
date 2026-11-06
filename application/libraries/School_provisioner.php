@@ -62,6 +62,11 @@ class School_provisioner
                 $admin_id = $this->create_super_admin($db, $school, $code);
                 $map = $this->load_default_data($db, (int) $school['id'], !empty($school['is_platform']), $admin_id);
                 $this->fill_settings($db, $school);
+                // The ready-made homepage (Front CMS > Pages > Page builder).
+                require_once APPPATH . 'libraries/Page_widgets.php';
+                $starter = json_encode(Page_widgets::starter_home(!empty($school['is_platform'])));
+                $db->where(array('school_id' => (int) $school['id'], 'is_homepage' => 1))
+                    ->update('front_cms_pages', array('builder_layout' => $starter, 'builder_draft' => $starter));
                 $db->where('id', (int) $school['id'])->update('school', array('status' => 1, 'cron_flag' => 1));
                 return $map;
             });
