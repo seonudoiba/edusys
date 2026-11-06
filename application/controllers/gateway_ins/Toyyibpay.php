@@ -11,11 +11,37 @@ class Toyyibpay extends Front_Controller {
         $this->load->model(array('gateway_ins_model'));
     }
 
+    /** True when toyyibPay reports a successful payment of $bill_code for $order_id. */
+    private function bill_paid($bill_code, $order_id)
+    {
+        if ($bill_code === '' || $order_id === '') {
+            return false;
+        }
+        $ch = curl_init('https://toyyibpay.com/index.php/api/getBillTransactions');
+        curl_setopt_array($ch, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => array('billCode' => $bill_code, 'billpaymentStatus' => '1')));
+        $rows = json_decode((string) curl_exec($ch), true);
+        curl_close($ch);
+        foreach ((array) $rows as $r) {
+            if (is_array($r) && isset($r['billpaymentStatus']) && (string) $r['billpaymentStatus'] === '1'
+                && (!isset($r['billExternalReferenceNo']) || (string) $r['billExternalReferenceNo'] === $order_id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
      public function index(){
  
         $refno=$_POST['refno'];
         $order_id=$_POST['order_id'];
         $status=$_POST['status'];
+        // Don't trust the posted status: ask toyyibPay about the bill (it must be paid and be this order's).
+        if ($status == 1 && !$this->bill_paid(isset($_POST['billcode']) ? (string) $_POST['billcode'] : '', (string) $order_id)) {
+            log_message('error', 'toyyibPay callback refused: bill not confirmed as paid (order ' . $order_id . ')');
+            set_status_header(403);
+            exit('refused');
+        }
         if($status==1){
         $para_amount=$this->gateway_ins_model->get_gateway_ins($order_id,'toyyibpay');
         $parameter_data=$this->gateway_ins_model->get($order_id,'toyyibpay');

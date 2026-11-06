@@ -28,6 +28,7 @@ class subscription extends Front_Controller
         $this->load->model(array('subscription_model', 'plan_model', 'setting_model', 'subscription_bank_transfer_model'));
         $this->load->library('Platform_coupons');
         $this->load->library('School_provisioner');
+        $this->load->library(array('Payment_gateways', 'Platform_settings'));
     }
 
     public function add()
@@ -56,6 +57,7 @@ class subscription extends Front_Controller
         }
 
         $this->data['setting_data'] = $this->setting_model->get();
+        $this->data['online_methods'] = $this->payment_gateways->platform_enabled();
 
         $this->load_theme('subscription/subscriptionform');
     }
@@ -92,7 +94,7 @@ class subscription extends Front_Controller
         ]);
 
         if ($total > 0) {
-            $this->form_validation->set_rules('payment_method', $this->lang->line('payment_method'), 'trim|required|xss_clean|in_list[paystack,' . self::BANK_TRANSFER . ']');
+            $this->form_validation->set_rules('payment_method', $this->lang->line('payment_method'), 'trim|required|xss_clean|in_list[' . implode(',', array_merge(array_keys($this->payment_gateways->platform_enabled()), array(self::BANK_TRANSFER))) . ']');
         }
         $this->form_validation->set_rules('phone_number', $this->lang->line('phone_number'), 'trim|required|xss_clean|regex_match[/^\+?[0-9]{1,4}?[-.\s]?[0-9]+[-.\s]?[0-9]+[-.\s]?[0-9]+$/]');
         $this->form_validation->set_rules('school_name', $this->lang->line('school_name'), 'trim|required|xss_clean');
@@ -119,6 +121,7 @@ class subscription extends Front_Controller
             $this->data['amount'] = $plan['price'];
             $this->data['active_menu'] = 'online_admission';
             $this->data['setting_data'] = $this->setting_model->get();
+            $this->data['online_methods'] = $this->payment_gateways->platform_enabled();
             $this->data['page_side_bar'] = false;
             $this->data['featured_image'] = false;
             $page = array('title' => '', 'meta_title' => '', 'meta_keyword' => '', 'meta_description' => '');
@@ -159,7 +162,7 @@ class subscription extends Front_Controller
 
             $this->session->set_flashdata('msg', 'Subscription added successfully');
             if ($total > 0) {
-                if ($this->input->post('payment_method') == 'paystack') {
+                if (Payment_gateways::known($this->input->post('payment_method'))) {
                     $this->initialize_payment($subscription_id);
                 } elseif ($this->input->post('payment_method') == self::BANK_TRANSFER) {
                     $token = $this->subscription_bank_transfer_model->create($subscription_id);
@@ -182,6 +185,15 @@ class subscription extends Front_Controller
         $row = $query->row();
 
         $plan = $this->plan_model->get($plan_id);
+        // Renewal: the online method picked on the plans page (any the platform has keys for).
+        $methods = $this->payment_gateways->platform_enabled();
+        $method = (string) $this->input->get('method');
+        if (!isset($methods[$method])) {
+            $method = key($methods);
+        }
+        if (!$method || empty($plan['plan_id']) || (int) $plan['status'] !== 1) {
+            show_error('Online payment is not available. Please contact us to renew by bank transfer.', 503, 'Payment unavailable');
+        }
         $currentDate = new DateTime();
         $currentDate->modify('+1 year');
         $end_date = $currentDate->format('Y-m-d');
@@ -196,7 +208,7 @@ class subscription extends Front_Controller
             'end_date' => $end_date,
             'price' => $plan['price'],
             'discount_amt' => $discount,
-            'payment_method' => 'paystack',
+            'payment_method' => $method,
             // 'payment_status' => 0,
             'status' => 0,
             'total' => $total,
@@ -228,91 +240,104 @@ class subscription extends Front_Controller
         }
     }
 
+    /**
+     * Starts the online payment of a subscription with the platform's keys (server environment,
+     * see Payment_gateways::PLATFORM_ENV): Paystack, Flutterwave, Monnify, Interswitch or Remita.
+     */
     private function initialize_payment($subscription_id, $edit = false)
     {
-        $callback_url = site_url('subscription/verifyPayment') . "?subscription_id={$subscription_id}";
-        if ($edit) {
-            $callback_url .= '&edit=true';
+        $s = $this->subscription_model->get($subscription_id);
+        $gateway = (string) $s['payment_method'];
+        $methods = $this->payment_gateways->platform_enabled();
+        if (!isset($methods[$gateway])) {
+            show_error('This payment method is not available on this server.', 503, 'Payment unavailable');
         }
-        $subscription_data = $this->subscription_model->get($subscription_id);
-
-        $fields = [
-            'email' => $subscription_data['email_address'],
-            'amount' => (int) round($subscription_data['total'] * 100),
-            'callback_url' => $callback_url,
-        ];
-        $paymentResponse = $this->paystack('transaction/initialize', $fields);
-
-        $return = array();
-        if (isset($paymentResponse['status']) && $paymentResponse['status'] == true) {
-            // Only this reference can later confirm this subscription (see verifyPayment()).
-            $this->db->where('id', (int) $subscription_id)->update('subscription', array('reference' => $paymentResponse['data']['reference']));
-            redirect($paymentResponse['data']['authorization_url']);
-        } else {
-            $return = array(
-                'status' => 'fail',
-                'error' => $paymentResponse['message'],
-            );
+        $reference = 'SUB' . (int) $subscription_id . 'T' . date('ymdHis') . strtoupper(bin2hex(random_bytes(3)));
+        try {
+            $answer = $this->payment_gateways->for_platform($gateway)->start(array(
+                'reference' => $reference,
+                'amount' => (float) $s['total'],
+                'currency' => self::platform_currency(),
+                'email' => $s['email_address'],
+                'name' => (string) ($s['owner_name'] ?: $s['school_name']),
+                'phone' => (string) $s['phone_number'],
+                'description' => $this->platform_settings->get('platform_name') . ' subscription: ' . $s['school_name'],
+                'return_url' => site_url('subscription/verify/' . $gateway . '/' . (int) $subscription_id) . ($edit ? '?edit=1' : ''),
+            ));
+        } catch (Payment_gateway_error $e) {
+            show_error(html_escape($e->getMessage()), 502, 'The payment could not start');
         }
+        // Only this reference can later confirm this subscription (see verify()).
+        $this->db->where('id', (int) $subscription_id)->update('subscription', array(
+            'reference' => $reference,
+            'gateway_ref' => isset($answer['gateway_ref']) ? $answer['gateway_ref'] : null,
+        ));
+        if (isset($answer['redirect'])) {
+            redirect($answer['redirect']);
+        }
+        $this->load->view('user/gateway/online/redirect_post', array(
+            'action' => $answer['post']['url'],
+            'fields' => $answer['post']['fields'],
+            'gateway_name' => Payment_gateways::name($gateway),
+        ));
     }
 
-    public function verifyPayment()
+    /**
+     * Where the gateway sends the payer back (GET or POST; no session needed, Interswitch comes
+     * back with a cross-site POST). The gateway's server is asked about the reference this
+     * subscription's payment was started with; only the full amount activates it, once.
+     */
+    public function verify($gateway = '', $subscription_id = 0)
     {
-        $reference = (string) $this->input->get('reference');
-        $subscription_id = (int) $this->input->get('subscription_id');
         $edit = (bool) $this->input->get('edit');
-        $subscription = $this->db->where('id', $subscription_id)->get('subscription')->row_array();
-
-        // The callback must carry the reference this subscription's payment was started with.
-        if (!$subscription || $reference === '' || !hash_equals((string) $subscription['reference'], $reference)) {
+        $s = $this->db->where('id', (int) $subscription_id)->get('subscription')->row_array();
+        if (!$s || !Payment_gateways::known($gateway) || $s['payment_method'] !== $gateway || (string) $s['reference'] === '') {
             return $edit ? redirect('user/plan/failure') : $this->failure();
         }
-        if ((int) $subscription['payment_status'] === 1) {
-            return $edit ? redirect('user/plan/failure') : $this->alreadyComplete();
+        if ((int) $s['payment_status'] === 1) {
+            return $edit ? redirect('user/plan/success') : $this->alreadyComplete();
         }
-
-        $paymentResponse = $this->paystack('transaction/verify/' . rawurlencode($reference));
-        $data = isset($paymentResponse['data']) && is_array($paymentResponse['data']) ? $paymentResponse['data'] : array();
-        $paid = !empty($paymentResponse['status'])
-            && isset($data['status'], $data['reference'], $data['amount']) && $data['status'] === 'success'
-            && $data['reference'] === $reference
-            && (int) $data['amount'] === (int) round($subscription['total'] * 100)
-            && isset($data['customer']['email']) && strcasecmp($data['customer']['email'], $subscription['email_address']) === 0;
+        $currency = self::platform_currency();
+        try {
+            $r = $this->payment_gateways->for_platform($gateway)->check(array(
+                'reference' => $s['reference'],
+                'gateway_ref' => $s['gateway_ref'],
+                'amount' => (float) $s['total'],
+                'currency' => $currency,
+                'email' => $s['email_address'],
+            ), array_merge((array) $this->input->get(), (array) $this->input->post()));
+        } catch (Payment_gateway_error $e) {
+            log_message('error', 'Subscription ' . (int) $subscription_id . ': ' . $e->getMessage());
+            return $edit ? redirect('user/plan/failure') : $this->failure();
+        }
+        $paid = !empty($r['paid']) && $r['amount'] !== null && $r['amount'] + 0.009 >= (float) $s['total']
+            && (!$r['currency'] || strtoupper($r['currency']) === $currency);
         if (!$paid) {
-            log_message('error', 'Paystack verification failed for subscription ' . $subscription_id . ' reference ' . $reference);
+            log_message('error', Payment_gateways::name($gateway) . ' did not confirm subscription ' . (int) $subscription_id
+                . ' (' . $s['reference'] . '): ' . (isset($r['message']) ? $r['message'] : '') . ', amount ' . var_export($r['amount'], true));
             return $edit ? redirect('user/plan/failure') : $this->failure();
         }
         $this->data_set($subscription_id, $edit);
     }
 
-    /**
-     * Calls the Paystack API with the platform's secret key (EDUSYS_PAYSTACK_SECRET_KEY in the
-     * server environment; it is never stored in the code or the database).
-     *
-     * @param string $path e.g. 'transaction/initialize'
-     * @param array|null $post form fields for a POST request
-     * @return array decoded response
-     */
-    private function paystack($path, $post = null)
+    /** Paystack's callback URL before verify() existed (payments started before this version). */
+    public function verifyPayment()
     {
-        $secret = getenv('EDUSYS_PAYSTACK_SECRET_KEY');
-        if ($secret === false || trim($secret) === '') {
-            show_error('Online payment is not configured on this server.', 503, 'Payment unavailable');
+        $id = (int) $this->input->get('subscription_id');
+        $s = $id ? $this->db->where('id', $id)->get('subscription')->row_array() : null;
+        if ($s && $s['payment_method'] === 'paystack' && hash_equals((string) $s['reference'], (string) $this->input->get('reference'))) {
+            $_GET['edit'] = $this->input->get('edit') ? '1' : '';
+            return $this->verify('paystack', $id);
         }
-        $ch = curl_init('https://api.paystack.co/' . $path);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer ' . trim($secret), 'Cache-Control: no-cache'));
-        if ($post !== null) {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
-        }
-        $response = curl_exec($ch);
-        curl_close($ch);
-        $decoded = json_decode((string) $response, true);
-        return is_array($decoded) ? $decoded : array();
+        return $this->failure();
     }
 
+    /** Currency of the plans (EDUSYS_PLATFORM_CURRENCY, default NGN). */
+    private static function platform_currency()
+    {
+        $c = strtoupper(trim((string) getenv('EDUSYS_PLATFORM_CURRENCY')));
+        return $c !== '' ? $c : 'NGN';
+    }
     /**
      * The school's bank transfer page (private link from save()): the platform's bank details,
      * the amount, the review status, and the receipt upload form while a receipt is due.

@@ -518,6 +518,46 @@ class Studentfeemaster_model extends MY_Model
         return $query->row();
     }
 
+    /**
+     * fee_deposit_bulk() for an online gateway, at most once per gateway transaction: the
+     * reference is recorded in online_fee_payments first (unique per school and gateway), so
+     * reloading or replaying a gateway's return URL can't deposit the same payment twice.
+     * A repeat returns the first deposit's invoices (the success page still shows).
+     *
+     * @return array|false the invoices (as fee_deposit_bulk), or false when nothing was deposited
+     */
+    public function fee_deposit_online($bulk_data, $send_to, $gateway, $reference)
+    {
+        $gateway = substr(strtolower((string) $gateway), 0, 30);
+        $reference = substr(trim((string) $reference), 0, 100);
+        if ($reference === '') {
+            log_message('error', 'Online fee deposit through ' . $gateway . ' without a transaction reference: refused');
+            return false;
+        }
+        $done = $this->db->where(array('gateway' => $gateway, 'reference' => $reference))->get('online_fee_payments')->row_array();
+        if ($done) {
+            log_message('error', 'Online fee deposit through ' . $gateway . ' ' . $reference . ' repeated: ignored');
+            $previous = $done['result'] ? json_decode($done['result'], true) : null;
+            return is_array($previous) ? $previous : false;
+        }
+        $this->db->insert('online_fee_payments', array(
+            'gateway' => $gateway,
+            'reference' => $reference,
+            'fees' => json_encode($bulk_data),
+            'status' => 'paid',
+            'paid_at' => date('Y-m-d H:i:s'),
+            'message' => 'Recorded by the ' . $gateway . ' gateway',
+        ));
+        $claim = (int) $this->db->insert_id();
+        $result = $this->fee_deposit_bulk($bulk_data, $send_to);
+        if ($result === false) {
+            $this->db->where('id', $claim)->delete('online_fee_payments'); // nothing recorded: allow a retry
+            return false;
+        }
+        $this->db->where('id', $claim)->update('online_fee_payments', array('result' => json_encode($result)));
+        return $result;
+    }
+
     public function fee_deposit_bulk($bulk_data, $student_fees_discount_id = null)
     {
         $this->db->trans_start();

@@ -14,6 +14,9 @@
                         <li><a href="#tab_4" data-toggle="tab"><?php echo $this->lang->line('ccavenue'); ?></a></li>
                         <li><a href="#tab_5" data-toggle="tab"><?php echo $this->lang->line('instamojo'); ?></a></li>
                         <li><a href="#tab_6" data-toggle="tab"><?php echo $this->lang->line('paystack'); ?></a></li>
+                        <li><a href="#tab_25" data-toggle="tab">Monnify</a></li>
+                        <li><a href="#tab_26" data-toggle="tab">Interswitch</a></li>
+                        <li><a href="#tab_27" data-toggle="tab">Remita</a></li>
                         <li><a href="#tab_7" data-toggle="tab"><?php echo $this->lang->line('razorpay'); ?></a></li>
                         <li><a href="#tab_8" data-toggle="tab"><?php echo $this->lang->line('paytm'); ?></a></li>
                         <li><a href="#tab_9" data-toggle="tab"><?php echo $this->lang->line('midtrans'); ?></a></li>
@@ -323,6 +326,51 @@ $paystack_result = check_in_array('paystack', $paymentlist);
                                     </div>
                                 </div>
                             </form>
+                            <?php // Option 2: no keys, a subaccount of the platform's Paystack account (Payment_gateways::for_school)
+                            $CI_sub = &get_instance(); $CI_sub->load->library('Payment_gateways');
+                            if ($CI_sub->payment_gateways->subaccounts_available('paystack')) {
+                                $sub_row = check_in_array('paystack', $paymentlist); ?>
+                            <div class="box-body" style="border-top:1px solid #eee;margin-top:10px">
+                                <h4 style="margin-top:0">Or: receive payments straight into your bank account <small>no Paystack account or keys needed</small></h4>
+                                <?php if (!empty($sub_row->api_signature) && empty($sub_row->api_secret_key)) { ?>
+                                    <div class="alert alert-success" style="margin-bottom:10px">
+                                        Active: payments settle to <b><?php echo html_escape($sub_row->api_email); ?></b>,
+                                        account <?php echo html_escape($sub_row->account_no); ?> (subaccount <?php echo html_escape($sub_row->api_signature); ?>).
+                                        Saving another account below replaces it.
+                                    </div>
+                                <?php } ?>
+                                <p class="text-muted">Parents pay through the platform's Paystack account and Paystack pays the money into this
+                                    bank account automatically (usually the next business day). Paystack's fee is deducted from each payment<?php
+                                    $pct = Payment_gateways::platform_split_percent(); echo $pct > 0 ? '; the platform keeps ' . $pct . '%' : ''; ?>.
+                                    Saving your own secret key above instead uses your own Paystack account.</p>
+                                <form class="form-horizontal subaccount-form" data-gateway="paystack" action="<?php echo site_url('admin/paymentsettings/subaccount'); ?>" method="post">
+                                    <input type="hidden" name="gateway" value="paystack">
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-12 col-xs-12">Bank</label>
+                                        <div class="col-md-6 col-sm-7 col-xs-12">
+                                            <select name="bank" class="form-control sub-bank"><option value="">Loading banks…</option></select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-12 col-xs-12">Account number</label>
+                                        <div class="col-md-6 col-sm-7 col-xs-12">
+                                            <input name="account" class="form-control sub-account" maxlength="10" inputmode="numeric" autocomplete="off" placeholder="10-digit NUBAN">
+                                            <span class="help-block sub-name"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-12 col-xs-12">Business name</label>
+                                        <div class="col-md-6 col-sm-7 col-xs-12">
+                                            <input name="business_name" class="form-control" maxlength="100" placeholder="The school's name (shown on receipts)">
+                                            <span class="text text-danger subaccount_error"></span>
+                                        </div>
+                                    </div>
+                                    <?php if ($this->rbac->hasPrivilege('payment_methods', 'can_edit')) { ?>
+                                        <div class="col-md-6 col-md-offset-3"><button type="submit" class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin'></i> Saving">Use this bank account</button></div>
+                                    <?php } ?>
+                                </form>
+                            </div>
+                            <?php } ?>
                         </div>
 
                         <div class="tab-pane " id="tab_7">
@@ -564,6 +612,51 @@ $flutterwave_result = check_in_array('flutterwave', $paymentlist);
                                     </div>
                                 </div>
                             </form>
+                            <?php // Option 2: no keys, a subaccount of the platform's Flutterwave account (Payment_gateways::for_school)
+                            $CI_sub = &get_instance(); $CI_sub->load->library('Payment_gateways');
+                            if ($CI_sub->payment_gateways->subaccounts_available('flutterwave')) {
+                                $sub_row = check_in_array('flutterwave', $paymentlist); ?>
+                            <div class="box-body" style="border-top:1px solid #eee;margin-top:10px">
+                                <h4 style="margin-top:0">Or: receive payments straight into your bank account <small>no Flutterwave account or keys needed</small></h4>
+                                <?php if (!empty($sub_row->api_signature) && empty($sub_row->api_secret_key)) { ?>
+                                    <div class="alert alert-success" style="margin-bottom:10px">
+                                        Active: payments settle to <b><?php echo html_escape($sub_row->api_email); ?></b>,
+                                        account <?php echo html_escape($sub_row->account_no); ?> (subaccount <?php echo html_escape($sub_row->api_signature); ?>).
+                                        Saving another account below replaces it.
+                                    </div>
+                                <?php } ?>
+                                <p class="text-muted">Parents pay through the platform's Flutterwave account and Flutterwave pays the money into this
+                                    bank account automatically (usually the next business day). Flutterwave's fee is deducted from each payment<?php
+                                    $pct = Payment_gateways::platform_split_percent(); echo $pct > 0 ? '; the platform keeps ' . $pct . '%' : ''; ?>.
+                                    Saving your own secret key above instead uses your own Flutterwave account.</p>
+                                <form class="form-horizontal subaccount-form" data-gateway="flutterwave" action="<?php echo site_url('admin/paymentsettings/subaccount'); ?>" method="post">
+                                    <input type="hidden" name="gateway" value="flutterwave">
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-12 col-xs-12">Bank</label>
+                                        <div class="col-md-6 col-sm-7 col-xs-12">
+                                            <select name="bank" class="form-control sub-bank"><option value="">Loading banks…</option></select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-12 col-xs-12">Account number</label>
+                                        <div class="col-md-6 col-sm-7 col-xs-12">
+                                            <input name="account" class="form-control sub-account" maxlength="10" inputmode="numeric" autocomplete="off" placeholder="10-digit NUBAN">
+                                            <span class="help-block sub-name"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-3 col-sm-12 col-xs-12">Business name</label>
+                                        <div class="col-md-6 col-sm-7 col-xs-12">
+                                            <input name="business_name" class="form-control" maxlength="100" placeholder="The school's name (shown on receipts)">
+                                            <span class="text text-danger subaccount_error"></span>
+                                        </div>
+                                    </div>
+                                    <?php if ($this->rbac->hasPrivilege('payment_methods', 'can_edit')) { ?>
+                                        <div class="col-md-6 col-md-offset-3"><button type="submit" class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin'></i> Saving">Use this bank account</button></div>
+                                    <?php } ?>
+                                </form>
+                            </div>
+                            <?php } ?>
                         </div>
                         <div class="tab-pane " id="tab_12">
                             <form role="form" id="ipayafrica" action="<?php echo site_url('admin/paymentsettings/ipayafrica') ?>" class="form-horizontal" method="post">
@@ -1145,6 +1238,178 @@ $payhere_result = check_in_array('payhere', $paymentlist);
                             </form>
                         </div>
 
+                        <div class="tab-pane" id="tab_25">
+                            <form role="form" id="monnify" action="<?php echo site_url('admin/paymentsettings/monnify') ?>" class="form-horizontal online-gateway-form" method="post">
+                                <div class="box-body">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <?php $monnify_result = check_in_array('monnify', $paymentlist); ?>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">API key<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="monnify_api_key" type="text" class="form-control" autocomplete="off" placeholder="MK_TEST_... or MK_PROD_..."
+                                                           value="<?php echo isset($monnify_result->api_publishable_key) ? html_escape($monnify_result->api_publishable_key) : ''; ?>" />
+                                                    <span class="text text-danger monnify_api_key_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Secret key<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="monnify_secret_key" type="text" class="form-control" autocomplete="off" placeholder=""
+                                                           value="<?php echo isset($monnify_result->api_secret_key) ? html_escape($monnify_result->api_secret_key) : ''; ?>" />
+                                                    <span class="text text-danger monnify_secret_key_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Contract code<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="monnify_contract_code" type="text" class="form-control" autocomplete="off" placeholder="e.g. 1234567890"
+                                                           value="<?php echo isset($monnify_result->account_no) ? html_escape($monnify_result->account_no) : ''; ?>" />
+                                                    <span class="text text-danger monnify_contract_code_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Mode</label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <select name="monnify_mode" class="form-control">
+                                                        <option value="0" <?php echo (isset($monnify_result->gateway_mode) && (int) $monnify_result->gateway_mode === 1) ? '' : 'selected'; ?>>Test (sandbox)</option>
+                                                        <option value="1" <?php echo (isset($monnify_result->gateway_mode) && (int) $monnify_result->gateway_mode === 1) ? 'selected' : ''; ?>>Live</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 disblock">
+                                            <h5><b>Monnify</b>: Nigerian payment gateway</h5>
+                                            <p class="text-muted">Card, bank transfer and USSD. Naira only. The money goes to the school's own Monnify account.</p>
+                                            <p class="text-muted">Where to find the keys: Monnify dashboard > Developers > API Keys & Contracts.</p>
+                                            <p><a href="https://app.monnify.com" target="_blank" rel="noopener">https://app.monnify.com</a></p>
+                                            <p class="text-muted">After saving, choose Monnify under <b>Select payment gateway</b> to use it.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer">
+                                    <div class="row">
+                                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                            <?php if ($this->rbac->hasPrivilege('payment_methods', 'can_edit')) { ?>
+                                                <button type="submit" class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('save'); ?>"><?php echo $this->lang->line('save'); ?></button>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="tab-pane" id="tab_26">
+                            <form role="form" id="interswitch" action="<?php echo site_url('admin/paymentsettings/interswitch') ?>" class="form-horizontal online-gateway-form" method="post">
+                                <div class="box-body">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <?php $interswitch_result = check_in_array('interswitch', $paymentlist); ?>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Merchant code<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="interswitch_merchant_code" type="text" class="form-control" autocomplete="off" placeholder="e.g. MX12345"
+                                                           value="<?php echo isset($interswitch_result->api_username) ? html_escape($interswitch_result->api_username) : ''; ?>" />
+                                                    <span class="text text-danger interswitch_merchant_code_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Pay item ID<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="interswitch_pay_item_id" type="text" class="form-control" autocomplete="off" placeholder="e.g. 1234567"
+                                                           value="<?php echo isset($interswitch_result->account_no) ? html_escape($interswitch_result->account_no) : ''; ?>" />
+                                                    <span class="text text-danger interswitch_pay_item_id_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Mode</label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <select name="interswitch_mode" class="form-control">
+                                                        <option value="0" <?php echo (isset($interswitch_result->gateway_mode) && (int) $interswitch_result->gateway_mode === 1) ? '' : 'selected'; ?>>Test (sandbox)</option>
+                                                        <option value="1" <?php echo (isset($interswitch_result->gateway_mode) && (int) $interswitch_result->gateway_mode === 1) ? 'selected' : ''; ?>>Live</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 disblock">
+                                            <h5><b>Interswitch</b>: Nigerian payment gateway</h5>
+                                            <p class="text-muted">Card (Verve, Visa, Mastercard), bank transfer, USSD. Naira only. The money goes to the school's own Interswitch account.</p>
+                                            <p class="text-muted">Where to find the keys: Quickteller Business > Developer Tools (Web Checkout).</p>
+                                            <p><a href="https://business.quickteller.com" target="_blank" rel="noopener">https://business.quickteller.com</a></p>
+                                            <p class="text-muted">After saving, choose Interswitch under <b>Select payment gateway</b> to use it.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer">
+                                    <div class="row">
+                                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                            <?php if ($this->rbac->hasPrivilege('payment_methods', 'can_edit')) { ?>
+                                                <button type="submit" class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('save'); ?>"><?php echo $this->lang->line('save'); ?></button>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="tab-pane" id="tab_27">
+                            <form role="form" id="remita" action="<?php echo site_url('admin/paymentsettings/remita') ?>" class="form-horizontal online-gateway-form" method="post">
+                                <div class="box-body">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <?php $remita_result = check_in_array('remita', $paymentlist); ?>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Merchant ID<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="remita_merchant_id" type="text" class="form-control" autocomplete="off" placeholder=""
+                                                           value="<?php echo isset($remita_result->api_username) ? html_escape($remita_result->api_username) : ''; ?>" />
+                                                    <span class="text text-danger remita_merchant_id_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Service type ID<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="remita_service_type_id" type="text" class="form-control" autocomplete="off" placeholder="the service (fee type) payments go to"
+                                                           value="<?php echo isset($remita_result->account_no) ? html_escape($remita_result->account_no) : ''; ?>" />
+                                                    <span class="text text-danger remita_service_type_id_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">API key<small class="req"> *</small></label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <input name="remita_api_key" type="text" class="form-control" autocomplete="off" placeholder=""
+                                                           value="<?php echo isset($remita_result->api_secret_key) ? html_escape($remita_result->api_secret_key) : ''; ?>" />
+                                                    <span class="text text-danger remita_api_key_error"></span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5 col-sm-12 col-xs-12">Mode</label>
+                                                <div class="col-md-7 col-sm-7 col-xs-12">
+                                                    <select name="remita_mode" class="form-control">
+                                                        <option value="0" <?php echo (isset($remita_result->gateway_mode) && (int) $remita_result->gateway_mode === 1) ? '' : 'selected'; ?>>Test (sandbox)</option>
+                                                        <option value="1" <?php echo (isset($remita_result->gateway_mode) && (int) $remita_result->gateway_mode === 1) ? 'selected' : ''; ?>>Live</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 disblock">
+                                            <h5><b>Remita</b>: Nigerian payment gateway</h5>
+                                            <p class="text-muted">Card, bank transfer, USSD and payment at any bank branch (RRR). Naira only. The money goes to the school's own Remita account.</p>
+                                            <p class="text-muted">Where to find the keys: Remita profile > Integration (merchant ID, service type and API key).</p>
+                                            <p><a href="https://remita.net" target="_blank" rel="noopener">https://remita.net</a></p>
+                                            <p class="text-muted">After saving, choose Remita under <b>Select payment gateway</b> to use it.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer">
+                                    <div class="row">
+                                        <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                            <?php if ($this->rbac->hasPrivilege('payment_methods', 'can_edit')) { ?>
+                                                <button type="submit" class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('save'); ?>"><?php echo $this->lang->line('save'); ?></button>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                         <div class="tab-pane " id="tab_24">
                            <form role="form" id="onepay" action="<?php echo site_url('admin/paymentsettings/onepay') ?>" class="form-horizontal" method="post">
                                 <div class="box-body">
@@ -1444,6 +1709,24 @@ if ($radio_check == 'payhere') {
 }
 ?>>
                                         <?php echo $this->lang->line('payhere'); ?>
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="payment_setting" value="monnify" <?php echo $radio_check == 'monnify' ? 'checked' : ''; ?>>
+                                        Monnify
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="payment_setting" value="interswitch" <?php echo $radio_check == 'interswitch' ? 'checked' : ''; ?>>
+                                        Interswitch
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="payment_setting" value="remita" <?php echo $radio_check == 'remita' ? 'checked' : ''; ?>>
+                                        Remita
                                     </label>
                                 </div>
                                 <div class="radio">
@@ -2291,5 +2574,58 @@ function check_in_array($find, $array)
             }
         });
         e.preventDefault();
+    });
+    // Monnify, Interswitch, Remita (admin/paymentsettings/<gateway>, same answers as the others)
+    $(".online-gateway-form").submit(function (e) {
+        e.preventDefault();
+        var $form = $(this), $btn = $form.find("button[type=submit]");
+        $form.find("[class$='_error']").html("");
+        $btn.button('loading');
+        $.ajax({
+            type: "POST", dataType: 'JSON', url: $form.attr('action'), data: $form.serialize(),
+            success: function (data) {
+                if (data.st === 1) {
+                    $.each(data.msg, function (key, value) { $form.find('.' + key + "_error").html(value); });
+                } else {
+                    successMsg(data.msg);
+                }
+            },
+            complete: function () { $btn.button('reset'); }
+        });
+    });
+    // Subaccount forms (Paystack, Flutterwave): banks, account name check, save.
+    $(".subaccount-form").each(function () {
+        var $form = $(this), gw = $form.data('gateway'), loaded = false;
+        var $bank = $form.find('.sub-bank'), $acct = $form.find('.sub-account'), $name = $form.find('.sub-name');
+        function load() {
+            if (loaded) { return; }
+            loaded = true;
+            $.getJSON('<?php echo site_url('admin/paymentsettings/banks'); ?>/' + gw, function (d) {
+                $bank.empty().append($('<option value="">').text(d.ok ? 'Choose your bank' : (d.message || 'Banks could not be loaded')));
+                $.each(d.banks || {}, function (code, label) { $bank.append($('<option>').val(code).text(label)); });
+            });
+        }
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) { if ($($(e.target).attr('href')).find($form).length) { load(); } });
+        if ($form.closest('.tab-pane').hasClass('active')) { load(); }
+        function check() {
+            $name.text('').css('color', '');
+            if ($bank.val() && /^\d{10}$/.test($acct.val())) {
+                $name.text('Checking the account…');
+                $.post('<?php echo site_url('admin/paymentsettings/resolve_account'); ?>', {gateway: gw, bank: $bank.val(), account: $acct.val()}, function (d) {
+                    $name.text(d.ok ? '✔ ' + d.name : (d.message || 'Account not found')).css('color', d.ok ? '#2e7d32' : '#c62828');
+                }, 'json');
+            }
+        }
+        $bank.on('change', check);
+        $acct.on('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 10); check(); });
+        $form.on('submit', function (e) {
+            e.preventDefault();
+            var $btn = $form.find('button[type=submit]');
+            $form.find('.subaccount_error').html('');
+            $btn.button('loading');
+            $.post($form.attr('action'), $form.serialize(), function (d) {
+                if (d.st === 1) { $form.find('.subaccount_error').text(d.msg.subaccount || 'Not saved'); } else { successMsg(d.msg); }
+            }, 'json').always(function () { $btn.button('reset'); });
+        });
     });
 </script>

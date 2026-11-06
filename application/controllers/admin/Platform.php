@@ -245,7 +245,9 @@ class Platform extends Admin_Controller
         $h['smtp_host'] = $this->config->item('smtp_host') . ':' . $this->config->item('smtp_port');
         $h['smtp_login'] = $this->config->item('smtp_pass') !== '' ? 'set' : 'none';
         $h['from_email'] = $this->config->item('from_email');
-        $h['paystack'] = trim((string) getenv('EDUSYS_PAYSTACK_SECRET_KEY')) !== '' ? (strpos(getenv('EDUSYS_PAYSTACK_SECRET_KEY'), 'sk_test') === 0 ? 'test key' : 'live key') : 'not set';
+        // Subscription payment gateways (keys in the server environment, see Payment_gateways::PLATFORM_ENV).
+        $this->load->library('Payment_gateways');
+        $h['gateways'] = $this->payment_gateways->platform_status();
         $h['disk_free'] = @disk_free_space(FCPATH);
         $h['disk_total'] = @disk_total_space(FCPATH);
         $h['cron'] = array();

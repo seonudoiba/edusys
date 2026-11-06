@@ -182,7 +182,7 @@ class Payment extends Studentgateway_Controller
                     //=======================
                 } else if ($pay_method->payment_type == "paystack") {
                     ///=====================
-                    if ($pay_method->api_secret_key == "") {
+                    if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("paystack", $pay_method)->missing()) { // own keys or a subaccount
                         $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paystack_settings_not_available') . '</div>');
                         redirect($_SERVER['HTTP_REFERER']);
                     } else {
@@ -224,7 +224,7 @@ class Payment extends Studentgateway_Controller
                     }
 
                 } else if ($pay_method->payment_type == "flutterwave") {
-                    if ($pay_method->api_publishable_key == "") {
+                    if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("flutterwave", $pay_method)->missing()) { // own keys or a subaccount
                         $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('flutterwave_settings_not_available') . '</div>');
                         redirect($_SERVER['HTTP_REFERER']);
                     } else {
@@ -336,6 +336,16 @@ class Payment extends Studentgateway_Controller
                     } else {
                         $this->session->set_userdata("params", $params);
                         redirect(base_url("user/gateway/payhere"));
+                    }
+                } else if (in_array($pay_method->payment_type, array("monnify", "interswitch", "remita"), true)) {
+                    // Built on Online_fee_payment (the school's own keys, checked here before leaving).
+                    $this->load->library("Payment_gateways");
+                    if ($this->payment_gateways->for_school($pay_method->payment_type, $pay_method)->missing()) {
+                        $this->session->set_flashdata("error", "<div class=\"alert alert-danger\">" . Payment_gateways::name($pay_method->payment_type) . " is not fully set up yet. Please contact the school.</div>");
+                        redirect($_SERVER["HTTP_REFERER"]);
+                    } else {
+                        $this->session->set_userdata("params", $params);
+                        redirect(base_url("user/gateway/" . $pay_method->payment_type));
                     }
                 } else if ($pay_method->payment_type == "onepay") {
                     if ($pay_method->api_publishable_key == "") {
@@ -534,7 +544,7 @@ class Payment extends Studentgateway_Controller
                     } else if ($pay_method->payment_type == "paystack") {
                         ///=====================
 
-                        if ($pay_method->api_secret_key == "") {
+                        if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("paystack", $pay_method)->missing()) { // own keys or a subaccount
                             $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paystack_settings_not_available') . '</div>');
                             redirect($_SERVER['HTTP_REFERER']);
                         } else {
@@ -615,7 +625,7 @@ class Payment extends Studentgateway_Controller
                             redirect(base_url("user/gateway/pesapal"));
                         }
                     } else if ($pay_method->payment_type == "flutterwave") {
-                        if ($pay_method->api_publishable_key == "") {
+                        if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("flutterwave", $pay_method)->missing()) { // own keys or a subaccount
                             $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('flutterwave_settings_not_available') . '</div>');
                             redirect($_SERVER['HTTP_REFERER']);
                         } else {
@@ -717,6 +727,16 @@ class Payment extends Studentgateway_Controller
                         } else {
                             $this->session->set_userdata("params", $params);
                             redirect(base_url("user/gateway/payhere"));
+                        }
+                    } else if (in_array($pay_method->payment_type, array("monnify", "interswitch", "remita"), true)) {
+                        // Built on Online_fee_payment (the school's own keys, checked here before leaving).
+                        $this->load->library("Payment_gateways");
+                        if ($this->payment_gateways->for_school($pay_method->payment_type, $pay_method)->missing()) {
+                            $this->session->set_flashdata("error", "<div class=\"alert alert-danger\">" . Payment_gateways::name($pay_method->payment_type) . " is not fully set up yet. Please contact the school.</div>");
+                            redirect($_SERVER["HTTP_REFERER"]);
+                        } else {
+                            $this->session->set_userdata("params", $params);
+                            redirect(base_url("user/gateway/" . $pay_method->payment_type));
                         }
                     } else if ($pay_method->payment_type == "onepay") {
                         if ($pay_method->api_publishable_key == "") {
@@ -822,7 +842,7 @@ class Payment extends Studentgateway_Controller
                 //==========End Paypal==========
             } else if ($pay_method->payment_type == "paystack") {
                 ///=====================
-                if ($pay_method->api_secret_key == "") {
+                if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("paystack", $pay_method)->missing()) { // own keys or a subaccount
                     $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paystack_settings_not_available') . '</div>');
                     redirect($_SERVER['HTTP_REFERER']);
                 } else {
@@ -900,7 +920,7 @@ class Payment extends Studentgateway_Controller
                     redirect(base_url("students/pesapal"));
                 }
             } else if ($pay_method->payment_type == "flutterwave") {
-                if ($pay_method->api_publishable_key == "") {
+                if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("flutterwave", $pay_method)->missing()) { // own keys or a subaccount
                     $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('flutterwave_settings_not_available') . '</div>');
                     redirect($_SERVER['HTTP_REFERER']);
                 } else {

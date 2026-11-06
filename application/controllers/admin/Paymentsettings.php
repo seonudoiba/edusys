@@ -4,6 +4,8 @@ if (!defined('BASEPATH')) {
     exit('No direct script access allowed');
 }
 
+require_once APPPATH . 'libraries/payments/Payment_gateway.php';
+
 class Paymentsettings extends Admin_Controller
 {
 
@@ -669,6 +671,174 @@ public function onepay()
         }
     }
     
+    // ------------------------------------------------------------------ subaccounts (no keys for the school)
+
+    /**
+     * Banks for the subaccount form (JSON). The platform's key is used: the school has none.
+     * /admin/paymentsettings/banks/<paystack|flutterwave>
+     */
+    public function banks($gateway = '')
+    {
+        $driver = $this->subaccount_driver($gateway);
+        try {
+            $out = array('ok' => true, 'banks' => $driver->banks());
+        } catch (Payment_gateway_error $e) {
+            $out = array('ok' => false, 'message' => $e->getMessage());
+        }
+        $this->output->set_content_type('application/json')->set_output(json_encode($out));
+    }
+
+    /** The account holder's name for a bank and account number (JSON, POST gateway, bank, account). */
+    public function resolve_account()
+    {
+        $driver = $this->subaccount_driver((string) $this->input->post('gateway'));
+        list($bank, $account) = $this->bank_and_account();
+        try {
+            $out = array('ok' => true, 'name' => $driver->resolve_account($bank, $account));
+        } catch (Payment_gateway_error $e) {
+            $out = array('ok' => false, 'message' => $e->getMessage());
+        }
+        $this->output->set_content_type('application/json')->set_output(json_encode($out));
+    }
+
+    /**
+     * Creates the school's subaccount on the platform's Paystack/Flutterwave account and saves it
+     * (JSON, POST gateway, bank, account, business_name). Payments then settle to that bank account.
+     */
+    public function subaccount()
+    {
+        $gateway = (string) $this->input->post('gateway');
+        $driver = $this->subaccount_driver($gateway);
+        list($bank, $account) = $this->bank_and_account();
+        $setting = $this->setting_model->get();
+        $school = $setting ? $setting[0] : array();
+        $business = trim((string) $this->input->post('business_name'));
+        if ($business === '') {
+            $business = isset($school['name']) ? $school['name'] : 'School';
+        }
+        $business = mb_substr($business, 0, 100);
+        $email = isset($school['email']) ? (string) $school['email'] : '';
+        $phone = isset($school['phone']) ? preg_replace('/[^0-9+]/', '', (string) $school['phone']) : '';
+        try {
+            $name = $driver->resolve_account($bank, $account);
+            $percent = Payment_gateways::platform_split_percent();
+            $code = $gateway === 'flutterwave'
+                ? $driver->create_subaccount($business, $bank, $account, $percent, $email, $phone)
+                : $driver->create_subaccount($business, $bank, $account, $percent, $email);
+        } catch (Payment_gateway_error $e) {
+            return $this->json(array('st' => 1, 'msg' => array('subaccount' => $e->getMessage())));
+        }
+        $this->paymentsetting_model->add(array(
+            'payment_type' => $gateway,
+            'api_secret_key' => '',          // no own keys: the subaccount is used (Payment_gateways::for_school)
+            'api_publishable_key' => '',
+            'api_signature' => $code,
+            'api_username' => $bank,
+            'account_no' => $account,
+            'api_email' => mb_substr($name, 0, 200),
+            'salt' => '', 'paypal_demo' => '', 'paytm_website' => '', 'paytm_industrytype' => '',
+        ));
+        $this->json(array('st' => 0, 'msg' => 'Done: payments will settle to ' . $name . ' (' . $account . '). Now choose '
+            . Payment_gateways::name($gateway) . ' under Select payment gateway.'));
+    }
+
+    /** The platform's driver for subaccount pages, or 404 when the platform has no key for it. */
+    private function subaccount_driver($gateway)
+    {
+        if (!$this->rbac->hasPrivilege('payment_methods', 'can_edit')) {
+            access_denied();
+        }
+        $this->load->library('Payment_gateways');
+        if (!$this->payment_gateways->subaccounts_available($gateway)) {
+            show_404();
+        }
+        return $this->payment_gateways->for_platform($gateway);
+    }
+
+    /** [bank code, 10-digit account number] from the POST, or a JSON error. */
+    private function bank_and_account()
+    {
+        $bank = preg_replace('/[^0-9A-Za-z]/', '', (string) $this->input->post('bank'));
+        $account = preg_replace('/\D/', '', (string) $this->input->post('account'));
+        if ($bank === '' || strlen($account) !== 10) {
+            $this->json(array('ok' => false, 'st' => 1, 'message' => 'Choose the bank and enter the 10-digit account number (NUBAN).',
+                'msg' => array('subaccount' => 'Choose the bank and enter the 10-digit account number (NUBAN).')));
+            exit;
+        }
+        return array($bank, $account);
+    }
+
+    private function json(array $data)
+    {
+        $this->output->set_content_type('application/json')->set_output(json_encode($data))->_display();
+        exit;
+    }
+    // ------------------------------------------------------------------ Nigerian gateways (Online_fee_payment)
+
+    /** Monnify: API key, secret key, contract code, test/live. */
+    public function monnify()
+    {
+        $this->save_gateway('monnify', array(
+            'monnify_api_key' => array('API key', 'api_publishable_key'),
+            'monnify_secret_key' => array('Secret key', 'api_secret_key'),
+            'monnify_contract_code' => array('Contract code', 'account_no'),
+        ));
+    }
+
+    /** Interswitch Web Checkout: merchant code, pay item id, test/live. */
+    public function interswitch()
+    {
+        $this->save_gateway('interswitch', array(
+            'interswitch_merchant_code' => array('Merchant code', 'api_username'),
+            'interswitch_pay_item_id' => array('Pay item ID', 'account_no'),
+        ));
+    }
+
+    /** Remita: merchant ID, service type ID, API key, test/live. */
+    public function remita()
+    {
+        $this->save_gateway('remita', array(
+            'remita_merchant_id' => array('Merchant ID', 'api_username'),
+            'remita_service_type_id' => array('Service type ID', 'account_no'),
+            'remita_api_key' => array('API key', 'api_secret_key'),
+        ));
+    }
+
+    /**
+     * Saves a gateway's keys (AJAX, same answers as the other gateways). $fields maps
+     * form field => [label, payment_settings column]; "<gateway>_mode" (0 test, 1 live) goes to gateway_mode.
+     */
+    private function save_gateway($gateway, array $fields)
+    {
+        if (!$this->rbac->hasPrivilege('payment_methods', 'can_edit')) {
+            access_denied();
+        }
+        $this->form_validation->set_error_delimiters('', '');
+        foreach ($fields as $field => $spec) {
+            $this->form_validation->set_rules($field, $spec[0], 'trim|required|max_length[200]|xss_clean');
+        }
+        $this->form_validation->set_rules($gateway . '_mode', 'Mode', 'trim|in_list[0,1]');
+        if (!$this->form_validation->run()) {
+            $errors = array();
+            foreach ($fields as $field => $spec) {
+                $errors[$field] = form_error($field);
+            }
+            echo json_encode(array('st' => 1, 'msg' => $errors));
+            return;
+        }
+        $data = array('payment_type' => $gateway, 'gateway_mode' => (int) $this->input->post($gateway . '_mode') === 1 ? 1 : 0);
+        foreach ($fields as $field => $spec) {
+            $data[$spec[1]] = $this->input->post($field);
+        }
+        foreach (array('api_secret_key', 'salt', 'api_publishable_key', 'paypal_demo', 'account_no', 'paytm_website', 'paytm_industrytype') as $not_null) {
+            if (!isset($data[$not_null])) {
+                $data[$not_null] = ''; // NOT NULL columns without a default
+            }
+        }
+        $this->paymentsetting_model->add($data);
+        echo json_encode(array('st' => 0, 'msg' => $this->lang->line('update_message')));
+    }
+
     public function setting()
     {
         $this->form_validation->set_error_delimiters('', '');

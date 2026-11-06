@@ -165,9 +165,12 @@
                                                         </label><small class="req"> *</small>
                                                         <select id="payment_method" name="payment_method" class="form-control">
                                                             <option value="">Select Payment Method</option>
-                                                            <option value="paystack" <?php echo set_select('payment_method', 'paystack'); ?>>
-                                                                <?php echo $this->lang->line('paystack_payment'); ?>
-                                                            </option>
+                                                            <?php // The online gateways the platform has keys for (Payment_gateways::PLATFORM_ENV).
+                                                            foreach ((isset($online_methods) ? $online_methods : array()) as $method_id => $method_name) { ?>
+                                                                <option value="<?php echo html_escape($method_id); ?>" <?php echo set_select('payment_method', $method_id); ?>>
+                                                                    Pay online with <?php echo html_escape($method_name); ?> (card, transfer, USSD)
+                                                                </option>
+                                                            <?php } ?>
                                                             <option value="bank_transfer" <?php echo set_select('payment_method', 'bank_transfer'); ?>>
                                                                 Bank transfer (upload receipt)
                                                             </option>

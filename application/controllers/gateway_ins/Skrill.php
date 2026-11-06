@@ -15,6 +15,18 @@ class Skrill extends Front_Controller
 
     public function index()
     {
+        // Skrill signs its status notification: md5sig = MD5(merchant_id . transaction_id . MD5(secret word)
+        // . mb_amount . mb_currency . status), upper case. Anything else is refused (it could be forged).
+        $details = $this->gateway_ins_model->get_gateway_details('skrill');
+        $secret = $details ? trim((string) $details->salt) : '';
+        $p = function ($k) { return isset($_POST[$k]) ? (string) $_POST[$k] : ''; };
+        $expected = strtoupper(md5($p('merchant_id') . $p('transaction_id') . strtoupper(md5($secret)) . $p('mb_amount') . $p('mb_currency') . $p('status')));
+        if ($secret === '' || !hash_equals($expected, strtoupper($p('md5sig')))
+            || ($details && $details->api_email !== '' && strcasecmp($p('pay_to_email'), $details->api_email) !== 0)) {
+            log_message('error', 'Skrill notification refused: bad signature (transaction ' . $p('transaction_id') . ')');
+            set_status_header(403);
+            exit('refused');
+        }
         $refno    = $_POST['transaction_id'];
        $order_id = $_POST['transaction_id'];
        $status   = $_POST['status'];

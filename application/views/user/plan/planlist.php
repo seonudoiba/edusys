@@ -52,9 +52,18 @@ $result =   $this->customlib->getLoggedInUserData();
                                   </li>
                                 <?php } ?>
 
-                                <li class="grey d-flex justify-content-center">
-                                  <a href="<?php echo base_url(); ?>subscription/edit?plan_id=<?php echo $value['plan_id']; ?>&school_id=<?php echo $school_id; ?>"
-                                    class="button">Buy Now</a>
+                                <li class="grey d-flex justify-content-center" style="flex-wrap:wrap;gap:6px">
+                                  <?php // One button per online gateway the platform has keys for.
+                                  $CI_pg = &get_instance();
+                                  $CI_pg->load->library('Payment_gateways');
+                                  $renew_methods = $CI_pg->payment_gateways->platform_enabled();
+                                  if (!$renew_methods) { ?>
+                                    <span>Online payment is not available: contact us to renew by bank transfer.</span>
+                                  <?php }
+                                  foreach ($renew_methods as $method_id => $method_name) { ?>
+                                    <a href="<?php echo base_url(); ?>subscription/edit?plan_id=<?php echo (int) $value['plan_id']; ?>&school_id=<?php echo (int) $school_id; ?>&method=<?php echo html_escape($method_id); ?>"
+                                      class="button"><?php echo count($renew_methods) > 1 ? 'Pay with ' . html_escape($method_name) : 'Buy Now'; ?></a>
+                                  <?php } ?>
                                 </li>
                               </ul>
                             </div>

@@ -16,6 +16,11 @@ class Twocheckout extends Front_Controller
     public function index()
     {
 
+        // This handler trusted a posted "status" without any signature, so anyone could mark fees paid.
+        // 2Checkout (Verifone) notifications need HMAC verification, which isn't implemented: refuse.
+        log_message('error', '2Checkout notification refused: unverified notifications are not accepted');
+        set_status_header(403);
+        exit('refused');
         $refno    = $_POST['refno'];
         $order_id = $_POST['order_id'];
         $status   = $_POST['status'];
