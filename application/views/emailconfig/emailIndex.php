@@ -22,6 +22,7 @@
                                 ?>
                             <?php } ?>   
                             <?php echo $this->customlib->getCSRF(); ?>
+                            <div class="col-md-12"><p class="text-muted">Your school's emails are sent through EduSYS, with replies going to your school's email address. Enter your own SMTP or SES account here only if you want to send through it instead.</p></div>
                             <div class="form-group">
                                 <label class="control-label col-md-3 col-sm-3 col-xs-12" for="exampleInputEmail1">
                                     <?php echo $this->lang->line('email_engine'); ?>

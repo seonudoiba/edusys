@@ -1461,7 +1461,7 @@ class Course extends Front_Controller
 
         if ($user) {
             //if the code is valid then display the password reset form
-            $this->form_validation->set_rules('password', $this->lang->line('password'), 'required');
+            $this->form_validation->set_rules('password', $this->lang->line('password'), 'required|min_length[8]');
             $this->form_validation->set_rules('confirm_password', $this->lang->line('confirm_password'), 'required|matches[password]');
             if ($this->form_validation->run() == false) {
 
@@ -1475,11 +1475,8 @@ class Course extends Front_Controller
 
                 $update_record['verification_code'] = '';
 
-                if ($role != 'guest') {
-                    $update_record['password'] = $this->input->post('password');
-                } else {
-                    $update_record['password'] = $this->enc_lib->passHashEnc($this->input->post('password'));
-                }
+                $update_record['password'] = $this->enc_lib->passHashEnc($this->input->post('password'));
+                $update_record['must_change_password'] = 0;
 
                 if ($role == 'student') {
                     $update_record['id'] = $user->user_tbl_id;
@@ -1492,7 +1489,7 @@ class Course extends Front_Controller
                     $table = 'users';
                 }
 
-                $change = $this->studentcourse_model->savenewpassword($table, $update_record);
+                $change = $this->studentcourse_model->savenewpassword($update_record, $table);
                 if ($change) {
                     //if the password was successfully changed
                     $this->session->set_flashdata('message', $this->lang->line('password_reset_successfully'));

@@ -9,4 +9,5 @@ ENV_FILE=${ENV_FILE:-/etc/edusys/edusys.env}
 set -a; . "$ENV_FILE"; set +a
 [ -d "$APP_ROOT/current" ] || { echo "No Edusys release yet ($APP_ROOT/current)." >&2; exit 0; }
 cd "$APP_ROOT/current"
+umask 002 # folders and files stay writable by the web server (group www-data)
 exec php index.php "$@"

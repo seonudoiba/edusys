@@ -48,6 +48,26 @@ class MY_Controller extends CI_Controller
 
 }
 
+/** A student, parent or school owner still on a password someone else knows goes to the change-password page. */
+function require_own_password($CI)
+{
+    $user = $CI->session->userdata('student');
+    if (empty($user['id'])) {
+        return;
+    }
+    $class = $CI->router->fetch_class();
+    $method = $CI->router->fetch_method();
+    $guest = isset($user['role']) && $user['role'] === 'guest';
+    if ($guest ? ($class === 'studentcourse' && in_array($method, array('changeguestpass', 'updateguestpass'), true)) : ($class === 'user' && in_array($method, array('changepass', 'choose'), true))) {
+        return;
+    }
+    $row = $CI->db->select('must_change_password')->where('id', (int) $user['id'])->get($guest ? 'guest' : 'users')->row();
+    if ($row && (int) $row->must_change_password === 1) {
+        $CI->session->set_flashdata('msg', '<div class="alert alert-info">Please choose your own password to continue.</div>');
+        redirect($guest ? 'user/studentcourse/changeguestpass' : 'user/user/changepass');
+    }
+}
+
 class Admin_Controller extends MY_Controller
 {
 
@@ -57,6 +77,7 @@ class Admin_Controller extends MY_Controller
     {
         parent::__construct();
         $this->auth->is_logged_in();
+        $this->require_own_staff_password();
         $this->check_license();
         $this->load->library('rbac');
         $this->config->load('app-config');
@@ -109,6 +130,20 @@ class Admin_Controller extends MY_Controller
         $this->config->set_item('SSLK', '');
     }
 
+
+    /** Staff still on the generated password choose their own. Platform support signed in as them doesn't. */
+    private function require_own_staff_password()
+    {
+        if ($this->session->userdata('impersonated_by') || ($this->router->fetch_class() === 'admin' && $this->router->fetch_method() === 'changepass')) {
+            return;
+        }
+        $admin = $this->session->userdata('admin');
+        $row = $this->db->select('must_change_password')->where('id', (int) $admin['id'])->get('staff')->row();
+        if ($row && (int) $row->must_change_password === 1) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-info">Please choose your own password to continue.</div>');
+            redirect('admin/admin/changepass');
+        }
+    }
 }
 
 class Student_Controller extends MY_Controller
@@ -128,6 +163,7 @@ class Student_Controller extends MY_Controller
         $this->load->library('cart');
         $this->config->load('app-config');
         $this->auth->is_logged_in_user('student');
+        require_own_password($this);
         $is_lock_panel = check_lock_enabled();
 
         if ($is_lock_panel) {
@@ -140,8 +176,11 @@ class Student_Controller extends MY_Controller
                     || $active_method == "getcollectfee"
                     || $active_method == "change_currency"
                     || $active_method == "user_language"
+                    || $active_method == "changepass"
 
                 ))
+
+                || ($active_class == "studentcourse" && in_array($active_method, array("changeguestpass", "updateguestpass"), true))
 
                 || ($active_class == "offlinepayment" && (
                     $active_method == "index"
@@ -168,6 +207,7 @@ class Studentgateway_Controller extends MY_Controller
         $this->load->library('studentmodule_lib');
         $this->config->load('app-config');
         $this->auth->is_logged_in_user('student');
+        require_own_password($this);
 
     }
 
@@ -215,6 +255,7 @@ class Parent_Controller extends MY_Controller
     {
         parent::__construct();
         $this->auth->is_logged_in_user('parent');
+        require_own_password($this);
         $this->config->load('app-config');
         $this->load->library('parentmodule_lib');
     }

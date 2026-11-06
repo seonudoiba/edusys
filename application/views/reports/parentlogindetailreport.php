@@ -60,7 +60,6 @@
                                         <th><?php echo $this->lang->line('admission_no'); ?></th>
                                         <th><?php echo $this->lang->line('student_name'); ?></th>
                                         <th><?php echo $this->lang->line('parent_username'); ?></th>
-                                        <th><?php echo $this->lang->line('parent_password'); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>

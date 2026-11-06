@@ -16,21 +16,21 @@ class Role {
     }
 
     public function get_random_password($chars_min = 6, $chars_max = 8, $use_upper_case = false, $include_numbers = false, $include_special_chars = false) {
-        $length = rand($chars_min, $chars_max);
-        $selection = 'aeuoyibcdfghjklmnpqrstvwxz';
+        $length = max(10, random_int($chars_min, $chars_max)); // never shorter than 10, whatever the caller asks
+        $selection = 'aeuoyibcdfghjkmnpqrstvwxz';
         if ($include_numbers) {
-            $selection .= "1234567890";
+            $selection .= "23456789";
         }
         if ($include_special_chars) {
-            $selection .= "!@\"#$%&[]{}?|";
+            $selection .= "!@#$%&?";
         }
 
         $password = "";
         for ($i = 0; $i < $length; $i++) {
-            $current_letter = $use_upper_case ? (rand(0, 1) ? strtoupper($selection[(rand() % strlen($selection))]) : $selection[(rand() % strlen($selection))]) : $selection[(rand() % strlen($selection))];
-            $password .= $current_letter;
+            $letter = $selection[random_int(0, strlen($selection) - 1)];
+            $password .= $use_upper_case && random_int(0, 1) ? strtoupper($letter) : $letter;
         }
         return $password;
-    }
+}
 
 }

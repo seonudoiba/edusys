@@ -84,7 +84,7 @@ if (!function_exists('upload_init_school')) {
             $folders = (array) $CI->config->item('upload_folders', 'uploads');
             foreach ($folders as $folder) {
                 if (!is_dir($dir . $folder)) {
-                    @mkdir($dir . $folder, 0755, true);
+                    @mkdir($dir . $folder, 0775, true);
                 }
             }
             upload_copy_defaults(FCPATH . 'uploads/_shared/', $dir);
@@ -110,7 +110,7 @@ if (!function_exists('upload_copy_defaults')) {
             }
             if (is_dir($from . $name)) {
                 if (!is_dir($to . $name)) {
-                    @mkdir($to . $name, 0755, true);
+                    @mkdir($to . $name, 0775, true);
                 }
                 upload_copy_defaults($from . $name . '/', $to . $name . '/');
             } elseif (!is_file($to . $name)) {

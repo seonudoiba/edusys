@@ -1078,7 +1078,7 @@ class Studentcourse_model extends MY_Model {
 
     public function getstudentbyemail($table, $role, $email)
     {
-        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username,users.password as `user_tbl_password`');
+        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username');
         $this->db->from($table);
         $this->db->join('users', 'users.user_id = ' . $table . '.id', 'left');
         $this->db->where('users.role', $role);
@@ -1099,7 +1099,7 @@ class Studentcourse_model extends MY_Model {
 
     public function getparentbyemail($table, $role, $email)
     {
-        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username,users.password as `user_tbl_password`');
+        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username');
         $this->db->from($table);
         $this->db->join('users', 'users.id = ' . $table . '.parent_id', 'left');
         $this->db->where('users.role', $role);
@@ -1138,7 +1138,7 @@ class Studentcourse_model extends MY_Model {
 
     public function getparentvalidcode($table, $role, $code)
     {
-        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username,users.password as `user_tbl_password`');
+        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username');
         $this->db->from($table);
         $this->db->join('users', 'users.id = ' . $table . '.parent_id', 'left');
         $this->db->where('users.role', $role);
@@ -1154,7 +1154,7 @@ class Studentcourse_model extends MY_Model {
 
     public function getuservalidcode($table, $role, $code)
     {
-        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username,users.password as `user_tbl_password`');
+        $this->db->select($table . '.*,users.id as `user_tbl_id`,users.username');
         $this->db->from($table);
         $this->db->join('users', 'users.user_id = ' . $table . '.id', 'left');
         $this->db->where('users.role', $role);
@@ -1180,10 +1180,10 @@ class Studentcourse_model extends MY_Model {
         }
     }
 
-    public function savenewpassword($data)
+    public function savenewpassword($data, $table = 'guest')
     {
         $this->db->where('id', $data['id']);
-        $query = $this->db->update('guest', $data);
+        $query = $this->db->update($table, $data);
         if ($query) {
             return true;
         } else {

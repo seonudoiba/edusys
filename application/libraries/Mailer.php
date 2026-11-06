@@ -21,9 +21,24 @@ class Mailer
     {
         $this->CI = &get_instance();
         $this->CI->load->model('emailconfig_model');
-        $this->CI->mail_config = $this->CI->emailconfig_model->getActiveEmail();
+        $this->CI->mail_config = $this->CI->emailconfig_model->getSendingConfig();
         $this->CI->load->model('setting_model');
         $this->sch_setting = $this->CI->setting_model->get();
+    }
+
+    /** A school on the platform's mail server sends from the platform's address; replies go to the school. */
+    private function set_sender($mail, $school_name, $school_email)
+    {
+        $config = $this->CI->mail_config;
+        if (empty($config->platform_default)) {
+            $mail->SetFrom($config->smtp_username, $school_name);
+            $mail->AddReplyTo($config->smtp_username, $config->smtp_username);
+            return;
+        }
+        $mail->SetFrom($config->from_email, $school_name);
+        if (filter_var($school_email, FILTER_VALIDATE_EMAIL)) {
+            $mail->AddReplyTo($school_email, $school_name);
+        }
     }
 
     public function send_mail_marksheet($toemail, $subject, $body, $file, $file_name, $cc = "")
@@ -70,8 +85,8 @@ class Mailer
                 $mail->Port       = $this->CI->mail_config->smtp_port;
                 $mail->Username   = $this->CI->mail_config->smtp_username;
                 $mail->Password   = $this->CI->mail_config->smtp_password;
-                $mail->SetFrom($this->CI->mail_config->smtp_username, $school_name);
-                $mail->AddReplyTo($this->CI->mail_config->smtp_username, $this->CI->mail_config->smtp_username);
+                $mail->Timeout    = 20;
+                $this->set_sender($mail, $school_name, $school_email);
              
             } else {
 
@@ -154,8 +169,8 @@ class Mailer
                 $mail->Port       = $this->CI->mail_config->smtp_port;
                 $mail->Username   = $this->CI->mail_config->smtp_username;
                 $mail->Password   = $this->CI->mail_config->smtp_password;
-                $mail->SetFrom($this->CI->mail_config->smtp_username, $school_name);
-                $mail->AddReplyTo($this->CI->mail_config->smtp_username, $this->CI->mail_config->smtp_username);
+                $mail->Timeout    = 20;
+                $this->set_sender($mail, $school_name, $school_email);
             } else {
                 $mail->From = $school_email;
                 $mail->FromName = $school_name;
@@ -242,8 +257,8 @@ class Mailer
                 $mail->Port       = $this->CI->mail_config->smtp_port;
                 $mail->Username   = $this->CI->mail_config->smtp_username;
                 $mail->Password   = $this->CI->mail_config->smtp_password;
-                $mail->SetFrom($this->CI->mail_config->smtp_username, $school_name);
-                $mail->AddReplyTo($this->CI->mail_config->smtp_username, $this->CI->mail_config->smtp_username);
+                $mail->Timeout    = 20;
+                $this->set_sender($mail, $school_name, $school_email);
             } else {
                 $mail->From = $school_email;
                 $mail->FromName = $school_name;

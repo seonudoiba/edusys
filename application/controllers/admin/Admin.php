@@ -515,7 +515,7 @@ class Admin extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'changepass/index');
         $data['title'] = 'Change Password';
         $this->form_validation->set_rules('current_pass', $this->lang->line("current_password"), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('new_pass', $this->lang->line("new_password"), 'trim|required|xss_clean|matches[confirm_pass]');
+        $this->form_validation->set_rules('new_pass', $this->lang->line("new_password"), 'trim|required|min_length[8]|xss_clean|matches[confirm_pass]');
         $this->form_validation->set_rules('confirm_pass', $this->lang->line("confirm_password"), 'trim|required|xss_clean');
         if ($this->form_validation->run() == false) {
             $sessionData            = $this->session->userdata('admin');
@@ -537,6 +537,7 @@ class Admin extends Admin_Controller
             $newdata = array(
                 'id'       => $sessionData['id'],
                 'password' => $this->enc_lib->passHashEnc($this->input->post('new_pass')),
+                'must_change_password' => 0,
             );
             $check  = $this->enc_lib->passHashDyc($this->input->post('current_pass'), $userdata["password"]);
             $query1 = $this->admin_model->checkOldPass($data_array);

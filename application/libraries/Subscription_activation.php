@@ -117,7 +117,7 @@ class Subscription_activation
     private function create_guest(array $subscription, $school_id)
     {
         $db = $this->CI->db;
-        $guest_password = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $guest_password = bin2hex(random_bytes(5));
         $encrypt_password = $this->CI->enc_lib->passHashEnc($guest_password);
 
         $sql = "SELECT * FROM online_course_settings WHERE " . $db->school_filter('online_course_settings') . " ORDER BY id";
@@ -136,6 +136,7 @@ class Subscription_activation
             'guest_name' => $subscription['school_name'],
             'email' => $subscription['email_address'],
             'password' => $encrypt_password,
+            'must_change_password' => 1,
             'created_at' => date('Y-m-d'),
             'is_active' => 'yes',
             'lang_id' => $setting_result[0]['lang_id'],
