@@ -41,6 +41,12 @@ class Mailer
         }
     }
 
+    /** Failed sends go to the web server's error log (no addresses or message text). */
+    private function log_failure($mail, $subject)
+    {
+        error_log('Edusys school email failed [' . $subject . ']: ' . $mail->ErrorInfo);
+    }
+
     public function send_mail_marksheet($toemail, $subject, $body, $file, $file_name, $cc = "")
     {
         
@@ -107,9 +113,9 @@ class Mailer
             $mail->AddAddress($toemail);
             if ($mail->Send()) {
                 return true;
-            } else {
-                return false;
             }
+            $this->log_failure($mail, $subject);
+            return false;
         }
     }
 
@@ -200,12 +206,10 @@ class Mailer
             $mail->AltBody = $body;
             $mail->AddAddress($toemail);
             if ($mail->Send()) {
-
                 return true;
-            } else {
-
-                return false;
             }
+            $this->log_failure($mail, $subject);
+            return false;
         }
     }
 
@@ -283,7 +287,7 @@ class Mailer
                 $mail->send();
                 return true;
             } catch (Exception $e) {
-               // echo "Mailer Error: " . $mail->ErrorInfo;
+               $this->log_failure($mail, $subject);
                return false;
             }    
              
