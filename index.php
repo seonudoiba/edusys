@@ -55,6 +55,9 @@
  * NOTE: If you change these, also change the error_reporting() code below
  */
 
+// Local development settings from <project>/.env (only fills in what the server hasn't set).
+require_once __DIR__ . '/application/env_loader.php';
+
 define('ENVIRONMENT', 'production');
 
 if(isset($_GET['test'])){

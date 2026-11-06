@@ -39,6 +39,7 @@ application/backups/
 # Environment: credentials live in the server environment, never in the repository
 .env
 .env.*
+!.env.example
 
 # Sample school data: real personal data, password hashes, plaintext student/parent passwords
 # and payment test keys. Generate them locally with tools/tenancy/gen_seeds.php.
