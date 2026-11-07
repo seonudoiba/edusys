@@ -25,28 +25,18 @@
                                         <div class="form-group row">
                                             <label class="col-sm-3"><?php echo $this->lang->line('auto_admission_no'); ?></label>
                                             <div class="col-sm-9">
-                                                <label class="radio-inline">
-                                                    <input type="radio" name="adm_auto_insert" value="0" <?php
-                                                    if ($result->adm_auto_insert == 0) {
-                                                        echo "checked";
-                                                    }
-                                                    ?>  ><?php echo $this->lang->line('disabled'); ?>
-                                                </label>
-                                                <label class="radio-inline">
-                                                    <input type="radio" name="adm_auto_insert" value="1" <?php
-                                                    if ($result->adm_auto_insert == 1) {
-                                                        echo "checked";
-                                                    }
-                                                    ?> ><?php echo $this->lang->line('enabled'); ?>
-                                                </label>
+                                                <input type="hidden" name="adm_auto_insert" value="1">
+                                                <p class="form-control-static">Always on. Every new student gets the next free number, so numbers never clash.
+                                                    Next number: <b><?php echo html_escape($next_admission_no); ?></b></p>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
                                         <div class="form-group row">
-                                            <label class="col-sm-3"><?php echo $this->lang->line('admission_no_prefix'); ?><small class="req"> *</small></label>
+                                            <label class="col-sm-3"><?php echo $this->lang->line('admission_no_prefix'); ?></label>
                                             <div class="col-sm-9">
-                                                <input type="text" name="adm_prefix" id="adm_prefix" class="form-control" value="<?php echo $result->adm_prefix; ?>">
+                                                <input type="text" name="adm_prefix" id="adm_prefix" class="form-control" maxlength="40" value="<?php echo html_escape($result->adm_prefix); ?>">
+                                                <p class="help-block">Optional. Write {YEAR} for the year (2026) or {YY} for 26, for example ADM/{YEAR}/ gives ADM/2026/0001.</p>
                                                 <span class="text-danger"><?php echo form_error('adm_prefix'); ?></span>
                                             </div>
                                         </div>

@@ -299,6 +299,7 @@ class Seed_default_sidebar_sub_menus extends Seeder
             [900039, 38, 'billing_coupons', 'billing_coupons', 'coupons', 'admin/billing/coupons', 4, '(\'subscription_list\', \'can_view\')', 1204, 'billing', 'coupons,coupon', '', 1, '2026-11-05 00:00:00'],
             [900040, 38, 'billing_reports', 'billing_reports', 'reports', 'admin/billing/reports', 5, '(\'subscription_list\', \'can_view\')', 1204, 'billing', 'reports', '', 1, '2026-11-05 00:00:00'],
             [900047, 38, 'billing_bands', 'billing_bands', 'pricing_bands', 'admin/billing/bands', 2, '(\'subscription_list\', \'can_view\')', 1204, 'billing', 'bands', '', 1, '2026-11-05 00:00:00'],
+            [900048, 24, 'website_design', 'website_design', 'website_design', 'admin/front/design', 0, '(\'front_cms_setting\', \'can_view\')', null, 'design', 'index', '', 1, '2026-11-07 00:00:00'],
             [900042, 900041, 'platform_support_desk', 'platform_support_desk', 'support_desk', 'admin/support_desk', 1, '(\'platform_settings\', \'can_view\')', 900010, 'support_desk', 'index,view', '', 1, '2026-11-05 00:00:00'],
             [900043, 900041, 'platform_enquiries', 'platform_enquiries', 'website_enquiries', 'admin/enquiries', 2, '(\'platform_settings\', \'can_view\')', 900010, 'enquiries', 'index,view', '', 1, '2026-11-05 00:00:00'],
             [900044, 27, 'platform_backups', 'platform_backups', 'platform_backups', 'admin/backups', 0, '(\'platform_settings\', \'can_view\')', 900010, 'backups', 'index', '', 1, '2026-11-05 00:00:00'],

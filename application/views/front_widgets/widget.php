@@ -12,6 +12,9 @@ $rich = function ($v) use ($tokens) {
 };
 $href = function ($url) { return preg_match('~^(https?://|mailto:|tel:)~i', (string) $url) ? html_escape($url) : html_escape(site_url($url)); };
 $src = function ($url) { return preg_match('~^https?://~i', (string) $url) ? html_escape($url) : html_escape(base_url($url)); };
+// Text written on the page: already cleaned to basic formatting; {school_name} etc. filled in.
+$inline = function ($v) use ($tokens) { return strtr((string) $v, array_map('html_escape', $tokens)); };
+$align = function () use ($s) { return isset($s['align']) && $s['align'] !== 'left' ? ' style="text-align:' . ($s['align'] === 'right' ? 'right' : 'center') . '"' : ''; };
 $heading = function () use ($s, $e) { return !empty($s['title']) ? '<h2>' . $e($s['title']) . '</h2>' : ''; };
 $empty = function ($why) use ($preview, $label) {
     return $preview ? '<div class="pw-empty"><b>' . html_escape($label) . ':</b> ' . html_escape($why) . ' Visitors don\'t see this box.</div>' : '';
@@ -24,6 +27,56 @@ $card_image = function ($row, $fallback) use ($src) { return !empty($row['featur
 
 $out = '';
 switch ($type) {
+    case 'paragraph':
+        if (trim(strip_tags($s['html'], '<br>')) === '') { $out = $empty('This paragraph is empty.'); break; }
+        $out .= '<p' . $align() . '>' . $inline($s['html']) . '</p>';
+        break;
+
+    case 'heading':
+        if (trim(strip_tags($s['html'])) === '') { $out = $empty('This heading is empty.'); break; }
+        $level = in_array($s['level'], array('2', '3', '4'), true) ? $s['level'] : '2';
+        $out .= '<h' . $level . ' class="pw-h"' . $align() . '>' . $inline($s['html']) . '</h' . $level . '>';
+        break;
+
+    case 'list':
+        if ($s['html'] === '') { $out = $empty('This list is empty.'); break; }
+        $tag = !empty($s['ordered']) ? 'ol' : 'ul';
+        $out .= '<' . $tag . ' class="pw-ul">' . $inline($s['html']) . '</' . $tag . '>';
+        break;
+
+    case 'quote':
+        if (trim(strip_tags($s['html'])) === '') { $out = $empty('This quote is empty.'); break; }
+        $out .= '<blockquote class="pw-blockquote"><p>' . $inline($s['html']) . '</p>' . ($s['cite'] !== '' ? '<cite>' . $e($s['cite']) . '</cite>' : '') . '</blockquote>';
+        break;
+
+    case 'table':
+        $filled = false;
+        foreach ($s['rows'] as $row) { foreach ($row as $cell) { if ($cell !== '') { $filled = true; } } }
+        if (!$filled) { $out = $empty('This table is empty.'); break; }
+        $out .= '<div class="table-responsive"><table class="table table-bordered pw-table">';
+        foreach ($s['rows'] as $i => $row) {
+            $cell = $i === 0 && !empty($s['header']) ? 'th' : 'td';
+            $out .= '<tr>';
+            foreach ($row as $c) {
+                $out .= '<' . $cell . '>' . $e($c) . '</' . $cell . '>';
+            }
+            $out .= '</tr>';
+        }
+        $out .= '</table></div>';
+        break;
+
+    case 'separator':
+        $out .= '<hr class="pw-hr">';
+        break;
+
+    case 'image_gallery':
+        if (!$s['images']) { $out = $empty('Add images to this gallery.'); break; }
+        $out .= '<div class="pw-grid" style="--pw-cols:' . (int) $s['columns'] . '">';
+        foreach ($s['images'] as $img) {
+            $out .= '<img class="pw-img pw-gallery-img" src="' . $src($img['src']) . '" alt="' . $e($img['alt']) . '" loading="lazy">';
+        }
+        $out .= '</div>';
+        break;
     case 'banner':
         if (!$d) { $out = $empty('No banner images yet. Add them in Front CMS > Banner Images.'); break; }
         $out .= '<div id="' . $uid . '" class="carousel slide pw-carousel" data-ride="carousel" data-interval="5000"><div class="carousel-inner">';
@@ -140,14 +193,14 @@ switch ($type) {
 
     case 'image':
         if ($s['src'] === '') { $out = $empty('Choose an image.'); break; }
-        $img = '<img class="pw-img" src="' . $src($s['src']) . '" alt="' . $e($s['alt']) . '" loading="lazy">';
+        $img = '<img class="pw-img" src="' . $src($s['src']) . '" alt="' . (!empty($s['decorative']) ? '' : $e($s['alt'])) . '" loading="lazy">';
         $out .= $s['link'] !== '' ? '<a href="' . $href($s['link']) . '">' . $img . '</a>' : $img;
         break;
 
     case 'image_text':
         if ($s['src'] === '' && $s['title'] === '' && $s['body'] === '') { $out = $empty('Choose an image and write some text.'); break; }
         $out .= '<div class="pw-it' . ($s['side'] === 'right' ? ' pw-right' : '') . '"><div>'
-            . ($s['src'] !== '' ? '<img class="pw-img" src="' . $src($s['src']) . '" alt="" loading="lazy">' : '') . '</div><div>' . $heading() . $rich($s['body']) . '</div></div>';
+            . ($s['src'] !== '' ? '<img class="pw-img" src="' . $src($s['src']) . '" alt="' . $e($s['alt']) . '" loading="lazy">' : '') . '</div><div>' . $heading() . $rich($s['body']) . '</div></div>';
         break;
 
     case 'video':

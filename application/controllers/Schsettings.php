@@ -334,7 +334,7 @@ class Schsettings extends Admin_Controller
         $adm_start_from = $this->input->post('adm_start_from');
         $adm_no_digit   = $this->input->post('adm_no_digit');
         if ($adm_no_digit != "") {
-            if (strlen($adm_start_from) == $adm_no_digit) {
+            if (ctype_digit((string) $adm_start_from) && strlen($adm_start_from) <= $adm_no_digit) { // it is padded with zeros to that many digits
                 return true;
             }
             $this->form_validation->set_message('check_admission_digit', $this->lang->line('admission_start_from') . ' ' . $adm_no_digit . ' ' . $this->lang->line('digit_long'));
@@ -593,6 +593,8 @@ class Schsettings extends Admin_Controller
         $setting->folder_path = ($setting->folder_path == "") ? FCPATH : $setting->folder_path;
         $data['result']       = $setting;
         $this->load->view('layout/header');
+        $this->load->library('Student_numbers');
+        $data['next_admission_no'] = $this->student_numbers->next();
         $this->load->view('setting/idautogeneration', $data);
         $this->load->view('layout/footer');
     }
@@ -602,7 +604,7 @@ class Schsettings extends Admin_Controller
         $this->form_validation->set_rules('sch_id', 'Id', 'trim|required|xss_clean');
 
         if ($this->input->post('adm_auto_insert')) {
-            $this->form_validation->set_rules('adm_prefix', $this->lang->line('admission_no_prefix'), 'trim|required|xss_clean');
+            $this->form_validation->set_rules('adm_prefix', $this->lang->line('admission_no_prefix'), 'trim|max_length[40]|xss_clean');
             $this->form_validation->set_rules('adm_start_from', $this->lang->line('admission_start_from'), 'trim|integer|required|xss_clean');
             $this->form_validation->set_rules('adm_no_digit', $this->lang->line('admission_no_digit'), 'trim|integer|required|xss_clean|callback_check_admission_digit');
         }
@@ -632,7 +634,7 @@ class Schsettings extends Admin_Controller
                 'adm_start_from'      => $this->input->post('adm_start_from'),
                 'adm_prefix'          => $this->input->post('adm_prefix'),
                 'adm_no_digit'        => $this->input->post('adm_no_digit'),
-                'adm_auto_insert'     => $this->input->post('adm_auto_insert'),
+                'adm_auto_insert'     => 1, // always on (Student_numbers)
                 'staffid_start_from'  => $this->input->post('staffid_start_from'),
                 'staffid_prefix'      => $this->input->post('staffid_prefix'),
                 'staffid_no_digit'    => $this->input->post('staffid_no_digit'),

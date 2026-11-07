@@ -2252,5 +2252,19 @@
         "scope": "platform",
         "file": "276_add_student_band_pricing.php",
         "refs": []
+    },
+    {
+        "n": 278,
+        "table": "front_cms_page_revisions",
+        "scope": "tenant",
+        "file": "278_add_block_editor.php",
+        "refs": []
+    },
+    {
+        "n": 278,
+        "table": "front_cms_block_patterns",
+        "scope": "tenant",
+        "file": "278_add_block_editor.php",
+        "refs": []
     }
 ]

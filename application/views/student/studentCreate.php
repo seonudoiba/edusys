@@ -38,6 +38,13 @@ echo $this->session->flashdata('msg');
                                     <input type="hidden" name="sibling_name" value="<?php echo set_value('sibling_name'); ?>" id="sibling_name_next">
                                     <input type="hidden" name="sibling_id" value="<?php echo set_value('sibling_id', 0); ?>" id="sibling_id">
                                     <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><?php echo $this->lang->line('admission_no'); ?></label>
+                                                <input type="text" class="form-control" value="<?php echo html_escape(isset($next_admission_no) ? $next_admission_no : ''); ?>" readonly aria-describedby="admNoHelp">
+                                                <span id="admNoHelp" class="help-block" style="margin:4px 0 0">Given automatically when you save. Change the format in System Settings &gt; ID Auto Generation.</span>
+                                            </div>
+                                        </div>
                                         <?php if (!$adm_auto_insert) {?>
                                             <div class="col-md-3">
                                                 <div class="form-group">
@@ -78,7 +85,7 @@ if (set_value('class_id') == $class['id']) {
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <label for="exampleInputEmail1"><?php echo $this->lang->line('section'); ?></label><small class="req"> *</small>
+                                                <label for="exampleInputEmail1"><?php echo $this->lang->line('section'); ?></label><small class="text-muted"> (optional)</small>
                                                 <select  id="section_id" name="section_id" class="form-control" >
                                                     <option value=""   ><?php echo $this->lang->line('select'); ?></option>
                                                 </select>

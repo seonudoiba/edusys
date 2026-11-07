@@ -40,7 +40,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="exampleInputEmail1"><?php echo $this->lang->line('sections'); ?></label><small class="req"> *</small>
+                                    <label for="exampleInputEmail1"><?php echo $this->lang->line('sections'); ?></label><small class="text-muted"> (optional)</small><p class="help-block" style="margin:0 0 6px">Leave empty if your school doesn't use sections; students go in a section called General.</p>
 
 
                                     <?php

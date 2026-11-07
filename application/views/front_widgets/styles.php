@@ -54,5 +54,21 @@
     .pw-plan ul { list-style: none; padding: 0; margin: 0 0 14px; flex: 1; font-size: 14px; }
     .pw-plan li { padding: 5px 0; border-top: 1px solid #f0f0f0; }
     .pw-carousel .item img { width: 100%; max-height: 520px; object-fit: cover; }
+    .pw-pad-s { padding: 12px 0; }
+    .pw-pad-m { padding: 26px 0; }
+    .pw-pad-l { padding: 56px 0; }
+    .pw-section > .pw-inner > .pw-widget:last-child, .pw-columns .pw-widget:last-child { margin-bottom: 0; }
+    .pw-columns { row-gap: 18px; }
+    .pw-widget > p { margin: 0; }
+    .pw-h { margin: 0; }
+    .pw-ul { margin: 0; padding-left: 1.4em; }
+    .pw-ul li { margin-bottom: 4px; }
+    .pw-blockquote { margin: 0; padding: 4px 0 4px 18px; border-left: 3px solid currentColor; font-size: 1.15em; }
+    .pw-blockquote p { margin: 0; }
+    .pw-blockquote cite { display: block; margin-top: 8px; font-size: .8em; font-style: normal; opacity: .75; }
+    .pw-table { margin: 0; background: transparent; }
+    .pw-hr { margin: 6px 0; border: 0; border-top: 1px solid rgba(0, 0, 0, .15); }
+    .pw-bg-dark .pw-hr { border-top-color: rgba(255, 255, 255, .25); }
+    .pw-gallery-img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
     .pw-empty { border: 1px dashed #d9a400; background: #fff8e1; color: #6b5500; padding: 12px; border-radius: 4px; font-size: 13px; }
 </style>

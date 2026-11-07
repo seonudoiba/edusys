@@ -100,7 +100,7 @@
                                                         <?php
                                                         if ($this->rbac->hasPrivilege('pages', 'can_edit')) {
                                                             ?>
-                                                            <a href="<?php echo site_url('admin/front/page_builder/edit/' . (int) $page['id']); ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" title="Page builder: drag and drop widgets"><i class="fa fa-th-large"></i></a>
+                                                            <a href="<?php echo site_url('admin/front/page_builder/edit/' . (int) $page['id']); ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" title="Edit with the block editor"><i class="fa fa-th-large"></i></a>
                                                             <a href="<?php echo site_url('admin/front/page/edit/' . $page['slug']); ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">
                                                                 <i class="fa fa-pencil"></i>
                                                             </a>

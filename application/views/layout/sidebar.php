@@ -19,6 +19,12 @@
         <?php $this->load->view('layout/top_sidemenu'); ?>
 
         <ul class="sidebar-menu verttop">
+            <?php $on_dashboard = $this->router->fetch_class() === 'admin' && $this->router->fetch_method() === 'dashboard'; ?>
+            <li class="<?php echo $on_dashboard ? 'active' : ''; ?>">
+                <a href="<?php echo site_url('admin/admin/dashboard'); ?>"<?php echo $on_dashboard ? ' aria-current="page"' : ''; ?>>
+                    <i class="fa fa-tachometer"></i> <span><?php echo $this->lang->line('dashboard') ?: 'Dashboard'; ?></span>
+                </a>
+            </li>
 
             <!-- //==================sidebar dynamic======================= -->
             <?php
