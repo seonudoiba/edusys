@@ -1366,6 +1366,56 @@ class Welcome extends Front_Controller
         echo json_encode($array);
     }
 
+    /** The applicant's bank transfer of the form fee: their details and the receipt, for the school to confirm. */
+    public function admission_bank_transfer($reference_no = '')
+    {
+        $back = 'welcome/online_admission_review/' . $reference_no;
+        if ($this->input->method() !== 'post' || $this->session->userdata('validlogin') != $reference_no || !preg_match('/^\d{4,20}$/', (string) $reference_no)) {
+            show_404();
+        }
+        $application = $this->db->where('reference_no', $reference_no)->get('online_admissions')->row_array();
+        $this->load->library('School_bank_transfer');
+        $this->load->model('admission_bank_transfer_model');
+        if (!$application || $this->sch_setting_detail->online_admission_payment != 'yes' || !$this->school_bank_transfer->for_admission()) {
+            show_404();
+        }
+        if ((int) $application['paid_status'] !== 0) {
+            redirect($back); // paid, or a transfer is already being checked
+        }
+        $this->form_validation->set_rules('payer_name', 'Name on the account', 'trim|required|max_length[200]|xss_clean');
+        $this->form_validation->set_rules('payer_bank', 'Bank paid from', 'trim|required|max_length[200]|xss_clean');
+        $this->form_validation->set_rules('payment_date', 'Date of transfer', 'trim|required|regex_match[/^\d{4}-\d{2}-\d{2}$/]');
+        $this->form_validation->set_rules('reference', 'Transaction reference', 'trim|max_length[100]|xss_clean');
+        $error = null;
+        if (!$this->form_validation->run()) {
+            $error = strip_tags(validation_errors(' ', ' '));
+        } elseif (strtotime($this->input->post('payment_date')) > time()) {
+            $error = 'The date of transfer can\'t be in the future.';
+        } else {
+            $error = $this->admission_bank_transfer_model->receipt_upload_error('receipt');
+        }
+        $stored = $error === null ? $this->admission_bank_transfer_model->store_receipt('receipt') : null;
+        if ($error === null && !$stored) {
+            $error = 'The receipt could not be saved. Please try again.';
+        }
+        if ($error !== null) {
+            $this->session->set_flashdata('payment_error', trim($error));
+            redirect($back . '#bank-transfer');
+        }
+        $this->admission_bank_transfer_model->add((int) $application['id'], array(
+            'amount' => (float) $this->sch_setting_detail->online_admission_amount,
+            'currency' => (string) $this->sch_setting_detail->currency,
+            'payer_name' => $this->input->post('payer_name'),
+            'payer_bank' => $this->input->post('payer_bank'),
+            'payment_date' => $this->input->post('payment_date'),
+            'reference' => (string) $this->input->post('reference'),
+            'receipt_file' => $stored['file'],
+            'receipt_name' => $stored['name'],
+        ));
+        $this->session->set_flashdata('payment_ok', 'Thank you. We\'ve received your transfer details; the school will confirm the payment.');
+        redirect($back);
+    }
+
     /** Mark an application as sent and tell the applicant. Returns its reference number. */
     private function mark_submitted($admission_id)
     {

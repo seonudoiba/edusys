@@ -8,6 +8,7 @@
                        <h3 class="box-title titlefix"><?php echo $this->lang->line('payment_methods'); ?></h3>
                     </div>
                     <ul class="nav nav-tabs nav-tabs2">
+                        <li><a href="#tab_bank" data-toggle="tab"><i class="fa fa-university"></i> Bank transfer</a></li>
                         <li class="active"><a href="#tab_1" data-toggle="tab"><?php echo $this->lang->line('paypal'); ?></a></li>
                         <li><a href="#tab_2" data-toggle="tab"><?php echo $this->lang->line('stripe'); ?></a></li>
                         <li><a href="#tab_3" data-toggle="tab"><?php echo $this->lang->line('payu'); ?></a></li>
@@ -37,6 +38,59 @@
                         <li><a href="#tab_24" data-toggle="tab"><?php echo $this->lang->line('onepay'); ?></a></li>
                     </ul>
                     <div class="tab-content pb0">
+                        <div class="tab-pane" id="tab_bank">
+                            <?php $bt = $bank_transfer; $bt_msg = $this->session->flashdata('bank_transfer_msg'); ?>
+                            <form role="form" action="<?php echo site_url('admin/paymentsettings/bank_transfer'); ?>" class="form-horizontal" method="post">
+                                <div class="box-body">
+                                    <?php if (is_array($bt_msg)) { ?><div class="alert alert-<?php echo html_escape($bt_msg[0]); ?>"><?php echo html_escape($bt_msg[1]); ?></div><?php } ?>
+                                    <p class="text-muted">Payers transfer to your account and upload the receipt; you confirm it before it counts as paid.
+                                        This works alongside an online gateway, so people can choose either.</p>
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5" for="bt_bank_name">Bank name</label>
+                                                <div class="col-md-7"><input id="bt_bank_name" name="bank_name" type="text" maxlength="120" class="form-control" value="<?php echo html_escape($bt['bank_name']); ?>" placeholder="e.g. Access Bank"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5" for="bt_account_name">Account name</label>
+                                                <div class="col-md-7"><input id="bt_account_name" name="account_name" type="text" maxlength="160" class="form-control" value="<?php echo html_escape($bt['account_name']); ?>"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5" for="bt_account_number">Account number</label>
+                                                <div class="col-md-7"><input id="bt_account_number" name="account_number" type="text" maxlength="40" class="form-control" value="<?php echo html_escape($bt['account_number']); ?>"></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5" for="bt_note">Note for payers</label>
+                                                <div class="col-md-7"><textarea id="bt_note" name="note" rows="3" maxlength="1000" class="form-control" placeholder="Optional, e.g. Use the reference number as the transfer narration."><?php echo html_escape($bt['note']); ?></textarea></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-5">Accept bank transfer for</label>
+                                                <div class="col-md-7">
+                                                    <div class="checkbox"><label><input type="checkbox" name="admission" value="1"<?php echo $bt['admission'] ? ' checked' : ''; ?>> The online admission form fee</label></div>
+                                                    <div class="checkbox"><label><input type="checkbox" name="school_fees" value="1"<?php echo $bt['school_fees'] ? ' checked' : ''; ?>> School fees (students upload proof under Offline Bank Payments)</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="well well-sm">
+                                                <b>How it works</b>
+                                                <ol style="padding-left:18px;margin:8px 0 0">
+                                                    <li>The payer sees these bank details and the amount.</li>
+                                                    <li>They transfer the money and upload the receipt.</li>
+                                                    <li>Admission: you approve or reject it on the application (Student Information &gt; Online Admission).
+                                                        School fees: under Fees Collection &gt; Offline Bank Payments.</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer">
+                                    <div class="row"><div class="col-md-6 col-md-offset-3">
+                                        <?php if ($this->rbac->hasPrivilege('payment_methods', 'can_edit')) { ?><button type="submit" class="btn btn-primary" id="bank_transfer_save"><?php echo $this->lang->line('save'); ?></button><?php } ?>
+                                    </div></div>
+                                </div>
+                            </form>
+                        </div>
                         <div class="tab-pane active" id="tab_1">
                             <form role="form" id="paypal" action="<?php echo site_url('admin/paymentsettings/paypal') ?>" class="form-horizontal" method="post">
                                 <div class="box-body">
@@ -2628,4 +2682,7 @@ function check_in_array($find, $array)
             }, 'json').always(function () { $btn.button('reset'); });
         });
     });
+</script>
+<script>
+$(function () { if (location.hash === '#tab_bank') { $('a[href="#tab_bank"]').tab('show'); } });
 </script>

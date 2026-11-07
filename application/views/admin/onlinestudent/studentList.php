@@ -19,6 +19,18 @@
                         </div><!-- /.box-tools -->
                     </div><!-- /.box-header -->
                     <div class="box-body">
+                      <?php $oa_ci->load->model('admission_bank_transfer_model'); $oa_pending = $oa_ci->admission_bank_transfer_model->pending();
+                      if ($oa_pending) { ?>
+                        <div class="alert alert-warning" id="pending_transfers">
+                            <b><i class="fa fa-university"></i> <?php echo count($oa_pending); ?> bank transfer<?php echo count($oa_pending) === 1 ? '' : 's'; ?> to confirm</b>
+                            <ul style="margin:6px 0 0;padding-left:18px">
+                                <?php foreach ($oa_pending as $p) { ?>
+                                    <li><a href="<?php echo site_url('admin/onlinestudent/edit/' . (int) $p['admission_id']); ?>"><?php echo html_escape(trim($p['firstname'] . ' ' . $p['lastname'])); ?> (ref <?php echo html_escape($p['reference_no']); ?>)</a>
+                                        &middot; <?php echo html_escape($this->customlib->getSchoolCurrencyFormat() . amountFormat($p['amount'])); ?> from <?php echo html_escape($p['payer_name']); ?></li>
+                                <?php } ?>
+                            </ul>
+                        </div>
+                      <?php } ?>
                       <div class="table-responsive">
                         <div class="mailbox-messages">
                              <?php if ($this->session->flashdata('msg')) {
