@@ -66,6 +66,11 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
 </style>
 
 <div id="divtoprint" class="st-rev">
+    <?php if ($this->session->flashdata('payment_error')) { ?>
+        <div class="alert alert-danger st-rev-noprint" role="alert"><?php echo $e($this->session->flashdata('payment_error')); ?></div>
+    <?php } elseif ($this->session->flashdata('payment_ok')) { ?>
+        <div class="alert alert-success st-rev-noprint" role="status"><?php echo $e($this->session->flashdata('payment_ok')); ?></div>
+    <?php } ?>
     <div class="st-rev-printonly" style="display:none">
         <?php ob_start(); $this->setting_model->get_onlineadmissionheader(); $header = trim(ob_get_clean()); // it echoes the file name
         if ($header !== '') { ?><img src="<?php echo $e(base_url('uploads/print_headerfooter/online_admission_receipt/' . $header)); ?>" alt="" style="width:100%;max-height:120px;object-fit:contain"><?php } ?>
@@ -156,6 +161,9 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
         <?php }
     } ?>
 
+    <?php if ($is_admin && ($unpaid || !$sent)) { ?>
+        <p class="st-adm-muted st-rev-noprint" style="text-align:right">You're signed in as school staff, so the applicant's <?php echo $unpaid ? 'Pay button is' : 'buttons are'; ?> hidden here. The applicant sees <?php echo $unpaid ? 'it' : 'them'; ?> on this page.</p>
+    <?php } ?>
     <?php if (!$is_admin && ($unpaid || !$sent)) { ?>
         <div class="st-rev-action st-rev-noprint">
             <?php if ($unpaid) { ?>
