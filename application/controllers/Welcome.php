@@ -726,6 +726,10 @@ class Welcome extends Front_Controller
             $this->data['page'] = $page;
             $this->data['meta_title'] = 'Oline Admission Review';
             ///============
+            // Staff who filled the form in themselves (this browser made it) see the applicant's page, with Pay.
+            if ($status === 'admin' && $this->session->userdata('validlogin') == $reference_no) {
+                $status = '';
+            }
             $this->data['status'] = $status;
             $this->data['form_admission'] = $this->setting_model->getOnlineAdmissionStatus();
             $genderList = $this->customlib->getGender();

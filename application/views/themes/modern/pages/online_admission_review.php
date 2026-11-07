@@ -156,6 +156,9 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
         <?php }
     } ?>
 
+    <?php if ($is_admin && ($unpaid || !$sent)) { ?>
+        <p class="st-adm-muted st-rev-noprint" style="text-align:right">You're signed in as school staff, so the applicant's <?php echo $unpaid ? 'Pay button is' : 'buttons are'; ?> hidden here. The applicant sees <?php echo $unpaid ? 'it' : 'them'; ?> on this page.</p>
+    <?php } ?>
     <?php if (!$is_admin && ($unpaid || !$sent)) { ?>
         <div class="st-rev-action st-rev-noprint">
             <?php if ($unpaid) { ?>
