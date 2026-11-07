@@ -198,10 +198,10 @@ $is_captcha = !$editing && !empty($is_captcha);
                         <span>I agree to the <a href="#admissionTerms" data-toggle="modal" data-target="#admissionTerms">terms and conditions</a></span></label>
                     <?php $err = form_error('checkterm'); if ($err) { ?><span class="text-danger"><?php echo strip_tags($err); ?></span><?php } ?>
                 <?php } ?>
-                <button type="submit" class="onlineformbtn st-adm-go"><?php echo $editing ? 'Save changes' : ($fee > 0 ? 'Continue to payment' : 'Submit application'); ?></button>
+                <button type="submit" class="onlineformbtn st-adm-go"><?php echo $editing ? 'Save changes' : 'Submit application'; ?></button>
             </div>
         </div>
-        <p class="st-adm-muted st-adm-note">Fields marked <span class="req">*</span> are required.<?php if (!$editing && $fee > 0) { ?> Your application is sent once the form fee of <?php echo $e($this->customlib->getSchoolCurrencyFormat() . amountFormat($fee)); ?> is paid.<?php } ?></p>
+        <p class="st-adm-muted st-adm-note">Fields marked <span class="req">*</span> are required.<?php if (!$editing && $fee > 0) { ?> After you submit, you can pay the form fee of <?php echo $e($this->customlib->getSchoolCurrencyFormat() . amountFormat($fee)); ?> online.<?php } ?></p>
         <?php if ($has_terms) { ?>
             <div id="admissionTerms" class="modal fade" role="dialog" tabindex="-1">
                 <div class="modal-dialog modal-lg"><div class="modal-content">

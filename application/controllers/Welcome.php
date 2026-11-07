@@ -345,7 +345,7 @@ class Welcome extends Front_Controller
     {
         if ($this->module_lib->hasActive('online_admission')) {
             $this->data['active_menu'] = 'online_admission';
-            $page = array('title' => 'Online Admission Form', 'meta_title' => 'online admission form', 'meta_keyword' => 'online admission form', 'meta_description' => 'online admission form');
+            $page = array('title' => 'Online Admission Form', 'meta_title' => 'Online Admission', 'meta_keyword' => 'online admission form', 'meta_description' => 'online admission form');
             $this->data['page_side_bar'] = false;
             $this->data['featured_image'] = false;
             $this->data['page'] = $page;
@@ -658,9 +658,7 @@ class Welcome extends Front_Controller
                     if (!empty($custom_value_array)) {
                         $this->customfield_model->onlineadmissioninsertRecord($custom_value_array, $insert_id);
                     }
-                    if ($sch_setting->online_admission_payment != 'yes') {
-                        $this->mark_submitted($insert_id);
-                    }
+                    $this->mark_submitted($insert_id); // a fee, if any, is paid after this
 
                     $this->data['class_id'] = $class_id;
                     $this->data['section_id'] = $section_id;
@@ -699,8 +697,7 @@ class Welcome extends Front_Controller
 
                     $this->data['admission_id'] = $insert_id;
                     $this->session->set_userdata('validlogin', $reference_no);
-                    $this->session->set_flashdata('msg', '<div class="alert alert-success">' . ' ' . $this->lang->line('thanks_for_registration_please_note_your_reference_number') . ' ' . $reference_no . ' ' . $this->lang->line('for_further_communication') . '</div>');
-                    redirect('welcome/online_admission_review/' . $reference_no);
+                    redirect('welcome/online_admission_review/' . $reference_no); // the page says it was submitted
                 }
             }
         }
@@ -861,7 +858,7 @@ class Welcome extends Front_Controller
         if ($ref_status) {
 
             $this->data['active_menu'] = 'online_admission';
-            $page = array('title' => 'Online Admission Form', 'meta_title' => 'online admission form', 'meta_keyword' => 'online admission form', 'meta_description' => 'online admission form');
+            $page = array('title' => 'Online Admission Form', 'meta_title' => 'Online Admission', 'meta_keyword' => 'online admission form', 'meta_description' => 'online admission form');
 
             $this->data['page_side_bar'] = false;
             $this->data['featured_image'] = false;

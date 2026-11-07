@@ -37,12 +37,16 @@ foreach (array('student_photo' => array('image', 'student'), 'father_pic' => arr
         $photos[] = array(base_url($a[$p[0]]), $this->lang->line($p[1]));
     }
 }
-if ($sent) {
-    list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application. Keep your reference number and the date of birth you entered to check its progress.');
-} elseif ($fee_on && (int) $paid_status === 2) {
-    list($state_class, $state_text, $state_note) = array('is-wait', 'Payment being confirmed', 'Your payment is being confirmed. Your application is sent as soon as it is.');
+$unpaid = $fee_on && (int) $paid_status === 0;
+$keep = ' Keep your reference number and the date of birth you entered to check its progress.';
+if ($sent && $unpaid) {
+    list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application. One more step: pay the form fee of ' . $currency_symbol . amountFormat($online_admission_amount) . ' below.' . $keep);
+} elseif ($sent && $fee_on && (int) $paid_status === 2) {
+    list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application and your payment is being confirmed.' . $keep);
+} elseif ($sent) {
+    list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application.' . $keep);
 } elseif ($fee_on) {
-    list($state_class, $state_text, $state_note) = array('is-wait', 'Awaiting payment', 'Pay the form fee of ' . $currency_symbol . amountFormat($online_admission_amount) . ' below to send your application. You can still change it until then.');
+    list($state_class, $state_text, $state_note) = array('is-wait', 'Not sent yet', 'Pay the form fee of ' . $currency_symbol . amountFormat($online_admission_amount) . ' below to send your application.');
 } else {
     list($state_class, $state_text, $state_note) = array('is-wait', 'Not sent yet', 'Check your details, then accept the terms and send your application.');
 }
@@ -81,8 +85,8 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
 
     <ol class="st-rev-steps st-rev-noprint" aria-label="Progress">
         <li class="done">Details filled in</li>
-        <?php if ($fee_on) { ?><li class="<?php echo (int) $paid_status === 1 ? 'done' : 'current'; ?>">Form fee paid</li><?php } ?>
-        <li class="<?php echo $sent ? 'done' : ''; ?>">Application submitted</li>
+        <li class="<?php echo $sent ? 'done' : 'current'; ?>">Application submitted</li>
+        <?php if ($fee_on) { ?><li class="<?php echo (int) $paid_status === 1 ? 'done' : ($sent ? 'current' : ''); ?>">Form fee paid</li><?php } ?>
         <li>School reviews it</li>
     </ol>
 
@@ -152,9 +156,9 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
         <?php }
     } ?>
 
-    <?php if (!$sent && !$is_admin) { ?>
+    <?php if (!$is_admin && ($unpaid || !$sent)) { ?>
         <div class="st-rev-action st-rev-noprint">
-            <?php if ($fee_on && (int) $paid_status === 0) { ?>
+            <?php if ($unpaid) { ?>
                 <form id="paymentform" action="<?php echo base_url(); ?>onlineadmission/checkout" method="post">
                     <input type="hidden" name="admission_id" value="<?php echo (int) $admission_id; ?>">
                     <input type="hidden" name="reference_no" value="<?php echo $e($reference_no); ?>">
