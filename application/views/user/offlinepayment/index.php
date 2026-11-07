@@ -17,6 +17,15 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                         <div class="box-tools pull-right">
                         </div><!-- /.box-tools -->
                     </div><!-- /.box-header -->
+                    <?php $bt_ci = get_instance(); $bt_ci->load->library('School_bank_transfer'); $bt = $bt_ci->school_bank_transfer->details();
+                    if ($bt_ci->school_bank_transfer->complete()) { ?>
+                    <div class="box-body pb0">
+                        <div class="alert alert-info" style="margin-bottom:0">
+                            <b>Pay into:</b> <?php echo html_escape($bt['bank_name']); ?> &middot; <?php echo html_escape($bt['account_name']); ?> &middot; <b><?php echo html_escape($bt['account_number']); ?></b>
+                            <?php if ($bt['note'] !== '') { ?><br><?php echo nl2br(html_escape($bt['note'])); ?><?php } ?>
+                        </div>
+                    </div>
+                    <?php } ?>
                     <?php if ($setting->offline_bank_payment_instruction) {?>
                     <div class="box-body pb0">
                         <div class="row">

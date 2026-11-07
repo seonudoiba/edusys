@@ -2266,5 +2266,15 @@
         "scope": "tenant",
         "file": "278_add_block_editor.php",
         "refs": []
+    },
+    {
+        "n": 284,
+        "table": "admission_bank_transfers",
+        "scope": "tenant",
+        "file": "284_school_bank_transfers.php",
+        "refs": [
+            "school",
+            "online_admissions"
+        ]
     }
 ]

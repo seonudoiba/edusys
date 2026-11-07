@@ -26,6 +26,8 @@ class Paymentsettings extends Admin_Controller
 
         $data['statuslist']  = $this->customlib->getStatus();
         $data['paymentlist'] = $this->paymentsetting_model->get();
+        $this->load->library('School_bank_transfer');
+        $data['bank_transfer'] = $this->school_bank_transfer->details();
 
         $this->load->view('layout/header', $data);
         $this->load->view('admin/payment_setting/paymentsettingList', $data);
@@ -776,6 +778,37 @@ public function onepay()
     // ------------------------------------------------------------------ Nigerian gateways (Online_fee_payment)
 
     /** Monnify: API key, secret key, contract code, test/live. */
+    /** Bank transfer: the school's bank details, for the admission form fee and school fees (Offline Bank Payments). */
+    public function bank_transfer()
+    {
+        if (!$this->rbac->hasPrivilege('payment_methods', 'can_edit') || $this->input->method() !== 'post') {
+            access_denied();
+        }
+        $this->load->library('School_bank_transfer');
+        $post = array(
+            'bank_name' => $this->input->post('bank_name'),
+            'account_name' => $this->input->post('account_name'),
+            'account_number' => $this->input->post('account_number'),
+            'note' => $this->input->post('note'),
+            'admission' => $this->input->post('admission'),
+            'school_fees' => $this->input->post('school_fees'),
+        );
+        $on = !empty($post['admission']) || !empty($post['school_fees']);
+        $missing = array();
+        foreach (array('bank_name' => 'bank name', 'account_name' => 'account name', 'account_number' => 'account number') as $key => $label) {
+            if ($on && trim(strip_tags((string) $post[$key])) === '') {
+                $missing[] = $label;
+            }
+        }
+        if ($missing) {
+            $this->session->set_flashdata('bank_transfer_msg', array('danger', 'Fill in the ' . implode(', ', $missing) . ' before switching bank transfer on.'));
+        } else {
+            $this->school_bank_transfer->save($post);
+            $this->session->set_flashdata('bank_transfer_msg', array('success', 'Bank transfer settings saved.'));
+        }
+        redirect('admin/paymentsettings#tab_bank');
+    }
+
     public function monnify()
     {
         $this->save_gateway('monnify', array(

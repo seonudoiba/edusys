@@ -75,6 +75,8 @@ class Onlinestudent extends Admin_Controller
         $student                       = $this->onlinestudent_model->get($id);
         $genderList                    = $this->customlib->getGender();
         $data['student']               = $student;
+        $this->load->model('admission_bank_transfer_model');
+        $data['bank_transfer']         = $this->admission_bank_transfer_model->latest($id);
         $data['genderList']            = $genderList;
         $session                       = $this->setting_model->getCurrentSession();
         $vehroute_result               = $this->vehroute_model->getRouteVehiclesList();
@@ -591,6 +593,77 @@ class Onlinestudent extends Admin_Controller
             "data"            => $dt_data,
         );
         echo json_encode($json_data);
+    }
+
+    /** Approve or reject an applicant's bank transfer of the form fee (from the application's page). */
+    public function transfer_review()
+    {
+        if (!$this->rbac->hasPrivilege('online_admission', 'can_edit') || $this->input->method() !== 'post') {
+            access_denied();
+        }
+        $this->load->model('admission_bank_transfer_model');
+        $transfer = $this->admission_bank_transfer_model->get((int) $this->input->post('transfer_id'));
+        if (!$transfer) {
+            show_404();
+        }
+        $back = 'admin/onlinestudent/edit/' . (int) $transfer['online_admission_id'];
+        $action = $this->input->post('action');
+        $note = trim(strip_tags((string) $this->input->post('note')));
+        $staff = (int) $this->customlib->getStaffID();
+        if ($action === 'approve') {
+            if (!$this->admission_bank_transfer_model->review($transfer['id'], 'approved', $staff, $note !== '' ? mb_substr($note, 0, 500) : null)) {
+                $this->session->set_flashdata('msg', '<div class="alert alert-info">This transfer was already reviewed.</div>');
+                redirect($back);
+            }
+            $this->onlinestudent_model->paymentSuccess(array(
+                'online_admission_id' => (int) $transfer['online_admission_id'],
+                'paid_amount' => (float) $transfer['amount'],
+                'transaction_id' => substr($transfer['reference'] ?: ('BT' . $transfer['id']), 0, 100),
+                'payment_mode' => 'bank_transfer',
+                'payment_type' => 'offline',
+                'note' => substr('Bank transfer from ' . $transfer['payer_name'] . ' (' . $transfer['payer_bank'] . ')', 0, 100),
+                'date' => $transfer['payment_date'] . ' 00:00:00',
+            ));
+            $a = $this->onlinestudent_model->getAdmissionData((int) $transfer['online_admission_id']);
+            if ($a) {
+                $this->mailsmsconf->mailsms('online_admission_fees_submission', array(
+                    'firstname' => $a->firstname, 'lastname' => $a->lastname, 'email' => $a->email,
+                    'date' => date($this->customlib->getSchoolDateFormat()), 'reference_no' => $a->reference_no, 'mobileno' => $a->mobileno,
+                    'paid_amount' => (float) $transfer['amount'], 'guardian_email' => $a->guardian_email, 'guardian_phone' => $a->guardian_phone,
+                ));
+            }
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">Transfer approved: the form fee is marked paid.</div>');
+        } elseif ($action === 'reject') {
+            if ($note === '') {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger">Give a reason for rejecting the transfer; the applicant sees it.</div>');
+                redirect($back);
+            }
+            if ($this->admission_bank_transfer_model->review($transfer['id'], 'rejected', $staff, mb_substr($note, 0, 500))) {
+                $this->db->where(array('id' => (int) $transfer['online_admission_id'], 'paid_status' => 2))->update('online_admissions', array('paid_status' => 0));
+                $this->session->set_flashdata('msg', '<div class="alert alert-warning">Transfer rejected. The applicant sees your reason and can pay again.</div>');
+            }
+        }
+        redirect($back);
+    }
+
+    /** The receipt an applicant uploaded (the folder itself refuses web access). */
+    public function transfer_receipt($id = 0)
+    {
+        if (!$this->rbac->hasPrivilege('online_admission', 'can_view')) {
+            access_denied();
+        }
+        $this->load->model('admission_bank_transfer_model');
+        $transfer = $this->admission_bank_transfer_model->get((int) $id);
+        $path = $transfer ? $this->admission_bank_transfer_model->receipt_path($transfer['receipt_file']) : null;
+        if (!$path) {
+            show_404();
+        }
+        $name = $transfer['receipt_name'] ?: basename($path);
+        header('Content-Type: ' . $this->admission_bank_transfer_model->receipt_mime($transfer['receipt_file']));
+        header('Content-Disposition: inline; filename="' . str_replace('"', '', $name) . '"');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
     }
 
     public function checkpaymentstatus()

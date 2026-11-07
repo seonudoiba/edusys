@@ -10,6 +10,39 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary border0">
+                    <?php if (!empty($bank_transfer)) { $t = $bank_transfer; $cur = $this->customlib->getSchoolCurrencyFormat(); ?>
+                    <div class="box-body" style="border-bottom:1px solid #eee">
+                        <h4 style="margin-top:0"><i class="fa fa-university"></i> Bank transfer of the form fee
+                            <?php $labels = array('pending' => array('warning', 'Waiting for you to confirm'), 'approved' => array('success', 'Approved'), 'rejected' => array('danger', 'Rejected')); ?>
+                            <span class="label label-<?php echo $labels[$t['status']][0]; ?>"><?php echo $labels[$t['status']][1]; ?></span></h4>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <table class="table table-condensed" style="margin-bottom:8px">
+                                    <tr><th style="width:180px">Amount</th><td><?php echo html_escape($cur . amountFormat($t['amount'])); ?></td></tr>
+                                    <tr><th>Paid from</th><td><?php echo html_escape($t['payer_name']); ?>, <?php echo html_escape($t['payer_bank']); ?></td></tr>
+                                    <tr><th>Date of transfer</th><td><?php echo html_escape(date($this->customlib->getSchoolDateFormat(), strtotime($t['payment_date']))); ?></td></tr>
+                                    <?php if ($t['reference']) { ?><tr><th>Transaction reference</th><td><?php echo html_escape($t['reference']); ?></td></tr><?php } ?>
+                                    <tr><th>Receipt</th><td><a href="<?php echo site_url('admin/onlinestudent/transfer_receipt/' . (int) $t['id']); ?>" target="_blank" rel="noopener"><i class="fa fa-file-o"></i> <?php echo html_escape($t['receipt_name'] ?: 'Open receipt'); ?></a></td></tr>
+                                    <?php if ($t['review_note']) { ?><tr><th>Note</th><td><?php echo html_escape($t['review_note']); ?></td></tr><?php } ?>
+                                </table>
+                                <?php if ($t['status'] === 'pending') { ?><p class="text-muted">Check that the money is in the school's account before approving. The applicant's reference number is <b><?php echo html_escape($student['reference_no']); ?></b>.</p><?php } ?>
+                            </div>
+                            <?php if ($t['status'] === 'pending' && $this->rbac->hasPrivilege('online_admission', 'can_edit')) { ?>
+                            <div class="col-md-4">
+                                <form method="post" action="<?php echo site_url('admin/onlinestudent/transfer_review'); ?>" style="margin-bottom:10px">
+                                    <input type="hidden" name="transfer_id" value="<?php echo (int) $t['id']; ?>"><input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn btn-success btn-block" id="transfer_approve" onclick="return confirm('Mark the form fee as paid?');"><i class="fa fa-check"></i> Approve: money received</button>
+                                </form>
+                                <form method="post" action="<?php echo site_url('admin/onlinestudent/transfer_review'); ?>">
+                                    <input type="hidden" name="transfer_id" value="<?php echo (int) $t['id']; ?>"><input type="hidden" name="action" value="reject">
+                                    <textarea name="note" class="form-control" rows="2" maxlength="500" placeholder="Reason, shown to the applicant (required to reject)" style="margin-bottom:6px"></textarea>
+                                    <button type="submit" class="btn btn-default btn-block" id="transfer_reject"><i class="fa fa-times"></i> Reject</button>
+                                </form>
+                            </div>
+                            <?php } ?>
+                        </div>
+                    </div>
+                    <?php } ?>
                     <form action="<?php echo site_url("admin/onlinestudent/edit/" . $id) ?>"  id="employeeform" name="employeeform" method="post" accept-charset="utf-8" enctype="multipart/form-data">
                         <div class="border0">
                             <input type="hidden" id="student_id" name="student_id" value="<?php echo set_value('id', $student['id']); ?>" />

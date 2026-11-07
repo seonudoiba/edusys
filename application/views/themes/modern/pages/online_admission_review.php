@@ -38,11 +38,19 @@ foreach (array('student_photo' => array('image', 'student'), 'father_pic' => arr
     }
 }
 $unpaid = $fee_on && (int) $paid_status === 0;
+// Ways to pay: the school's online gateway, and/or bank transfer with a receipt (School_bank_transfer).
+$CI->load->library('School_bank_transfer');
+$CI->load->model(array('admission_bank_transfer_model', 'paymentsetting_model'));
+$bank = $CI->school_bank_transfer->details();
+$bank_on = $CI->school_bank_transfer->for_admission();
+$online_pay = (bool) $CI->paymentsetting_model->getActiveMethod();
+$transfer = $CI->admission_bank_transfer_model->latest($id);
+$transfer_pending = $transfer && $transfer['status'] === 'pending';
 $keep = ' Keep your reference number and the date of birth you entered to check its progress.';
 if ($sent && $unpaid) {
     list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application. One more step: pay the form fee of ' . $currency_symbol . amountFormat($online_admission_amount) . ' below.' . $keep);
 } elseif ($sent && $fee_on && (int) $paid_status === 2) {
-    list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application and your payment is being confirmed.' . $keep);
+    list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application and ' . ($transfer_pending ? 'is checking your bank transfer.' : 'your payment is being confirmed.') . $keep);
 } elseif ($sent) {
     list($state_class, $state_text, $state_note) = array('is-sent', 'Application submitted', 'The school has your application.' . $keep);
 } elseif ($fee_on) {
@@ -165,8 +173,39 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
         <p class="st-adm-muted st-rev-noprint" style="text-align:right">You're signed in as school staff, so the applicant's <?php echo $unpaid ? 'Pay button is' : 'buttons are'; ?> hidden here. The applicant sees <?php echo $unpaid ? 'it' : 'them'; ?> on this page.</p>
     <?php } ?>
     <?php if (!$is_admin && ($unpaid || !$sent)) { ?>
+        <?php if ($unpaid && $transfer && $transfer['status'] === 'rejected') { ?>
+            <div class="alert alert-warning st-rev-noprint" role="alert"><b>Your bank transfer receipt wasn't accepted.</b>
+                <?php echo $transfer['review_note'] ? $e($transfer['review_note']) : ''; ?> Please check it and send it again, or pay another way.</div>
+        <?php } ?>
+        <?php if ($unpaid && $bank_on) { ?>
+            <section class="st-adm-card st-rev-bank" id="bank-transfer">
+                <h3>Pay by bank transfer</h3>
+                <dl class="st-rev-grid">
+                    <div><dt>Bank</dt><dd><?php echo $e($bank['bank_name']); ?></dd></div>
+                    <div><dt>Account name</dt><dd><?php echo $e($bank['account_name']); ?></dd></div>
+                    <div><dt>Account number</dt><dd><b class="st-rev-acct"><?php echo $e($bank['account_number']); ?></b></dd></div>
+                    <div><dt>Amount</dt><dd><b><?php echo $e($currency_symbol . amountFormat($online_admission_amount)); ?></b></dd></div>
+                    <div class="wide"><dt>Narration</dt><dd>Write your reference number <b><?php echo $e($reference_no); ?></b> in the transfer narration so the school can match it.</dd></div>
+                    <?php if ($bank['note'] !== '') { ?><div class="wide"><dt>Note</dt><dd><?php echo nl2br($e($bank['note'])); ?></dd></div><?php } ?>
+                </dl>
+                <p class="st-adm-muted">After transferring, tell us how you paid and upload the receipt (JPG, PNG or PDF, up to 5 MB). The school confirms it, usually within a working day.</p>
+                <form id="bankform" action="<?php echo site_url('welcome/admission_bank_transfer/' . $reference_no); ?>" method="post" enctype="multipart/form-data">
+                    <div class="st-adm-grid">
+                        <div class="st-adm-field"><label for="bt_payer_name">Name on the account paid from <small class="req">*</small></label><input class="form-control" id="bt_payer_name" name="payer_name" maxlength="200" required></div>
+                        <div class="st-adm-field"><label for="bt_payer_bank">Bank paid from <small class="req">*</small></label><input class="form-control" id="bt_payer_bank" name="payer_bank" maxlength="200" required></div>
+                        <div class="st-adm-field"><label for="bt_payment_date">Date of transfer <small class="req">*</small></label><input class="form-control" type="date" id="bt_payment_date" name="payment_date" max="<?php echo date('Y-m-d'); ?>" required></div>
+                        <div class="st-adm-field"><label for="bt_reference">Transaction reference</label><input class="form-control" id="bt_reference" name="reference" maxlength="100"><small class="st-adm-help">Optional, from your bank's receipt.</small></div>
+                        <div class="st-adm-field st-adm-wide"><label for="bt_receipt">Receipt <small class="req">*</small></label><input class="form-control" type="file" id="bt_receipt" name="receipt" accept=".jpg,.jpeg,.png,.pdf" required></div>
+                    </div>
+                    <div class="st-rev-action" style="margin-top:0"><button type="submit" class="onlineformbtn st-adm-go" id="bankbtn">Send transfer details</button></div>
+                </form>
+            </section>
+        <?php } ?>
+        <?php if ($unpaid && !$bank_on && !$online_pay) { ?>
+            <p class="st-adm-muted st-rev-noprint" style="text-align:right">To pay the form fee, please contact the school.</p>
+        <?php } ?>
         <div class="st-rev-action st-rev-noprint">
-            <?php if ($unpaid) { ?>
+            <?php if ($unpaid && $online_pay) { ?>
                 <form id="paymentform" action="<?php echo base_url(); ?>onlineadmission/checkout" method="post">
                     <input type="hidden" name="admission_id" value="<?php echo (int) $admission_id; ?>">
                     <input type="hidden" name="reference_no" value="<?php echo $e($reference_no); ?>">
@@ -177,7 +216,7 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
                             </select>
                         </label>
                     <?php } ?>
-                    <button type="submit" id="paybtn" class="onlineformbtn st-adm-go"><?php echo $this->lang->line('pay'); ?> <?php echo $e($currency_symbol . amountFormat($online_admission_amount)); ?></button>
+                    <button type="submit" id="paybtn" class="onlineformbtn st-adm-go"><?php echo $bank_on ? 'Pay online instead' : $this->lang->line('pay'); ?> <?php echo $e($currency_symbol . amountFormat($online_admission_amount)); ?></button>
                 </form>
             <?php } elseif (!$fee_on) { ?>
                 <form id="admissionform" action="<?php echo base_url(); ?>welcome/submitadmission" method="post">

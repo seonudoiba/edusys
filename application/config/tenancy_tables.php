@@ -14,6 +14,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 */
 
 $config['tenancy_tenant_tables'] = array(
+    'admission_bank_transfers',
     'alumni_events',
     'alumni_students',
     'attendence_type',
