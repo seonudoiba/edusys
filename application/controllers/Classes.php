@@ -28,7 +28,7 @@ class Classes extends Admin_Controller
                 array('class_exists', array($this->class_model, 'class_exists')),
             )
         );
-        $this->form_validation->set_rules('sections[]', $this->lang->line('section'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('sections[]', $this->lang->line('section'), 'trim|xss_clean'); // optional
 
         if ($this->form_validation->run() == false) {
 
@@ -38,6 +38,11 @@ class Classes extends Admin_Controller
                 'class' => $this->input->post('class'),
             );
             $sections = $this->input->post('sections');
+            if (empty($sections)) {
+                // No sections: the class gets one called "General", so students can still be placed.
+                $this->load->library('Student_numbers');
+                $sections = array($this->student_numbers->general_section_id());
+            }
             $this->classsection_model->add($class_array, $sections);
             $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
             redirect('classes');
@@ -91,7 +96,7 @@ class Classes extends Admin_Controller
                 array('class_exists', array($this->class_model, 'class_exists')),
             )
         );
-        $this->form_validation->set_rules('sections[]', $this->lang->line('sections'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('sections[]', $this->lang->line('sections'), 'trim|xss_clean'); // optional
 
         if ($this->form_validation->run() == false) {
             $vehicle_result       = $this->section_model->get();
@@ -105,6 +110,10 @@ class Classes extends Admin_Controller
             $this->load->view('layout/footer', $data);
         } else {
             $sections      = $this->input->post('sections');
+            if (empty($sections)) {
+                $this->load->library('Student_numbers');
+                $sections = array($this->student_numbers->general_section_id());
+            }
             $prev_sections = $this->input->post('prev_sections');
             $route_id      = $this->input->post('route_id');
             $class_id      = $this->input->post('pre_class_id');

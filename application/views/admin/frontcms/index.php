@@ -189,25 +189,10 @@
                                 <hr/>
                                 <div>
                                  
-                                        <label for="input-type"><?php echo $this->lang->line('current_theme'); ?></label>
-                                        <div id="input-type" class="mediarow">
-                                            <div class="row">
-                                                <?php
-                                                foreach ($front_themes as $theme_key => $theme_value) {
-                                                    ?>
-                                                    <div class="col-md-2 col-sm-4 col-xs-6 img_div_modal">
-                                                        <label class="radio-img w-100">
-                                                            <input name="theme"  value="<?php echo $theme_key; ?>" type="radio" <?php echo set_radio('theme', $theme_key, (set_value('theme', $frontcmslist->theme) == $theme_key) ? TRUE : FALSE); ?> />
-
-                                                            <img src="<?php echo $this->media_storage->getImageURL('backend/images/front_theme/' . $theme_value); ?>">
-                                                            <span class="radiotext"><?php echo $theme_key;?></span>
-                                                        </label>
-                                                    </div>
-                                                    <?php
-                                                }
-                                                ?>
-                                            </div>
-                                        </div>                                   
+                                        <label><?php echo $this->lang->line('current_theme'); ?></label>
+                                        <?php // The theme is chosen on Website design; this keeps it when these settings are saved. ?>
+                                        <input type="hidden" name="theme" value="<?php echo html_escape((string) $frontcmslist->theme); ?>">
+                                        <p>Choose the theme, colours, fonts, header and footer in <a href="<?php echo site_url('admin/front/design'); ?>"><b>Front CMS &gt; Website design</b></a>, with a live preview.</p>
                                 </div>
                             </div><!-- /.box-body -->
                             <div class="box-footer">

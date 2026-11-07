@@ -132,29 +132,9 @@ class Onlinestudent_model extends MY_Model
                 $insert             = true;
                 $sch_setting_detail = $this->setting_model->getSetting();
 
-                if ($sch_setting_detail->adm_auto_insert) {
-                    if ($sch_setting_detail->adm_update_status) {
-
-                        $admission_no = $sch_setting_detail->adm_prefix . $sch_setting_detail->adm_start_from;
-
-                        $last_student = $this->student_model->lastRecord();
-                        if (empty($last_student)) {
-                            $admission_no         = $sch_setting_detail->adm_prefix . $sch_setting_detail->adm_start_from;
-                            $data['admission_no'] = $admission_no;
-                        } else {
-                            $last_admission_digit = str_replace($sch_setting_detail->adm_prefix, "", $last_student->admission_no);
-
-                            $admission_no = $sch_setting_detail->adm_prefix . sprintf("%0" . $sch_setting_detail->adm_no_digit . "d", $last_admission_digit + 1);
-
-                            $data['admission_no'] = $admission_no;
-                        }
-
-                    } else {
-                        $admission_no         = $sch_setting_detail->adm_prefix . $sch_setting_detail->adm_start_from;
-                        $data['admission_no'] = $admission_no;
-                    }
-                }
-
+                // Always generated (Student_numbers).
+                $this->load->library('Student_numbers');
+                $data['admission_no'] = $this->student_numbers->next();
                 $admission_no_exists = $this->student_model->check_adm_exists($data['admission_no']);
                 if ($admission_no_exists) {
                     $insert               = false;

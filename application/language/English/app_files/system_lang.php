@@ -2440,3 +2440,4 @@ $lang['support_desk'] = "Support Desk";
 $lang['website_enquiries'] = "Website Enquiries";
 $lang['platform_backups'] = "Backups";
 $lang['pricing_bands'] = "Pricing Bands";
+$lang['website_design'] = "Website Design";

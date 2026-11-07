@@ -352,9 +352,31 @@ class Front_Controller extends CI_Controller
 
     protected function load_theme($content = null, $layout = true)
     {
-        // The platform theme only has its public pages (the course pages keep the standard design).
-        if ($content !== null && !is_file(VIEWPATH . THEMES_DIR . '/' . $this->theme_path . '/' . $content . '.php')) {
+        // School websites: every theme is a preset of one design (views/themes/modern, Site_theme).
+        // Views it doesn't have (admission forms, online courses, exam results) come from material_pink.
+        $this->load->library('Site_theme');
+        $content_theme = $this->theme_path;
+        if ($this->site_theme->is_theme($this->theme_path)) {
+            $override = null;
+            $preview = $this->session->userdata('site_theme_preview');
+            if ($this->input->get('st_preview') && $this->session->userdata('admin') && is_array($preview)) {
+                $override = $preview; // an admin trying unsaved choices on Website design
+            }
+            $st = $this->site_theme->options($this->front_setting, $override);
+            $this->data['st'] = $st;
+            $this->data['st_css'] = $this->site_theme->css($st);
+            $this->data['st_fonts_url'] = $this->site_theme->fonts_url($st);
+            $this->data['st_classes'] = $this->site_theme->body_classes($st);
+            $this->theme_path = Site_theme::ENGINE;
+            $content_theme = Site_theme::ENGINE;
+            if ($content !== null && !is_file(VIEWPATH . THEMES_DIR . '/' . Site_theme::ENGINE . '/' . $content . '.php')) {
+                $content_theme = 'material_pink';
+            }
+            $this->base_assets_url = 'backend/' . THEMES_DIR . '/material_pink/';
+        } elseif ($content !== null && !is_file(VIEWPATH . THEMES_DIR . '/' . $this->theme_path . '/' . $content . '.php')) {
+            // The platform theme only has its public pages (the course pages keep the standard design).
             $this->theme_path = 'material_pink';
+            $content_theme = 'material_pink';
         }
         $this->data['main_menus'] = '';
         $this->data['school_setting'] = $this->school_details;
@@ -370,26 +392,16 @@ class Front_Controller extends CI_Controller
             $this->data['footer_menus'] = $this->cms_menuitems_model->getMenus($footer_menu_list['id']);
         }
         $this->data['layout_type'] = $layout;
-        $this->data['header'] = $this->load->view('themes/' . $this->theme_path . '/header', $this->data, true);
-
-        $this->data['slider'] = $this->load->view('themes/' . $this->theme_path . '/home_slider', $this->data, true);
-
-        $this->data['footer'] = $this->load->view('themes/' . $this->theme_path . '/footer', $this->data, true);
-
-        $this->base_assets_url = 'backend/' . THEMES_DIR . '/' . $this->theme_path . '/';
-
-        $this->data['base_assets_url'] = base_url() . $this->base_assets_url;
-        $is_captcha = $this->captchalib->is_captcha('admission');
-        $this->data["is_captcha"] = $is_captcha;
-        // print_r($layout);
-        // die;
-        if ($layout == true) {
-            $this->data['content'] = (is_null($content)) ? '' : $this->load->view(THEMES_DIR . '/' . $this->theme_path . '/' . $content, $this->data, true);
-            $this->load->view(THEMES_DIR . '/' . $this->theme_path . '/layout', $this->data);
-        } else {
-            $this->data['content'] = (is_null($content)) ? '' : $this->load->view(THEMES_DIR . '/' . $this->theme_path . '/' . $content, $this->data, true);
-            $this->load->view(THEMES_DIR . '/' . $this->theme_path . '/base_layout', $this->data);
+        if (!isset($this->base_assets_url) || $this->theme_path !== Site_theme::ENGINE) {
+            $this->base_assets_url = 'backend/' . THEMES_DIR . '/' . $this->theme_path . '/';
         }
+        $this->data['base_assets_url'] = base_url() . $this->base_assets_url;
+        $this->data['header'] = $this->load->view('themes/' . $this->theme_path . '/header', $this->data, true);
+        $this->data['slider'] = $this->load->view('themes/' . $this->theme_path . '/home_slider', $this->data, true);
+        $this->data['footer'] = $this->load->view('themes/' . $this->theme_path . '/footer', $this->data, true);
+        $this->data["is_captcha"] = $this->captchalib->is_captcha('admission');
+        $this->data['content'] = is_null($content) ? '' : $this->load->view(THEMES_DIR . '/' . $content_theme . '/' . $content, $this->data, true);
+        $this->load->view(THEMES_DIR . '/' . $this->theme_path . '/' . ($layout == true ? 'layout' : 'base_layout'), $this->data);
     }
 
     protected function load_theme_form($content = null, $layout = true)

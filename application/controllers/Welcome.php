@@ -299,6 +299,41 @@ class Welcome extends Front_Controller
         $this->load_theme('pages/read');
     }
 
+    /** The class-section an application goes in: the one chosen, or the class's default (sections are optional). */
+    private function admission_class_section()
+    {
+        if ((int) $this->input->post('section_id') > 0) {
+            return (int) $this->input->post('section_id');
+        }
+        $this->load->library('Student_numbers');
+        $row = $this->student_numbers->default_section((int) $this->input->post('class_id'));
+        return (int) $row['id'];
+    }
+
+    /** Email: a valid address not used by another application; required if the school says so. */
+    private function admission_email_rule()
+    {
+        if (!$this->admission_form->shown('student_email')) {
+            return;
+        }
+        $rules = array('trim', 'valid_email');
+        if ($this->admission_form->required('student_email')) {
+            $rules[] = 'required';
+        }
+        $rules[] = array('check_student_email_exists', array($this->onlinestudent_model, 'check_student_email_exists'));
+        $this->form_validation->set_rules('email', $this->admission_form->label('student_email'), $rules);
+    }
+
+    /** The class must still be taking applications (Online Admission settings > Classes). */
+    public function admission_class_open($class_id)
+    {
+        if ($class_id === '' || $class_id === null || $this->admission_form->class_is_open($class_id)) {
+            return true;
+        }
+        $this->form_validation->set_message('admission_class_open', 'This class is not taking applications now, or its places are full.');
+        return false;
+    }
+
     public function getSections()
     {
         $class_id = $this->input->post('class_id');
@@ -316,14 +351,15 @@ class Welcome extends Front_Controller
             $this->data['page'] = $page;
             ///============
             $this->data['form_admission'] = $this->setting_model->getOnlineAdmissionStatus();
+            $this->load->library('Admission_form');
+            $this->data['admission_state'] = $this->admission_form->state();
             $genderList = $this->customlib->getGender();
             $this->data['genderList'] = $genderList;
             $this->data['title'] = 'Add Student';
             $this->data['title_list'] = 'Online Admission Form';
             $data["student_categorize"] = 'class';
             $session = $this->setting_model->getCurrentSession();
-            $class = $this->class_model->getAll();
-            $this->data['classlist'] = $class;
+            $this->data['classlist'] = $this->admission_form->open_classes(); // classes taking applications, with places left
             $this->data['sch_setting'] = $this->sch_setting_detail;
             $category = $this->category_model->get();
             $this->data['categorylist'] = $category;
@@ -338,10 +374,18 @@ class Welcome extends Front_Controller
             $this->data['setting_data'] = $setting_data;
             $this->data['online_admission_instruction'] = $sch_setting->online_admission_instruction;
             $this->data['online_admission_application_form'] = $sch_setting->online_admission_application_form;
+            $this->data['online_admission_conditions'] = $sch_setting->online_admission_conditions;
+            $this->data['admission_fee'] = $sch_setting->online_admission_payment == 'yes' ? (float) $sch_setting->online_admission_amount : 0;
 
             if ($this->module_lib->hasModule('online_course')) {
                 $this->load->model('course_model');
                 $this->data['course_setting'] = $this->course_model->getOnlineCourseSettings();
+            }
+
+            // Closed (switched off, outside its dates or full): the page says so and takes nothing.
+            if (!$this->data['admission_state']['open']) {
+                $this->load_theme('pages/admission', $this->config->item('front_layout'));
+                return;
             }
 
             if ($this->captchalib->is_captcha('admission')) {
@@ -352,30 +396,18 @@ class Welcome extends Front_Controller
                 }
             }
 
-            if ($this->customlib->getfieldstatus('student_email')) {
-                $this->form_validation->set_rules(
-                    'email',
-                    $this->lang->line('email'),
-                    array(
-                        'trim',
-                        'valid_email',
-                        'required',
-                        array('check_student_email_exists', array($this->onlinestudent_model, 'check_student_email_exists')),
-                    )
-                );
+            // Fields the school made required (Online Admission settings > Form fields).
+            $this->admission_form->apply_rules($this->form_validation);
+            if (trim(strip_tags((string) $sch_setting->online_admission_conditions)) !== '') {
+                $this->form_validation->set_rules('checkterm', $this->lang->line('terms_conditions'), 'required', array('required' => 'Please read and accept the terms and conditions.'));
             }
+            $this->admission_email_rule();
 
-            $this->form_validation->set_rules('firstname', $this->lang->line('first_name'), 'trim|required|xss_clean');
-            $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
-            $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
-            $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
-            $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
-
-            if ($this->customlib->getfieldstatus('if_guardian_is')) {
-                $this->form_validation->set_rules('guardian_is', $this->lang->line('guardian'), 'trim|required|xss_clean');
-                $this->form_validation->set_rules('guardian_name', $this->lang->line('guardian_name'), 'trim|required|xss_clean');
-                $this->form_validation->set_rules('guardian_relation', $this->lang->line('guardian_relation'), 'trim|required|xss_clean');
-            }
+            $this->form_validation->set_rules('firstname', $this->admission_form->label('firstname'), 'trim|required|xss_clean');
+            $this->form_validation->set_rules('dob', $this->admission_form->label('dob'), 'trim|required|xss_clean');
+            $this->form_validation->set_rules('class_id', $this->admission_form->label('class'), 'trim|required|xss_clean|callback_admission_class_open');
+            $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean'); // optional
+            $this->form_validation->set_rules('gender', $this->admission_form->label('gender'), 'trim|required|xss_clean');
 
             if (!empty($_FILES['document']['name'])) {
                 $this->form_validation->set_rules('document', $this->lang->line('documents'), 'callback_document_handle_upload[document]');
@@ -438,7 +470,7 @@ class Welcome extends Front_Controller
 
                     $data = array(
                         'firstname' => $this->input->post('firstname'),
-                        'class_section_id' => $this->input->post('section_id'),
+                        'class_section_id' => $this->admission_class_section(),
                         'dob' => date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('dob'))),
                         'gender' => $this->input->post('gender'),
 
@@ -626,6 +658,9 @@ class Welcome extends Front_Controller
                     if (!empty($custom_value_array)) {
                         $this->customfield_model->onlineadmissioninsertRecord($custom_value_array, $insert_id);
                     }
+                    if ($sch_setting->online_admission_payment != 'yes') {
+                        $this->mark_submitted($insert_id);
+                    }
 
                     $this->data['class_id'] = $class_id;
                     $this->data['section_id'] = $section_id;
@@ -687,7 +722,7 @@ class Welcome extends Front_Controller
         if ($ref_status) {
 
             $this->data['active_menu'] = 'online_admission';
-            $page = array('title' => 'online admission review', 'meta_title' => 'online admission review', 'meta_keyword' => 'online admission review', 'meta_description' => 'online admission review');
+            $page = array('title' => 'Your application', 'meta_title' => 'Your application', 'meta_keyword' => 'online admission review', 'meta_description' => 'online admission review');
 
             $this->data['page_side_bar'] = false;
             $this->data['featured_image'] = false;
@@ -793,6 +828,9 @@ class Welcome extends Front_Controller
             $this->data['online_admission_amount'] = $this->sch_setting_detail->online_admission_amount;
 
             $this->data['online_admission_conditions'] = $this->sch_setting_detail->online_admission_conditions;
+            $this->data['application'] = $result;
+            $this->data['section_name'] = (string) $result['section'];
+            $this->load->library('Admission_form');
             $setting_data = $this->setting_model->get();
 
             $this->data['setting_data'] = $setting_data;
@@ -933,25 +971,11 @@ class Welcome extends Front_Controller
                 $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
                 $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
                 $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
-                $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
+                $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean'); // optional
 
-                if ($this->customlib->getfieldstatus('if_guardian_is')) {
-                    $this->form_validation->set_rules('guardian_is', $this->lang->line('guardian'), 'trim|required|xss_clean');
-                    $this->form_validation->set_rules('guardian_name', $this->lang->line('guardian_name'), 'trim|required|xss_clean');
-                    $this->form_validation->set_rules('guardian_relation', $this->lang->line('guardian_relation'), 'trim|required|xss_clean');
-                }
-                if ($this->customlib->getfieldstatus('student_email')) {
-                    $this->form_validation->set_rules(
-                        'email',
-                        $this->lang->line('email'),
-                        array(
-                            'trim',
-                            'valid_email',
-                            'required',
-                            array('check_student_email_exists', array($this->onlinestudent_model, 'check_student_email_exists')),
-                        )
-                    );
-                }
+                $this->load->library('Admission_form');
+                $this->admission_form->apply_rules($this->form_validation, false);
+                $this->admission_email_rule();
 
                 foreach ($custom_fields as $custom_fields_key => $custom_fields_value) {
                     if ($custom_fields_value['validation'] && $this->customlib->getfieldstatus($custom_fields_value['name'])) {
@@ -1006,7 +1030,7 @@ class Welcome extends Front_Controller
                         $data = array(
                             'id' => $id,
                             'firstname' => $this->input->post('firstname'),
-                            'class_section_id' => $this->input->post('section_id'),
+                            'class_section_id' => $this->admission_class_section(),
                             'dob' => date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('dob'))),
                             'gender' => $this->input->post('gender'),
                         );
@@ -1331,23 +1355,7 @@ class Welcome extends Front_Controller
         $admission_id = $this->input->post('admission_id');
 
         if ($this->form_validation->run() == true) {
-            $date = date('Y-m-d');
-
-            $data = array('id' => $admission_id, 'form_status' => 1, 'submit_date' => $date);
-
-            $this->onlinestudent_model->edit($data);
-            $result = $this->onlinestudent_model->get($admission_id);
-
-            $firstname = $result['firstname'];
-            $lastname = $result['lastname'];
-            $date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
-            $reference_no = $result['reference_no'];
-            $mobileno = $result['mobileno'];
-            $email = $result['email'];
-
-            $sender_details = array('firstname' => $firstname, 'lastname' => $lastname, 'email' => $email, 'date' => $date, 'reference_no' => $reference_no, 'mobileno' => $mobileno, 'guardian_email' => $result['guardian_email'], 'guardian_phone' => $result['guardian_phone']);
-
-            $this->mailsmsconf->mailsms('online_admission_form_submission', $sender_details);
+            $reference_no = $this->mark_submitted($admission_id);
 
             $array = array('status' => '1', 'error' => '', 'id' => $admission_id, 'msg' => '', 'reference_no' => $reference_no);
 
@@ -1355,6 +1363,19 @@ class Welcome extends Front_Controller
             $array = array('status' => '0', 'error' => form_error('checkterm'), 'msg' => '');
         }
         echo json_encode($array);
+    }
+
+    /** Mark an application as sent and tell the applicant. Returns its reference number. */
+    private function mark_submitted($admission_id)
+    {
+        $date = date('Y-m-d');
+        $this->onlinestudent_model->edit(array('id' => $admission_id, 'form_status' => 1, 'submit_date' => $date));
+        $result = $this->onlinestudent_model->get($admission_id);
+        $sender_details = array('firstname' => $result['firstname'], 'lastname' => $result['lastname'], 'email' => $result['email'],
+            'date' => date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date)),
+            'reference_no' => $result['reference_no'], 'mobileno' => $result['mobileno'], 'guardian_email' => $result['guardian_email'], 'guardian_phone' => $result['guardian_phone']);
+        $this->mailsmsconf->mailsms('online_admission_form_submission', $sender_details);
+        return $result['reference_no'];
     }
 
     public function checktermcondition()

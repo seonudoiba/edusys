@@ -33,6 +33,11 @@ class Onlineadmission extends Admin_Controller
         $data['inserted_fields']    = $this->onlinestudent_model->getformfields();
         $data['sch_setting_detail'] = $this->sch_setting_detail;
         $data['custom_fields']      = $this->onlinestudent_model->getcustomfields();
+        $this->load->library('Admission_form');
+        $this->load->model('class_model');
+        $data['adm']       = $this->admission_form;
+        $data['classes']   = $this->class_model->getAll();
+        $data['questions'] = $this->db->where('belong_to', 'students')->order_by('weight')->order_by('id')->get('custom_fields')->result_array();
 
         if (!empty($this->input->post('submitbtn'))) {
 
@@ -67,7 +72,8 @@ class Onlineadmission extends Admin_Controller
                     }
                     $data['online_admission_application_form'] = $img_name;
 
-                    $this->setting_model->add($data);                  
+                    $this->setting_model->add($data);
+                    $this->save_dates();
                     
                     $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">'. $this->lang->line('record_updated_successfully') . '</div>');
                     redirect('admin/onlineadmission/admissionsetting');
@@ -102,6 +108,7 @@ class Onlineadmission extends Admin_Controller
                 $data['online_admission_application_form'] = $img_name;
 
                 $this->setting_model->add($data);
+                $this->save_dates();
                 redirect('admin/onlineadmission/admissionsetting');
             }
 
@@ -111,6 +118,129 @@ class Onlineadmission extends Admin_Controller
             $this->load->view("layout/footer");
         }
 
+    }
+
+    /** Opening and closing dates and the closed message, from the General tab. */
+    private function save_dates()
+    {
+        $date = function ($v) {
+            $v = trim((string) $v);
+            return preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) && strtotime($v) ? $v : null;
+        };
+        $opens = $date($this->input->post('online_admission_opens'));
+        $closes = $date($this->input->post('online_admission_closes'));
+        if ($opens && $closes && $closes < $opens) {
+            list($opens, $closes) = array($closes, $opens);
+        }
+        $row = $this->db->select('id')->order_by('id')->limit(1)->get('sch_settings')->row();
+        $this->db->where('id', $row->id)->update('sch_settings', array('online_admission_opens' => $opens, 'online_admission_closes' => $closes));
+        $config = $this->admission_form->config();
+        $config['closed_message'] = (string) $this->input->post('online_admission_closed_message');
+        $this->admission_form->save($config);
+    }
+
+    private function can_edit()
+    {
+        if (!$this->rbac->hasPrivilege('online_admission', 'can_view') || $this->input->method() !== 'post') {
+            $this->output->set_status_header(403);
+            echo json_encode(array('status' => 0, 'msg' => $this->lang->line('access_denied')));
+            return false;
+        }
+        $this->load->library('Admission_form');
+        return true;
+    }
+
+    /** Form fields tab: required, label, help text and order of the built-in fields. */
+    public function saveform()
+    {
+        if (!$this->can_edit()) {
+            return;
+        }
+        $config = $this->admission_form->config();
+        $config['fields'] = (array) $this->input->post('fields');
+        $config['order'] = (array) $this->input->post('order');
+        $this->admission_form->save($config);
+        echo json_encode(array('status' => 1, 'msg' => $this->lang->line('success_message')));
+    }
+
+    /** Classes tab: which classes take applications and how many places each has. */
+    public function saveclasses()
+    {
+        if (!$this->can_edit()) {
+            return;
+        }
+        $config = $this->admission_form->config();
+        $classes = array();
+        foreach ((array) $this->input->post('classes') as $id => $v) {
+            $classes[(int) $id] = array('open' => !empty($v['open']) ? 1 : 0, 'places' => isset($v['places']) && trim($v['places']) !== '' ? (int) $v['places'] : null);
+        }
+        $config['classes'] = $classes;
+        // Places count applications from now on, the first time they're set or when asked to restart.
+        if ($config['counted_from'] === '' || $this->input->post('restart_count')) {
+            $config['counted_from'] = date('Y-m-d H:i:s');
+        }
+        $this->admission_form->save($config);
+        echo json_encode(array('status' => 1, 'msg' => $this->lang->line('success_message')));
+    }
+
+    /** Questions tab: add or change one of the school's own questions (a student custom field). */
+    public function savequestion()
+    {
+        if (!$this->can_edit()) {
+            return;
+        }
+        $types = array('input', 'textarea', 'number', 'select', 'multiselect', 'checkbox', 'date_picker');
+        $id = (int) $this->input->post('id');
+        $name = trim(strip_tags((string) $this->input->post('name')));
+        $type = (string) $this->input->post('type');
+        $options = implode(',', array_filter(array_map('trim', preg_split('/[\r\n,]+/', strip_tags((string) $this->input->post('options'))))));
+        $errors = array();
+        if ($name === '' || mb_strlen($name) > 100) {
+            $errors['name'] = 'Write the question (up to 100 characters).';
+        }
+        if (!in_array($type, $types, true)) {
+            $errors['type'] = 'Choose an answer type.';
+        }
+        if (in_array($type, array('select', 'multiselect', 'checkbox'), true) && $options === '') {
+            $errors['options'] = 'List the choices, one per line.';
+        }
+        $same = $this->db->where('belong_to', 'students')->where('name', $name)->where('id !=', $id)->count_all_results('custom_fields');
+        if ($same) {
+            $errors['name'] = 'There is already a question with this wording.';
+        }
+        $old = $id ? $this->db->where(array('id' => $id, 'belong_to' => 'students'))->get('custom_fields')->row_array() : null;
+        if ($id && !$old) {
+            $errors['name'] = 'That question no longer exists.';
+        }
+        if ($errors) {
+            echo json_encode(array('status' => 0, 'error' => $errors, 'msg' => reset($errors)));
+            return;
+        }
+        $row = array('name' => $name, 'type' => $type, 'field_values' => $options, 'validation' => $this->input->post('required') ? 1 : 0,
+            'bs_column' => in_array($type, array('textarea', 'checkbox'), true) ? 12 : 6);
+        if ($old) {
+            $this->db->where('id', $id)->update('custom_fields', $row);
+            if ($old['name'] !== $name) { // the form's on/off switch is keyed by the question
+                $this->db->where('name', $old['name'])->update('online_admission_fields', array('name' => $name));
+            }
+        } else {
+            $weight = (int) $this->db->select_max('weight')->where('belong_to', 'students')->get('custom_fields')->row()->weight;
+            $this->db->insert('custom_fields', $row + array('belong_to' => 'students', 'visible_on_table' => 0, 'weight' => $weight + 1, 'is_active' => 1));
+            $this->onlinestudent_model->addformfields(array('name' => $name, 'status' => 1));
+        }
+        echo json_encode(array('status' => 1, 'msg' => $this->lang->line('success_message')));
+    }
+
+    /** Questions tab: the heading the questions appear under. */
+    public function savequestionstitle()
+    {
+        if (!$this->can_edit()) {
+            return;
+        }
+        $config = $this->admission_form->config();
+        $config['questions_title'] = (string) $this->input->post('questions_title');
+        $this->admission_form->save($config);
+        echo json_encode(array('status' => 1, 'msg' => $this->lang->line('success_message')));
     }
 
     public function changeformfieldsetting()

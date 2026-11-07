@@ -126,7 +126,7 @@ class Onlinestudent extends Admin_Controller
         $this->form_validation->set_rules('guardian_pic', $this->lang->line('image'), 'callback_handle_upload[guardian_pic]');
         $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean'); // optional
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
         if ($this->sch_setting_detail->guardian_name) {
             $this->form_validation->set_rules('guardian_name', $this->lang->line('guardian_name'), 'trim|required|xss_clean');
@@ -158,6 +158,11 @@ class Onlinestudent extends Admin_Controller
             $student_id     = $this->input->post('student_id');
             $class_id       = $this->input->post('class_id');
             $section_id     = $this->input->post('section_id');
+            if ((int) $section_id <= 0) {
+                $this->load->library('Student_numbers');
+                $default_section = $this->student_numbers->default_section($class_id);
+                $section_id = (int) $default_section['id'];
+            }
             $hostel_room_id = empty2null($this->input->post('hostel_room_id'));
             $fees_discount  = $this->input->post('fees_discount');
 

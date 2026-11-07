@@ -17,6 +17,7 @@ class Student extends Admin_Controller
         $this->config->load("payroll");
         $this->load->library('smsgateway');
         $this->load->library('mailsmsconf');
+        $this->load->library('Student_numbers');
         $this->load->library('encoding_lib');
         $this->load->model("classteacher_model");
         $this->load->model(array("timeline_model", "student_edit_field_model", 'transportfee_model', 'marksdivision_model', 'module_model'));
@@ -368,6 +369,7 @@ class Student extends Admin_Controller
         $data['title_list']            = 'Recently Added Student';
         $data['adm_auto_insert']       = $this->sch_setting_detail->adm_auto_insert;
         $data["student_categorize"]    = 'class';
+        $data['next_admission_no']     = $this->student_numbers->next();
         $session                       = $this->setting_model->getCurrentSession();
         $data['feesessiongroup_model'] = $this->feesessiongroup_model->getFeesByGroup();
         $data['transport_fees']        = $this->transportfee_model->getSessionFees($session);
@@ -405,7 +407,7 @@ class Student extends Admin_Controller
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean'); // optional: see Student_numbers::default_section
 
         if ($this->sch_setting_detail->guardian_name) {
             $this->form_validation->set_rules('guardian_name', $this->lang->line('guardian_name'), 'trim|required|xss_clean');
@@ -479,7 +481,7 @@ class Student extends Admin_Controller
             }
 
             $class_id              = $this->input->post('class_id');
-            $section_id            = $this->input->post('section_id');
+            $section_id            = $this->student_numbers->section_or_default($class_id, $this->input->post('section_id'));
             $fees_discount         = $this->input->post('fees_discount');
             $route_pickup_point_id = $this->input->post('route_pickup_point_id');
             $vehroute_id           = $this->input->post('vehroute_id');
@@ -615,36 +617,9 @@ class Student extends Admin_Controller
             $data_setting['id']                = $this->sch_setting_detail->id;
             $data_setting['adm_auto_insert']   = $this->sch_setting_detail->adm_auto_insert;
             $data_setting['adm_update_status'] = $this->sch_setting_detail->adm_update_status;
-            $admission_no                      = 0;
-
-            if ($this->sch_setting_detail->adm_auto_insert) {
-                if ($this->sch_setting_detail->adm_update_status) {
-
-                    $admission_no = $this->sch_setting_detail->adm_prefix . $this->sch_setting_detail->adm_start_from;
-
-                    $last_student = $this->student_model->lastRecord();
-                    if (!empty($last_student)) {
-
-                        $last_admission_digit = str_replace($this->sch_setting_detail->adm_prefix, "", $last_student->admission_no);
-
-                        $admission_no                = $this->sch_setting_detail->adm_prefix . sprintf("%0" . $this->sch_setting_detail->adm_no_digit . "d", $last_admission_digit + 1);
-                        $data_insert['admission_no'] = $admission_no;
-                    } else {
-                        $admission_no                = $this->sch_setting_detail->adm_prefix . $this->sch_setting_detail->adm_start_from;
-                        $data_insert['admission_no'] = $admission_no;
-                    }
-                } else {
-                    $admission_no                = $this->sch_setting_detail->adm_prefix . $this->sch_setting_detail->adm_start_from;
-                    $data_insert['admission_no'] = $admission_no;
-                }
-
-                $admission_no_exists = $this->student_model->check_adm_exists($admission_no);
-                if ($admission_no_exists) {
-                    $insert = false;
-                }
-            } else {
-                $data_insert['admission_no'] = $this->input->post('admission_no');
-            }
+            // Always generated: never typed, never clashing (Student_numbers).
+            $admission_no                = $this->student_numbers->next();
+            $data_insert['admission_no'] = $admission_no;
 
             if (empty($_FILES["file"])) {
                 if ($this->input->post('gender') == 'Female') {
@@ -1062,7 +1037,7 @@ class Student extends Admin_Controller
         $data["fields"]       = $fields;
         $data['categorylist'] = $category;
         $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean'); // optional: see Student_numbers::default_section
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_csv_upload');
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header', $data);
@@ -1078,7 +1053,7 @@ class Student extends Admin_Controller
                 $section = $this->input->post('section_id');
             }
             $class_id   = $this->input->post('class_id');
-            $section_id = $this->input->post('section_id');
+            $section_id = $this->student_numbers->section_or_default($class_id, $this->input->post('section_id'));
 
             $session = $this->setting_model->getCurrentSession();
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
@@ -1132,31 +1107,9 @@ class Student extends Admin_Controller
                             $data_setting['adm_update_status'] = $this->sch_setting_detail->adm_update_status;
                             //-------------------------
 
-                            if ($this->sch_setting_detail->adm_auto_insert) {
-                                if ($this->sch_setting_detail->adm_update_status) {
-                                    $last_student                     = $this->student_model->lastRecord();
-                                    $last_admission_digit             = str_replace($this->sch_setting_detail->adm_prefix, "", $last_student->admission_no);
-                                    $admission_no                     = $this->sch_setting_detail->adm_prefix . sprintf("%0" . $this->sch_setting_detail->adm_no_digit . "d", $last_admission_digit + 1);
-                                    $student_data[$i]["admission_no"] = $admission_no;
-                                } else {
-                                    $admission_no                     = $this->sch_setting_detail->adm_prefix . $this->sch_setting_detail->adm_start_from;
-                                    $student_data[$i]["admission_no"] = $admission_no;
-                                }
-
-                                $admission_no_exists = $this->student_model->check_adm_exists($admission_no);
-                                if ($admission_no_exists) {
-                                    $insert = "";
-                                } else {
-                                    $insert_id = $this->student_model->add($student_data[$i], $data_setting);
-                                }
-                            } else {
-
-                                if ($this->form_validation->is_unique($adm_no, 'students.admission_no')) {
-                                    $insert_id = $this->student_model->add($student_data[$i], $data_setting);
-                                } else {
-                                    $insert_id = "";
-                                }
-                            }
+                            // Always generated, whatever the file says (Student_numbers).
+                            $student_data[$i]['admission_no'] = $this->student_numbers->next();
+                            $insert_id = $this->student_model->add($student_data[$i], $data_setting);
 
                             //-------------------------
                             if (!empty($insert_id)) {
@@ -1320,7 +1273,7 @@ class Student extends Admin_Controller
         $this->form_validation->set_rules('firstname', $this->lang->line('first_name'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean'); // optional: see Student_numbers::default_section
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
 
         if ($this->sch_setting_detail->guardian_name) {
@@ -1396,7 +1349,7 @@ class Student extends Admin_Controller
             $siblings              = $this->student_model->getMySiblings($student['parent_id'], $student_id);
             $total_siblings        = count($siblings);
             $class_id              = $this->input->post('class_id');
-            $section_id            = $this->input->post('section_id');
+            $section_id            = $this->student_numbers->section_or_default($class_id, $this->input->post('section_id'));
             $hostel_room_id        = $this->input->post('hostel_room_id');
             $fees_discount         = $this->input->post('fees_discount');
             $route_pickup_point_id = $this->input->post('route_pickup_point_id');

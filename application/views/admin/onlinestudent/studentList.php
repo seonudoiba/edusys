@@ -11,6 +11,11 @@
                     <div class="box-header with-border">
                         <h3 class="box-title"><?php echo $this->lang->line('student_list'); ?></h3>
                         <div class="box-tools pull-right">
+                            <?php $oa_ci = get_instance(); $oa_ci->load->library('Admission_form'); $oa_state = $oa_ci->admission_form->state(); ?>
+                            <span class="label <?php echo $oa_state['open'] ? 'label-success' : 'label-danger'; ?>" style="margin-right:8px;font-size:12px"><?php echo $oa_state['open'] ? 'Admission open' : 'Admission closed'; ?></span>
+                            <?php if ($this->rbac->hasPrivilege('online_admission', 'can_view')) { ?>
+                                <a href="<?php echo site_url('admin/onlineadmission/admissionsetting'); ?>" class="btn btn-default btn-sm"><i class="fa fa-cog"></i> Open, close and design the form</a>
+                            <?php } ?>
                         </div><!-- /.box-tools -->
                     </div><!-- /.box-header -->
                     <div class="box-body">
