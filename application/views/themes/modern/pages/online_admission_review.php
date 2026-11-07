@@ -66,6 +66,11 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
 </style>
 
 <div id="divtoprint" class="st-rev">
+    <?php if ($this->session->flashdata('payment_error')) { ?>
+        <div class="alert alert-danger st-rev-noprint" role="alert"><?php echo $e($this->session->flashdata('payment_error')); ?></div>
+    <?php } elseif ($this->session->flashdata('payment_ok')) { ?>
+        <div class="alert alert-success st-rev-noprint" role="status"><?php echo $e($this->session->flashdata('payment_ok')); ?></div>
+    <?php } ?>
     <div class="st-rev-printonly" style="display:none">
         <?php ob_start(); $this->setting_model->get_onlineadmissionheader(); $header = trim(ob_get_clean()); // it echoes the file name
         if ($header !== '') { ?><img src="<?php echo $e(base_url('uploads/print_headerfooter/online_admission_receipt/' . $header)); ?>" alt="" style="width:100%;max-height:120px;object-fit:contain"><?php } ?>
