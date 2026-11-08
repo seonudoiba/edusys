@@ -21,16 +21,45 @@ foreach (isset($page['category_content']) && is_array($page['category_content'])
     if (is_array($list)) { $items = array_merge($items, $list); }
 }
 ?>
+<?php
+// Long documents (Privacy Policy, Terms of Service): sections written as <h2 id="..."> get a contents list.
+$toc = array();
+if (preg_match_all('~<h2\s+id="([a-z0-9-]+)"[^>]*>(.*?)</h2>~is', $html, $m, PREG_SET_ORDER) && count($m) >= 4) {
+    foreach ($m as $h) {
+        $toc[] = array('id' => $h[1], 'text' => trim(strip_tags($h[2])));
+    }
+}
+$toc_list = function () use ($toc) {
+    $out = '<ol>';
+    foreach ($toc as $t) {
+        $out .= '<li><a href="#' . html_escape($t['id']) . '">' . html_escape($t['text']) . '</a></li>';
+    }
+    return $out . '</ol>';
+};
+?>
 <?php if (!empty($page['builder_html'])) { ?>
     <div class="wrap"><?php echo $html; ?></div>
 <?php } else { ?>
     <section class="hero hero-sm has-bg">
         <?php $this->load->view('themes/platform/_bg'); ?>
-        <div class="wrap"><h1><?php echo html_escape($page['title']); ?></h1></div>
+        <div class="wrap">
+            <?php if ($toc) { ?><p class="crumb">Legal</p><?php } ?>
+            <h1><?php echo html_escape($page['title']); ?></h1>
+        </div>
     </section>
     <div class="wrap">
         <div class="page-body">
-            <div class="prose"><?php echo $html; ?></div>
+            <?php if ($toc) { ?>
+                <div class="doc">
+                    <nav class="toc" aria-label="On this page"><p>On this page</p><?php echo $toc_list(); ?></nav>
+                    <div>
+                        <details class="toc-mobile"><summary>On this page</summary><?php echo $toc_list(); ?></details>
+                        <div class="prose"><?php echo $html; ?></div>
+                    </div>
+                </div>
+            <?php } else { ?>
+                <div class="prose"><?php echo $html; ?></div>
+            <?php } ?>
             <?php if ($items) { ?>
                 <div class="rows" id="postList">
                     <?php foreach ($items as $item) { ?>

@@ -1,12 +1,13 @@
-<section class="hero has-bg" style="padding-bottom:clamp(32px,5vw,52px)">
+<section class="hero hero-sm has-bg">
     <?php $this->load->view('themes/platform/_bg'); ?>
     <div class="wrap">
+        <p class="crumb">Pricing</p>
         <h1>Request a quote.</h1>
         <p class="lede">For schools and groups with more than 3,000 students. Implementation and training starts from &#8358;750,000. We will reply by email.</p>
     </div>
 </section>
 <section class="band">
-    <div class="wrap" style="max-width:720px;margin-left:calc((100% - min(100%, 1160px)) / 2)">
+    <div class="wrap"><div class="calc-card" style="max-width:720px">
         <?php if ($sent) { ?>
             <div class="alert alert-success">Thank you. We have your request and will reply by email.</div>
         <?php } else { ?>
@@ -24,5 +25,6 @@
                 <button class="btn" type="submit">Send request</button>
             </form>
         <?php } ?>
+        </div>
     </div>
 </section>

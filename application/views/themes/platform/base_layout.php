@@ -8,13 +8,15 @@ $css = 'backend/themes/platform/site.css';
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo $is_home || $title === '' ? 'EduSYS: school management software, by Hypercom' : html_escape($title) . ' | EduSYS'; ?></title>
+    <title><?php echo $is_home || $title === '' ? 'EduSYS: school management software by HyperCom' : html_escape($title) . ' | EduSYS'; ?></title>
     <meta name="description" content="<?php echo html_escape($description); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400&amp;family=Public+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo base_url($css) . '?v=' . (int) @filemtime(FCPATH . $css); ?>">
-    <?php if (!empty($front_setting->fav_icon)) { ?><link rel="icon" href="<?php echo html_escape(base_url(ltrim(str_replace('./', '', $front_setting->fav_icon), '/'))); ?>"><?php } ?>
+    <link rel="icon" type="image/png" href="<?php echo base_url('backend/themes/platform/edusys-icon.png'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo base_url('backend/themes/platform/edusys-icon.png'); ?>">
+    <meta name="theme-color" content="#0b2d64">
 </head>
 <body>
     <a class="skip" href="#main">Skip to content</a>

@@ -1,17 +1,19 @@
 <?php
+$this->load->view('themes/platform/_icons');
 $money = function ($v) { return '&#8358;' . number_format((float) $v); };
 ?>
-<section class="hero has-bg" style="padding-bottom:clamp(40px,6vw,64px)">
+<section class="hero hero-sm has-bg">
     <?php $this->load->view('themes/platform/_bg'); ?>
     <div class="wrap">
-        <h1>Pricing.</h1>
+        <p class="crumb">Pricing</p>
+        <h1>Simple pricing, by the size of your school.</h1>
         <p class="lede">You pay per student, per term, at a rate set by the size of your school. A one-time fee covers implementation and training.</p>
     </div>
 </section>
 
 <section class="band">
     <div class="wrap">
-        <div class="scroll">
+        <div class="price-card scroll">
             <table class="prices">
                 <thead><tr><th>Students</th><th>EduSYS subscription</th><th>One-time implementation and training</th></tr></thead>
                 <tbody>
@@ -28,16 +30,20 @@ $money = function ($v) { return '&#8358;' . number_format((float) $v); };
     </div>
 </section>
 
-<section class="band">
+<section class="band band-tint">
     <div class="wrap split">
-        <div><h2>What your school would pay</h2></div>
-        <form class="calc" method="get" action="<?php echo site_url('subscription/add'); ?>" style="max-width:520px">
+        <div>
+            <p class="eyebrow">Calculator</p>
+            <h2>What your school would pay</h2>
+            <p style="margin-top:14px">Enter your number of students and how you want to pay. The price per student is the same either way.</p>
+        </div>
+        <form class="calc calc-card" method="get" action="<?php echo site_url('subscription/add'); ?>" style="max-width:560px">
             <div class="field">
                 <label for="c_students">Number of students</label>
                 <input id="c_students" name="students" type="number" min="1" step="1" inputmode="numeric" value="200">
             </div>
             <div class="field">
-                <span style="display:block;font-size:.9rem;font-weight:500;margin-bottom:6px">Pay</span>
+                <span style="display:block;font-size:.92rem;font-weight:600;margin-bottom:7px">Pay</span>
                 <div class="choice">
                     <label><input type="radio" name="period" value="year" checked><span>For the year</span></label>
                     <label><input type="radio" name="period" value="term"><span>Each term</span></label>
@@ -55,56 +61,55 @@ $money = function ($v) { return '&#8358;' . number_format((float) $v); };
 </section>
 
 <section class="band">
-    <div class="wrap split">
-        <div><h2>How billing works</h2></div>
-        <div class="prose">
-            <p>The price is based on the number of active students on EduSYS. Your band is set at the start of each subscription period.</p>
-            <p>You choose to pay each term or for the year; the price per student is the same. A year is three terms.</p>
-            <p>If your school grows past the number you have paid for, you pay for the extra students at your current rate, for the terms left in the period. Your end date doesn't change.</p>
-            <p>The implementation and training fee is paid once, when you join.</p>
-        </div>
-    </div>
-</section>
-
-<section class="band">
-    <div class="wrap split">
-        <div><h2>Included</h2></div>
-        <div class="prose">
-            <ul>
-                <li>Access to the EduSYS school management platform and its standard modules</li>
-                <li>Your school's branding and configuration</li>
-                <li>Standard system updates and configuration support</li>
-                <li>Logins for administrators, teachers, students and parents</li>
-                <li>Standard reports</li>
-            </ul>
-        </div>
-    </div>
-</section>
-
-<section class="band">
-    <div class="wrap split">
-        <div><h2>Not included</h2></div>
-        <div class="prose">
-            <ul>
-                <li>SMS and other third-party messaging charges</li>
-                <li>Payment gateway transaction fees</li>
-                <li>Zoom and Google Meet add-ons</li>
-                <li>Custom software development and bespoke integrations</li>
-                <li>Major data cleaning or migration outside the agreed scope</li>
-                <li>Hardware such as biometric devices, scanners, printers, routers and end-user devices</li>
-            </ul>
-        </div>
-    </div>
-</section>
-
-<section class="band band-green">
     <div class="wrap">
-        <h2 style="max-width:16em;margin-bottom:18px">More than 3,000 students?</h2>
-        <p style="max-width:32em">Large schools and groups get a custom quote. Tell us about your school and we will come back to you.</p>
-        <a class="btn" href="<?php echo site_url('plans/quote'); ?>">Request a quote</a>
+        <div class="section-head">
+            <p class="eyebrow">Billing</p>
+            <h2>How billing works</h2>
+        </div>
+        <div class="cards cards-4">
+            <div class="card"><span class="card-icon"><?php echo pf_icon('users'); ?></span><h3>Active students</h3><p>The price is based on the number of active students on EduSYS. Your band is set at the start of each subscription period.</p></div>
+            <div class="card"><span class="card-icon green"><?php echo pf_icon('calendar'); ?></span><h3>Term or year</h3><p>Pay each term or for the year; the price per student is the same. A year is three terms.</p></div>
+            <div class="card"><span class="card-icon yellow"><?php echo pf_icon('chart'); ?></span><h3>Growing schools</h3><p>Pay for extra students at your current rate, for the terms left in the period. Your end date doesn't change.</p></div>
+            <div class="card"><span class="card-icon red"><?php echo pf_icon('support'); ?></span><h3>Paid once</h3><p>The implementation and training fee is paid once, when you join.</p></div>
+        </div>
     </div>
 </section>
 
+<section class="band">
+    <div class="wrap cards cards-2">
+        <div class="card">
+            <h3>Included</h3>
+            <ul class="checks">
+                <li><?php echo pf_icon('check'); ?>Access to the EduSYS school management platform and its standard modules</li>
+                <li><?php echo pf_icon('check'); ?>Your school's branding and configuration</li>
+                <li><?php echo pf_icon('check'); ?>Standard system updates and configuration support</li>
+                <li><?php echo pf_icon('check'); ?>Logins for administrators, teachers, students and parents</li>
+                <li><?php echo pf_icon('check'); ?>Standard reports</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>Not included</h3>
+            <ul class="checks no">
+                <li><?php echo pf_icon('x'); ?>SMS and other third-party messaging charges</li>
+                <li><?php echo pf_icon('x'); ?>Payment gateway transaction fees</li>
+                <li><?php echo pf_icon('x'); ?>Zoom and Google Meet add-ons</li>
+                <li><?php echo pf_icon('x'); ?>Custom software development and bespoke integrations</li>
+                <li><?php echo pf_icon('x'); ?>Major data cleaning or migration outside the agreed scope</li>
+                <li><?php echo pf_icon('x'); ?>Hardware such as biometric devices, scanners, printers, routers and end-user devices</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="band band-navy">
+    <div class="wrap cta">
+        <div>
+            <h2>More than 3,000 students?</h2>
+            <p>Large schools and groups get a custom quote. Tell us about your school and we will come back to you.</p>
+        </div>
+        <div class="actions"><a class="btn" href="<?php echo site_url('plans/quote'); ?>">Request a quote <?php echo pf_icon('arrow'); ?></a></div>
+    </div>
+</section>
 <script>
 (function () {
     var bands = <?php echo json_encode($bands, JSON_HEX_TAG | JSON_HEX_AMP); ?>;

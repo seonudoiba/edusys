@@ -1,2 +1,3 @@
-<?php /* The logo set in Front CMS > Settings; the name only if none is set. */
-if (!empty($front_setting->logo)) { ?><img src="<?php echo html_escape(base_url(ltrim(str_replace('./', '', $front_setting->logo), '/'))); ?>" alt="EduSYS"><?php } else { ?>EduSYS<?php }
+<?php /* The EduSYS logo, shipped with the theme (backend/themes/platform/edusys-logo.png). */
+$logo = 'backend/themes/platform/edusys-logo.png';
+?><img src="<?php echo html_escape(base_url($logo) . '?v=' . (int) @filemtime(FCPATH . $logo)); ?>" alt="EduSYS" width="406" height="120">
