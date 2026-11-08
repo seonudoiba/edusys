@@ -198,7 +198,7 @@ if (!empty($cartdata)) {
                                     <?php }
                                 }else{
                                     if (!$this->session->userdata('student')) {  ?>                                
-                                        <a onclick="openmodal()"><i class="fa fa-user"></i><?php echo $this->lang->line('login'); ?></a>
+                                        <a href="<?php echo site_url('site/userlogin'); ?>"><i class="fa fa-user"></i><?php echo $this->lang->line('login'); ?></a>
                                     <?php } else {?>                                
                                         <a href="<?php echo base_url(); ?>course/logout"><?php echo $this->lang->line('logout'); ?></a> 
                                     <?php } 
