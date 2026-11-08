@@ -548,7 +548,10 @@ class subscription extends Front_Controller
         $this->load_theme('subscription/bank_transfer');
     }
 
-    /** Tells the platform a receipt is waiting for review (template receipt_submitted). */
+    /**
+     * Tells the platform a receipt is waiting for review (template receipt_submitted) and confirms
+     * to the owner that it arrived (receipt_received).
+     */
     private function notify_platform_of_receipt(array $transfer)
     {
         $subscription = $this->subscription_model->get($transfer['subscription_id']);
@@ -556,12 +559,22 @@ class subscription extends Front_Controller
             return;
         }
         $fresh = $this->subscription_bank_transfer_model->get_by_token($transfer['token']);
+        $amount = $fresh ? number_format((float) $fresh['amount'], 2) : '';
+        $school_id = $subscription['school_id'] ?: null;
         $this->load->library('Platform_mailer');
         $this->platform_mailer->send('receipt_submitted', $this->platform_settings->get('notify_email'), array(
             'school_name' => $subscription['school_name'],
-            'amount' => $fresh ? number_format((float) $fresh['amount'], 2) : '',
+            'amount' => $amount,
             'review_url' => site_url('admin/subscription_bank_transfers/view/' . (int) $transfer['id']),
-        ), $subscription['school_id'] ?: null);
+        ), $school_id);
+        $plan = $this->plan_model->get($subscription['plan_id']);
+        $this->platform_mailer->send('receipt_received', $subscription['email_address'], array(
+            'owner_name' => $subscription['owner_name'],
+            'school_name' => $subscription['school_name'],
+            'plan' => is_array($plan) && isset($plan['title']) ? $plan['title'] : (is_object($plan) && isset($plan->title) ? $plan->title : ''),
+            'amount' => $amount,
+            'status_url' => site_url('subscription/bank_transfer/' . $transfer['token']),
+        ), $school_id);
     }
 
     public function success()
