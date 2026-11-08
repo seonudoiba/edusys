@@ -8,7 +8,7 @@ class Language extends Admin_Controller
 {
 
     /** Actions that change the languages shared by every school (table languages, language files). */
-    const PLATFORM_ACTIONS = array('create', 'delete', 'edit', 'addpharses', 'editlanguage', 'migratelang', 'editcountrycode');
+    const PLATFORM_ACTIONS = array('create', 'delete', 'edit', 'addpharses', 'editlanguage', 'migratelang', 'editcountrycode', 'rtl');
 
     public function __construct()
     {
@@ -74,6 +74,9 @@ class Language extends Admin_Controller
 
     public function view($id)
     {
+        if (!$this->rbac->hasPrivilege('languages', 'can_view')) {
+            access_denied();
+        }
         $data['title']    = 'Language List';
         $language         = $this->language_model->get($id);
         $data['language'] = $language;
@@ -301,7 +304,7 @@ class Language extends Admin_Controller
         exit();
     }
 
-    public function copydirr($fromDir, $toDir, $chmod = 0757, $verbose = false)
+    private function copydirr($fromDir, $toDir, $chmod = 0757, $verbose = false)
     {
         $errors   = array();
         $messages = array();
@@ -366,6 +369,9 @@ class Language extends Admin_Controller
 
     public function select_language($language_id)
     {
+        if (!$this->rbac->hasPrivilege('languages', 'can_view')) {
+            access_denied();
+        }
         $this->load->model("setting_model");
         $setting_result = $this->setting_model->get();
         $id             = $setting_result[0]["id"];
@@ -383,12 +389,18 @@ class Language extends Admin_Controller
 
     public function defoult_language($language_id)
     {
+        if (!$this->rbac->hasPrivilege('languages', 'can_view')) {
+            access_denied();
+        }
         $this->db->set('lang_id', $language_id); //if 2 columns
         $this->db->update('sch_settings');
     }
 
     public function unselect_language($language_id)
     {
+        if (!$this->rbac->hasPrivilege('languages', 'can_view')) {
+            access_denied();
+        }
         $this->load->model("setting_model");
         $setting_result = $this->setting_model->get();
         $id             = $setting_result[0]["id"];
@@ -430,148 +442,6 @@ class Language extends Admin_Controller
         } else {
 
             echo json_encode(array('status' => '0'));
-        }
-    }
-
-    public function write_lang_file($language, $writedata)
-    {
-        if (is_dir(FCPATH . "application/language/" . $language)) {
-            mkdir(FCPATH . "application/language/" . $language);
-            mkdir(FCPATH . "application/language/" . $language . "/app_files");
-            $my_file = FCPATH . "application/language/" . $language . "/app_files/system_lang.php";
-            $handle  = fopen($my_file, 'w') or die('Cannot open file:  ' . $my_file);
-            echo "echo";
-            print_r($writedata);
-            echo "<pre>";die;
-            $sta = '$lang[';
-            fwrite($handle, "<?php" . "\n");
-            $i  = 0;
-            $tr = '"';
-            foreach ($writedata as $sakey => $savalue) {
-                $data = $sta . "'" . $savalue["key"] . "'] =  " . $tr . $savalue["pharses"] . $tr . ";";
-
-                print_r($data . "<br/>");
-                fwrite($handle, $data . "\n");
-            }
-            fwrite($handle, "?>" . "\n");
-            $i++;
-        }
-        echo $i;
-    }
-
-    public function create_language_file()
-    {
-        $language_result = $this->language_model->get();
-        foreach ($language_result as $langkey => $langvalue) {
-            $lang_id  = $langvalue["id"];
-            $language = $langvalue["language"];
-
-            $key_query = $this->db->select("*")->order_by("key", "asc")->get("lang_keys");
-            $result    = $key_query->result_array();
-            $lang_arr  = array();
-            $i         = 0;
-            foreach ($result as $key => $value) {
-
-                $id                      = $value["id"];
-                $key                     = $value["key"];
-                $pharses_query           = $this->db->select("*")->where("key_id", $id)->where("lang_id", $lang_id)->get("lang_pharses");
-                $lang_pharses_data       = $pharses_query->row_array();
-                $pharses                 = $lang_pharses_data["pharses"];
-                $lang_arr[$i]["key"]     = $key;
-                $lang_arr[$i]["pharses"] = $pharses;
-                $i++;
-            }
-            $this->write_lang_file($language, $lang_arr);
-        }
-    }
-
-    public function update_520()
-    {
-        $language_result = $this->db->select('*')->from('languages')->where_in('id', array(""))->get()->result_array();
-        foreach ($language_result as $value11) {
-            $data             = array();
-            $final_data       = array();
-            $lang_pharses     = array();
-            $sort_array       = "";
-            $language_pharses = array(array('key' => 'create', 'pharses' => 'create'));
-            if (file_exists(FCPATH . "application/language/English/app_files/system_lang.php")) {
-
-                $file_content = file(FCPATH . "application/language/English/app_files/system_lang.php");
-                $newdata      = $file_content;
-
-                for ($i = 1722; $i < 1724; $i++) {
-                    $exp     = explode("=", $newdata[$i]);
-                    $key     = $exp[0];
-                    $pharses = '';
-                    if (isset($exp[1])) {
-                        $pharses = $exp[1];
-                    }
-                    $lang_pharses[$key] = $pharses;
-
-                }
-            }
-
-            $convert_from = 'en'; //change from langauge
-            $convert_to   = $value11['short_code']; //change to langauge
-            $text         = "";
-
-            foreach ($lang_pharses as $key => $value) {
-
-                $string = str_replace(';', '', $value);
-                $string = str_replace("'", "", $string);
-                $string = str_replace('"', '', $string);
-                $string = preg_replace('~[\r\n]+~', '', $string);
-                $text   = trim($string);
-
-                $apiKey = '';
-                $url    = 'https://www.googleapis.com/language/translate/v2?key=' . $apiKey . '&q=' . rawurlencode($text) . '&source=en&target=' . $convert_to;
-                $handle = curl_init($url);
-                curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, false);
-                curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-                $response        = curl_exec($handle);
-                $responseDecoded = json_decode($response, true);
-
-                curl_close($handle);
-                $result           = $responseDecoded['data']['translations'][0]['translatedText'];
-                $final_data[$key] = $result;
-            }
-
-            $this->updateTranslateText($language = $value11['language'], $final_data);
-
-        }
-    }
-
-    public function writeTranslateText($language, $writedata)
-    {
-        mkdir(FCPATH . "application/language/" . $language);
-        mkdir(FCPATH . "application/language/" . $language . "/app_files");
-        if (is_dir(FCPATH . "application/language/" . $language)) {
-            $my_file = FCPATH . "application/language/" . $language . "/app_files/system_lang.php";
-            $handle  = fopen($my_file, 'w') or die('Cannot open file:  ' . $my_file);
-            fwrite($handle, "" . "\n");
-            $i = 0;
-
-            foreach ($writedata as $fkey => $fvalue) {
-                $data = $fkey . "=" . strip_tags($fvalue) . ";";
-                fwrite($handle, $data . "\n");
-            }
-
-            $i++;
-        }
-    }
-
-    public function updateTranslateText($language, $writedata)
-    {
-        if (is_dir(FCPATH . "application/language/" . $language)) {
-            $my_file = FCPATH . "application/language/" . $language . "/app_files/system_lang.php";
-            $handle  = fopen($my_file, 'a') or die('Cannot open file:  ' . $my_file);        
-            $i = 0;
-            foreach ($writedata as $fkey => $fvalue) {
-                $data = $fkey . '="' . strip_tags($fvalue) . '";';
-                fwrite($handle, $data . "\n");
-            }
-            $i++;
         }
     }
 

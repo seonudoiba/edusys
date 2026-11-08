@@ -217,7 +217,7 @@ $config['directory_trigger'] = 'd';
   | your log files will fill up very fast.
   |
  */
-$config['log_threshold'] = 0;
+$config['log_threshold'] = 1; // errors only (production hides notices and deprecations), one file per day in application/logs
 
 /*
   |--------------------------------------------------------------------------
@@ -402,7 +402,7 @@ $config['cookie_domain'] = '';
 $config['cookie_path'] = '/';
 // Secure cookies whenever the site is served over HTTPS (directly or behind a TLS proxy).
 $config['cookie_secure'] = is_https() || strtolower((string) getenv('EDUSYS_FORCE_HTTPS')) === 'true';
-$config['cookie_httponly'] = FALSE;
+$config['cookie_httponly'] = TRUE; // the session cookie is always HttpOnly; this covers other cookies set through CI
 $config['cookie_samesite'] = 'Lax';
 /*
   |--------------------------------------------------------------------------

@@ -34,7 +34,7 @@ if ($lang['lang_id'] == $language['id']) {
     ?>
         </td>
           <td>
-                                                   <input type="checkbox" id="rtl_<?php echo $language["id"]; ?>" value="<?php echo $language["id"]; ?>" name="defoult" onchange="rtl(this.value)"  <?php if ($language['is_rtl'] == '1') {echo "checked";}?>>
+                                                   <input type="checkbox" id="rtl_<?php echo $language["id"]; ?>" value="<?php echo $language["id"]; ?>" name="defoult" <?php echo Tenant::is_platform() ? 'onchange="rtl(this.value)"' : 'disabled title="Set by the platform"'; ?> <?php if ($language['is_rtl'] == '1') {echo "checked";}?>>
                                                 </td>
         <td class="relative text-right">
             <?php if ($language['is_deleted'] == 'yes' && $this->customlib->getSessionLanguage() != $language['id'] && ($this->rbac->hasPrivilege('languages', 'can_delete'))) {

@@ -1310,6 +1310,11 @@ class Staff extends Admin_Controller
 
     public function permission($id)
     {
+        // Grants permissions to a staff member: Super Admin only (anyone else could promote themselves).
+        $role = json_decode((string) $this->customlib->getStaffRole());
+        if (!$role || (int) $role->id !== 7) {
+            access_denied();
+        }
         $data['title']          = 'Add Role';
         $data['id']             = $id;
         $staff                  = $this->staff_model->get($id);
@@ -1375,6 +1380,15 @@ class Staff extends Admin_Controller
     {
         $sessionData = $this->session->userdata('admin');
         $userdata    = $this->customlib->getUserData();
+        // Same rule as the key icon on the staff profile: your own password, or a Super Admin
+        // setting another staff member's (but not another Super Admin's).
+        $target = $this->staff_model->get((int) $id);
+        $role   = json_decode((string) $this->customlib->getStaffRole());
+        $own    = $target && (int) $target['id'] === (int) $sessionData['id'];
+        $super  = $role && (int) $role->id === 7;
+        if (!$target || !($own || ($super && (int) $target['role_id'] !== 7))) {
+            access_denied();
+        }
         $this->form_validation->set_rules('new_pass', $this->lang->line('new_password'), 'trim|required|min_length[8]|xss_clean|matches[confirm_pass]');
         $this->form_validation->set_rules('confirm_pass', $this->lang->line('confirm_password'), 'trim|required|xss_clean');
         if ($this->form_validation->run() == false) {
