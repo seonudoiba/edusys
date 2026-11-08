@@ -15,7 +15,9 @@ foreach (!empty($footer_menus) ? $footer_menus : array() as $m) {
         <div class="foot-grid">
             <div class="foot-brand">
                 <a class="mark" href="<?php echo html_escape(base_url()); ?>"><?php $this->load->view('themes/platform/_logo'); ?></a>
-                <p>EduSYS is the school management platform from HyperCom, an integrated information technology company founded by Dr Joshua A. Denila. We work with businesses of every size on telecoms, internet technology and green energy.</p>
+                <p>HyperCom is an integrated information technology company founded by Dr Joshua A. Denila. We work with businesses of every size, from small enterprises to large corporations, on telecoms, internet technology and green energy.</p>
+                <p>EduSYS is our school management platform. A school's administration is the same work every term: admissions, fees, attendance, results, keeping parents informed. EduSYS puts that work in one place and automates what repeats, so that a school can give its attention to teaching.</p>
+                <p>Each school runs on its own web address, with its own data, staff and branding.</p>
             </div>
             <div>
                 <h2>EduSYS</h2>
@@ -36,7 +38,7 @@ foreach (!empty($footer_menus) ? $footer_menus : array() as $m) {
                 </ul>
             </div>
             <div>
-                <h2>HyperCom</h2>
+                <h2>Where to find us</h2>
                 <ul class="foot-contact">
                     <li><?php echo pf_icon('pin'); ?><span>14 Akinremi Street, Ikeja, Lagos</span></li>
                     <li><?php echo pf_icon('pin'); ?><span>1 Melcut Road, Okapa, Udu, Warri</span></li>
