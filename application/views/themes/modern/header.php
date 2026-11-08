@@ -83,13 +83,9 @@ $target = function ($m) { return !empty($m['open_new_tab']) ? ' target="_blank" 
                     <?php $items = $this->cart->total_items(); if ($items) { ?><span class="st-badge"><?php echo (int) $items; ?></span><?php } ?>
                 </a>
             <?php } ?>
-            <?php if ($course_on) { ?>
-                <?php if (!$this->session->userdata('student')) { ?>
-                    <a class="st-btn st-btn-sm" href="#" onclick="openmodal(); return false;"><?php echo $e($this->lang->line('login')); ?></a>
-                <?php } else { ?>
-                    <a class="st-btn st-btn-sm" href="<?php echo $e(base_url('course/logout')); ?>"><?php echo $e($this->lang->line('logout')); ?></a>
-                <?php } ?>
-            <?php } elseif ($student_login) { ?>
+            <?php if ($course_on && $this->session->userdata('student')) { ?>
+                <a class="st-btn st-btn-sm" href="<?php echo $e(base_url('course/logout')); ?>"><?php echo $e($this->lang->line('logout')); ?></a>
+            <?php } elseif ($course_on || $student_login) { ?>
                 <a class="st-btn st-btn-sm" href="<?php echo $e(site_url('site/userlogin')); ?>"><?php echo $e($this->lang->line('login')); ?></a>
             <?php } ?>
             <button type="button" class="st-burger" data-toggle="collapse" data-target="#st-nav" aria-controls="st-nav" aria-expanded="false" aria-label="<?php echo $e($this->lang->line('toggle_navigation') ?: 'Menu'); ?>">

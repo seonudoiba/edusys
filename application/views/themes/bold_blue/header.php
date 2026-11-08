@@ -229,7 +229,7 @@ if (!empty($cartdata)) {
                             }else{
                             
                                 if (!$this->session->userdata('student')) {  ?>                                
-                                    <a class="login-btn" onclick="openmodal()"><i class="fa fa-user"></i><?php echo $this->lang->line('login'); ?></a>
+                                    <a class="login-btn" href="<?php echo site_url('site/userlogin'); ?>"><i class="fa fa-user"></i><?php echo $this->lang->line('login'); ?></a>
                                 <?php } else {?>                                
                                     <a class="login-btn" href="<?php echo base_url(); ?>course/logout"><?php echo $this->lang->line('logout'); ?></a>
                                 <?php }
