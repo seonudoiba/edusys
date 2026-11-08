@@ -426,3 +426,25 @@ input:focus, select:focus, textarea:focus, .form-control:focus { outline: none; 
 
 /* a thin brand line above the header, in the logo's teal and gold */
 .site-head::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--teal) 0%, var(--teal) 70%, var(--gold) 70%, var(--gold) 100%); }
+
+/* legal documents (Privacy Policy, Terms of Service): header card, contents, cards for subsections */
+.doc-page { background: var(--tint); padding: clamp(36px, 5vw, 64px) 0 clamp(64px, 8vw, 104px); }
+.doc-card { background: #fff; border: 1px solid var(--rule); border-radius: 20px; padding: clamp(24px, 4vw, 44px); box-shadow: var(--shadow); margin-bottom: clamp(32px, 4vw, 48px); }
+.doc-card h1 { font-size: clamp(2rem, 4vw, 2.9rem); color: var(--navy-dark); }
+.doc-meta { margin: 10px 0 0; color: var(--faint); font-size: .88rem; }
+.doc-summary { margin: 18px 0 0; max-width: 48rem; color: var(--soft); font-size: 1.04rem; }
+.doc-page .doc .toc { top: 100px; }
+.doc-page .doc .toc-mobile { background: #fff; }
+.doc-body { max-width: none; }
+.doc-body > h2:first-child { margin-top: 0; }
+.doc-body h2 { color: var(--navy-dark); }
+.doc-body .sub { background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 18px 20px; margin: 0 0 12px; }
+.doc-body .sub h3 { margin: 0 0 6px; font-size: 1rem; }
+.doc-body .sub p { margin: 0; color: var(--soft); }
+.doc-contact { margin-top: 44px; background: #fff; border: 1px solid var(--rule); border-radius: 20px; padding: clamp(22px, 3vw, 30px); box-shadow: var(--shadow); }
+.doc-contact h2 { font-size: 1.25rem; color: var(--navy-dark); }
+.doc-contact p { margin: 8px 0 18px; color: var(--soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chips a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--rule-strong); border-radius: 10px; color: var(--ink); font-weight: 500; font-size: .94rem; background: #fff; }
+.chips a:hover { border-color: var(--teal); color: var(--teal-dark); text-decoration: none; }
+.chips .ic { width: 18px; height: 18px; color: var(--teal); }
