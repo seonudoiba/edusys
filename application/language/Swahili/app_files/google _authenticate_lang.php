@@ -23,10 +23,9 @@ $lang['secret_code'] ="Kanuni ya Siri";
 $lang['use_authenticator'] ="Tumia Kithibitishaji";
 $lang['select_scan_a_qrcode'] ="Chagua changanua msimbo wa qr";
 $lang['verify_login'] ="Thibitisha Kuingia";
-$lang['verification_code'] ="Nambari ya Uthibitishaji";#version 2.0
-="";
+$lang['verification_code'] ="Nambari ya Uthibitishaji";
 
-="";
+#version 2.0
+
 $lang['invalid_code_please_try_again'] ="Msimbo Batili, Tafadhali jaribu tena";
 $lang['invalid_code'] ="Msimbo Batili";
-="";

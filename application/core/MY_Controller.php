@@ -298,41 +298,26 @@ class Front_Controller extends CI_Controller
 
         $this->front_setting = $this->frontcms_setting_model->get();
 
-        if (!$this->front_setting) {
-            redirect('site/userlogin');
-        } else {
-            $front_cms_class = $this->router->fetch_class();
-            $front_cms_method = $this->router->fetch_method();
-            if ($this->front_setting->is_active_front_cms) {
-                $this->config->set_item('front_layout', true);
-            }
-            if (!$this->front_setting->is_active_front_cms) {
-                $this->config->set_item('front_layout', false);
-            }
+        $front_cms_class = $this->router->fetch_class();
+        $front_cms_method = $this->router->fetch_method();
+        $website_on = $this->front_setting && $this->front_setting->is_active_front_cms;
+        $this->config->set_item('front_layout', (bool) $website_on);
 
-            if (!$this->front_setting->is_active_front_cms && !$this->school_details->online_admission) {
-                redirect('site/userlogin');
+        if (!$website_on) {
+            // With the website off, only online admission stays reachable (when it is open);
+            // everything else gets a "website not available" page with the admission and login links.
+            $admission_pages = array(
+                'welcome' => array('admission', 'editonlineadmission', 'online_admission_review', 'getsections',
+                    'submitadmission', 'checkadmissionstatus', 'admission_bank_transfer', 'setsitecookies'),
+                'checkout' => array('index', 'successinvoice', 'paymentfailed'),
+            );
+            $class = strtolower((string) $front_cms_class);
+            $allowed = $this->front_setting && $this->school_details->online_admission
+                && isset($admission_pages[$class]) && in_array(strtolower((string) $front_cms_method), $admission_pages[$class], true);
+            if (!$allowed) {
+                $this->website_off_page();
             }
-
-            if ($this->school_details->online_admission) {
-                if (
-                    !$this->front_setting->is_active_front_cms &&
-                    !($front_cms_class == "welcome" && $front_cms_method == "admission") &&
-                    !($front_cms_class == "welcome" && $front_cms_method == "editonlineadmission") &&
-                    !($front_cms_class == "welcome" && $front_cms_method == "online_admission_review") &&
-                    !($front_cms_class == "welcome" && $front_cms_method == "getSections") &&
-                    !($front_cms_class == "welcome" && $front_cms_method == "submitadmission") &&
-                    !($front_cms_class == "checkout" && $front_cms_method == "index") &&
-                    !($front_cms_class == "checkout" && $front_cms_method == "successinvoice") &&
-                    !($front_cms_class == "checkout" && $front_cms_method == "paymentfailed") &&
-                    !($front_cms_class == "welcome" && $front_cms_method == "checkadmissionstatus")
-                ) {
-                    redirect('site/userlogin');
-                }
-            }
-
         }
-
         $this->theme_path = $this->front_setting->theme;
         //================
         $language = ($this->school_details->language);
@@ -348,6 +333,19 @@ class Front_Controller extends CI_Controller
         //===============
 
         $this->load->config('ci-blog');
+    }
+
+    /** The "website not available" page (website switched off), then stop. */
+    private function website_off_page()
+    {
+        $setting = $this->setting_model->get();
+        $school = $setting ? $setting[0] : array();
+        echo $this->load->view('website_off', array(
+            'school_name' => isset($school['name']) ? $school['name'] : '',
+            'admission' => $this->front_setting && !empty($this->school_details->online_admission),
+            'user_login' => !empty($school['student_panel_login']),
+        ), true);
+        exit;
     }
 
     protected function load_theme($content = null, $layout = true)
