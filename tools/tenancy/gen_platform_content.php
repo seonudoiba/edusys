@@ -57,8 +57,9 @@ foreach (array('about-us', 'edusys-solar-computer-lab', 'privacy-policy', 'terms
     if (!$p) {
         exit("Page $slug not found\n");
     }
-    if (in_array($slug, array('privacy-policy', 'terms-of-service'), true)) {
-        $p['description'] = markdown_to_html($p['description']);
+    if (in_array($slug, array('about-us', 'privacy-policy', 'terms-of-service'), true)) {
+        // Written as HTML files next to the seed (also used by migration 286).
+        $p['description'] = file_get_contents($out . '/pages/' . $slug . '.html');
     }
     if ($slug === 'contact-us') {
         // The demo map (Times Square) and the icons hotlinked from another company's demo site.
@@ -101,7 +102,7 @@ $identity = array(
 );
 $row = $one("SELECT phone, email, address FROM sch_settings WHERE school_id = $sid");
 $identity = array_merge($identity, $row);
-$front = array('footer_text' => $one("SELECT footer_text FROM front_cms_settings WHERE school_id = $sid")['footer_text']);
+$front = array('footer_text' => '© HyperCom. All rights reserved.');
 foreach (array('image' => 'school_content/logo/', 'admin_logo' => 'school_content/admin_logo/', 'admin_small_logo' => 'school_content/admin_small_logo/', 'app_logo' => 'school_content/logo/') as $col => $dir) {
     if (!empty($s[$col]) && ($safe = $add($dir . $s[$col], 'edusys-' . str_replace('_', '-', $col)))) {
         $identity[$col] = $safe;
@@ -113,22 +114,12 @@ foreach (array('logo' => 'edusys-front-logo', 'fav_icon' => 'edusys-favicon') as
     }
 }
 
-// ---------------------------------------------------------------- the website's copy (version 2)
+// ---------------------------------------------------------------- the website's copy (version 3)
 $copy = array (
-  'about-us' => 
-  array (
-    'title' => 'About Hypercom',
-    'description' => '<p class="lede">Hypercom Network Ltd is an integrated information technology company established in 2000 by Chief Joshua A. Denila. We work with businesses of every size, from small enterprises to large corporations, on telecoms, internet technology and green energy.</p>
-<h2>EduSYS</h2>
-<p>EduSYS is our school management platform. A school\'s administration is the same work every term: admissions, fees, attendance, results, keeping parents informed. EduSYS puts that work in one place and automates what repeats, so that a school can give its attention to teaching.</p>
-<p>Each school runs on its own web address, with its own data, staff and branding.</p>
-<h2>Where to find us</h2>
-<p>Our head office is at 14 Akinremi Street, Ikeja, Lagos. We also have an office at 1 Melcut Road, Okapa, Udu, Warri.</p>',
-  ),
   'edusys-solar-computer-lab' => 
   array (
     'title' => 'Computer laboratories',
-    'description' => '<p class="lede">Through the Hypercom school compute programme, your school gets a fully managed computer laboratory.</p>
+    'description' => '<p class="lede">Through the HyperCom school compute programme, your school gets a fully managed computer laboratory.</p>
 <p>To find out more, call <a href="tel:+2348033836341">+234 803 383 6341</a> or email <a href="mailto:info@hypercom.net.ng">info@hypercom.net.ng</a>.</p>',
   ),
   'contact-us' => 
@@ -144,7 +135,11 @@ $copy = array (
 <iframe class="map" src="https://www.google.com/maps?q=14%20Akinremi%20Street%2C%20Ikeja%2C%20Lagos%2C%20Nigeria&amp;output=embed" loading="lazy" title="Map of our Lagos office"></iframe>',
   ),
 );
+$titles = array('about-us' => 'About HyperCom', 'privacy-policy' => 'Privacy Policy', 'terms-of-service' => 'Terms of Service');
 foreach ($pages as $i => $p) {
+    if (isset($titles[$p['slug']])) {
+        $pages[$i]['title'] = $titles[$p['slug']];
+    }
     if (isset($copy[$p['slug']])) {
         $pages[$i] = array_merge($p, $copy[$p['slug']]);
     }
@@ -185,7 +180,7 @@ while ($m = $rows->fetch_assoc()) {
     }
 }
 
-$json = json_encode(array('version' => 2, 'identity' => $identity, 'front' => $front, 'pages' => $pages, 'menus' => $menus, 'banners' => $banners, 'files' => $files),
+$json = json_encode(array('version' => 3, 'identity' => $identity, 'front' => $front, 'pages' => $pages, 'menus' => $menus, 'banners' => $banners, 'files' => $files),
     JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 file_put_contents($out . '/content.json', $json);
 printf("content.json: %d KB, %d pages, %d files\n", strlen($json) / 1024, count($pages), count($files));
