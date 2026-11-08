@@ -142,8 +142,15 @@ class Roles extends Admin_Controller
 
     public function delete($id)
     {
-        $data['title'] = 'Fees Master List';
-        $this->role_model->remove($id);
+        if (!$this->rbac->hasPrivilege('superadmin', 'can_view')) {
+            access_denied();
+        }
+        // Built-in roles (Super Admin, Teacher, ...) can't be deleted; the page only offers it for others.
+        $role = $this->db->select('id, is_system')->where('id', (int) $id)->get('roles')->row_array();
+        if (!$role || !empty($role['is_system'])) {
+            access_denied();
+        }
+        $this->role_model->remove((int) $id);
         redirect('admin/roles/index');
     }
 

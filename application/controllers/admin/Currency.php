@@ -33,8 +33,17 @@ class Currency extends Admin_Controller
         $this->load->view('layout/footer', $data);
     }
 
+    /** The school's currency list is changed only by staff who may edit it. */
+    private function require_edit()
+    {
+        if (!$this->rbac->hasPrivilege('currency', 'can_view')) {
+            access_denied();
+        }
+    }
+
     public function editprice()
     {
+        $this->require_edit();
         $base_price   = $this->input->post('base_price');
         $currency_id  = $this->input->post('currency_id');
         $data = array(
@@ -47,6 +56,7 @@ class Currency extends Admin_Controller
 	
 	public function editsymbol()
     {
+        $this->require_edit();
         $symbol   = $this->input->post('symbol');
         $currency_id  = $this->input->post('currency_id');
         $data = array(
@@ -59,6 +69,7 @@ class Currency extends Admin_Controller
 
     public function changestatus()
     {
+        $this->require_edit();
         $status       = $this->input->post('status');
         $id  = $this->input->post('id');
         $data = array(
@@ -72,6 +83,7 @@ class Currency extends Admin_Controller
 
     public function changeactive()
     {
+        $this->require_edit();
         $currency_id       = $this->input->post('currency_id');
         $id  = $this->input->post('id');
         $setting_data = array(

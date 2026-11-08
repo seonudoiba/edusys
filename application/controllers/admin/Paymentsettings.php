@@ -12,6 +12,13 @@ class Paymentsettings extends Admin_Controller
     public function __construct()
     {
         parent::__construct();
+        // Every page here changes where the school's payments go: the list needs can_view, everything
+        // else (saving gateway keys, subaccounts, bank details, the active gateway) needs can_edit.
+        $method = $this->router->fetch_method();
+        $needed = $method === 'index' ? 'can_view' : 'can_edit';
+        if (!$this->rbac->hasPrivilege('payment_methods', $needed)) {
+            access_denied();
+        }
         $this->load->library('media_storage');
     }
 

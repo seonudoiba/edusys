@@ -10,6 +10,7 @@ class Mailsms extends Admin_Controller
     public function __construct()
     {
         parent::__construct();
+        $this->require_permission($this->router->fetch_method());
 
         $this->load->library('smsgateway');
         $this->load->library('mailsmsconf');
@@ -187,45 +188,6 @@ class Mailsms extends Admin_Controller
         $this->load->view('layout/header');
         $this->load->view('admin/mailsms/compose_sms', $data);
         $this->load->view('layout/footer');
-    }
-
-    public function edit($id)
-    {
-        $data['title']       = 'Add Vehicle';
-        $data['id']          = $id;
-        $editvehicle         = $this->vehicle_model->get($id);
-        $data['editvehicle'] = $editvehicle;
-        $listVehicle         = $this->vehicle_model->get();
-        $data['listVehicle'] = $listVehicle;
-        $this->form_validation->set_rules('vehicle_no', $this->lang->line('vehicle_number'), 'trim|required|xss_clean');
-        if ($this->form_validation->run() == false) {
-
-            $this->load->view('layout/header');
-            $this->load->view('admin/mailsms/edit', $data);
-            $this->load->view('layout/footer');
-        } else {
-            $manufacture_year = $this->input->post('manufacture_year');
-            $data             = array(
-                'id'             => $this->input->post('id'),
-                'vehicle_no'     => $this->input->post('vehicle_no'),
-                'vehicle_model'  => $this->input->post('vehicle_model'),
-                'driver_name'    => $this->input->post('driver_name'),
-                'driver_licence' => $this->input->post('driver_licence'),
-                'driver_contact' => $this->input->post('driver_contact'),
-                'note'           => $this->input->post('note'),
-            );
-            ($manufacture_year != "") ? $data['manufacture_year'] = $manufacture_year : '';
-            $this->vehicle_model->add($data);
-            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('update_message') . '</div>');
-            redirect('admin/mailsms/index');
-        }
-    }
-
-    public function delete($id)
-    {
-        $data['title'] = 'Fees Master List';
-        $this->vehicle_model->remove($id);
-        redirect('admin/mailsms/index');
     }
 
     public function send_individual()
@@ -2632,5 +2594,41 @@ class Mailsms extends Admin_Controller
         $message_id = $this->input->post('message_id');
         $this->messages_model->remove($message_id);
         echo json_encode(array('status' => '1', 'message' => $this->lang->line('delete_message')));
+    }
+
+    /**
+     * Sending costs money (SMS) and reaches every parent, so each sending/scheduling action needs the
+     * same permission as the page it comes from. Methods not listed keep their own checks.
+     */
+    private function require_permission($method)
+    {
+        $map = array(
+            'send_individual' => array('email', 'can_view'),
+            'send_birthday' => array('email', 'can_view'),
+            'send_group' => array('email', 'can_view'),
+            'send_class' => array('email', 'can_view'),
+            'templatedata' => array('email', 'can_view'),
+            'get_birthday_preview' => array('email', 'can_view'),
+            'get_class_preview' => array('email', 'can_view'),
+            'get_individual_preview' => array('email', 'can_view'),
+            'get_preview' => array('email', 'can_view'),
+            'send_individual_sms' => array('sms', 'can_view'),
+            'send_birthday_sms' => array('sms', 'can_view'),
+            'send_group_sms' => array('sms', 'can_view'),
+            'send_class_sms' => array('sms', 'can_view'),
+            'smstemplatedata' => array('sms', 'can_view'),
+            'test_sms' => array('sms_setting', 'can_view'),
+            'schedule_templatedata' => array('schedule_email_sms_log', 'can_view'),
+            'update_group_schedule' => array('schedule_email_sms_log', 'can_edit'),
+            'update_individual_schedule' => array('schedule_email_sms_log', 'can_edit'),
+            'update_class_schedule' => array('schedule_email_sms_log', 'can_edit'),
+            'update_group_sms_schedule' => array('schedule_email_sms_log', 'can_edit'),
+            'update_individual_sms_schedule' => array('schedule_email_sms_log', 'can_edit'),
+            'update_class_sms_schedule' => array('schedule_email_sms_log', 'can_edit'),
+        );
+        $method = strtolower((string) $method);
+        if (isset($map[$method]) && !$this->rbac->hasPrivilege($map[$method][0], $map[$method][1])) {
+            access_denied();
+        }
     }
 }
