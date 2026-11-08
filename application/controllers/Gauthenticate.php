@@ -83,28 +83,8 @@ class Gauthenticate extends Public_Controller
      */
     public function userlogin()
     {
-        $school = $this->setting_model->get();
-
-        if (!$school[0]['student_panel_login']) {
-            redirect('site/login', 'refresh');
-        }
-        
-        if ($this->auth->user_logged_in()) {
-            $this->auth->user_redirect();
-        }
-
-        $data           = array();
-        $data['title']  = 'Login';
-        $school         = $this->setting_model->get();
-        $data['name']   = $school[0]['name'];
-        $notice_content = $this->config->item('ci_front_notice_content');
-        $notices        = $this->cms_program_model->getByCategory($notice_content, array('start' => 0, 'limit' => 5));
-        $data['notice'] = $notices;
-        $data['school'] = $school[0];
-        $is_captcha     = $this->captchalib->is_captcha('userlogin');
-        $data["is_captcha"]    = $is_captcha;
-        $data['captcha_image'] = $this->captchalib->generate_captcha()['image'];
-        $this->load->view('user/gauthenticate/login', $data);
+        // The student/parent login lives at site/userlogin (it shows the two-factor form when on).
+        redirect('site/userlogin');
     }
 
     /*
