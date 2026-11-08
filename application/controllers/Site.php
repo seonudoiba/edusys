@@ -497,10 +497,6 @@ class Site extends Public_Controller
             $this->auth->user_redirect();
         }
         
-        if ($this->module_lib->hasModule('google_authenticator') 
-            && $this->module_lib->hasActive('google_authenticator')) {             redirect('gauthenticate/userlogin');     
-        }
-
         $data               = array();
         $data['title']      = 'Login';
         $data['name']       = $school[0]['name'];
@@ -510,6 +506,15 @@ class Site extends Public_Controller
         $data['school']     = $school[0];
         $is_captcha         = $this->captchalib->is_captcha('userlogin');
         $data["is_captcha"] = $is_captcha;
+
+        // With two-factor login on, show its form here (it signs in through gauthenticate/*), so the
+        // address stays site/userlogin.
+        if ($this->module_lib->hasModule('google_authenticator')
+            && $this->module_lib->hasActive('google_authenticator')) {
+            $data['captcha_image'] = $this->captchalib->generate_captcha()['image'];
+            $this->load->view('user/gauthenticate/login', $data);
+            return;
+        }
         if ($is_captcha) {
             
             if($this->input->post('captcha')){
