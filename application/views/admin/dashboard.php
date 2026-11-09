@@ -26,6 +26,21 @@
                 </div>
             <?php }?>
 
+            <?php if (!empty($onboarding)) { list($ob_done, $ob_total) = $onboarding['progress']; ?>
+                <div class="box box-primary" style="margin-bottom:20px">
+                    <div class="box-body" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px">
+                        <div style="flex:1;min-width:240px">
+                            <h4 style="margin:0 0 4px"><i class="fa fa-flag-checkered"></i> Set up your school &middot; <?php echo $ob_done; ?> of <?php echo $ob_total; ?> done</h4>
+                            <?php if ($onboarding['next']) { ?>
+                                <p style="margin:0" class="text-muted">Next: <?php echo html_escape($onboarding['next']['title']); ?>. <?php echo html_escape($onboarding['next']['text']); ?></p>
+                            <?php } ?>
+                            <div class="progress" style="height:8px;margin:8px 0 0"><div class="progress-bar progress-bar-success" style="width:<?php echo round(100 * $ob_done / max(1, $ob_total)); ?>%"></div></div>
+                        </div>
+                        <a href="<?php echo site_url('admin/onboarding'); ?>" class="btn btn-primary">Continue setup</a>
+                    </div>
+                </div>
+            <?php } ?>
+
             <?php
 $show    = false;
 $role    = $this->customlib->getStaffRole();
