@@ -422,6 +422,25 @@ class Admin extends Admin_Controller
             $data['std_graphclass'] = "col-lg-4 col-md-6 col-sm-6";
         }
 
+        // Setup checklist card, until every step is done or skipped or the school hides it.
+        $data['onboarding'] = null;
+        if ($this->rbac->hasPrivilege('general_setting', 'can_view')) {
+            $this->load->library('School_onboarding');
+            $state = $this->school_onboarding->state();
+            $steps = $this->school_onboarding->steps();
+            $progress = $this->school_onboarding->progress($steps);
+            if (!$state['hidden'] && $progress[0] < $progress[1]) {
+                $next = null;
+                foreach ($steps as $step) {
+                    if ($step['status'] === 'todo') {
+                        $next = $step;
+                        break;
+                    }
+                }
+                $data['onboarding'] = array('progress' => $progress, 'next' => $next);
+            }
+        }
+
         $this->load->view('layout/header', $data);
         $this->load->view('admin/dashboard', $data);
         $this->load->view('layout/footer', $data);

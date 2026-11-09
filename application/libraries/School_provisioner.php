@@ -62,6 +62,11 @@ class School_provisioner
                 $admin_id = $this->create_super_admin($db, $school, $code);
                 $map = $this->load_default_data($db, (int) $school['id'], !empty($school['is_platform']), $admin_id);
                 $this->fill_settings($db, $school);
+                if (empty($school['is_platform'])) {
+                    // Nigerian classes (Nursery, Primary, JSS, SS) in place of the sample Class 1-4.
+                    $this->CI->load->library('School_onboarding');
+                    $this->CI->school_onboarding->provision_defaults((int) $school['id']);
+                }
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';
                 if (empty($school['is_platform'])) { // the platform's homepage is the 'platform' theme's
