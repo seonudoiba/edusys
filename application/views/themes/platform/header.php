@@ -11,7 +11,7 @@
                     <a href="<?php echo html_escape($url); ?>"<?php echo $on ? ' class="on" aria-current="page"' : ''; ?>><?php echo html_escape($m['menu']); ?></a>
                 <?php }
             } ?>
-            <a class="end" href="<?php echo html_escape(site_url('account')); ?>">Sign in</a>
+            <a class="end<?php echo isset($active_menu) && in_array($active_menu, array('find-school', 'account'), true) ? ' on" aria-current="page' : ''; ?>" href="<?php echo html_escape(site_url('find-school')); ?>">Sign in</a>
             <a class="btn btn-sm" href="<?php echo html_escape(site_url('plans')); ?>">Register your school</a>
         </nav>
     </div>

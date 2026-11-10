@@ -52,7 +52,7 @@ foreach (!empty($footer_menus) ? $footer_menus : array() as $m) {
             <nav aria-label="Legal">
                 <a href="<?php echo html_escape(site_url('page/privacy-policy')); ?>">Privacy Policy</a>
                 <a href="<?php echo html_escape(site_url('page/terms-of-service')); ?>">Terms of Service</a>
-                <a href="<?php echo html_escape(site_url('account')); ?>">Sign in</a>
+                <a href="<?php echo html_escape(site_url('find-school')); ?>">Sign in</a>
             </nav>
         </div>
     </div>

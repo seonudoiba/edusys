@@ -16,7 +16,7 @@
                 <a href="#" id="a_forgot">Forgot your password?</a>
             </div>
         </form>
-        <p style="margin-top:44px;color:var(--soft);font-size:.95rem">Staff, parents and students sign in at their school's own address. <a href="<?php echo site_url('site/login'); ?>">Platform team</a></p>
+        <p style="margin-top:44px;color:var(--soft);font-size:.95rem">Staff, parents and students sign in at their school's own address: <a href="<?php echo html_escape(site_url('find-school')); ?>">find your school</a>. <a href="<?php echo site_url('site/login'); ?>">Platform team</a></p>
     </div>
 </div>
 <script>
