@@ -62,13 +62,13 @@ class Question extends Admin_Controller
         echo json_encode(array('status' => 1, 'result' => $question_result));
     }
 
+    /** The import template: Excel (.xlsx), or the CSV with ?format=csv. */
     public function exportformat()
     {
         $this->load->helper('download');
-        $filepath = "./backend/import/import_question_sample_file.csv";
-        $data     = file_get_contents($filepath);
-        $name     = 'import_question_sample_file.csv';
-        force_download($name, $data);
+        $xlsx = $this->input->get('format') !== 'csv' && is_file('./backend/import/import_question_template.xlsx');
+        $name = $xlsx ? 'import_question_template.xlsx' : 'import_question_sample_file.csv';
+        force_download($name, file_get_contents('./backend/import/' . $name));
     }
 
     public function bulkdelete()
@@ -78,8 +78,12 @@ class Question extends Admin_Controller
         echo json_encode(array('status' => 1, 'message' => $this->lang->line('delete_message')));
     }
 
+    /** Excel (.xlsx) or CSV questions (libraries/Question_import.php): imported rows, and problems by row. */
     public function uploadfile()
     {
+        if (!$this->rbac->hasPrivilege('import_question', 'can_view') || !$this->rbac->hasPrivilege('question_bank', 'can_add')) {
+            access_denied();
+        }
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
         $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
@@ -91,50 +95,28 @@ class Question extends Admin_Controller
                 'section_id' => form_error('section_id'),
                 'file'       => form_error('file'),
             );
-            $array = array('status' => 0, 'error' => $data);
-            echo json_encode($array);
-        } else {
-            $insert_array = array();
-            //====================
-            if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-
-                $fileName = $_FILES["file"]["tmp_name"];
-                if (isset($_FILES["file"]) && !empty($_FILES['file']['name']) && $_FILES["file"]["size"] > 0) {
-                    $file = fopen($fileName, "r");
-                    $flag = true;
-                    while (($column = fgetcsv($file, 10000, ",")) !== false) {
-                        if ($flag) {
-                            $flag = false;
-                            continue;
-                        }
-                        if (trim($column['0']) != "" && trim($column['1']) != "" && trim($column['2']) != "") {
-                            $insert_array[] = array(
-                                'staff_id'      => $this->customlib->getStaffID(),
-                                'subject_id'    => $this->input->post('subject_id'),
-                                'class_id'      => $this->input->post('class_id'),
-                                'section_id'    => $this->input->post('section_id'),
-                                'question_type' => trim($column['0']),
-                                'level'         => trim($column['1']),
-                                'question'      => trim($column['2']),
-                                'opt_a'         => trim($column['3']),
-                                'opt_b'         => trim($column['4']),
-                                'opt_c'         => trim($column['5']),
-                                'opt_d'         => trim($column['6']),
-                                'opt_e'         => trim($column['7']),
-                                'correct'       => trim($column['8']),
-                            );
-                        }
-                    }
-                }
-
-                if (!empty($insert_array)) {
-                    $this->question_model->add_question_bulk($insert_array);
-                }
-                $array = array('status' => '1', 'error' => '', 'message' => count($insert_array) . ' ' . $this->lang->line('questions_are_successfully_imported'));
-                echo json_encode($array);
-            }
-            //=============
+            echo json_encode(array('status' => 0, 'error' => $data));
+            return;
         }
+        $this->load->library('Question_import');
+        list($rows, $error) = Question_import::read($_FILES['file']['tmp_name'], pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+        if ($error) {
+            echo json_encode(array('status' => 0, 'error' => array('file' => $error)));
+            return;
+        }
+        list($count, $problems) = $this->question_import->import($rows, array(
+            'staff_id' => $this->customlib->getStaffID(),
+            'subject_id' => $this->input->post('subject_id'),
+            'class_id' => $this->input->post('class_id'),
+            'section_id' => $this->input->post('section_id'),
+        ));
+        $message = $count . ' ' . $this->lang->line('questions_are_successfully_imported');
+        if ($problems) {
+            $shown = array_slice($problems, 0, 20);
+            $message .= '<br><b>' . count($problems) . ' row(s) skipped:</b><br>' . implode('<br>', array_map('html_escape', $shown))
+                . (count($problems) > 20 ? '<br>...' : '');
+        }
+        echo json_encode(array('status' => '1', 'error' => '', 'message' => $message));
     }
 
     public function handle_upload()
@@ -146,7 +128,11 @@ class Question extends Admin_Controller
             $file_size         = $_FILES["file"]["size"];
             $file_name         = $_FILES["file"]["name"];
             $allowed_extension = $image_validate['allowed_extension'];
-            $ext               = pathinfo($file_name, PATHINFO_EXTENSION);
+            $ext               = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+            if ($ext === 'xlsx') { // Excel: a zip file
+                $allowed_extension[] = 'xlsx';
+                $allowed_mime_type = array_merge($allowed_mime_type, array('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip', 'application/octet-stream'));
+            }
             $allowed_mime_type = $image_validate['allowed_mime_type'];
 
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -231,6 +217,7 @@ class Question extends Admin_Controller
                 'level'         => $this->input->post('question_level'),
                 'class_id'      => $this->input->post('class_id'),
                 'staff_id'      => $this->customlib->getStaffID(),
+                'passage_id'    => (int) $this->input->post('passage_id') ?: null,
             );
 
             $section_id = $this->input->post('section_id');
@@ -300,6 +287,7 @@ class Question extends Admin_Controller
         $questionOpt                 = $this->customlib->getQuesOption();
         $data['questionOpt']         = $questionOpt;
         $data['recordid']            = $this->input->post('recordid');
+        $data['passages']            = $this->db->select('id, title')->order_by('title')->get('question_passages')->result_array();
         $page                        = $this->load->view('admin/question/_addform', $data, true);
         echo json_encode(array('status' => 1, 'page' => $page));
     }
@@ -310,6 +298,7 @@ class Question extends Admin_Controller
         $data['recordid']            = $this->input->post('recordid');
         $question_result             = $this->question_model->get($data['recordid']);
         $data['question_result']     = $question_result;
+        $data['passages']            = $this->db->select('id, title')->order_by('title')->get('question_passages')->result_array();
         $data['classList']           = $this->class_model->get();
         $data['sectionList']         = $this->section_model->getClassBySection($question_result->class_id);
         $subject_result              = $this->subject_model->get();

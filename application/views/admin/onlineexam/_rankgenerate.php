@@ -60,7 +60,10 @@ if (!empty($student_data)) {
                     $exam_total_neg_marks = 0;
                 }
 
-                $get_marks                = (int) ($exam_total_scored - $exam_total_neg_marks);
+                $get_marks                = (int) round(($exam_total_scored - $exam_total_neg_marks) * 100);
+                if (isset($stored_scores[$student_key])) {
+                    $get_marks = (int) round($stored_scores[$student_key] * 100); // the stored score (Cbt_scoring)
+                }
 
 
                 $array_rank[$get_marks][] = $student_key;

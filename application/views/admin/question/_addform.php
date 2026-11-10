@@ -75,6 +75,16 @@ foreach ($classList as $class_key => $class_value) {
                    </div>
 
                     <div class="form-group">
+                        <label for="passage_id">Reading passage <small class="text-muted">(optional, for comprehension)</small></label>
+                        <select id="passage_id" name="passage_id" class="form-control">
+                            <option value="">None</option>
+                            <?php foreach ($passages as $p) { ?>
+                                <option value="<?php echo (int) $p['id']; ?>" <?php echo (int) 0 === (int) $p['id'] ? 'selected' : ''; ?>><?php echo html_escape($p['title']); ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="help-block">Students see the passage above the question. <a href="<?php echo site_url('admin/question_passage'); ?>" target="_blank">Manage passages</a></p>
+                    </div>
+                    <div class="form-group">
                         <label><?php echo $this->lang->line('question') ?></label><small class="req"> *</small>
                         <button class="btn btn-primary pull-right btn-xs" type="button" id="question" data-toggle="modal" data-location="question" data-target="#myimgModal"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_image'); ?></button>
                             <textarea class="form-control ckeditor" id="question_textbox" name="question"></textarea>

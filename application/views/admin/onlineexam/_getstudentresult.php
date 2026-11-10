@@ -61,6 +61,15 @@ if (!empty($online_exam_validate)) {
             $exam_total_neg_marks = 0;
         }
     }
+    // The stored score (libraries/Cbt_scoring.php) is the one that counts: the same on every page.
+    if (!empty($online_exam_validate->scored_at)) {
+        $correct_ans          = (int) $online_exam_validate->correct_count;
+        $wrong_ans            = (int) $online_exam_validate->wrong_count;
+        $not_attempted        = (int) $online_exam_validate->unanswered_count;
+        $exam_total_marks     = (float) $online_exam_validate->max_score;
+        $exam_total_neg_marks = (float) $online_exam_validate->neg_score;
+        $exam_total_scored    = (float) $online_exam_validate->score + $exam_total_neg_marks; // shown as scored minus negative
+    }
 
     ?>
                   <button class="btn btn-primary btn-xs print_div" title="<?php echo $this->lang->line('print'); ?>" data-examid="<?php echo $exam->id; ?>" data-student_session_id="<?php echo $student_session_id; ?>" data-recordid="<?php echo $onlineexam_student_id; ?>"  data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-print"></i></button>

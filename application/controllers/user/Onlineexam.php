@@ -50,6 +50,19 @@ class Onlineexam extends Student_Controller
             $data['result_prepare']  = $this->onlineexamresult_model->checkResultPrepare($online_exam_validate->id);
         }
         $data['online_exam_validate'] = $online_exam_validate;
+        $data['cbt_state'] = null;
+        if (!empty($online_exam_validate) && $exam) {
+            $this->load->library('Cbt_attempt');
+            $found = $this->cbt_attempt->enrolment((int) $exam->id, (int) $student_session_id);
+            if ($found) {
+                $data['cbt_state'] = $this->cbt_attempt->state($found[0], $found[1]); // also closes an attempt whose time ran out
+                $data['online_exam_validate'] = $online_exam_validate = $this->onlineexam_model->examstudentsID($student_session_id, $id);
+                $data['question_result'] = $this->onlineexamresult_model->getResultByStudent($online_exam_validate->id, $online_exam_validate->onlineexam_id);
+            }
+        }
+        if ($this->session->flashdata('msg')) {
+            $data['flash'] = $this->session->flashdata('msg');
+        }
         $filetype                     = $this->filetype_model->get();
         $data['allowed_extension']    = array_map('trim', array_map('strtolower', explode(',', $filetype->file_extension)));
         $data['allowed_mime_type']    = array_map('trim', array_map('strtolower', explode(',', $filetype->file_mime)));
@@ -87,115 +100,130 @@ class Onlineexam extends Student_Controller
         echo json_encode(array('status' => 1, 'page' => $data['page']));
     }
 
+    /** The old one-form submit: answers now save as they are chosen (take/answer/submit). */
     public function save()
     {
-        if ($this->input->server('REQUEST_METHOD') == 'POST') {
-            $total_rows = $this->input->post('total_rows');
-            if (!empty($total_rows)) {
-                $save_result = array();
-                foreach ($total_rows as $row_key => $row_value) {
-                    if (($_POST['question_type_' . $row_value]) == "singlechoice") {
-
-                        if (isset($_POST['radio' . $row_value])) {
-                            $save_result[] = array(
-                                'onlineexam_student_id'  => $this->input->post('onlineexam_student_id'),
-                                'onlineexam_question_id' => $this->input->post('question_id_' . $row_value),
-                                'select_option'          => $_POST['radio' . $row_value],
-                                'attachment_name'        => "",
-                                'attachment_upload_name' => "",
-                            );
-                        }
-                    } elseif (($_POST['question_type_' . $row_value]) == "true_false") {
-                        # code...
-                        if (isset($_POST['radio' . $row_value])) {
-                            $save_result[] = array(
-                                'onlineexam_student_id'  => $this->input->post('onlineexam_student_id'),
-                                'onlineexam_question_id' => $this->input->post('question_id_' . $row_value),
-                                'select_option'          => $_POST['radio' . $row_value],
-                                'attachment_name'        => "",
-                                'attachment_upload_name' => "",
-                            );
-                        }
-                    } elseif (($_POST['question_type_' . $row_value]) == "multichoice") {
-                        # code...
-                        if (isset($_POST['checkbox' . $row_value])) {
-                            $save_result[] = array(
-                                'onlineexam_student_id'  => $this->input->post('onlineexam_student_id'),
-                                'onlineexam_question_id' => $this->input->post('question_id_' . $row_value),
-                                'select_option'          => json_encode($_POST['checkbox' . $row_value]),
-                                'attachment_name'        => "",
-                                'attachment_upload_name' => "",
-                            );
-                        }
-                    } elseif (($_POST['question_type_' . $row_value]) == "descriptive") {
-                        # code...
-                        if (isset($_POST['answer' . $row_value]) || (isset($_FILES["attachment" . $row_value]) && !empty($_FILES["attachment" . $row_value]['name']))) {
-                            $inst_array = array(
-                                'onlineexam_student_id'  => $this->input->post('onlineexam_student_id'),
-                                'onlineexam_question_id' => $this->input->post('question_id_' . $row_value),
-                                'select_option'          => $_POST['answer' . $row_value],
-                            );
-
-                            $file_name        = "";
-                            $upload_file_name = "";
-                            if (isset($_FILES["attachment" . $row_value]) && !empty($_FILES["attachment" . $row_value]['name'])) {
-                                $file_name        = $_FILES["attachment" . $row_value]["name"];
-                                $fileInfo         = pathinfo($_FILES["attachment" . $row_value]["name"]);
-                                $upload_file_name = time() . uniqid(rand()) . '.' . $fileInfo['extension'];
-                                move_uploaded_file($_FILES["attachment" . $row_value]["tmp_name"], upload_root() . "onlinexam_images/" . $upload_file_name);
-                            }
-                            $inst_array['attachment_name']        = $file_name;
-                            $inst_array['attachment_upload_name'] = $upload_file_name;
-                            $save_result[]                        = $inst_array;
-                        }
-                    }
-                }
-
-                $this->onlineexamresult_model->add($save_result);
-                $this->onlineexam_model->updateExamResult($this->input->post('onlineexam_student_id'));
-                redirect('user/onlineexam', 'refresh');
-            }
-        } else {
-
-        }
+        $this->session->set_flashdata('msg', '<div class="alert alert-info">Please open the exam again: answers now save as you go.</div>');
+        redirect('user/onlineexam');
     }
 
+    /** The old start (exam in a pop-up): the exam now opens on its own page. */
     public function getExamForm()
     {
-        $data            = array();
-        $question_status = 0;
-        $recordid        = $this->input->post('recordid');
-        $exam            = $this->onlineexam_model->getexamdetails($recordid);
-        $data['exam']    = $exam;
+        $id = (int) $this->input->post('recordid');
+        echo json_encode(array('status' => 0, 'redirect' => site_url('user/onlineexam/take/' . $id), 'question_status' => 1));
+    }
 
-        $data['questions'] = $this->onlineexam_model->getExamQuestions($recordid, $exam->is_random_question);
+    // ------------------------------------------------------------------ CBT (libraries/Cbt_attempt.php)
 
-        $student_current_class         = $this->customlib->getStudentCurrentClsSection();
-        $student_session_id            = $student_current_class->student_session_id;
-        $onlineexam_student            = $this->onlineexam_model->examstudentsID($student_session_id, $exam->id);
-        $data['onlineexam_student_id'] = $onlineexam_student;
-        $getStudentAttemts             = $this->onlineexam_model->getStudentAttemts($onlineexam_student->id);
-        $data['question_status']       = 0;
-        $data['exam_duration']         = $exam->duration;
-
-        if (strtotime(date('Y-m-d H:i:s')) >= strtotime(date($exam->exam_to))) {
-            $question_status         = 1;
-            $data['question_status'] = 1;
-        } else if ($exam->attempt > $getStudentAttemts) {
-            $this->onlineexam_model->addStudentAttemts(array('onlineexam_student_id' => $onlineexam_student->id));
-        } else {
-            $question_status         = 1;
-            $data['question_status'] = 1;
+    /** The exam screen: questions, navigator, timer. The questions load from start(). */
+    public function take($id = null)
+    {
+        list($exam, $os) = $this->cbt_enrolment($id);
+        list($state, $message) = $this->cbt_attempt->state($exam, $os);
+        if (!in_array($state, array('ready', 'running'), true)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-info">' . html_escape($message) . '</div>');
+            redirect('user/onlineexam/view/' . (int) $exam['id']);
         }
+        $student = $this->student_model->getByStudentSession($os['student_session_id']);
+        $this->load->view('user/onlineexam/take', array(
+            'exam' => $exam,
+            'state' => $state,
+            'student' => $student,
+            'sch_setting' => $this->sch_setting_detail,
+            'question_count' => $this->db->where('onlineexam_id', (int) $exam['id'])->count_all_results('onlineexam_questions'),
+        ));
+    }
 
-        $questionOpt         = $this->customlib->getQuesOption();
-        $data['questionOpt'] = $questionOpt;
-        $pag_content         = $this->load->view('user/onlineexam/_searchQuestionByExamID', $data, true);
+    /** POST exam_id: starts or resumes the attempt; the paper, saved answers and seconds left. */
+    public function start()
+    {
+        list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
+        try {
+            $attempt = $this->cbt_attempt->start($exam, $os);
+        } catch (RuntimeException $e) {
+            return $this->cbt_json(array('ok' => false, 'error' => $e->getMessage()));
+        }
+        $paper = $this->cbt_attempt->paper($exam, $os, $attempt);
+        $this->cbt_json(array('ok' => true, 'attempt' => (int) $attempt['id'], 'seconds_left' => $this->cbt_attempt->seconds_left($attempt),
+            'questions' => $paper['questions'], 'passages' => $paper['passages']));
+    }
 
-        $total_remaining_seconds = round((strtotime($exam->exam_to) - strtotime(date('Y-m-d H:i:s'))) / 3600 * 60 * 60, 1);
-        $exam_duration           = ($total_remaining_seconds < getSecondsFromHMS($exam->duration)) ? getHMSFromSeconds($total_remaining_seconds) : $exam->duration;
+    /** POST exam_id, question_id, answer (string, or answer[] for multiple choice): saves one answer. */
+    public function answer()
+    {
+        list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
+        $attempt = $this->cbt_attempt->running($exam, $os);
+        if (!$attempt) {
+            return $this->cbt_json(array('ok' => false, 'ended' => true, 'error' => 'This exam has ended. Your saved answers were submitted.'));
+        }
+        $value = $this->input->post('answer');
+        if ($value === null) {
+            $value = $this->input->post('answer[]');
+        }
+        try {
+            $this->cbt_attempt->save($exam, $os, $attempt, (int) $this->input->post('question_id'), $value);
+        } catch (RuntimeException $e) {
+            return $this->cbt_json(array('ok' => false, 'error' => $e->getMessage(), 'seconds_left' => $this->cbt_attempt->seconds_left($attempt)));
+        }
+        $this->cbt_json(array('ok' => true, 'seconds_left' => $this->cbt_attempt->seconds_left($attempt)));
+    }
 
-        echo json_encode(array('status' => 0, 'exam' => $exam, 'duration' => $exam_duration, 'page' => $pag_content, 'question_status' => $question_status, 'total_question' => count($data['questions'])));
+    /** POST exam_id, question_id, file: a file for a written answer. */
+    public function upload()
+    {
+        list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
+        $attempt = $this->cbt_attempt->running($exam, $os);
+        if (!$attempt) {
+            return $this->cbt_json(array('ok' => false, 'ended' => true, 'error' => 'This exam has ended.'));
+        }
+        try {
+            $name = $this->cbt_attempt->upload($exam, $os, $attempt, (int) $this->input->post('question_id'), isset($_FILES['file']) ? $_FILES['file'] : array());
+        } catch (RuntimeException $e) {
+            return $this->cbt_json(array('ok' => false, 'error' => $e->getMessage()));
+        }
+        $this->cbt_json(array('ok' => true, 'file' => $name, 'seconds_left' => $this->cbt_attempt->seconds_left($attempt)));
+    }
+
+    /** POST exam_id: submits (also when time is up). */
+    public function submit()
+    {
+        list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
+        $attempt = $this->cbt_attempt->running($exam, $os); // a passed deadline is closed (submitted) here already
+        if ($attempt) {
+            $this->cbt_attempt->submit($exam, $os, $attempt);
+        }
+        $this->session->set_flashdata('msg', '<div class="alert alert-success">Your exam has been submitted.</div>');
+        $this->cbt_json(array('ok' => true, 'redirect' => site_url('user/onlineexam/view/' . (int) $exam['id'])));
+    }
+
+    /** The exam and this student's place in it; only the student (not a parent) and only their own. */
+    private function cbt_enrolment($exam_id, $json = false)
+    {
+        $this->load->library('Cbt_attempt');
+        $fail = function ($message) use ($json) {
+            if ($json) {
+                $this->cbt_json(array('ok' => false, 'error' => $message));
+                $this->output->_display();
+                exit;
+            }
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">' . html_escape($message) . '</div>');
+            redirect('user/onlineexam');
+        };
+        if ($this->customlib->getUserRole() !== 'student') {
+            $fail('Only the student can sit an exam.');
+        }
+        $class = $this->customlib->getStudentCurrentClsSection();
+        $found = $class ? $this->cbt_attempt->enrolment((int) $exam_id, (int) $class->student_session_id) : null;
+        if (!$found) {
+            $fail('This exam is not assigned to you.');
+        }
+        return $found;
+    }
+
+    private function cbt_json(array $data)
+    {
+        $this->output->set_content_type('application/json')->set_header('Cache-Control: no-store')->set_output(json_encode($data));
     }
 
     public function downloadattachment($doc)

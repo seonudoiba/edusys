@@ -19,7 +19,7 @@
                     </div>
                     <div class="tab-content">
                     <div class="tab-pane active" id="exam">
-                    <div class="box-body ">
+                    <div class="box-body "><?php if ($this->session->flashdata('msg')) { echo $this->session->flashdata('msg'); } ?>
                         <div class="table-responsive mailbox-messages">
                             <table class="table table-striped table-bordered table-hover exam-list" data-export-title="<?php echo $this->lang->line('online_exam'); ?>">
                                 <thead>

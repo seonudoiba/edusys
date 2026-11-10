@@ -14,6 +14,7 @@
                   <div class="box-tools pull-right"></div>
                </div>
                <div class="box-body">
+                  <?php if (!empty($flash)) { echo $flash; } ?>
                   <?php
 
 if ($online_exam_validate->is_attempted == 1 && ($exam->is_quiz)) {
@@ -77,6 +78,15 @@ if (!empty($online_exam_validate)) {
         if (!$dispaly_negative_marks) {
             $exam_total_neg_marks = 0;
         }
+    }
+    // The stored score (libraries/Cbt_scoring.php) is the one that counts: the same on every page.
+    if (!empty($online_exam_validate->scored_at)) {
+        $correct_ans          = (int) $online_exam_validate->correct_count;
+        $wrong_ans            = (int) $online_exam_validate->wrong_count;
+        $not_attempted        = (int) $online_exam_validate->unanswered_count;
+        $exam_total_marks     = (float) $online_exam_validate->max_score;
+        $exam_total_neg_marks = (float) $online_exam_validate->neg_score;
+        $exam_total_scored    = (float) $online_exam_validate->score + $exam_total_neg_marks; // shown below as scored minus negative
     }
 
     ?>
@@ -398,13 +408,18 @@ $question_no++;
     }
     ?>
                   <?php
-if (!$online_exam_validate->is_attempted && ($exam->is_active) && !($exam->publish_result) && $role == 'student' && strtotime(date('Y-m-d H:i:s')) >= strtotime(date($exam->exam_from)) && strtotime(date('Y-m-d H:i:s')) <= strtotime(date($exam->exam_to))) {
+if ($role == 'student' && !empty($cbt_state) && in_array($cbt_state[0], array('ready', 'running'), true)) {
         ?>
                   <div class="row no-print">
                      <div class="col-xs-12">
-                        <button type="button" class="btn btn-info questions" data-recordid="<?php echo $exam->id; ?>"  data-loading-text="<i class='fa fa-spinner fa-spin'></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-bullhorn"></i> <?php echo $this->lang->line('start_exam') ?></button>
+                        <a class="btn btn-info" href="<?php echo site_url('user/onlineexam/take/' . (int) $exam->id); ?>"><i class="fa fa-bullhorn"></i> <?php echo $cbt_state[0] === 'running' ? 'Continue exam' : $this->lang->line('start_exam'); ?></a>
+                        <?php if ($cbt_state[0] === 'running') { ?><p class="text-muted" style="margin-top:8px"><?php echo html_escape($cbt_state[1]); ?></p><?php } ?>
                      </div>
                   </div>
+                  <?php
+} elseif ($role == 'student' && !empty($cbt_state) && in_array($cbt_state[0], array('not_open', 'no_questions'), true)) {
+        ?>
+                  <div class="alert alert-info no-print"><?php echo html_escape($cbt_state[1]); ?></div>
                   <?php
 }
 
@@ -465,344 +480,6 @@ function getMarks($question)
     return json_encode(array('get_marks' => $question->marks, 'scr_marks' => 0));
 }
 ?>
-<!-- Modal -->
-<div class="questionmodal">
-   <form id="regiration_form"  action="<?php echo site_url('user/onlineexam/save') ?>"  enctype="multipart/form-data" method="post">
-      <div id="onlineexample" class="modal fade" role="dialog">
-         <div class="modal-dialog modal-dialogfullwidth">
-            <!-- Modal content-->
-            <div class="modal-content modal-contentfull">
-               <div class="modal-header">
-                  <button type="button" class="close questionclose" data-dismiss="modal">&times;</button>
-                  <div class="questionlogo"><img src="<?php echo $this->customlib->getBaseUrl(); ?>uploads/school_content/admin_logo/<?php echo $this->setting_model->getAdminlogo();?>" alt="<?php echo $this->customlib->getAppName() ?>" /></div>
-               </div>
-               <div class="exambgtop">
-                  <h3><?php echo $exam->exam; ?></h3>
-                  <div class="exambgright">
-                    <div class="timeclock">
-                     <i class="fa fa-clock-o"></i><div id="box_header" class="inlineblock valign-middle"></div>
-                    </div>
-                     <button type="button" class="btn btn-info btn-sm save_exam_btn"><?php echo $this->lang->line('submit') ?> </button>
-                  </div>
-               </div>
-               <!-- ./exambgtop -->
-               <div class="modal-body">
-                <span id='spanFileName'></span>
-                  <div class="row question_container">
-                  </div>
-                  <!--./row-->
-               </div>
-               <!--./modal-body-->
-            </div>
-            <!--./modal-content-->
-         </div>
-         <!--./modal-dialog-->
-         <div class="quizfooter">
-           <input type="button" name="next" class="next qbtn-previous" value="<?php echo $this->lang->line('previous'); ?>" style="display: none;">
-            <input type="button" name="next" class="next qbtn-next" value="<?php echo $this->lang->line('next'); ?>">
-         </div>
-         <!-- ./quizfooter -->
-      </div>
-      <!--./-->
-   </form>
-</div>
-<!-- questionmodal -->
-<div id="saveModal" class="modal fade" role="dialog">
-   <div class="modal-dialog">
-      <!-- Modal content-->
-      <div class="modal-content">
-         <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title"><?php echo $this->lang->line('confirm_save'); ?></h4>
-         </div>
-         <div class="modal-body">
-            <p><?php echo $this->lang->line('are_you_sure_you_want_to_submit_this_exam') ?></p>
-         </div>
-         <div class="modal-footer">
-            <button type="button" class="btn btn-success btn-ok" data-loading-text="<i class='fa fa-spinner fa-spin'></i> <?php echo $this->lang->line('please_wait'); ?>"><?php echo $this->lang->line('save'); ?></button>
-         </div>
-      </div>
-   </div>
-</div>
-
-<script type="text/javascript">
-  var word_count_limit="<?php echo $exam->answer_word_count ?>";
-  var allowed_mime_type=<?php echo json_encode($allowed_mime_type) ?>;
-  var allowed_extension=<?php echo json_encode($allowed_extension) ?>;
-  var allowed_upload_size='<?php echo $allowed_upload_size; ?>';
-
-   $('#saveModal').on('click', '.btn-ok', function (e) {
-       $("#regiration_form").submit();
-       var $this = $(this);
-       $this.button('loading');
-       setTimeout(function () {
-           $this.button('reset');
-       }, 800000);
-
-
-   });
-
-   $("#regiration_form").submit(function () {
-       // submit more than once return false
-       $(this).submit(function () {
-           return false;
-       });
-       // submit once return true
-       return true;
-   });
-
-
-   $(document).ready(function () {
-       var current = 1, current_step, next_step, steps, elapsed_seconds;
-       steps = 0;
-       elapsed_seconds = 0;
-       var timer2 = "00:00:00";
-       $(document).on('click', '.qbtn-next', function () {
-
-           if ($("div.question_list").find("fieldset:visible").next().is(":last-child"))
-           {
-               $('.qbtn-next').toggle();
-           }
-
-           current_step = $("div.question_list").find("fieldset:visible");
-           next_step = $("div.question_list").find("fieldset:visible").next();
-
-           next_step.show();
-           current_step.hide();
-
-           if ($("div.question_list").find("fieldset:visible").prev().length) {
-               $('.qbtn-previous').show();
-           }
-
-           if ($("div.question_list").find("fieldset:visible").next().length) {
-               $('.qbtn-next').show();
-           }
-
-           activeQuestionButton();
-
-       });
-
-       $(document).on('click', '.qbtn-previous', function () {
-
-           if ($("div.question_list").find("fieldset:visible").prev().is(":first-child"))
-           {
-               $('.qbtn-previous').hide();
-           }
-           current_step = $("div.question_list").find("fieldset:visible");
-           next_step = $("div.question_list").find("fieldset:visible").prev();
-           next_step.show();
-           current_step.hide();
-
-           if ($("div.question_list").find("fieldset:visible").prev().length) {
-               $('.qbtn-previous').show();
-           }
-           if ($("div.question_list").find("fieldset:visible").next().length) {
-               $('.qbtn-next').show();
-           }
-           activeQuestionButton();
-       });
-   });
-
-   function activeQuestionButton() {
-       var qu = $("div.question_list").find("fieldset:visible").attr('id');
-       var qustion_n = qu.split("question_");
-       var sss = $("button[data-qustion_no='" + qustion_n[1] + "']");
-       sss.addClass("activeqbtn");
-       $("button.question_switcher").not(sss).removeClass('activeqbtn');
-   }
-</script>
-<script type="text/javascript">
-   $(document).on('click', '.question_switcher', function () {
-       var question_no = $(this).data('qustion_no');
-       var btn = $(this).addClass("activeqbtn");
-
-       $("button.question_switcher").not(btn).removeClass('activeqbtn');
-
-       var $this = $("div.question_list").find("fieldset#question_" + question_no);
-       $("div.question_list").find("fieldset").not($this).hide();
-       $this.show();
-
-       if ($("div.question_list").find("fieldset:visible").is(":first-child"))
-       {
-           $('.qbtn-previous').hide();
-       }
-
-       if ($("div.question_list").find("fieldset:visible").is(":last-child"))
-       {
-           $('.qbtn-next').hide();
-       }
-
-       if ($("div.question_list").find("fieldset:visible").prev().length) {
-           $('.qbtn-previous').show();
-       }
-
-       if ($("div.question_list").find("fieldset:visible").next().length) {
-           $('.qbtn-next').show();
-       }
-
-   });
-
-   $(document).on('click', '.questions', function () {
-       elapsed_seconds = 0;
-       var $this = $(this);
-       var recordid = $this.data('recordid');
-       $('input[name=recordid]').val(recordid);
-
-       $.ajax({
-           type: 'POST',
-           url: baseurl + "user/onlineexam/getExamForm",
-           data: {'recordid': recordid},
-           dataType: 'JSON',
-           beforeSend: function () {
-               $this.button('loading');
-               clearInterval(interval);
-           },
-           success: function (data) {
-               if (data.question_status == 0) {
-                   if(data.total_question <= 1){
-                    $('.qbtn-next').css('display','none');
-                   }
-
-                   $('#box_header').html(data.duration);
-
-                   timer2 = data.duration;
-                   timer();
-                $('.question_container').html(data.page);
-                $('.question_container').find('.filestyle').dropify();
-                  CKEDITOR.env.isCompatible = true;
-                 $('[class*="ckeditor"]').ckeditor({
-                     toolbar: 'Evalution',
-                     allowedContent : true,
-                     extraPlugins: 'ckeditor_wiris,wordcount,notification',
-                     enterMode : CKEDITOR.ENTER_BR,
-                     shiftEnterMode: CKEDITOR.ENTER_P,
-                     customConfig: baseurl+'/backend/js/ckeditor_config.js',
-                    wordcount : {
-
-    // Whether or not you Show Remaining Count (if Maximum Word/Char/Paragraphs Count is set)
-    showRemaining: false,
-
-    // Whether or not you want to show the Paragraphs Count
-    showParagraphs: false,
-
-    // Whether or not you want to show the Word Count
-    showWordCount: true,
-
-    // Whether or not you want to show the Char Count
-    showCharCount: false,
-
-    // Whether or not you want to Count Bytes as Characters (needed for Multibyte languages such as Korean and Chinese)
-    countBytesAsChars: false,
-
-    // Whether or not you want to count Spaces as Chars
-    countSpacesAsChars: false,
-
-    // Whether or not to include Html chars in the Char Count
-    countHTML: false,
-
-    // Whether or not to include Line Breaks in the Char Count
-    countLineBreaks: false,
-
-    // Whether or not to prevent entering new Content when limit is reached.
-    hardLimit: true,
-
-    // Whether or not to to Warn only When limit is reached. Otherwise content above the limit will be deleted on paste or entering
-    warnOnLimitOnly: false,
-
-    // Maximum allowed Word Count, -1 is default for unlimited
-    maxWordCount: word_count_limit,
-
-    // Maximum allowed Char Count, -1 is default for unlimited
-    maxCharCount: -1,
-
-    // Maximum allowed Paragraphs Count, -1 is default for unlimited
-    maxParagraphs: -1,
-
-    // How long to show the 'paste' warning, 0 is default for not auto-closing the notification
-    pasteWarningDuration: 0,
-
-    // Add filter to add or remove element before counting (see CKEDITOR.htmlParser.filter), Default value : null (no filter)
-    filter: new CKEDITOR.htmlParser.filter({
-        elements: {
-            div: function( element ) {
-                if(element.attributes.class == 'mediaembed') {
-                    return false;
-                }
-            }
-        }
-    }),
-
-}
-                });
-
-                   $('#onlineexample').modal({
-                       show: true,
-                       backdrop: 'static',
-                       keyboard: false
-                   });
-               } else {
-                   errorMsg(data.page);
-               }
-               $this.button('reset');
-           },
-           error: function (xhr) { // if error occured
-               alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
-               $this.button('reset');
-           },
-           complete: function () {
-               $this.button('reset');
-           }
-       });
-   });
-</script>
-<script type="text/javascript">
-   var interval;
-   var timer = function () {
-       interval = setInterval(function () {
-           $('#box_header').text(get_elapsed_time_string());
-       }, 1000);
-   };
-
-   function get_elapsed_time_string() {
-       function pretty_time_string(num) {
-           return (num < 10 ? "0" : "") + num;
-       }
-
-       timer111 = timer2.split(':');
-       var hours = parseInt(timer111[0], 10);
-       var minutes = parseInt(timer111[1], 10);
-       var seconds = parseInt(timer111[2], 10);
-       --seconds;
-       minutes = (seconds < 0) ? --minutes : minutes;
-       seconds = (seconds < 0) ? 59 : seconds;
-       hours = (minutes < 0) ? --hours : hours;
-       minutes = (minutes < 0) ? 59 : minutes;
-
-       hours = pretty_time_string(hours);
-       minutes = pretty_time_string(minutes);
-       seconds = pretty_time_string(seconds);
-
-       if (hours < 0)
-           clearInterval(interval);
-
-       if ((seconds <= 0) && (minutes <= 0) && (hours <= 0)) {
-           clearInterval(interval);
-           $("#regiration_form").submit();
-       }
-
-       timer2 = hours + ":" + minutes + ":" + seconds;
-       var currentTimeString = hours + ":" + minutes + ":" + seconds;
-       return currentTimeString;
-   }
-
-   $('.save_exam_btn').click(function () {
-       $('#saveModal').modal({
-           show: true,
-           backdrop: 'static',
-           keyboard: false
-       })
-   });
-</script>
 <script type="text/javascript">
    var base_url = '<?php echo base_url() ?>';
    function Popup(data)
@@ -859,15 +536,4 @@ function getMarks($question)
                 });
     });
 
-    $(document).on('change','.exam_attachment',function(){
-      var files = $(this).get(0).files;
-      var file = files[0];
-        if (($.inArray(file.name.split('.').pop().toLowerCase(), allowed_extension) == -1) || ($.inArray(file.type,allowed_mime_type) == -1) || (allowed_upload_size <= file.size) ) {
-         errorMsg("<?php echo $this->lang->line('invalid_file_format_or_size'); ?>");
-         $(this).parent().find(".dropify-clear").trigger('click');
-        }
-        else {
-
-        }
-    });
 </script>

@@ -66,6 +66,11 @@ class School_provisioner
                     // Nigerian classes (Nursery, Primary, JSS, SS) in place of the sample Class 1-4.
                     $this->CI->load->library('School_onboarding');
                     $this->CI->school_onboarding->provision_defaults((int) $school['id']);
+                    // Sample online exams left with no questions (their sample questions were tied to Class 1-4).
+                    $empty = array_column($db->query('SELECT e.id FROM onlineexam e LEFT JOIN onlineexam_questions q ON q.onlineexam_id = e.id WHERE e.school_id = ? AND q.id IS NULL', array((int) $school['id']))->result_array(), 'id'); // tenancy-lint: ok school_id given
+                    if ($empty) {
+                        $db->where('school_id', (int) $school['id'])->where_in('id', array_map('intval', $empty))->delete('onlineexam');
+                    }
                 }
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';

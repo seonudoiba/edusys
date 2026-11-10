@@ -54,6 +54,7 @@
                             <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) {?>
                                 <button class="btn btn-primary btn-sm question-btn" data-recordid="0" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_question'); ?></button>
                             <?php }?>
+                            <a class="btn btn-default btn-sm" href="<?php echo site_url('admin/question_passage'); ?>"><i class="fa fa-book"></i> Reading passages</a>
                             <?php if ($this->rbac->hasPrivilege('import_question', 'can_view')) {?>
                                 <button class="btn btn-primary btn-sm import-question" data-toggle="modal" data-target="#myQuesImportModal" ><i class="fa fa-plus"></i> <?php echo $this->lang->line('import'); ?></button>
                             <?php }?>
