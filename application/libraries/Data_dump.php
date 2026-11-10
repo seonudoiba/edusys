@@ -97,7 +97,7 @@ class Data_dump
                     $deleted += max(0, (int) $conn->affected_rows);
                 }
             }
-            foreach (array('platform_impersonation_tokens', 'platform_school_domains') as $table) {
+            foreach (array('platform_impersonation_tokens', 'platform_billing_tokens', 'platform_school_domains') as $table) {
                 if (isset($existing[$table])) {
                     $conn->query('DELETE FROM ' . $this->q($table) . ' WHERE school_ref = ' . $id);
                 }

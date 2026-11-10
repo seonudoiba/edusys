@@ -58,7 +58,10 @@ function require_own_password($CI)
     $class = $CI->router->fetch_class();
     $method = $CI->router->fetch_method();
     $guest = isset($user['role']) && $user['role'] === 'guest';
-    if ($guest ? ($class === 'studentcourse' && in_array($method, array('changeguestpass', 'updateguestpass'), true)) : ($class === 'user' && in_array($method, array('changepass', 'choose'), true))) {
+    if ($guest && $CI->session->userdata('billing_from_school')) {
+        return; // a school's super admin opened billing from the admin panel (course/from_school)
+    }
+    if ($guest ?($class === 'studentcourse' && in_array($method, array('changeguestpass', 'updateguestpass'), true)) : ($class === 'user' && in_array($method, array('changepass', 'choose'), true))) {
         return;
     }
     $row = $CI->db->select('must_change_password')->where('id', (int) $user['id'])->get($guest ? 'guest' : 'users')->row();

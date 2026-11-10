@@ -143,6 +143,11 @@ $this->load->view('layout/theme');
                                     </div>
                                     <?php
 }?>
+                                    <?php require_once APPPATH . 'libraries/Billing_link.php';
+                                    $can_open_billing = Billing_link::allowed();
+                                    if ($can_open_billing) { ?>
+                                        <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="Billing: renew or pay for more students"><a href="<?php echo Billing_link::url(); ?>" target="_blank" rel="noopener"><i class="fa fa-credit-card" aria-hidden="true"></i><span class="sr-only">Billing</span></a></li>
+                                    <?php } ?>
                                     <?php $userdata = $this->customlib->getUserData();
                                     if($userdata["role_id"] ==7){                                    
                                         if (($this->module_lib->hasModule('multi_branch') && $this->module_lib->hasActive('multi_branch')) || $this->db->multi_branch) { ?>
@@ -206,7 +211,7 @@ if (!empty($image)) {
                 $CI_limits = &get_instance(); // a library loaded from a view lives on the controller
                 $CI_limits->load->library('Plan_limits');
                 $plan_notices = $CI_limits->plan_limits->notices(Tenant::id());
-                if ($plan_notices) { $renew = $CI_limits->plan_limits->renew_url(); ?>
+                if ($plan_notices) { $renew = !empty($can_open_billing) ? Billing_link::url() : $CI_limits->plan_limits->renew_url(); ?>
                 <div style="position:relative;z-index:1000;margin-left:inherit">
                     <?php foreach ($plan_notices as $n) { ?>
                         <div class="alert alert-<?php echo $n[0]; ?>" style="margin:0;border-radius:0;padding:7px 15px;font-size:13px">

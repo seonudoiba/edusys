@@ -895,6 +895,7 @@ class Course extends Front_Controller
 
     public function user_session($result, $login_detail)
     {
+        $this->session->unset_userdata('billing_from_school'); // set again by from_school() when it applies
         $sch_setting = $this->setting_model->getSetting();
 
         if ($result[0]->lang_id == 0) {
@@ -949,6 +950,47 @@ class Course extends Front_Controller
 
         $this->session->set_userdata('student', $session_data);
 
+    }
+
+    /**
+     * A school's super admin arriving from its admin panel (admin/billing_access/open). The
+     * one-time token is checked (hash, unused, not expired) and used up, then the owner account
+     * registered for that school is signed in and the subscription page opens. The owner's
+     * password isn't asked for or changed: the super admin already signed in to the school.
+     */
+    public function from_school($token = '')
+    {
+        if (!Tenant::is_platform()) {
+            show_404();
+        }
+        $token = (string) $token;
+        $row = null;
+        if (preg_match('/^[0-9a-f]{64}$/', $token)) {
+            $row = $this->db->where('token_hash', hash('sha256', $token))->get('platform_billing_tokens')->row_array();
+        }
+        if (!$row || $row['used_at'] !== null || strtotime($row['expires_at']) < time()) {
+            show_error('This billing link is not valid any more. Open Billing again from your school\'s admin panel.', 403, 'Link expired');
+        }
+        // Used up before anything else, so a second request with the same token fails.
+        $this->db->where(array('id' => (int) $row['id'], 'used_at' => null))->update('platform_billing_tokens', array('used_at' => date('Y-m-d H:i:s')));
+        if ($this->db->affected_rows() !== 1) {
+            show_error('This billing link was already used. Open Billing again from your school\'s admin panel.', 403, 'Link expired');
+        }
+        $school_id = (int) $row['school_ref'];
+        $guest = $this->db->select('id')->where(array('registered_school_id' => $school_id, 'is_active' => 'yes'))
+            ->order_by('id', 'desc')->limit(1)->get('guest')->row();
+        $result = $guest ? $this->studentcourse_model->read_user_information($guest->id) : false;
+        if (!$result) {
+            show_error('There is no billing account for this school yet. Please contact EduSYS support.', 404, 'No billing account');
+        }
+        $this->session->unset_userdata('student');
+        $result[0]->role = 'guest';
+        $this->user_session($result, (object) array('type' => 'guest'));
+        // The owner's must-change-password prompt doesn't apply: this person signed in to the school.
+        $this->session->set_userdata('billing_from_school', $row['created_by']);
+        $this->load->library('Platform_audit');
+        $this->platform_audit->record_in_school($school_id, 'billing.open', 'Billing opened from the admin panel by ' . $row['created_by']);
+        redirect('user/plan/planlist');
     }
 
     public function filterRecords()
