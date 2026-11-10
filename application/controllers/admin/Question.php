@@ -6,9 +6,47 @@ if (!defined('BASEPATH')) {
 
 class Question extends Admin_Controller
 {
+    /**
+     * The permission each page or action needs: alternatives, any one is enough. A method missing
+     * from this list is refused. add(): a new question needs can_add, an edit (recordid) can_edit.
+     */
+    const PERMISSIONS = array(
+        'read' => array(array('question_bank', 'can_view')),
+        'index' => array(array('question_bank', 'can_view')),
+        'getdatatable' => array(array('question_bank', 'can_view')),
+        'getquestionbyid' => array(array('question_bank', 'can_view')),
+        'getrecord' => array(array('question_bank', 'can_view')),
+        'questionsearchvalidation' => array(array('question_bank', 'can_view')),
+        'exportformat' => array(array('import_question', 'can_view'), array('question_bank', 'can_add')),
+        'uploadfile' => array(array('import_question', 'can_view')),
+        'addform' => array(array('question_bank', 'can_add')),
+        'editform' => array(array('question_bank', 'can_edit')),
+        'add' => array(),
+        'delete' => array(array('question_bank', 'can_delete')),
+        'bulkdelete' => array(array('question_bank', 'can_delete')),
+        'getimages' => null, // the image picker, also used by the syllabus pages: any signed-in staff
+    );
+
     public function __construct()
     {
         parent::__construct();
+        $method = strtolower($this->router->fetch_method());
+        if (!array_key_exists($method, self::PERMISSIONS)) {
+            show_404(); // form-validation callbacks and helpers are not pages
+        }
+        $needs = self::PERMISSIONS[$method];
+        if ($method === 'add') {
+            $needs = array(array('question_bank', $this->input->post('recordid') ? 'can_edit' : 'can_add'));
+        }
+        if ($needs !== null) {
+            $allowed = false;
+            foreach ($needs as $need) {
+                $allowed = $allowed || $this->rbac->hasPrivilege($need[0], $need[1]);
+            }
+            if (!$allowed) {
+                access_denied();
+            }
+        }
         $this->load->library('media_storage');
         $this->sch_setting_detail = $this->setting_model->getSetting();
 
@@ -163,9 +201,6 @@ class Question extends Admin_Controller
 
     public function add()
     {
-        if (!$this->rbac->hasPrivilege('question_bank', 'can_add')) {
-            access_denied();
-        }
 
         $this->form_validation->set_rules('subject_id', $this->lang->line('subject'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('question', $this->lang->line('question'), 'trim|required');

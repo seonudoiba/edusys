@@ -7,9 +7,44 @@ if (!defined('BASEPATH')) {
 class Onlineexam extends Admin_Controller
 {
     public $sch_setting_detail = array();
+    /**
+     * The permission each page or action needs: alternatives, any one is enough. A method missing
+     * from this list is refused, so a new public method has to be added here to be reachable.
+     */
+    const PERMISSIONS = array(
+        'index' => array(array('online_examination', 'can_view')),
+        'getexamlist' => array(array('online_examination', 'can_view')),
+        'getclosedexamlist' => array(array('online_examination', 'can_view')),
+        'getonlineexambyid' => array(array('online_examination', 'can_view')),
+        'getrecord' => array(array('online_examination', 'can_view')),
+        'downloadattachment' => array(array('online_examination', 'can_view'), array('online_exam_wise_report', 'can_view')),
+        'evalution' => array(array('online_examination', 'can_view')),
+        'getdescques' => array(array('online_examination', 'can_view')),
+        'fillmarks' => array(array('online_examination', 'can_edit')),
+        'assign' => array(array('online_assign_view_student', 'can_view')),
+        'addstudent' => array(array('online_assign_view_student', 'can_edit')),
+        'searchquestionbyexamid' => array(array('add_questions_in_exam', 'can_view')),
+        'getexamquestions' => array(array('add_questions_in_exam', 'can_view')),
+        'download_exam' => array(array('add_questions_in_exam', 'can_view')),
+        'questionadd' => array(array('add_questions_in_exam', 'can_edit')),
+        'deleteexamquestions' => array(array('add_questions_in_exam', 'can_edit')),
+        'rankgenerate' => array(array('online_examination', 'can_edit')),
+        'saverank' => array(array('online_examination', 'can_edit')),
+        'delete' => array(array('online_examination', 'can_delete')),
+        'ajax_delete' => array(array('online_examination', 'can_delete')),
+        'send_marks' => array(array('online_examination', 'can_edit')),
+        'report' => array(array('online_exam_wise_report', 'can_view')),
+        'dtreportlist' => array(array('online_exam_wise_report', 'can_view')),
+        'searchloginvalidation' => array(array('online_exam_wise_report', 'can_view')),
+        'getstudentresult' => array(array('online_examination', 'can_view'), array('online_exam_wise_report', 'can_view')),
+        // add(): a new exam needs can_add, an edit (recordid posted) can_edit; checked below.
+        'add' => array(),
+    );
+
     public function __construct()
     {
         parent::__construct();
+        $this->require_permission();
         $this->config->load('app-config');
         $this->sch_setting_detail = $this->setting_model->getSetting();
         $this->load->library('mailsmsconf');
@@ -114,7 +149,7 @@ class Onlineexam extends Admin_Controller
                 }
 
                 if ($this->rbac->hasPrivilege('online_examination', 'can_delete')) {
-                    $deletebtn = " <a href=" . base_url() . 'admin/onlineexam/delete/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip'  title=" . $this->lang->line('delete') . " '  onclick='return confirm(" . '"' . $this->lang->line('delete_confirm') . '"' . "  )' ><i class='fa fa fa-remove'></i></a>";
+                    $deletebtn = " <form method='post' action='" . site_url('admin/onlineexam/delete/' . (int) $subject_value->id) . "' style='display:inline' onsubmit='return confirm(" . htmlspecialchars(json_encode($this->lang->line('delete_confirm')), ENT_QUOTES) . ")'><button type='submit' class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('delete') . "'><i class='fa fa fa-remove'></i></button></form>";
                 }
 
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
@@ -226,7 +261,7 @@ class Onlineexam extends Admin_Controller
                     $editbtn = "";
                 }
                 if ($this->rbac->hasPrivilege('online_examination', 'can_delete')) {
-                    $deletebtn = " <a href=" . base_url() . 'admin/onlineexam/delete/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip'  title=" . $this->lang->line('delete') . " '  onclick='return confirm(" . '"' . $this->lang->line('delete_confirm') . '"' . "  )' ><i class='fa fa fa-remove'></i></a>";
+                    $deletebtn = " <form method='post' action='" . site_url('admin/onlineexam/delete/' . (int) $subject_value->id) . "' style='display:inline' onsubmit='return confirm(" . htmlspecialchars(json_encode($this->lang->line('delete_confirm')), ENT_QUOTES) . ")'><button type='submit' class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('delete') . "'><i class='fa fa fa-remove'></i></button></form>";
                 }else{
                     $deletebtn = "";
                 }
@@ -731,6 +766,25 @@ class Onlineexam extends Admin_Controller
 
     }
 
+    /** Refuses the request unless the staff member has one of the permissions its method needs (PERMISSIONS). */
+    private function require_permission()
+    {
+        $method = strtolower($this->router->fetch_method());
+        if (!array_key_exists($method, self::PERMISSIONS)) {
+            show_404(); // form-validation callbacks and anything not listed are not pages
+        }
+        $needs = self::PERMISSIONS[$method];
+        if ($method === 'add') {
+            $needs = array(array('online_examination', $this->input->post('recordid') ? 'can_edit' : 'can_add'));
+        }
+        foreach ($needs as $need) {
+            if ($this->rbac->hasPrivilege($need[0], $need[1])) {
+                return;
+            }
+        }
+        access_denied();
+    }
+
     /**
      * Before results are shown: attempts whose time ran out are closed (submitted), and students
      * who submitted without a stored score (before scores were stored) get one.
@@ -948,6 +1002,9 @@ class Onlineexam extends Admin_Controller
 
     public function delete($id)
     {
+        if ($this->input->method() !== 'post') {
+            show_error('Delete exams with the delete button on the exam list.', 405, 'Not allowed');
+        }
         $this->onlineexam_model->remove($id);
         redirect('admin/onlineexam', 'refresh');
     }
@@ -1086,6 +1143,9 @@ class Onlineexam extends Admin_Controller
             );
 
             $array = array('status' => 0, 'error' => $msg, 'message' => '');
+        } elseif (!$this->db->where('id', (int) $this->input->post('onlineexam_id'))->count_all_results('onlineexam')
+            || !$this->db->where('id', (int) $this->input->post('question_id'))->count_all_results('questions')) {
+            $array = array('status' => 0, 'error' => array('question_id' => 'That exam or question no longer exists. Reload the page.'), 'message' => '');
         } else {
             $insert_data = array(
                 'question_id'   => $this->input->post('question_id'),
