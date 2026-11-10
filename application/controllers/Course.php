@@ -966,13 +966,13 @@ class Course extends Front_Controller
         $token = (string) $token;
         $row = null;
         if (preg_match('/^[0-9a-f]{64}$/', $token)) {
-            $row = $this->db->where('token_hash', hash('sha256', $token))->get('platform_billing_tokens')->row_array();
+            $row = $this->db->select('*, (expires_at > NOW()) AS still_valid', false)->where('token_hash', hash('sha256', $token))->get('platform_billing_tokens')->row_array();
         }
-        if (!$row || $row['used_at'] !== null || strtotime($row['expires_at']) < time()) {
+        if (!$row || $row['used_at'] !== null || !$row['still_valid']) { // the database's clock: no time-zone mismatch
             show_error('This billing link is not valid any more. Open Billing again from your school\'s admin panel.', 403, 'Link expired');
         }
         // Used up before anything else, so a second request with the same token fails.
-        $this->db->where(array('id' => (int) $row['id'], 'used_at' => null))->update('platform_billing_tokens', array('used_at' => date('Y-m-d H:i:s')));
+        $this->db->where(array('id' => (int) $row['id'], 'used_at' => null))->set('used_at', 'NOW()', false)->update('platform_billing_tokens');
         if ($this->db->affected_rows() !== 1) {
             show_error('This billing link was already used. Open Billing again from your school\'s admin panel.', 403, 'Link expired');
         }

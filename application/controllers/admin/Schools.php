@@ -366,12 +366,13 @@ class Schools extends Admin_Controller
         $me = $this->session->userdata('admin');
         $by = trim(($me['username'] ?? 'Platform admin') . ' <' . ($me['email'] ?? '') . '>');
         $token = bin2hex(random_bytes(32));
-        $this->db->insert('platform_impersonation_tokens', array(
+        // The database sets the expiry and checks it (site/impersonate): one clock for the platform and the school,
+        // whatever time zone each one's PHP runs in.
+        $this->db->set('expires_at', 'NOW() + INTERVAL 120 SECOND', false)->insert('platform_impersonation_tokens', array(
             'token_hash' => hash('sha256', $token),
             'school_ref' => (int) $school['id'],
             'staff_id' => (int) $admin['id'],
             'created_by' => mb_substr($by, 0, 255),
-            'expires_at' => date('Y-m-d H:i:s', time() + 120),
         ));
         $this->platform_audit->record('school.impersonate', 'Opened the admin panel of ' . $school['school_name'] . ' as ' . $admin['email'], $school['id']);
         redirect($this->school_provisioner->school_url($school['subdomain']) . 'site/impersonate/' . $token);

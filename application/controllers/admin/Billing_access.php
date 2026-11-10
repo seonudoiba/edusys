@@ -39,12 +39,13 @@ class Billing_access extends Admin_Controller
         }
         $admin = $this->session->userdata('admin');
         $token = bin2hex(random_bytes(32));
-        $this->db->insert('platform_billing_tokens', array(
+        // The database sets the expiry and checks it (course/from_school): one clock for the school and the platform,
+        // whatever time zone each one's PHP runs in.
+        $this->db->set('expires_at', 'NOW() + INTERVAL ' . self::LIFETIME . ' SECOND', false)->insert('platform_billing_tokens', array(
             'token_hash' => hash('sha256', $token),
             'school_ref' => (int) Tenant::id(),
             'staff_id' => (int) $admin['id'],
             'created_by' => mb_substr(trim($admin['username'] . ' <' . $admin['email'] . '>'), 0, 255),
-            'expires_at' => date('Y-m-d H:i:s', time() + self::LIFETIME),
         ));
         $this->load->library('School_provisioner');
         // The school's log gets "Billing opened from the admin panel" when the platform uses the token.
