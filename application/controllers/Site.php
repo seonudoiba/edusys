@@ -51,13 +51,9 @@ class Site extends Public_Controller
         if ($this->auth->logged_in()) {
             $this->auth->is_logged_in(true);
         }
-        
-        if ($this->module_lib->hasModule('google_authenticator') 
-            && $this->module_lib->hasActive('google_authenticator')) {
-
-            //redirect('gauthenticate/login');
-     
-        }	
+        if ($this->input->method() !== 'post' && $this->auth->user_logged_in()) {
+            $this->auth->user_redirect();
+        }
         
         $data          = array();
         $data['title'] = 'Login';
@@ -84,7 +80,8 @@ class Site extends Public_Controller
             $captcha               = $this->captchalib->generate_captcha();
             $data['captcha_image'] = isset($captcha['image']) ? $captcha['image'] : "";
             $data['name']          = $app_name;
-            $this->load->view('admin/login', $data);
+            $posted                = $this->input->method() === 'post';
+            $this->show_login($data, $posted ? 'staff' : 'student', $posted);
         } else {
             $login_post = array(
                 'email'    => $this->input->post('username'),
@@ -165,12 +162,12 @@ class Site extends Public_Controller
                     $data['name']          = $app_name;
                     $data['error_message'] = $this->lang->line('your_account_is_disabled_please_contact_to_administrator');
 
-                    $this->load->view('admin/login', $data);
+                    $this->show_login($data, 'staff', true);
                 }
             } else {
                 $data['name']          = $app_name;
                 $data['error_message'] = $this->lang->line('invalid_username_or_password');
-                $this->load->view('admin/login', $data);
+                $this->show_login($data, 'staff', true);
             }
         }
     }
@@ -507,13 +504,12 @@ class Site extends Public_Controller
         $is_captcha         = $this->captchalib->is_captcha('userlogin');
         $data["is_captcha"] = $is_captcha;
 
-        // With two-factor login on, show its form here (it signs in through gauthenticate/*), so the
-        // address stays site/userlogin.
-        if ($this->module_lib->hasModule('google_authenticator')
-            && $this->module_lib->hasActive('google_authenticator')) {
-            $data['captcha_image'] = $this->captchalib->generate_captcha()['image'];
-            $this->load->view('user/gauthenticate/login', $data);
-            return;
+        // Students and parents sign in on site/login now (its "Student or parent" side). This address
+        // stays for the links already out there (emails, SMS, websites, logout) and still takes the
+        // form's POST; with two-factor sign-in on, that side signs in through gauthenticate/*.
+        if ($this->input->method() !== 'post' || $this->two_factor_on()) {
+            $this->session->keep_flashdata($this->session->get_flash_keys());
+            redirect('site/login');
         }
         if ($is_captcha) {
             
@@ -530,7 +526,7 @@ class Site extends Public_Controller
             if ($this->captchalib->is_captcha('userlogin')) {
                 $data['captcha_image'] = $this->captchalib->generate_captcha()['image'];
             }
-            $this->load->view('userlogin', $data);
+            $this->show_login($data, 'student', true);
         } else {
             $login_post = array(
                 'username' => $this->input->post('username'),
@@ -627,17 +623,51 @@ class Site extends Public_Controller
                         redirect('user/user/choose');
                     } else {
                         $data['error_message'] = $this->lang->line('account_suspended');
-                        $this->load->view('userlogin', $data);
+                        $this->show_login($data, 'student', true);
                     }
                 } else {
                     $data['error_message'] = $this->lang->line('your_account_is_disabled_please_contact_to_administrator');
-                    $this->load->view('userlogin', $data);
+                    $this->show_login($data, 'student', true);
                 }
             } else {
                 $data['error_message'] = $this->lang->line('invalid_username_or_password');
-                $this->load->view('userlogin', $data);
+                $this->show_login($data, 'student', true);
             }
         }
+    }
+
+    private function two_factor_on()
+    {
+        return $this->module_lib->hasModule('google_authenticator') && $this->module_lib->hasActive('google_authenticator');
+    }
+
+    /**
+     * The sign-in page (views/site_login.php): "Student or parent" and "Staff" sides.
+     * $active: the side to open; $forced: a failed sign-in on that side (the browser's
+     * remembered side doesn't override it, and the form keeps what was typed).
+     */
+    private function show_login(array $data, $active, $forced = false)
+    {
+        $school = $this->setting_model->get();
+        $school = $school[0];
+        $data['school'] = $school;
+        $data['name'] = isset($data['name']) ? $data['name'] : $school['name'];
+        if (!isset($data['notice'])) {
+            $data['notice'] = $this->cms_program_model->getByCategory($this->config->item('ci_front_notice_content'), array('start' => 0, 'limit' => 5));
+        }
+        $data['student_on'] = !empty($school['student_panel_login']);
+        $data['student_2fa'] = $this->two_factor_on();
+        $data['staff_captcha'] = $this->captchalib->is_captcha('login');
+        $data['student_captcha'] = $this->captchalib->is_captcha('userlogin');
+        $data['captcha_image'] = '';
+        if ($data['staff_captcha'] || $data['student_captcha']) {
+            $captcha = $this->captchalib->generate_captcha(); // one word in the session, shown on both sides
+            $data['captcha_image'] = isset($captcha['image']) ? $captcha['image'] : '';
+        }
+        $data['active'] = $data['student_on'] && $active === 'student' ? 'student' : 'staff';
+        $data['forced'] = $forced;
+        $data['error_side'] = $data['active'];
+        $this->load->view('site_login', $data);
     }
 
     public function savemulticlass()
