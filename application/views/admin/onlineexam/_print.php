@@ -149,6 +149,15 @@ if (!empty($online_exam_validate)) {
         }
 
     }
+    // The stored score (libraries/Cbt_scoring.php) is the one that counts: the same on every page.
+    if (!empty($online_exam_validate->scored_at)) {
+        $correct_ans          = (int) $online_exam_validate->correct_count;
+        $wrong_ans            = (int) $online_exam_validate->wrong_count;
+        $not_attempted        = (int) $online_exam_validate->unanswered_count;
+        $exam_total_marks     = (float) $online_exam_validate->max_score;
+        $exam_total_neg_marks = (float) $online_exam_validate->neg_score;
+        $exam_total_scored    = (float) $online_exam_validate->score + $exam_total_neg_marks; // shown as scored minus negative
+    }
     ?>
                  <h4 class="text-center font-weight-bold"><?php echo $exam->exam; ?></h4>
                   <div class="row ">

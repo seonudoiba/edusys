@@ -122,6 +122,9 @@ class Onlineexam extends Admin_Controller
                     $question_list = "<button class='btn btn-default btn-xs exam_ques_list' data-toggle='tooltip' data-recordid=" . $subject_value->id . "    data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>' title='" . $this->lang->line('exam_questions_list') . "' ><i class='fa fa-file-text-o'></i></button>" . " ";
 
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
+                    if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
+                        $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Send scores to report card'><i class='fa fa-share-square-o'></i></a> ";
+                    }
 
                     if ($subject_value->publish_result || ($subject_value->auto_publish_date != "0000-00-00" && $subject_value->auto_publish_date != "" && $subject_value->auto_publish_date != null && (strtotime($subject_value->auto_publish_date) <= strtotime(date('Y-m-d H:i:s'))))) {
 
@@ -233,6 +236,9 @@ class Onlineexam extends Admin_Controller
                     $question_list = "<button type='button'class='btn btn-default btn-xs exam_ques_list' data-toggle='tooltip' data-recordid=" . $subject_value->id . "    data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>' title='" . $this->lang->line('exam_questions_list') . "' ><i class='fa fa-file-text-o'></i></button>" . " ";
 
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
+                    if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
+                        $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Send scores to report card'><i class='fa fa-share-square-o'></i></a> ";
+                    }
 
                     if ($subject_value->publish_result || ($subject_value->auto_publish_date != "0000-00-00" && $subject_value->auto_publish_date != "" && $subject_value->auto_publish_date != null && (strtotime($subject_value->auto_publish_date) <= strtotime(date('Y-m-d H:i:s'))))) {
 
@@ -273,6 +279,7 @@ class Onlineexam extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
         $data['id']         = $id;
         $data['title']      = 'student fees';
+        $this->cbt_refresh($id);
         $class              = $this->class_model->get();
         $data['classlist']  = $class;
         $onlineexam         = $this->onlineexam_model->get($id);
@@ -724,9 +731,63 @@ class Onlineexam extends Admin_Controller
 
     }
 
+    /**
+     * Before results are shown: attempts whose time ran out are closed (submitted), and students
+     * who submitted without a stored score (before scores were stored) get one.
+     */
+    private function cbt_refresh($exam_id)
+    {
+        $this->load->library(array('Cbt_attempt', 'Cbt_scoring'));
+        $this->cbt_attempt->close_expired((int) $exam_id);
+        $ids = array_column($this->db->select('id')->where(array('onlineexam_id' => (int) $exam_id, 'is_attempted' => 1))
+            ->where('scored_at IS NULL', null, false)->get('onlineexam_students')->result_array(), 'id');
+        foreach ($ids as $id) {
+            $this->cbt_scoring->score((int) $id);
+        }
+    }
+
+    /** Send the CBT scores to a subject's marks in Examinations (the report card). GET: the form; POST: send. */
+    public function send_marks($id = null)
+    {
+        if (!$this->rbac->hasPrivilege('online_examination', 'can_edit')) {
+            access_denied();
+        }
+        $exam = $this->db->where('id', (int) $id)->get('onlineexam')->row_array();
+        if (!$exam) {
+            show_404();
+        }
+        $this->cbt_refresh($exam['id']);
+        $this->load->library('Cbt_scoring');
+        $data = array('exam' => $exam, 'result' => null, 'error' => null);
+        if ($this->input->method() === 'post') {
+            try {
+                $data['result'] = $this->cbt_scoring->send_to_report_card($exam['id'], (int) $this->input->post('target_id'),
+                    $this->input->post('mode') !== 'raw', (bool) $this->input->post('replace'));
+                $exam['marks_target'] = (int) $this->input->post('target_id');
+                $data['exam'] = $exam;
+            } catch (RuntimeException $e) {
+                $data['error'] = $e->getMessage();
+            }
+        }
+        $data['targets'] = $this->cbt_scoring->report_card_targets($this->setting_model->getCurrentSession());
+        $data['summary'] = $this->db->select('COUNT(*) AS assigned, SUM(is_attempted = 1) AS sat, SUM(pending_count > 0) AS pending, MAX(max_score) AS max_score', false)
+            ->where('onlineexam_id', (int) $exam['id'])->get('onlineexam_students')->row_array();
+        $this->session->set_userdata('top_menu', 'Online_Examinations');
+        $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/onlineexam/send_marks', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
     public function rankgenerate()
     {
         $examid                 = $this->input->post('examid');
+        $this->cbt_refresh($examid);
+        $data['stored_scores']  = array();
+        foreach ($this->db->select('id, score')->where('onlineexam_id', (int) $examid)->where('scored_at IS NOT NULL', null, false)
+            ->get('onlineexam_students')->result_array() as $row) {
+            $data['stored_scores'][(int) $row['id']] = (float) $row['score'];
+        }
         $student_data           = $this->onlineexam_model->searchAllOnlineExamStudents($examid, null, null, 1);
         $student_question_array = array();
         if (!empty($student_data)) {
@@ -812,6 +873,7 @@ class Onlineexam extends Admin_Controller
                 'is_marks_display'   => $is_marks_display,
                 'is_neg_marking'     => $is_neg_marking,
                 'is_random_question' => $is_random_question,
+                'is_random_option'   => isset($_POST['is_random_option']) ? 1 : 0,
                 'passing_percentage' => $this->input->post('passing_percentage'),
             );
             if (isset($_POST['is_quiz']) && $_POST['is_quiz'] != "") {
@@ -942,9 +1004,16 @@ class Onlineexam extends Admin_Controller
                 'id'     => $this->input->post('onlineexam_student_result_id'),
                 'marks'  => $this->input->post('fill_mark'),
                 'remark' => $this->input->post('remark'),
+                'marked_at' => date('Y-m-d H:i:s'),
 
             );
             $this->onlineexamresult_model->update($insert_data);
+            // The student's stored score includes the new mark.
+            $result = $this->db->select('onlineexam_student_id')->where('id', (int) $insert_data['id'])->get('onlineexam_student_results')->row();
+            if ($result) {
+                $this->load->library('Cbt_scoring');
+                $this->cbt_scoring->score((int) $result->onlineexam_student_id);
+            }
             $array = array('status' => 1, 'error' => '', 'message' => $this->lang->line('success_message'));
         }
 
@@ -1083,6 +1152,7 @@ class Onlineexam extends Admin_Controller
         $data['section']      = $student_list['section'];
         $data['father_name']  = $student_list['father_name'];
 
+        $this->cbt_refresh($examid);
         $exam         = $this->onlineexam_model->get($examid);
         $data['exam'] = $exam;
         $online_exam_validate = $this->onlineexam_model->examstudentsID($student_session_id, $examid);

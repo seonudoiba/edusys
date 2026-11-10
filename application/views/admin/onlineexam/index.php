@@ -241,6 +241,11 @@ function findOption($questionOpt, $find)
                                          <?php echo $this->lang->line('random_question_order'); ?>
                                         </label>
 
+                                      <label class="checkbox-inline" title="Each student sees options A-E in a different order">
+<input type="checkbox" class="is_random_option" name="is_random_option" value="1">
+                                         Shuffle answer options
+                                        </label>
+
                 </div>
 
                 </div>
@@ -668,6 +673,7 @@ $(document).on('submit','#delete_question',function(e) {
 
                         var chk_is_random_question=(data.result.is_random_question == 0)?false:true;
                         $('input[name=is_random_question]').prop('checked',chk_is_random_question);
+                        $('input[name=is_random_option]').prop('checked', data.result.is_random_option == 1);
                         $('#myModal').modal('show');
                     }
                     $this.button('reset');

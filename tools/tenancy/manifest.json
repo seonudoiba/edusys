@@ -2276,5 +2276,24 @@
             "school",
             "online_admissions"
         ]
+    },
+    {
+        "n": 289,
+        "table": "platform_billing_tokens",
+        "scope": "platform",
+        "file": "289_create_platform_billing_tokens.php",
+        "refs": [
+            "school"
+        ]
+    },
+    {
+        "n": 290,
+        "table": "question_passages",
+        "scope": "tenant",
+        "file": "290_cbt_attempts_scores_passages.php",
+        "refs": [
+            "school",
+            "subjects"
+        ]
     }
 ]
