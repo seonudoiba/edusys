@@ -183,13 +183,13 @@ class Site extends Public_Controller
         $token = (string) $token;
         $row = null;
         if (preg_match('/^[0-9a-f]{64}$/', $token)) {
-            $row = $this->db->where('token_hash', hash('sha256', $token))->get('platform_impersonation_tokens')->row_array();
+            $row = $this->db->select('*, (expires_at > NOW()) AS still_valid', false)->where('token_hash', hash('sha256', $token))->get('platform_impersonation_tokens')->row_array();
         }
-        if (!$row || (int) $row['school_ref'] !== Tenant::id() || $row['used_at'] !== null || strtotime($row['expires_at']) < time()) {
+        if (!$row || (int) $row['school_ref'] !== Tenant::id() || $row['used_at'] !== null || !$row['still_valid']) {
             show_error('This support link is not valid any more. Open the school again from the platform.', 403, 'Link expired');
         }
         // Used up before anything else, so a second request with the same token fails.
-        $this->db->where(array('id' => (int) $row['id'], 'used_at' => null))->update('platform_impersonation_tokens', array('used_at' => date('Y-m-d H:i:s')));
+        $this->db->where(array('id' => (int) $row['id'], 'used_at' => null))->set('used_at', 'NOW()', false)->update('platform_impersonation_tokens');
         if ($this->db->affected_rows() !== 1) {
             show_error('This support link was already used.', 403, 'Link expired');
         }
