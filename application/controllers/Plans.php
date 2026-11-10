@@ -46,6 +46,41 @@ class Plans extends Front_Controller
         $this->load_theme('plan/account');
     }
 
+    /**
+     * Find your school (/find-school): staff, students and parents type their school's name and
+     * go to its own sign-in page. Nothing is looked up by email or username: the page only says
+     * which schools exist, not who belongs to them.
+     */
+    public function find()
+    {
+        $this->page('Find your school', 'Find your school and go to its sign-in page.', 'find-school');
+        $this->load_theme('plan/find');
+    }
+
+    /** GET q (2+ characters): up to 8 schools that are set up and open, as {name, place, url}. */
+    public function find_search()
+    {
+        $q = trim(preg_replace('/\s+/', ' ', (string) $this->input->get('q')));
+        $out = array();
+        if (mb_strlen($q) >= 2 && mb_strlen($q) <= 100) {
+            $rows = $this->db->select('id, school_name, subdomain, school_address, is_platform')
+                ->where(array('is_platform' => 0, 'status' => 1))
+                ->where('subdomain IS NOT NULL', null, false)->where('subdomain <>', '')
+                ->like('school_name', $q)
+                ->order_by('school_name')->limit(8)->get('school')->result_array();
+            foreach ($rows as $r) {
+                $out[] = array(
+                    'name' => $r['school_name'],
+                    'place' => mb_substr(trim((string) $r['school_address']), 0, 80),
+                    'url' => $this->school_provisioner->url_for($r) . 'site/login',
+                );
+            }
+        }
+        $this->output->set_content_type('application/json')
+            ->set_header('Cache-Control: no-store')
+            ->set_output(json_encode(array('schools' => $out)));
+    }
+
     /** Schools above the largest band: the request lands in Support > Website Enquiries. */
     public function quote()
     {

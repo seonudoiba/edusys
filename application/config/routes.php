@@ -35,6 +35,7 @@ $route['read/(:any)'] = 'welcome/read/$1';
 $route['online_admission'] = 'welcome/admission';
 $route['product'] = 'plans/product';
 $route['account'] = 'plans/account';
+$route['find-school'] = 'plans/find';
 $route['examresult'] = 'welcome/examresult';
 $route['frontend'] = 'welcome';
 $route['cbseexam'] = 'welcome/cbseexam';
