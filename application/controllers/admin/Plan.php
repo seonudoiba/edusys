@@ -45,7 +45,9 @@ class Plan extends Admin_Controller
             $p['stats'] = isset($stats[$p['plan_id']]) ? $stats[$p['plan_id']] : array('active' => 0, 'paid' => 0, 'pending' => 0, 'revenue' => 0.0);
         }
         unset($p);
+        $this->load->library('Plan_pricing');
         $data = array(
+            'default_period' => $this->plan_pricing->default_period(),
             'plans' => $plans,
             'currency_symbol' => $this->customlib->getSchoolCurrencyFormat(),
             'token' => $this->form_token->field(),
@@ -126,6 +128,22 @@ class Plan extends Admin_Controller
         $show = (int) $plan['status'] !== 1;
         $this->plan_model->plan_update($plan['plan_id'], array('status' => $show ? 1 : 0));
         $this->session->set_flashdata('plan_msg', '"' . $plan['title'] . '" is now ' . ($show ? 'shown on' : 'hidden from') . ' the sign-up page.');
+        redirect('admin/plan');
+    }
+
+    /** The payment period selected first on the public pricing and registration pages (POST period). */
+    public function default_period()
+    {
+        $this->require_privilege('can_edit');
+        $this->form_token->require_post();
+        $this->load->library(array('Platform_settings', 'Plan_pricing'));
+        $period = (string) $this->input->post('period');
+        if (!isset(Plan_pricing::PERIODS[$period])) {
+            $this->session->set_flashdata('plan_error', 'Choose "Each term" or "For the year".');
+            redirect('admin/plan');
+        }
+        $this->platform_settings->set('default_billing_period', $period);
+        $this->session->set_flashdata('plan_msg', 'The public pages now select "' . ($period === 'term' ? 'Each term' : 'For the year') . '" first.');
         redirect('admin/plan');
     }
 

@@ -25,6 +25,8 @@ class Platform_settings
         'invoice_address' => '',
         'invoice_tax_id' => '',
         'invoice_footer' => 'Thank you for your business.',
+        // The payment period selected first on the public pricing and registration pages: term or year.
+        'default_billing_period' => 'term',
     );
 
     /** @var CI_Controller */
