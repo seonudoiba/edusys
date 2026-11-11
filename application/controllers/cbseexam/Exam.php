@@ -2018,6 +2018,7 @@ class Exam extends MY_Addon_CBSEController
 
         $exam_student_id = $this->input->post('exam_student_id');
         $teacher_remark = $this->input->post('teacher_remark');
+        $principal_remark = (array) $this->input->post('principal_remark');
 
         foreach ($exam_student_id as $key => $value) {
 
@@ -2026,6 +2027,9 @@ class Exam extends MY_Addon_CBSEController
                 'staff_id' => $this->customlib->getStaffID(),
                 'remark' => $teacher_remark[$value],
             );
+            if (array_key_exists($value, $principal_remark)) {
+                $savedata['principal_remark'] = mb_substr(trim((string) $principal_remark[$value]), 0, 1000);
+            }
             $this->cbseexam_exam_model->addexamstudent($savedata);
         }
 

@@ -814,16 +814,23 @@ class Onlineexam extends Admin_Controller
         $this->load->library('Cbt_scoring');
         $data = array('exam' => $exam, 'result' => null, 'error' => null);
         if ($this->input->method() === 'post') {
+            // "cbse:<timetable>:<type>" = a CBSE Examination assessment; a number = an Examinations subject.
+            $target = (string) $this->input->post('target_id');
+            $scale = $this->input->post('mode') !== 'raw';
+            $replace = (bool) $this->input->post('replace');
             try {
-                $data['result'] = $this->cbt_scoring->send_to_report_card($exam['id'], (int) $this->input->post('target_id'),
-                    $this->input->post('mode') !== 'raw', (bool) $this->input->post('replace'));
-                $exam['marks_target'] = (int) $this->input->post('target_id');
+                $data['result'] = strpos($target, 'cbse:') === 0
+                    ? $this->cbt_scoring->send_to_cbse($exam['id'], $target, $scale, $replace)
+                    : $this->cbt_scoring->send_to_report_card($exam['id'], (int) $target, $scale, $replace);
+                $exam['marks_target'] = $target;
                 $data['exam'] = $exam;
             } catch (RuntimeException $e) {
                 $data['error'] = $e->getMessage();
             }
         }
-        $data['targets'] = $this->cbt_scoring->report_card_targets($this->setting_model->getCurrentSession());
+        $session = $this->setting_model->getCurrentSession();
+        $data['cbse_targets'] = $this->cbt_scoring->cbse_targets($session);
+        $data['targets'] = $this->cbt_scoring->report_card_targets($session);
         $data['summary'] = $this->db->select('COUNT(*) AS assigned, SUM(is_attempted = 1) AS sat, SUM(pending_count > 0) AS pending, MAX(max_score) AS max_score', false)
             ->where('onlineexam_id', (int) $exam['id'])->get('onlineexam_students')->row_array();
         $this->session->set_userdata('top_menu', 'Online_Examinations');

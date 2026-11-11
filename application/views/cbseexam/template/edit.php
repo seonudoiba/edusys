@@ -84,6 +84,13 @@
                             <span class="text-danger"><?php echo form_error('date'); ?></span>
                         </div> 
     </div>    
+     <div class="col-md-4">
+         <div class="form-group">
+                            <label for="next_term_begins">Next term begins</label>
+                            <input id="next_term_begins" name="next_term_begins" value="<?php echo set_value('next_term_begins', !empty($result['next_term_begins']) ? $this->customlib->dateformat($result['next_term_begins']) : ''); ?>" type="text" class="form-control date" autocomplete="off" />
+                            <span class="help-block small">Optional. Printed on the report.</span>
+                        </div>
+    </div>
 </div>         
                      <div class="form-group">
                         <label><?php echo set_value('header'); ?><?php echo $this->lang->line('header_image'); ?> (965px X 150px)</label>

@@ -71,6 +71,12 @@ class School_provisioner
                     if ($empty) {
                         $db->where('school_id', (int) $school['id'])->where_in('id', array_map('intval', $empty))->delete('onlineexam');
                     }
+                    // Report cards: the CBSE Examination module with Nigerian terms, CA + exam, WAEC grades and
+                    // affective/psychomotor ratings. The other Examinations menu is hidden (System Settings >
+                    // Sidebar Menu brings it back); its data and module stay.
+                    $this->CI->load->library('Cbse_nigeria');
+                    $this->CI->cbse_nigeria->for_school((int) $school['id'])->install(true);
+                    $db->where(array('school_id' => (int) $school['id'], 'lang_key' => 'examinations'))->update('sidebar_menus', array('sidebar_display' => 0));
                 }
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';

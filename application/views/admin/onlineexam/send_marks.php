@@ -1,8 +1,12 @@
 <?php
-$groups = array();
-foreach ($targets as $t) {
-    $groups[$t['exam_group'] . ' · ' . $t['exam']][] = $t;
+$groups = array(); // label => array of array(key, text)
+foreach ($cbse_targets as $t) {
+    $groups['CBSE Examination · ' . $t['group']][] = array($t['key'], $t['label']);
 }
+foreach ($targets as $t) {
+    $groups['Examinations · ' . $t['exam_group'] . ' · ' . $t['exam']][] = array((string) (int) $t['id'], $t['subject'] . ' (max ' . (float) $t['max_marks'] . ')');
+}
+$has_targets = (bool) $groups;
 $sat = (int) $summary['sat'];
 ?>
 <div class="content-wrapper">
@@ -35,17 +39,18 @@ $sat = (int) $summary['sat'];
                         <div class="box-body">
                             <p><?php echo $sat; ?> of <?php echo (int) $summary['assigned']; ?> students sat this CBT<?php echo $summary['max_score'] !== null ? ', out of ' . (float) $summary['max_score'] . ' marks' : ''; ?>.
                                 <?php if ((int) $summary['pending']) { ?><span class="text-warning"><?php echo (int) $summary['pending']; ?> still have written answers to mark (<a href="<?php echo site_url('admin/onlineexam/evalution/' . (int) $exam['id']); ?>">mark them</a>); they are skipped until then.</span><?php } ?></p>
-                            <?php if (!$targets) { ?>
-                                <div class="alert alert-info">There are no exams for this session yet. Create one under Examinations &gt; Exam Group, add its subjects and students, then come back.</div>
+                            <?php if (!$has_targets) { ?>
+                                <div class="alert alert-info">There are no exams for this session yet. Create one under CBSE Examination &gt; Exam (or Examinations &gt; Exam Group), add its subjects and students, then come back.</div>
                             <?php } else { ?>
                                 <div class="form-group">
                                     <label for="target_id">Put the scores into</label>
+                                    <p class="help-block" style="margin-top:0">A CBSE Examination assessment (e.g. First CA) or an Examinations subject.</p>
                                     <select class="form-control" id="target_id" name="target_id" required>
                                         <option value="">Choose an exam subject</option>
                                         <?php foreach ($groups as $label => $items) { ?>
                                             <optgroup label="<?php echo html_escape($label); ?>">
                                                 <?php foreach ($items as $t) { ?>
-                                                    <option value="<?php echo (int) $t['id']; ?>" <?php echo (int) $exam['marks_target'] === (int) $t['id'] ? 'selected' : ''; ?>><?php echo html_escape($t['subject'] . ' (max ' . (float) $t['max_marks'] . ')'); ?></option>
+                                                    <option value="<?php echo html_escape($t[0]); ?>" <?php echo (string) $exam['marks_target'] === $t[0] ? 'selected' : ''; ?>><?php echo html_escape($t[1]); ?></option>
                                                 <?php } ?>
                                             </optgroup>
                                         <?php } ?>
@@ -63,7 +68,7 @@ $sat = (int) $summary['sat'];
                             <?php } ?>
                         </div>
                         <div class="box-footer">
-                            <?php if ($targets) { ?><button type="submit" class="btn btn-primary">Send scores</button><?php } ?>
+                            <?php if ($has_targets) { ?><button type="submit" class="btn btn-primary">Send scores</button><?php } ?>
                             <a href="<?php echo site_url('admin/onlineexam'); ?>" class="btn btn-default">Back to online exams</a>
                         </div>
                     </form>
@@ -72,7 +77,7 @@ $sat = (int) $summary['sat'];
             <div class="col-md-4">
                 <div class="box box-solid">
                     <div class="box-body">
-                        <p>Only students who are in the chosen exam (Examinations &gt; Exam Group &gt; Exam &gt; Assign / View Student) get a mark. Their attendance is set to present.</p>
+                        <p>Only students who are in the chosen exam (Assign / View Student on that exam) get a mark.</p>
                         <p class="text-muted small">Sending again is safe: it updates the same marks. Teachers can still change any mark under Examinations afterwards.</p>
                     </div>
                 </div>

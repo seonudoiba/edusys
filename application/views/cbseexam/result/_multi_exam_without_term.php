@@ -493,6 +493,20 @@ foreach ($result as $student_key => $student_value) {
           </td>
         </tr>
         <?php } ?>
+        <?php if ($template['is_remark'] && !empty($student_value['principal_remark'])) { ?>
+        <tr>
+          <td style="padding-bottom: 6px;display: block;">
+            <b>Principal's remark :</b> <?php echo html_escape($student_value['principal_remark']); ?>
+          </td>
+        </tr>
+        <?php } ?>
+        <?php if (!empty($template['next_term_begins']) && $template['next_term_begins'] !== '0000-00-00') { ?>
+        <tr>
+          <td style="padding-bottom: 6px;display: block;">
+            <b>Next term begins :</b> <?php echo date('l, j F Y', strtotime($template['next_term_begins'])); ?>
+          </td>
+        </tr>
+        <?php } ?>
         
         <tr>
           <td valign="top" style="height:20px"></td>

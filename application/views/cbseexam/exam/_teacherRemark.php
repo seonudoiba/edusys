@@ -17,7 +17,8 @@
                                     <th><?php echo $this->lang->line('student_name'); ?></th>                                
                                     <th><?php echo $this->lang->line('gender'); ?></th>
                                     <th><?php echo $this->lang->line('marks'); ?><br/><?php echo "(".two_digit_float($total_exam_marks).")"; ?></th>
-                                    <th><?php echo $this->lang->line('remark') ?></th> 
+                                    <th><?php echo $this->lang->line('class_teacher_remark') ?: $this->lang->line('remark'); ?></th>
+                                    <th>Principal's remark</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -25,7 +26,7 @@
                                 if (empty($resultlist)) {
                                     ?>
                                     <tr>
-                                        <td colspan="7" class="text-danger text-center"><?php echo $this->lang->line('no_record_found'); ?></td>
+                                        <td colspan="9" class="text-danger text-center"><?php echo $this->lang->line('no_record_found'); ?></td>
                                     </tr>
                                     <?php
                                 } else {
@@ -45,7 +46,10 @@
                                         <td class="white-space-nowrap"> 
                                             <input type="hidden" class="marksssss form-control w-sm-150" name="exam_student_id[]" value="<?php echo $student['exam_student_id']; ?>">
                                            
-                                            <input type="text" class="marksssss form-control w-sm-150" name="teacher_remark[<?php echo $student['exam_student_id']; ?>]" value="<?php echo $student['remark']; ?>">
+                                            <input type="text" class="marksssss form-control w-sm-150" name="teacher_remark[<?php echo $student['exam_student_id']; ?>]" value="<?php echo html_escape((string) $student['remark']); ?>">
+                                        </td>
+                                        <td class="white-space-nowrap">
+                                            <input type="text" class="form-control w-sm-150" maxlength="1000" name="principal_remark[<?php echo $student['exam_student_id']; ?>]" value="<?php echo html_escape((string) $student['principal_remark']); ?>">
                                         </td>
                                     </tr>
                                     <?php
