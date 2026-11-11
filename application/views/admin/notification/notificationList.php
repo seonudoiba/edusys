@@ -40,6 +40,13 @@ if (empty($notificationlist)) {
                                 <div class="email-discription"><?php //echo $notification['message']; ?></div>
                             </a>
                             <div class="d-flex ptt10 hover-show">
+                                <?php
+                                $wa_text = $notification['title'] . "\n\n" . mb_substr(trim(html_entity_decode(strip_tags(str_replace(array('<br>', '<br/>', '<br />', '</p>'), "\n", (string) $notification['message'])), ENT_QUOTES, 'UTF-8')), 0, 1200)
+                                    . "\n\n" . $this->customlib->getSchoolName();
+                                ?>
+                                <a href="<?php echo html_escape($this->customlib->whatsapp_link('', $wa_text)); ?>" target="_blank" rel="noopener" data-toggle="tooltip" title="Share on WhatsApp">
+                                    <i class="fa fa-whatsapp"></i>
+                                </a>
                             
                                 <?php if ($notification["created_id"] == $user_id) {?>
                                     <a href="<?php echo base_url() ?>admin/notification/edit/<?php echo $notification['id'] ?>" class="" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">

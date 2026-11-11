@@ -825,6 +825,46 @@ class Customlib
         return $array;
     }
 
+    /**
+     * A WhatsApp link that opens a chat with the phone number (any Nigerian form) with the text typed
+     * in, or WhatsApp's "share to" list when there is no phone. Nothing is sent until the user presses send.
+     */
+    public function whatsapp_link($phone, $text)
+    {
+        if (!class_exists('Smsgateway', false)) {
+            require_once APPPATH . 'libraries/Smsgateway.php';
+        }
+        $number = trim((string) $phone) !== '' ? Smsgateway::phone($phone) : '';
+        $number = preg_match('/^\d{8,15}$/', $number) ? $number : '';
+        return 'https://wa.me/' . $number . '?text=' . rawurlencode(trim(preg_replace('/[ \t]+/', ' ', (string) $text)));
+    }
+
+    /** How the school charges transport: 'term' (First, Second, Third Term) or 'month'. */
+    public function transport_billing()
+    {
+        if (!$this->CI->db->field_exists('transport_billing', 'sch_settings')) {
+            return 'month';
+        }
+        $row = $this->CI->db->select('transport_billing')->order_by('id')->limit(1)->get('sch_settings')->row();
+        return $row && $row->transport_billing === 'term' ? 'term' : 'month';
+    }
+
+    /**
+     * The periods transport fees are charged for, key => label: the three terms, or the months of the
+     * session. Keys are stored in transport_feemaster.month; pages print them with lang->line(strtolower(key)).
+     */
+    public function getTransportPeriods($start_month = null)
+    {
+        if ($this->transport_billing() === 'term') {
+            $out = array();
+            foreach (array('first_term', 'second_term', 'third_term') as $key) {
+                $out[$key] = $this->CI->lang->line($key);
+            }
+            return $out;
+        }
+        return $this->getMonthDropdown($start_month);
+    }
+
     public function getMonthDropdown($start_month = null)
     {
 

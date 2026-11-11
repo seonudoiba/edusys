@@ -86,6 +86,56 @@ class Admin_Controller extends MY_Controller
         $this->config->load('app-config');
         $this->config->load('ci-blog');
         $this->config->load('custom_filed-config');
+        $this->guard_action();
+    }
+
+    /**
+     * Two checks before an admin action runs:
+     *   - an action that changes data by its name (delete, remove, status, enable...) is refused when
+     *     the request comes from another website, so a link planted elsewhere can't trigger it for a
+     *     signed-in staff member (the browser's Sec-Fetch-Site, or else the Referer);
+     *   - actions listed in config/permission_guards.php need that permission (the action falls back
+     *     to "can_edit" when the category has no such action, e.g. no delete).
+     */
+    private function guard_action()
+    {
+        $method = strtolower((string) $this->router->fetch_method());
+        if (preg_match('/^(delete|remove|bulkdelete|disable|enable|toggle|change_?status|status|approve|reject|revert|inactive|active|deactivate|activate|purge|reset)/', $method)) {
+            $site = strtolower((string) $this->input->server('HTTP_SEC_FETCH_SITE'));
+            $cross = $site === 'cross-site';
+            if ($site === '') {
+                $referer = (string) $this->input->server('HTTP_REFERER');
+                $host = strtolower((string) parse_url($referer, PHP_URL_HOST));
+                $cross = $referer !== '' && $host !== '' && $host !== strtolower((string) $this->input->server('HTTP_HOST'))
+                    && $host !== strtolower((string) parse_url('http://' . $this->input->server('HTTP_HOST'), PHP_URL_HOST));
+            }
+            if ($cross) {
+                log_message('error', 'Refused cross-site request to ' . uri_string());
+                show_error('This action must be started from within EduSYS. Open the page and try again.', 403, 'Not allowed');
+            }
+        }
+        $guards = $this->config->item('permission_guards');
+        if ($guards === null) {
+            $this->config->load('permission_guards', false, true);
+            $guards = (array) $this->config->item('permission_guards');
+        }
+        $key = strtolower((string) $this->router->fetch_directory() . $this->router->fetch_class() . '/' . $method);
+        if (!isset($guards[$key])) {
+            return;
+        }
+        list($category, $action) = $guards[$key];
+        if ($this->rbac->hasPrivilege($category, $action)) {
+            return;
+        }
+        if ($action !== 'can_edit' && $action !== 'can_view') {
+            // A category without that action (no "delete" column offered) uses "edit".
+            $field = 'enable_' . substr($action, 4);
+            $cat = $this->db->select($field)->where('short_code', $category)->get('permission_category')->row_array();
+            if ($cat && empty($cat[$field]) && $this->rbac->hasPrivilege($category, 'can_edit')) {
+                return;
+            }
+        }
+        access_denied();
     }
 
     public function check_license()

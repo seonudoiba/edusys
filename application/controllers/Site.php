@@ -111,6 +111,24 @@ class Site extends Public_Controller
             }
 
             if ($result) {
+                // Two-factor sign-in: staff who set it up must also give the code from their app.
+                if ($result->is_active && $this->two_factor_on()) {
+                    $this->load->model('google_authenticator/gauthuser_model');
+                    $this->load->library('Google_authenticator');
+                    $gauth = $this->gauthuser_model->getByUser('staff', $result->id);
+                    if ($gauth && !empty($gauth->secret_code)) {
+                        $code = preg_replace('/\D+/', '', (string) $this->input->post('gauth_code'));
+                        if ($code === '' || !$this->google_authenticator->verifyQR($gauth->secret_code, $code)) {
+                            $data['name'] = $app_name;
+                            $data['staff_code'] = true;
+                            $data['error_message'] = $code === ''
+                                ? 'Enter the 6-digit code from your authenticator app.'
+                                : 'That code is not right. Enter the current 6-digit code from your authenticator app.';
+                            $this->show_login($data, 'staff', true);
+                            return;
+                        }
+                    }
+                }
                 if ($result->is_active) {
                     if ($result->surname != "") {
                         $logusername = $result->name . " " . $result->surname;
@@ -655,7 +673,8 @@ class Site extends Public_Controller
         if (!isset($data['notice'])) {
             $data['notice'] = $this->cms_program_model->getByCategory($this->config->item('ci_front_notice_content'), array('start' => 0, 'limit' => 5));
         }
-        $data['student_on'] = !empty($school['student_panel_login']);
+        // The platform (edusys.ng) has no students or parents: only the Staff side.
+        $data['student_on'] = !empty($school['student_panel_login']) && !Tenant::is_platform();
         $data['student_2fa'] = $this->two_factor_on();
         $data['staff_captcha'] = $this->captchalib->is_captcha('login');
         $data['student_captcha'] = $this->captchalib->is_captcha('userlogin');

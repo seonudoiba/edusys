@@ -124,9 +124,14 @@
         event.stopPropagation();
     });
 
-    $(".mCustomScrollbar").mCustomScrollbar({
-        scrollInertia: 1000,
-        mouseWheelPixels: 170,
-        autoDraggerLength: false,
+    // The scrollbar plugin is loaded by the footer, after this menu: start it once the page has loaded.
+    $(function () {
+        if ($.fn.mCustomScrollbar) {
+            $(".mCustomScrollbar").mCustomScrollbar({
+                scrollInertia: 1000,
+                mouseWheelPixels: 170,
+                autoDraggerLength: false,
+            });
+        }
     });
 </script>

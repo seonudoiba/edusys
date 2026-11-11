@@ -185,6 +185,11 @@ if (!empty($student['fees'])) {
 echo amountFormat(($amount - ($amount_deposite + $amount_discount)));
             ?></td>
                                                     <td class="text text-right">
+                                                        <?php if (!empty($student['guardian_phone'])) {
+                                                            $wa_name = $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname);
+                                                            $wa_text = 'Dear ' . ($student['guardian_name'] ?: 'parent') . ', this is a reminder that ' . $wa_name . ' (' . $student['class'] . ' ' . $student['section'] . ') has an outstanding school fees balance of ' . $currency_symbol . amountFormat($balance) . '. Kindly pay at your earliest convenience. Thank you. ' . $this->customlib->getSchoolName(); ?>
+                                                            <a href="<?php echo html_escape($this->customlib->whatsapp_link($student['guardian_phone'], $wa_text)); ?>" target="_blank" rel="noopener" class="btn btn-default btn-xs" title="Remind the guardian on WhatsApp"><i class="fa fa-whatsapp"></i></a>
+                                                        <?php } ?>
                                                         <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) {?><a href="<?php echo base_url(); ?>studentfee/addfee/<?php echo $student['student_session_id'] ?>" class="btn btn-info btn-xs">
                                                             <?php echo $currency_symbol; ?> <?php echo $this->lang->line('add_fees'); ?>
                                                             </a>

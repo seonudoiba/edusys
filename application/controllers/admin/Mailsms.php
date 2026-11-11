@@ -1219,7 +1219,7 @@ class Mailsms extends Admin_Controller
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         } else {
 
-            $this->smsgateway->sendSMS($this->input->post('mobile'), ('Smart School SMS Test Successful.'));
+            $this->smsgateway->sendSMS($this->input->post('mobile'), ('EduSYS test message: your SMS settings work.'));
 
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('test_sms_sent_successfully_please_check_your_mobile_if_you_have_receiveds'));
         }

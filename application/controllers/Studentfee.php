@@ -134,7 +134,7 @@ class Studentfee extends Admin_Controller
         if (!empty($currentsessiontransportfee)) {
             $transportfesstype = [];
             if ($module['is_active']) {
-                $month_list = $this->customlib->getMonthDropdown($this->sch_setting_detail->start_month);
+                $month_list = $this->customlib->getTransportPeriods($this->sch_setting_detail->start_month);
                 foreach ($month_list as $key => $value) {
 
                     $transportfesstype[] = $this->transportfee_model->transportfesstype($this->current_session, $key);
@@ -1053,6 +1053,20 @@ class Studentfee extends Admin_Controller
             $array = array('status' => 1, 'error' => '');
             echo json_encode($array);
         }
+    }
+
+    /** A printable fee bill for one student (libraries/Fee_bill.php). */
+    public function bill($student_session_id = null)
+    {
+        if (!$this->rbac->hasPrivilege('collect_fees', 'can_view')) {
+            access_denied();
+        }
+        $this->load->library('Fee_bill');
+        $bill = $this->fee_bill->build((int) $student_session_id);
+        if (!$bill) {
+            show_404();
+        }
+        $this->load->view('fee_bill', array('bill' => $bill));
     }
 
     public function add_new_student($student)

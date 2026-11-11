@@ -813,6 +813,24 @@ class User extends Student_Controller
         return $data['student'] = $student;
     }
 
+    /** The fee bill of the student chosen at sign-in, to print or save. */
+    public function feebill()
+    {
+        if (!$this->module_lib->hasActive('fees_collection') || !$this->studentmodule_lib->hasActive('fees')) {
+            access_denied();
+        }
+        $current = $this->customlib->getStudentCurrentClsSection();
+        if (!$current || empty($current->student_session_id)) {
+            show_404();
+        }
+        $this->load->library('Fee_bill');
+        $bill = $this->fee_bill->build((int) $current->student_session_id);
+        if (!$bill) {
+            show_404();
+        }
+        $this->load->view('fee_bill', array('bill' => $bill));
+    }
+
     public function getfees()
     {
         $id                    = $this->customlib->getStudentSessionUserID();

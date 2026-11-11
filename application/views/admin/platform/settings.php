@@ -101,7 +101,8 @@ $v = function ($k) use ($values) { return html_escape((string) $values[$k]); };
                             <dt>SQL guard</dt><dd><?php echo $ok($h['raw_sql_mode'] === 'throw', $h['raw_sql_mode']); ?> <span class="ps-muted">use "throw" in production</span></dd>
                             <dt>Mail</dt><dd><?php echo $e($h['smtp_host']); ?> <span class="ps-muted">login <?php echo $e($h['smtp_login']); ?> · from <?php echo $e($h['from_email']); ?></span><br>
                                 <span class="ps-muted">last 7 days:</span> <?php echo (int) $h['mail_sent']; ?> sent, <?php echo $h['mail_failed'] ? '<span class="text-danger">' . (int) $h['mail_failed'] . ' failed</span>' : '0 failed'; ?>
-                                · <a href="<?php echo site_url('admin/platform/email_log'); ?>">email log</a></dd>
+                                · <a href="<?php echo site_url('admin/platform/email_log'); ?>">email log</a>
+                                <?php if (!empty($h['mail_sandbox'])) { ?><br><span class="text-danger"><b>Mailgun sandbox:</b> only addresses authorised in Mailgun receive email; parents, applicants and staff get nothing. Verify mg.edusys.ng in Mailgun and put its SMTP login in /etc/edusys/edusys.env.</span><?php } ?></dd>
                             <?php foreach ($h['gateways'] as $gw => $gw_status) { ?>
                                 <dt><?php echo html_escape(Payment_gateways::name($gw)); ?></dt><dd><?php echo $ok($gw_status === 'live key' || $gw_status === 'live', $gw_status); ?></dd>
                             <?php } ?>

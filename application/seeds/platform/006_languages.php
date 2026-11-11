@@ -6,7 +6,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * Seeds `languages` for platform.
  *
  * Source: smartschool (central database), table `languages`.
- * Rows: 77
+ * Rows: 80
  */
 class Seed_platform_languages extends Seeder
 {
@@ -94,6 +94,10 @@ class Seed_platform_languages extends Seeder
             [92, 'Kurdish', 'ku', 'iq', 0, 'no', 'no', '2020-12-21 00:15:31', '0000-00-00'],
             [93, 'Lao', 'lo', 'la', 0, 'no', 'no', '2020-12-21 00:15:36', '0000-00-00'],
             [94, 'Croatia', 'hr', 'hr', 0, 'no', 'no', '2022-06-07 11:48:21', '0000-00-00'],
+            // Nigerian languages (EduSYS): student and parent panel translated, the rest in English.
+            [95, 'Hausa', 'ha', 'ng', 0, 'no', 'no', '2026-11-11 00:00:00', '0000-00-00'],
+            [96, 'Yoruba', 'yo', 'ng', 0, 'no', 'no', '2026-11-11 00:00:00', '0000-00-00'],
+            [97, 'Igbo', 'ig', 'ng', 0, 'no', 'no', '2026-11-11 00:00:00', '0000-00-00'],
         ];
     }
 }

@@ -28,6 +28,36 @@ class Smsconfig extends Admin_Controller
         $this->load->view('layout/footer', $data);
     }
 
+    /** Termii (Nigeria): API key, sender ID, route (dnd or generic), status. */
+    public function termii()
+    {
+        if (!$this->rbac->hasPrivilege('sms_setting', 'can_edit')) {
+            access_denied();
+        }
+        $this->form_validation->set_error_delimiters('', '');
+        $this->form_validation->set_rules('termii_apikey', 'API key', 'trim|required|max_length[200]');
+        $this->form_validation->set_rules('termii_sender_id', 'Sender ID', 'trim|required|max_length[11]');
+        $this->form_validation->set_rules('termii_channel', 'Route', 'trim|required|in_list[dnd,generic]');
+        $this->form_validation->set_rules('termii_status', $this->lang->line('status'), 'required');
+        if ($this->form_validation->run()) {
+            $this->smsconfig_model->add(array(
+                'type' => 'termii',
+                'api_id' => $this->input->post('termii_apikey'),
+                'senderid' => $this->input->post('termii_sender_id'),
+                'username' => $this->input->post('termii_channel'),
+                'is_active' => $this->input->post('termii_status'),
+            ));
+            echo json_encode(array('st' => 0, 'msg' => $this->lang->line('update_message')));
+            return;
+        }
+        echo json_encode(array('st' => 1, 'msg' => array(
+            'termii_apikey' => form_error('termii_apikey'),
+            'termii_sender_id' => form_error('termii_sender_id'),
+            'termii_channel' => form_error('termii_channel'),
+            'termii_status' => form_error('termii_status'),
+        )));
+    }
+
     public function clickatell()
     {
         $this->form_validation->set_error_delimiters('', '');

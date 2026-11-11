@@ -332,7 +332,7 @@ class Pickuppoint extends Admin_Controller
     {
         $data                          = array();
         $data['sch_setting']           = $this->sch_setting_detail;
-        $month_list                    = $this->customlib->getMonthDropdown($this->sch_setting_detail->start_month);
+        $month_list                    = $this->customlib->getTransportPeriods($this->sch_setting_detail->start_month);
         $data['title']                 = 'student fees';
         $data['month_list']            = $month_list;
         $student_session_id            = $this->input->post('student_session_id');
