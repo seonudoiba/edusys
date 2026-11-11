@@ -8,34 +8,38 @@
                        <h3 class="box-title titlefix"><?php echo $this->lang->line('payment_methods'); ?></h3>
                     </div>
                     <ul class="nav nav-tabs nav-tabs2">
-                        <li><a href="#tab_bank" data-toggle="tab"><i class="fa fa-university"></i> Bank transfer</a></li>
-                        <li class="active"><a href="#tab_1" data-toggle="tab"><?php echo $this->lang->line('paypal'); ?></a></li>
-                        <li><a href="#tab_2" data-toggle="tab"><?php echo $this->lang->line('stripe'); ?></a></li>
-                        <li><a href="#tab_3" data-toggle="tab"><?php echo $this->lang->line('payu'); ?></a></li>
-                        <li><a href="#tab_4" data-toggle="tab"><?php echo $this->lang->line('ccavenue'); ?></a></li>
-                        <li><a href="#tab_5" data-toggle="tab"><?php echo $this->lang->line('instamojo'); ?></a></li>
-                        <li><a href="#tab_6" data-toggle="tab"><?php echo $this->lang->line('paystack'); ?></a></li>
+                        <li class="active"><a href="#tab_6" data-toggle="tab"><?php echo $this->lang->line('paystack'); ?></a></li>
+                        <li><a href="#tab_11" data-toggle="tab"><?php echo $this->lang->line('flutter_wave'); ?></a></li>
                         <li><a href="#tab_25" data-toggle="tab">Monnify</a></li>
                         <li><a href="#tab_26" data-toggle="tab">Interswitch</a></li>
                         <li><a href="#tab_27" data-toggle="tab">Remita</a></li>
-                        <li><a href="#tab_7" data-toggle="tab"><?php echo $this->lang->line('razorpay'); ?></a></li>
-                        <li><a href="#tab_8" data-toggle="tab"><?php echo $this->lang->line('paytm'); ?></a></li>
-                        <li><a href="#tab_9" data-toggle="tab"><?php echo $this->lang->line('midtrans'); ?></a></li>
-                        <li><a href="#tab_10" data-toggle="tab"><?php echo $this->lang->line('pesapal'); ?></a></li>
-                        <li><a href="#tab_11" data-toggle="tab"><?php echo $this->lang->line('flutter_wave'); ?> </a></li>
-                        <li><a href="#tab_12" data-toggle="tab"><?php echo $this->lang->line('ipay_africa'); ?></a></li>
-                        <li><a href="#tab_13" data-toggle="tab"><?php echo $this->lang->line('jazzcash'); ?></a></li>
-                        <li><a href="#tab_14" data-toggle="tab"><?php echo $this->lang->line('billplz'); ?></a></li>
-                        <li><a href="#tab_15" data-toggle="tab"><?php echo $this->lang->line('sslcommerz'); ?></a></li>
-                        <li><a href="#tab_16" data-toggle="tab"><?php echo $this->lang->line('walkingm'); ?></a></li>
-                        <li><a href="#tab_17" data-toggle="tab"><?php echo $this->lang->line('mollie'); ?></a></li>
-                        <li><a href="#tab_18" data-toggle="tab"><?php echo $this->lang->line('cashfree'); ?></a></li>
-                        <li><a href="#tab_19" data-toggle="tab"><?php echo $this->lang->line('payfast'); ?></a></li>
-                        <li><a href="#tab_20" data-toggle="tab"><?php echo $this->lang->line('toyyibPay'); ?></a></li>
-                        <li><a href="#tab_21" data-toggle="tab"><?php echo $this->lang->line('twocheckout'); ?></a></li>
-                        <li><a href="#tab_22" data-toggle="tab"><?php echo $this->lang->line('skrill'); ?></a></li>
-                        <li><a href="#tab_23" data-toggle="tab"><?php echo $this->lang->line('payhere'); ?></a></li>
-                        <li><a href="#tab_24" data-toggle="tab"><?php echo $this->lang->line('onepay'); ?></a></li>
+                        <li><a href="#tab_bank" data-toggle="tab"><i class="fa fa-university"></i> Bank transfer</a></li>
+                        <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Other countries <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#tab_1" data-toggle="tab"><?php echo $this->lang->line('paypal'); ?></a></li>
+                                <li><a href="#tab_2" data-toggle="tab"><?php echo $this->lang->line('stripe'); ?></a></li>
+                                <li><a href="#tab_3" data-toggle="tab"><?php echo $this->lang->line('payu'); ?></a></li>
+                                <li><a href="#tab_4" data-toggle="tab"><?php echo $this->lang->line('ccavenue'); ?></a></li>
+                                <li><a href="#tab_5" data-toggle="tab"><?php echo $this->lang->line('instamojo'); ?></a></li>
+                                <li><a href="#tab_7" data-toggle="tab"><?php echo $this->lang->line('razorpay'); ?></a></li>
+                                <li><a href="#tab_8" data-toggle="tab"><?php echo $this->lang->line('paytm'); ?></a></li>
+                                <li><a href="#tab_9" data-toggle="tab"><?php echo $this->lang->line('midtrans'); ?></a></li>
+                                <li><a href="#tab_10" data-toggle="tab"><?php echo $this->lang->line('pesapal'); ?></a></li>
+                                <li><a href="#tab_12" data-toggle="tab"><?php echo $this->lang->line('ipay_africa'); ?></a></li>
+                                <li><a href="#tab_13" data-toggle="tab"><?php echo $this->lang->line('jazzcash'); ?></a></li>
+                                <li><a href="#tab_14" data-toggle="tab"><?php echo $this->lang->line('billplz'); ?></a></li>
+                                <li><a href="#tab_15" data-toggle="tab"><?php echo $this->lang->line('sslcommerz'); ?></a></li>
+                                <li><a href="#tab_16" data-toggle="tab"><?php echo $this->lang->line('walkingm'); ?></a></li>
+                                <li><a href="#tab_17" data-toggle="tab"><?php echo $this->lang->line('mollie'); ?></a></li>
+                                <li><a href="#tab_18" data-toggle="tab"><?php echo $this->lang->line('cashfree'); ?></a></li>
+                                <li><a href="#tab_19" data-toggle="tab"><?php echo $this->lang->line('payfast'); ?></a></li>
+                                <li><a href="#tab_20" data-toggle="tab"><?php echo $this->lang->line('toyyibPay'); ?></a></li>
+                                <li><a href="#tab_21" data-toggle="tab"><?php echo $this->lang->line('twocheckout'); ?></a></li>
+                                <li><a href="#tab_22" data-toggle="tab"><?php echo $this->lang->line('skrill'); ?></a></li>
+                                <li><a href="#tab_23" data-toggle="tab"><?php echo $this->lang->line('payhere'); ?></a></li>
+                                <li><a href="#tab_24" data-toggle="tab"><?php echo $this->lang->line('onepay'); ?></a></li>
+                            </ul>
+                        </li>
                     </ul>
                     <div class="tab-content pb0">
                         <div class="tab-pane" id="tab_bank">
@@ -91,7 +95,7 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="tab-pane active" id="tab_1">
+                        <div class="tab-pane" id="tab_1">
                             <form role="form" id="paypal" action="<?php echo site_url('admin/paymentsettings/paypal') ?>" class="form-horizontal" method="post">
                                 <div class="box-body">
                                     <div class="row">
@@ -341,7 +345,7 @@ $instamojo_result = check_in_array('instamojo', $paymentlist);
                                 </div>
                             </form>
                         </div>
-                        <div class="tab-pane " id="tab_6">
+                        <div class="tab-pane active" id="tab_6">
                             <form role="form" id="paystack" action="<?php echo site_url('admin/paymentsettings/paystack') ?>" class="form-horizontal" method="post">
                                 <div class="box-body">
                                     <div class="row">
@@ -2685,4 +2689,26 @@ function check_in_array($find, $array)
 </script>
 <script>
 $(function () { if (location.hash === '#tab_bank') { $('a[href="#tab_bank"]').tab('show'); } });
+</script>
+<script>
+jQuery(function ($) {
+    var nigeria = ['paystack', 'flutterwave', 'monnify', 'interswitch', 'remita'];
+    var group = $('#payment_gateway .form-group').first();
+    var radios = group.children('.radio');
+    if (!radios.length) { return; }
+    var label = group.children('label.control-label').first();
+    var other = $('<details class="pay-other" style="margin:8px 0 6px"><summary style="cursor:pointer;color:#555">Other countries</summary><div style="padding-left:12px"></div></details>');
+    var inner = other.children('div');
+    var firstOfRest = null;
+    nigeria.slice().reverse().forEach(function (v) {
+        var r = radios.filter(function () { return $(this).find('input[value="' + v + '"]').length; });
+        r.insertAfter(label);
+    });
+    radios.each(function () {
+        var v = $(this).find('input').val();
+        if (nigeria.indexOf(v) === -1 && v !== 'none') { inner.append(this); }
+    });
+    group.children('.radio').filter(function () { return $(this).find('input[value="remita"]').length; }).after(other);
+    if (inner.find('input:checked').length) { other.attr('open', 'open'); }
+});
 </script>

@@ -25,12 +25,12 @@ class Transport extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'transport/feemaster');
         $current_session               = $this->setting_model->getCurrentSession();
         $data                          = array();
-        $month_list                    = $this->customlib->getMonthDropdown($this->sch_setting_detail->start_month);
+        $month_list                    = $this->customlib->getTransportPeriods($this->sch_setting_detail->start_month);
 
         $data['title']                 = 'student fees';
         $data['month_list']            = $month_list;
         
-         $month_list= $this->customlib->getMonthDropdown($this->sch_setting_detail->start_month);
+         $month_list= $this->customlib->getTransportPeriods($this->sch_setting_detail->start_month);
        
         foreach($month_list as $key => $value){
             $data['transportfees'][]=(array)$this->transportfee_model->transportfesstype($current_session,$key);

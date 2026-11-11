@@ -36,6 +36,31 @@ class Smsgateway
         }
     }
 
+    /**
+     * A phone number in the form SMS providers expect. Nigerian numbers written locally
+     * (0803 123 4567, 803...) become 2348031234567; spaces, dashes and brackets are removed.
+     * Twilio and Africa's Talking get a leading "+", the others digits only.
+     */
+    public static function phone($number, $type = '')
+    {
+        $raw = trim((string) $number);
+        $digits = preg_replace('/\D+/', '', $raw);
+        if ($digits === '') {
+            return $raw;
+        }
+        if (strpos($digits, '00') === 0) {
+            $digits = substr($digits, 2); // 00234... international prefix
+        }
+        if (strlen($digits) === 11 && $digits[0] === '0') {
+            $digits = '234' . substr($digits, 1); // 0803 123 4567
+        } elseif (strlen($digits) === 10 && in_array($digits[0], array('7', '8', '9'), true)) {
+            $digits = '234' . $digits; // 803 123 4567
+        } elseif (strpos($digits, '2340') === 0 && strlen($digits) === 14) {
+            $digits = '234' . substr($digits, 4); // +234 0803...
+        }
+        return in_array($type, array('twilio', 'africastalking'), true) ? '+' . $digits : $digits;
+    }
+
     public function sendSMS($send_to, $detail, $template_id, $template = '')
     {
         $sms_detail = $this->_CI->smsconfig_model->getActiveSMS();
@@ -46,8 +71,17 @@ class Smsgateway
             $msg = $detail;
         }
 
+        $send_to = self::phone($send_to, $sms_detail ? $sms_detail->type : '');
         if (!empty($sms_detail)) {
-            if ($sms_detail->type == 'clickatell') {
+            if (false) {
+            } else if ($sms_detail->type == 'termii') {
+                $this->_CI->load->library('termii_lib', array(
+                    'api_key' => $sms_detail->api_id,
+                    'sender_id' => $sms_detail->senderid,
+                    'channel' => $sms_detail->username,
+                ));
+                return $this->_CI->termii_lib->sendSMS($send_to, $msg);
+            } else if ($sms_detail->type == 'clickatell') {
 
                 $params = array(
                     'apiToken' => $sms_detail->api_id,
@@ -170,8 +204,17 @@ class Smsgateway
     {
         $sms_detail = $this->_CI->smsconfig_model->getActiveSMS();
         $msg = $this->getStudentRegistrationContent($id, $template, $sms_detail->type);
+        $send_to = self::phone($send_to, $sms_detail ? $sms_detail->type : '');
         if (!empty($sms_detail)) {
-            if ($sms_detail->type == 'clickatell') {
+            if (false) {
+            } else if ($sms_detail->type == 'termii') {
+                $this->_CI->load->library('termii_lib', array(
+                    'api_key' => $sms_detail->api_id,
+                    'sender_id' => $sms_detail->senderid,
+                    'channel' => $sms_detail->username,
+                ));
+                return $this->_CI->termii_lib->sendSMS($send_to, $msg);
+            } else if ($sms_detail->type == 'clickatell') {
                 $params = array(
                     'apiToken' => $sms_detail->api_id,
                 );
@@ -711,9 +754,12 @@ class Smsgateway
         $sms_detail = $this->_CI->smsconfig_model->getActiveSMS();
         $msg        = $this->getStudentResultContent($detail, $template, $sms_detail->type);
         foreach ($detail['contact_numbers'] as $key => $contact_numbersvalue) {
-            $send_to = $contact_numbersvalue;
+            $send_to = self::phone($contact_numbersvalue, $sms_detail ? $sms_detail->type : '');
             if (!empty($sms_detail)) {
-                if ($sms_detail->type == 'clickatell') {
+                if ($sms_detail->type == 'termii') {
+                    $this->_CI->load->library('termii_lib', array('api_key' => $sms_detail->api_id, 'sender_id' => $sms_detail->senderid, 'channel' => $sms_detail->username));
+                    $this->_CI->termii_lib->sendSMS($send_to, $msg);
+                } else if ($sms_detail->type == 'clickatell') {
                     $params = array(
                         'apiToken' => $sms_detail->api_id,
                     );
@@ -841,8 +887,17 @@ class Smsgateway
         $sms_detail = $this->_CI->smsconfig_model->getActiveSMS();
         $msg        = $this->getLoginCredentialContent($sender_details['credential_for'], $sender_details, $template, $sms_detail->type);
         $send_to = $sender_details['contact_no'];
+        $send_to = self::phone($send_to, $sms_detail ? $sms_detail->type : '');
         if (!empty($sms_detail)) {
-            if ($sms_detail->type == 'clickatell') {
+            if (false) {
+            } else if ($sms_detail->type == 'termii') {
+                $this->_CI->load->library('termii_lib', array(
+                    'api_key' => $sms_detail->api_id,
+                    'sender_id' => $sms_detail->senderid,
+                    'channel' => $sms_detail->username,
+                ));
+                return $this->_CI->termii_lib->sendSMS($send_to, $msg);
+            } else if ($sms_detail->type == 'clickatell') {
 
                 $params = array(
                     'apiToken' => $sms_detail->api_id,
@@ -1048,11 +1103,14 @@ class Smsgateway
         if (!empty($sms_detail)) {
 
             foreach ($detail as $student_key => $student_value) {
-                $send_to = $student_key;
+                $send_to = self::phone($student_key, $sms_detail->type);
                 if ($send_to != "") {
                     $msg     = $this->getHomeworkStudentContent($detail[$student_key], $template, $sms_detail->type);
                     $subject = "HomeWork Notice";
-                    if ($sms_detail->type == 'clickatell') {
+                    if ($sms_detail->type == 'termii') {
+                        $this->_CI->load->library('termii_lib', array('api_key' => $sms_detail->api_id, 'sender_id' => $sms_detail->senderid, 'channel' => $sms_detail->username));
+                        $this->_CI->termii_lib->sendSMS($send_to, $msg);
+                    } else if ($sms_detail->type == 'clickatell') {
                         $params = array(
                             'apiToken' => $sms_detail->api_id,
                         );
@@ -1183,11 +1241,14 @@ class Smsgateway
         if (!empty($sms_detail)) {
 
             foreach ($detail as $student_key => $student_value) {
-                $send_to = $student_key;
+                $send_to = self::phone($student_key, $sms_detail->type);
                 if ($send_to != "") {
                     $msg     = $this->getOnlineexamStudentContent($detail[$student_key], $template, $sms_detail->type);
                     $subject = "Online Examination Notice";
-                    if ($sms_detail->type == 'clickatell') {
+                    if ($sms_detail->type == 'termii') {
+                        $this->_CI->load->library('termii_lib', array('api_key' => $sms_detail->api_id, 'sender_id' => $sms_detail->senderid, 'channel' => $sms_detail->username));
+                        $this->_CI->termii_lib->sendSMS($send_to, $msg);
+                    } else if ($sms_detail->type == 'clickatell') {
                         $params = array(
                             'apiToken' => $sms_detail->api_id,
                         );
@@ -2172,8 +2233,17 @@ class Smsgateway
             $sender_details['body'];
         $send_to = $sender_details['contact_no'];
 
+        $send_to = self::phone($send_to, $sms_detail ? $sms_detail->type : '');
         if (!empty($sms_detail)) {
-            if ($sms_detail->type == 'clickatell') {
+            if (false) {
+            } else if ($sms_detail->type == 'termii') {
+                $this->_CI->load->library('termii_lib', array(
+                    'api_key' => $sms_detail->api_id,
+                    'sender_id' => $sms_detail->senderid,
+                    'channel' => $sms_detail->username,
+                ));
+                return $this->_CI->termii_lib->sendSMS($send_to, $msg);
+            } else if ($sms_detail->type == 'clickatell') {
                 $params = array(
                     'apiToken' => $sms_detail->api_id,
                 );
@@ -2301,8 +2371,17 @@ class Smsgateway
         $msg        = $this->getLoginCredentialContent($sender_details['credential_for'], $sender_details, $template, $sms_detail->type);
 
         $send_to = $sender_details['contact_no'];
+        $send_to = self::phone($send_to, $sms_detail ? $sms_detail->type : '');
         if (!empty($sms_detail)) {
-            if ($sms_detail->type == 'clickatell') {
+            if (false) {
+            } else if ($sms_detail->type == 'termii') {
+                $this->_CI->load->library('termii_lib', array(
+                    'api_key' => $sms_detail->api_id,
+                    'sender_id' => $sms_detail->senderid,
+                    'channel' => $sms_detail->username,
+                ));
+                return $this->_CI->termii_lib->sendSMS($send_to, $msg);
+            } else if ($sms_detail->type == 'clickatell') {
 
                 $params = array(
                     'apiToken' => $sms_detail->api_id,
@@ -2432,8 +2511,17 @@ class Smsgateway
         $msg        = $this->getLoginCredentialContent($sender_details['credential_for'], $sender_details, $template, $sms_detail->type);
 
         $send_to = $sender_details['contact_no'];
+        $send_to = self::phone($send_to, $sms_detail ? $sms_detail->type : '');
         if (!empty($sms_detail)) {
-            if ($sms_detail->type == 'clickatell') {
+            if (false) {
+            } else if ($sms_detail->type == 'termii') {
+                $this->_CI->load->library('termii_lib', array(
+                    'api_key' => $sms_detail->api_id,
+                    'sender_id' => $sms_detail->senderid,
+                    'channel' => $sms_detail->username,
+                ));
+                return $this->_CI->termii_lib->sendSMS($send_to, $msg);
+            } else if ($sms_detail->type == 'clickatell') {
 
                 $params = array(
                     'apiToken' => $sms_detail->api_id,
@@ -2560,8 +2648,17 @@ class Smsgateway
         $msg        = $this->getstudent_apply_leaveContent($sender_details, $template, $sms_detail->type);
  
         $send_to = $sender_details['contact_no'];
+        $send_to = self::phone($send_to, $sms_detail ? $sms_detail->type : '');
         if (!empty($sms_detail)) {
-            if ($sms_detail->type == 'clickatell') {
+            if (false) {
+            } else if ($sms_detail->type == 'termii') {
+                $this->_CI->load->library('termii_lib', array(
+                    'api_key' => $sms_detail->api_id,
+                    'sender_id' => $sms_detail->senderid,
+                    'channel' => $sms_detail->username,
+                ));
+                return $this->_CI->termii_lib->sendSMS($send_to, $msg);
+            } else if ($sms_detail->type == 'clickatell') {
 
                 $params = array(
                     'apiToken' => $sms_detail->api_id,

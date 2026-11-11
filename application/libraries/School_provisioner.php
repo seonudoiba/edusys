@@ -77,6 +77,10 @@ class School_provisioner
                     $this->CI->load->library('Cbse_nigeria');
                     $this->CI->cbse_nigeria->for_school((int) $school['id'])->install(true);
                     $db->where(array('school_id' => (int) $school['id'], 'lang_key' => 'examinations'))->update('sidebar_menus', array('sidebar_display' => 0));
+                    // Nigerian defaults: September session, ₦ before amounts, the student form, grades,
+                    // report cards for teachers, and no sample website of an Indian school.
+                    $this->CI->load->library('Nigeria_defaults');
+                    $this->CI->nigeria_defaults->apply((int) $school['id'], true);
                 }
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';

@@ -175,6 +175,8 @@ $earning_count++;
                                 <div class="col-md-4 col-sm-4">
                                     <h3 class="box-title"><?php echo $this->lang->line('deduction'); ?></h3>
                                     <button type="button" onclick="add_more_deduction()" class="plusign"><i class="fa fa-plus"></i></button>
+                                    <button type="button" onclick="ngPayrollDeductions()" class="btn btn-default btn-xs" style="margin:0 0 8px 6px" title="Pension 8% of basic, housing and transport; NHF 2.5% of basic; PAYE on the Nigeria Tax Act 2025 bands (first 800,000 a year tax-free)">Nigerian deductions</button>
+                                    <p class="help-block" id="ng_payroll_note" style="margin:0 0 6px"></p>
                                     <div class="sameheight">
                                         <div class="feebox">
                                             <table class="table3" id="tableID2">
@@ -365,3 +367,4 @@ $deduction_count++;
         }
     });
 </script>
+<script src="<?php echo base_url('backend/js/ng_payroll.js'); ?>"></script>

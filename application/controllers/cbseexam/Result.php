@@ -440,6 +440,8 @@ class Result extends MY_Addon_CBSEController
         $data['remarkexam_id'] = $remarkexam_id;
         $data['exam_grades'] = $this->cbseexam_grade_model->getExamGrades($gradeexam_id);
       
+        $this->load->library('Cbse_class_stats');
+        $data['class_stats'] = $this->cbse_class_stats->compute($this->cbse_class_stats->template_weights($cbse_template_id), 'percent');
         $result_page = $this->load->view('cbseexam/result/_printpdf_multi', $data, true);
 
         return array('pg' => $result_page);
@@ -1808,6 +1810,8 @@ class Result extends MY_Addon_CBSEController
         $data['gradeexam_id'] = $gradeexam_id;
         $data['remarkexam_id'] = $remarkexam_id;
         $data['exam_grades'] = $this->cbseexam_grade_model->getExamGrades($gradeexam_id);
+        $this->load->library('Cbse_class_stats');
+        $data['class_stats'] = $this->cbse_class_stats->compute($this->cbse_class_stats->template_weights($cbse_template_id), 'percent');
         $result_page = $this->load->view('cbseexam/result/_multi_exam_without_term', $data, true);
         return array('pg' => $result_page);
     }

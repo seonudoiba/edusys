@@ -453,7 +453,7 @@ foreach ($result as $student_key => $student_value) {
                   <td><?php echo $this->lang->line('overall_marks'); ?> : <?php echo two_digit_float($grand_total_exam_weight_percentage, 2) . "/" . count($subject_array) * 100; ?></td>
                   <td><?php echo $this->lang->line('percentage'); ?> : <?php echo two_digit_float($overall_percentage, 2); ?></td>
                   <td><?php echo $this->lang->line('grade'); ?> : <?php echo getGrade($exam_grades, $overall_percentage); ?></td>
-                  <td><?php echo $this->lang->line('rank'); ?> : <?php echo $student_value['rank']; ?></td>
+                  <td><?php echo $this->lang->line('rank'); ?> : <?php echo $student_value['rank']; ?> <?php $class_size = isset($class_stats) ? Cbse_class_stats::class_size($class_stats, $student_value['class_id'], $student_value['section_id']) : 0; echo ($class_size && $student_value['rank'] !== null && $student_value['rank'] !== '') ? ' out of ' . $class_size : ''; ?></td>
                 </tr>
               </tbody>
             </table>

@@ -573,6 +573,9 @@ class Schsettings extends Admin_Controller
                 'is_offline_fee_payment'    => $this->input->post('is_offline_fee_payment'),
                 'offline_bank_payment_instruction'  => $this->input->post('offline_bank_payment_instruction'),
             );
+            if ($this->db->field_exists('transport_billing', 'sch_settings') && in_array($this->input->post('transport_billing'), array('term', 'month'), true)) {
+                $data['transport_billing'] = $this->input->post('transport_billing');
+            }
 
             $this->setting_model->add($data);
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));

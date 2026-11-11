@@ -245,6 +245,8 @@ class Platform extends Admin_Controller
         $h['smtp_host'] = $this->config->item('smtp_host') . ':' . $this->config->item('smtp_port');
         $h['smtp_login'] = $this->config->item('smtp_pass') !== '' ? 'set' : 'none';
         $h['from_email'] = $this->config->item('from_email');
+        // A Mailgun sandbox delivers only to the few addresses authorised in Mailgun: school emails are lost.
+        $h['mail_sandbox'] = (bool) preg_match('/sandbox[0-9a-f]*\.mailgun\.org/i', (string) $this->config->item('smtp_user'));
         // Subscription payment gateways (keys in the server environment, see Payment_gateways::PLATFORM_ENV).
         $this->load->library('Payment_gateways');
         $h['gateways'] = $this->payment_gateways->platform_status();

@@ -151,6 +151,12 @@ $captcha_block = function ($error) use ($captcha_image) {
                                                     <span class="fa fa-lock form-control-feedback"></span>
                                                     <span class="text-danger"><?php echo $is_staff_post ? form_error('password') : ''; ?></span>
                                                 </div>
+                                                <?php if (!empty($staff_code)) { ?>
+                                                    <div class="form-group has-feedback">
+                                                        <input type="text" name="gauth_code" placeholder="6-digit code from your authenticator app" class="form-control" inputmode="numeric" autocomplete="one-time-code" maxlength="6" autofocus aria-label="Authenticator code">
+                                                        <span class="fa fa-shield form-control-feedback"></span>
+                                                    </div>
+                                                <?php } ?>
                                                 <?php if ($staff_captcha) { $captcha_block($is_staff_post ? form_error('captcha') : ''); } ?>
                                                 <button type="submit" class="btn"><?php echo $this->lang->line('sign_in'); ?></button>
                                             </form>

@@ -118,6 +118,7 @@ foreach ($categorylist as $value) {
                             <div class="col-md-12 mDMb10">
                                 <div class="float-rtl-right float-left">
                                 <a href="javascript:void(0)" class="btn btn-sm btn-info printSelected" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-print"></i> <?php echo $this->lang->line('print_selected'); ?> </a>
+                                <a class="btn btn-sm btn-default" href="<?php echo site_url('user/user/feebill'); ?>" target="_blank" rel="noopener"><i class="fa fa-file-text-o"></i> Fee bill</a>
                                 <?php if ($payment_method) {?>
                                 <button type="button" class="btn btn-sm btn-warning collectSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('pay_selected') ?></button>
                                 <?php }?>

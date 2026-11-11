@@ -16,7 +16,8 @@
                        <h3 class="box-title titlefix"></i> <?php echo $this->lang->line('sms_setting'); ?></h3>
                     </div>
                     <ul class="nav nav-tabs">
-                        <li class="active"><a href="#tab_1" data-toggle="tab"><?php echo $this->lang->line('clickatell_sms_gateway'); ?></a></li>
+                        <li class="active"><a href="#tab_termii" data-toggle="tab">Termii (Nigeria)</a></li>
+                        <li><a href="#tab_1" data-toggle="tab"><?php echo $this->lang->line('clickatell_sms_gateway'); ?></a></li>
                         <li><a href="#tab_2" data-toggle="tab"><?php echo $this->lang->line('twilio_sms_gateway'); ?></a></li>
                         <li><a href="#tab_4" data-toggle="tab"><?php echo $this->lang->line('msg_ninty_one'); ?></a></li>
                         <li><a href="#tab_6" data-toggle="tab"><?php echo $this->lang->line('text_local'); ?></a></li>
@@ -30,7 +31,69 @@
 
                     </ul>
                     <div class="tab-content">
-                        <div class="tab-pane active" id="tab_1">
+                        <div class="tab-pane active" id="tab_termii">
+                            <?php $termii_result = check_in_array('termii', $smslist); ?>
+                            <form role="form" id="termii" action="<?php echo site_url('smsconfig/termii') ?>" class="form-horizontal" method="post">
+                                <div class="box-body">
+                                    <div class="row">
+                                        <div class="minheight170">
+                                            <div class="col-md-7">
+                                                <div class="form-group">
+                                                    <label class="col-sm-5 control-label">API key<small class="req"> *</small></label>
+                                                    <div class="col-sm-7">
+                                                        <input type="text" class="form-control" name="termii_apikey" value="<?php echo html_escape($termii_result->api_id); ?>" autocomplete="off">
+                                                        <span class="text text-danger termii_apikey_error"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-5 control-label">Sender ID<small class="req"> *</small></label>
+                                                    <div class="col-sm-7">
+                                                        <input type="text" class="form-control" name="termii_sender_id" maxlength="11" value="<?php echo html_escape($termii_result->senderid); ?>">
+                                                        <span class="text text-danger termii_sender_id_error"></span>
+                                                        <span class="help-block">Up to 11 characters, approved on your Termii dashboard (e.g. your school's short name).</span>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-5 control-label">Route<small class="req"> *</small></label>
+                                                    <div class="col-sm-7">
+                                                        <?php $termii_channel = !empty($termii_result->username) ? $termii_result->username : 'dnd'; ?>
+                                                        <select class="form-control" name="termii_channel">
+                                                            <option value="dnd"<?php echo $termii_channel === 'dnd' ? ' selected' : ''; ?>>DND (transactional): reaches every number</option>
+                                                            <option value="generic"<?php echo $termii_channel === 'generic' ? ' selected' : ''; ?>>Generic (promotional): not delivered to DND numbers</option>
+                                                        </select>
+                                                        <span class="text text-danger termii_channel_error"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-5 control-label"><?php echo $this->lang->line('status'); ?><small class="req"> *</small></label>
+                                                    <div class="col-sm-7">
+                                                        <select class="form-control" name="termii_status">
+                                                            <?php foreach ($statuslist as $s_key => $s_value) { ?>
+                                                                <option value="<?php echo $s_key; ?>"<?php echo $termii_result->is_active == $s_key ? ' selected' : ''; ?>><?php echo $s_value; ?></option>
+                                                            <?php } ?>
+                                                        </select>
+                                                        <span class="text text-danger termii_status_error"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5 text disblock">
+                                                <p><b>Termii</b> delivers SMS across Nigerian networks. Create an account at <a href="https://termii.com" target="_blank" rel="noopener">termii.com</a>, register a sender ID, then copy your API key here.</p>
+                                                <p>Use the <b>DND</b> route for school messages: many parents' numbers are on the Do-Not-Disturb list, and the generic route does not reach them.</p>
+                                                <p>Phone numbers can be stored as 0803 123 4567; they are sent as 234803 123 4567.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer">
+                                    <div class="col-md-offset-3">
+                                        <?php if ($this->rbac->hasPrivilege('sms_setting', 'can_edit')) { ?>
+                                            <button type="submit" class="btn btn-primary btnleftinfo"><?php echo $this->lang->line('save'); ?></button>&nbsp;&nbsp;<span class="termii_loader"></span>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="tab-pane" id="tab_1">
                             <form role="form" id="clickatell" action="<?php echo site_url('smsconfig/clickatell') ?>" class="form-horizontal" method="post">
                                 <div class="box-body">
                                     <div class="row">
@@ -1259,6 +1322,24 @@ function check_in_array($find, $array) {
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
     });
+
+        $("#termii").submit(function (e) {
+            e.preventDefault();
+            $("[class$='_error']").html("");
+            $(".termii_loader").html('<img src="' + img_path + '">');
+            $.ajax({
+                type: "POST", dataType: "JSON", url: $(this).attr("action"), data: $(this).serialize(),
+                success: function (data) {
+                    if (data.st === 1) {
+                        $.each(data.msg, function (key, value) { $("." + key + "_error").html(value); });
+                    } else {
+                        successMsg(data.msg);
+                    }
+                    $(".termii_loader").html("");
+                },
+                error: function () { $(".termii_loader").html(""); }
+            });
+        });
 
         $("#africastalking").submit(function (e) {
         $("[class$='_error']").html("");

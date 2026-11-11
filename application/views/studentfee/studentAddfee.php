@@ -162,6 +162,7 @@ foreach ($categorylist as $value) {
                                 <div class="float-rtl-right float-left">
                                 <button type="button" class="btn btn-sm btn-info printSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-print"></i> <?php echo $this->lang->line('print_selected'); ?></button>
                                 
+                                <a class="btn btn-sm btn-default" href="<?php echo site_url('studentfee/bill/' . (int) $student['student_session_id']); ?>" target="_blank" rel="noopener"><i class="fa fa-file-text-o"></i> Fee bill</a>
                                 <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
                                 <button type="button" class="btn btn-sm btn-warning collectSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('collect_selected'); ?></button><?php } ?>
                                 

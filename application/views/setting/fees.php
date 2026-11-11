@@ -47,6 +47,17 @@
                                     </div>                                    
                                     <div class="col-md-12">
                                         <div class="form-group row">
+                                            <label class="col-sm-4">Transport fees</label>
+                                            <div class="col-sm-8">
+                                                <?php $transport_billing = $this->customlib->transport_billing(); ?>
+                                                <label class="radio-inline"><input type="radio" name="transport_billing" value="term" <?php echo $transport_billing === 'term' ? 'checked' : ''; ?>> Per term</label>
+                                                <label class="radio-inline"><input type="radio" name="transport_billing" value="month" <?php echo $transport_billing === 'month' ? 'checked' : ''; ?>> Per month</label>
+                                                <p class="help-block">Per term: Transport &gt; Fees Master lists First, Second and Third Term, and each pickup point's fee is charged per term. Change this before setting up the session's transport fees.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
                                             <label class="col-sm-4"><?php echo $this->lang->line("offline_bank_payment_instruction"); ?></label>
                                             <div class="col-sm-8">                           
                                                 
