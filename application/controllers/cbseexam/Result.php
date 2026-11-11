@@ -264,6 +264,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id] = $new_cbse_term_id;
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'])) {
@@ -301,6 +302,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 } elseif (!array_key_exists($student_value->subject_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'])) {
 
@@ -330,6 +332,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->cbse_exam_assessment_type_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments'])) {
@@ -352,6 +355,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['total_assessments'] = count($students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments']);
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 }
 
@@ -425,6 +429,7 @@ class Result extends MY_Addon_CBSEController
                 ];
                 if ($student_value->remarkexam_id == $remarkexam_id) {
                     $students[$student_value->student_id]['remark'] = $student_value->remark;
+                    $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                 }
             }
         }
@@ -674,6 +679,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id] = $new_cbse_term_id;
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'])) {
@@ -709,6 +715,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 } elseif (!array_key_exists($student_value->subject_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'])) {
 
@@ -735,6 +742,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->cbse_exam_assessment_type_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments'])) {
@@ -754,6 +762,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['total_assessments'] = count($students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments']);
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 }
 
@@ -822,6 +831,7 @@ class Result extends MY_Addon_CBSEController
                 ];
                 if ($student_value->remarkexam_id == $remarkexam_id) {
                     $students[$student_value->student_id]['remark'] = $student_value->remark;
+                    $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                 }
             }
         }
@@ -846,7 +856,7 @@ class Result extends MY_Addon_CBSEController
 
         $list_observation_new = [];
       
-        if(!empty($list_observation_new)){
+        if(!empty($list_observation)){ // was $list_observation_new, always empty: the ratings never printed
 
             foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
     
@@ -1022,6 +1032,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'])) {
@@ -1058,6 +1069,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['term_total_assessments'] += 1;
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->subject_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'])) {
@@ -1088,6 +1100,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->cbse_exam_assessment_type_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments'])) {
@@ -1110,6 +1123,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['total_assessments'] = count($students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments']);
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 }
 
@@ -1183,6 +1197,7 @@ class Result extends MY_Addon_CBSEController
                 ];
                 if ($student_value->remarkexam_id == $remarkexam_id) {
                     $students[$student_value->student_id]['remark'] = $student_value->remark;
+                    $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                 }
             }
         }
@@ -1193,6 +1208,9 @@ class Result extends MY_Addon_CBSEController
         $data['exam_grades'] = $this->cbseexam_grade_model->getExamGrades($gradeexam_id);
     
     
+        // Class average, highest and lowest per subject (weighted percent, as the report shows it).
+        $this->load->library('Cbse_class_stats');
+        $data['class_stats'] = $this->cbse_class_stats->compute($this->cbse_class_stats->template_weights($cbse_template_id), 'percent');
         $result_page = $this->load->view('cbseexam/result/_printpdf_multi_exam', $data, true);
         return array('pg' => $result_page);
     }
@@ -1423,6 +1441,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'])) {
@@ -1457,6 +1476,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['term_total_assessments'] += 1;
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->subject_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'])) {
@@ -1483,6 +1503,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['term_total_assessments'] += 1;
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->cbse_exam_assessment_type_id, $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments'])) {
@@ -1502,6 +1523,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['total_assessments'] = count($students[$student_value->student_id]['terms'][$student_value->cbse_term_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments']);
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 }
 
@@ -1569,6 +1591,7 @@ class Result extends MY_Addon_CBSEController
                 ];
                 if ($student_value->remarkexam_id == $remarkexam_id) {
                     $students[$student_value->student_id]['remark'] = $student_value->remark;
+                    $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                 }
             }
         }
@@ -1661,6 +1684,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->subject_id, $students[$student_value->student_id]['exams'][$student_value->id]['subjects'])) {
@@ -1689,6 +1713,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->cbse_exam_assessment_type_id, $students[$student_value->student_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments'])) {
@@ -1710,6 +1735,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 }
 
@@ -1772,6 +1798,7 @@ class Result extends MY_Addon_CBSEController
                 ];
                 if ($student_value->remarkexam_id == $remarkexam_id) {
                     $students[$student_value->student_id]['remark'] = $student_value->remark;
+                    $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                 }
             }
         }
@@ -1857,6 +1884,7 @@ class Result extends MY_Addon_CBSEController
                     $students[$student_value->student_id]['exams'][$student_value->id] = $new_exam;
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->subject_id, $students[$student_value->student_id]['exams'][$student_value->id]['subjects'])) {
@@ -1882,6 +1910,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
 
                 } elseif (!array_key_exists($student_value->cbse_exam_assessment_type_id, $students[$student_value->student_id]['exams'][$student_value->id]['subjects'][$student_value->subject_id]['exam_assessments'])) {
@@ -1900,6 +1929,7 @@ class Result extends MY_Addon_CBSEController
 
                     if ($student_value->remarkexam_id == $remarkexam_id) {
                         $students[$student_value->student_id]['remark'] = $student_value->remark;
+                        $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                     }
                 }
 
@@ -1957,6 +1987,7 @@ class Result extends MY_Addon_CBSEController
                 ];
                 if ($student_value->remarkexam_id == $remarkexam_id) {
                     $students[$student_value->student_id]['remark'] = $student_value->remark;
+                    $students[$student_value->student_id]['principal_remark'] = isset($student_value->principal_remark) ? $student_value->principal_remark : '';
                 }
             }
         }
@@ -2042,6 +2073,7 @@ class Result extends MY_Addon_CBSEController
                     'guardian_phone' => $student_value->guardian_phone,
                     'dob' => $student_value->dob,
                     'remark' => $student_value->remark,
+                    'principal_remark' => isset($student_value->principal_remark) ? $student_value->principal_remark : '',
                     'admission_no' => $student_value->admission_no,
                     'father_name' => $student_value->father_name,
                     'mother_name' => $student_value->mother_name,
@@ -2095,6 +2127,9 @@ class Result extends MY_Addon_CBSEController
 
         $data['result'] = $students;
         $data['exam_assessments'] = $exam_assessments;
+        // Class average, highest and lowest per subject (total marks, as the report shows it).
+        $this->load->library('Cbse_class_stats');
+        $data['class_stats'] = $this->cbse_class_stats->compute(array((int) $cbse_exam_id => 100), 'marks');
         $result_page = $this->load->view('cbseexam/result/_printpdf', $data, true);
         return array('pg' => $result_page);
     }
@@ -2159,6 +2194,7 @@ class Result extends MY_Addon_CBSEController
                     'guardian_phone' => $student_value->guardian_phone,
                     'dob' => $student_value->dob,
                     'remark' => $student_value->remark,
+                    'principal_remark' => isset($student_value->principal_remark) ? $student_value->principal_remark : '',
                     'admission_no' => $student_value->admission_no,
                     'father_name' => $student_value->father_name,
                     'mother_name' => $student_value->mother_name,

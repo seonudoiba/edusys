@@ -96,6 +96,96 @@ class Cbt_scoring
     }
 
     /**
+     * The CBSE Examination report-card assessments of this session: one per exam, subject and
+     * assessment type (e.g. First Term Examination > Mathematics > First CA, out of 20).
+     * key "cbse:<timetable id>:<assessment type id>".
+     */
+    public function cbse_targets($session_id)
+    {
+        $rows = $this->CI->db->select('tt.id AS timetable_id, t.id AS type_id, t.name AS type_name, t.code, t.maximum_marks, sub.name AS subject, e.name AS exam, term.name AS term')
+            ->from('cbse_exam_timetable tt')
+            ->join('cbse_exams e', 'e.id = tt.cbse_exam_id')
+            ->join('cbse_exam_timetable_assessment_types link', 'link.cbse_exam_timetable_id = tt.id')
+            ->join('cbse_exam_assessment_types t', 't.id = link.cbse_exam_assessment_type_id')
+            ->join('subjects sub', 'sub.id = tt.subject_id')
+            ->join('cbse_terms term', 'term.id = e.cbse_term_id', 'left')
+            ->where('e.session_id', (int) $session_id)
+            ->order_by('term.id')->order_by('e.name')->order_by('sub.name')->order_by('t.id')
+            ->get()->result_array();
+        $out = array();
+        foreach ($rows as $r) {
+            $out[] = array('key' => 'cbse:' . $r['timetable_id'] . ':' . $r['type_id'], 'group' => trim(($r['term'] ? $r['term'] . ' · ' : '') . $r['exam']),
+                'label' => $r['subject'] . ' · ' . $r['type_name'] . ' (out of ' . (float) $r['maximum_marks'] . ')', 'max_marks' => (float) $r['maximum_marks']);
+        }
+        return $out;
+    }
+
+    /**
+     * Puts the CBT scores into a CBSE Examination assessment (cbse_student_subject_marks), as the
+     * teacher would type them under CBSE Examination > Exam > Marks. Same counts as send_to_report_card().
+     */
+    public function send_to_cbse($onlineexam_id, $key, $scale = true, $replace = false)
+    {
+        $db = $this->CI->db;
+        if (!preg_match('/^cbse:(\d+):(\d+)$/', (string) $key, $m)) {
+            throw new RuntimeException('Choose the assessment the scores should go to.');
+        }
+        $timetable_id = (int) $m[1];
+        $type_id = (int) $m[2];
+        $link = $db->select('link.id, tt.cbse_exam_id, t.maximum_marks')
+            ->from('cbse_exam_timetable_assessment_types link')
+            ->join('cbse_exam_timetable tt', 'tt.id = link.cbse_exam_timetable_id')
+            ->join('cbse_exam_assessment_types t', 't.id = link.cbse_exam_assessment_type_id')
+            ->where(array('link.cbse_exam_timetable_id' => $timetable_id, 'link.cbse_exam_assessment_type_id' => $type_id))
+            ->get()->row_array();
+        if (!$link) {
+            throw new RuntimeException('That assessment is no longer part of the exam. Reload the page.');
+        }
+        $max = (float) $link['maximum_marks'];
+        $exam_students = array();
+        foreach ($db->select('id, student_session_id')->where('cbse_exam_id', (int) $link['cbse_exam_id'])->get('cbse_exam_students')->result_array() as $r) {
+            $exam_students[(int) $r['student_session_id']] = (int) $r['id'];
+        }
+        $existing = array();
+        foreach ($db->select('id, cbse_exam_student_id, marks')->where(array('cbse_exam_timetable_id' => $timetable_id, 'cbse_exam_assessment_type_id' => $type_id))
+            ->get('cbse_student_subject_marks')->result_array() as $r) {
+            $existing[(int) $r['cbse_exam_student_id']] = $r;
+        }
+        $count = array('sent' => 0, 'kept' => 0, 'pending' => 0, 'not_in_exam' => 0, 'not_sat' => 0);
+        $db->trans_start();
+        foreach ($db->where('onlineexam_id', (int) $onlineexam_id)->get('onlineexam_students')->result_array() as $os) {
+            if (empty($os['is_attempted']) || $os['scored_at'] === null) {
+                $count['not_sat']++;
+                continue;
+            }
+            if ((int) $os['pending_count'] > 0) {
+                $count['pending']++;
+                continue;
+            }
+            if (!isset($exam_students[(int) $os['student_session_id']])) {
+                $count['not_in_exam']++;
+                continue;
+            }
+            $es = $exam_students[(int) $os['student_session_id']];
+            $marks = $scale ? round((float) $os['percentage'] / 100 * $max, 2) : min($max, (float) $os['score']);
+            if (isset($existing[$es])) {
+                if (!$replace && $existing[$es]['marks'] !== null && $existing[$es]['marks'] !== '') {
+                    $count['kept']++;
+                    continue;
+                }
+                $db->where('id', (int) $existing[$es]['id'])->update('cbse_student_subject_marks', array('marks' => $marks, 'is_absent' => 0));
+            } else {
+                $db->insert('cbse_student_subject_marks', array('cbse_exam_timetable_assessment_type_id' => (int) $link['id'], 'cbse_exam_timetable_id' => $timetable_id,
+                    'cbse_exam_student_id' => $es, 'cbse_exam_assessment_type_id' => $type_id, 'marks' => $marks, 'is_absent' => 0, 'note' => ''));
+            }
+            $count['sent']++;
+        }
+        $db->where('id', (int) $onlineexam_id)->update('onlineexam', array('marks_target' => $key));
+        $db->trans_complete();
+        return $count;
+    }
+
+    /**
      * Puts each student's CBT score into one exam subject's marks (exam_group_exam_results), as
      * the teacher would type them in Examinations > Exam Group > Exam > Assign / View > Marks.
      *
@@ -152,7 +242,7 @@ class Cbt_scoring
             $this->CI->load->model('examgroupstudent_model');
             $this->CI->examgroupstudent_model->add_result($rows);
         }
-        $db->where('id', (int) $onlineexam_id)->update('onlineexam', array('marks_target' => (int) $target['id']));
+        $db->where('id', (int) $onlineexam_id)->update('onlineexam', array('marks_target' => (string) (int) $target['id']));
         return $count;
     }
 

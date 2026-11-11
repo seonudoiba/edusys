@@ -574,7 +574,9 @@ foreach ($result as $student_key => $student_value) {
 
                                 $parameter_percentage = getPercent($parameter_array['maximum_marks'], $parameter_array['obtain_marks']);
 
-                                echo getGrade($exam_grades, $parameter_percentage);
+                                // Ratings out of 5 or less (Nigerian affective/psychomotor 1-5) print as the rating itself.
+
+                                echo ((float) $parameter_array['maximum_marks'] <= 5) ? (0 + $parameter_array['obtain_marks']) : getGrade($exam_grades, $parameter_percentage);
                               } else {
                                 echo "-";
                               }
@@ -642,6 +644,20 @@ foreach ($result as $student_key => $student_value) {
           <td style="padding-bottom: 6px;display: block;">
 
             <b><?php echo $this->lang->line('class_teacher_remark'); ?> :</b> <?php echo $student_value['remark']; ?>
+          </td>
+        </tr>
+        <?php } ?>
+        <?php if ($template['is_remark'] && !empty($student_value['principal_remark'])) { ?>
+        <tr>
+          <td style="padding-bottom: 6px;display: block;">
+            <b>Principal's remark :</b> <?php echo html_escape($student_value['principal_remark']); ?>
+          </td>
+        </tr>
+        <?php } ?>
+        <?php if (!empty($template['next_term_begins']) && $template['next_term_begins'] !== '0000-00-00') { ?>
+        <tr>
+          <td style="padding-bottom: 6px;display: block;">
+            <b>Next term begins :</b> <?php echo date('l, j F Y', strtotime($template['next_term_begins'])); ?>
           </td>
         </tr>
         <?php } ?>

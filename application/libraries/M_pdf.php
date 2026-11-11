@@ -30,9 +30,19 @@ class M_pdf
                 'margin_bottom' => 2,
                 'format' => 'Legal'
             ]);
-        }else{
-            return  new Mpdf($param);  
         }
+        // An orientation ('P' portrait, 'L' landscape: the CBSE Examination templates) on A4.
+        // mPDF 7+ takes only a settings array; a plain string here used to stop the report printing.
+        if (is_string($param)) {
+            $orientation = strtoupper(substr(trim($param), 0, 1)) === 'L' ? 'L' : 'P';
+            return new Mpdf([
+                'tempDir' => __DIR__ . '/../tmp',
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'orientation' => $orientation,
+            ]);
+        }
+        return new Mpdf($param + ['tempDir' => __DIR__ . '/../tmp']);
       
     }
 }

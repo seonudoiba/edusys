@@ -335,6 +335,7 @@ foreach ($result as $student_key => $student_value) {
                   }
                   ?>
 
+                  <td valign="middle" class="text-center" colspan="3">Class</td>
                 </tr>
                 <tr>
                   <td rowspan="2" valign="middle" class="text-center"><?php echo $this->lang->line('subject'); ?></td>
@@ -367,6 +368,7 @@ foreach ($result as $student_key => $student_value) {
 
                   }
                   ?>
+                  <td valign="middle" class="text-center" colspan="3">This subject</td>
                 </tr>
                 <tr>
                   <?php
@@ -392,9 +394,12 @@ foreach ($result as $student_key => $student_value) {
                   }
                   ?>
                   <td valign="middle" class="text-center"><?php echo $this->lang->line('grand_total'); ?> <br /> <?php echo $this->lang->line('out_of'); ?> (100)</td>
-                  <td valign="middle" class="text-center"><?php echo $this->lang->line('total'); ?> </td>
+                  <td valign="middle" class="text-center"><?php echo $this->lang->line('grade'); ?> </td>
                   <td valign="middle" class="text-center"><?php echo $this->lang->line('rank'); ?></td>
 
+                  <td valign="middle" class="text-center">Average</td>
+                  <td valign="middle" class="text-center">Highest</td>
+                  <td valign="middle" class="text-center">Lowest</td>
                 </tr>
                 <?php
 
@@ -458,6 +463,10 @@ foreach ($result as $student_key => $student_value) {
                     <td valign="top" class="text-center">
                       <?php echo searchSubjectRank($student_value['subject_rank'], $subject_array_key); ?>
                     </td>
+                    <?php $cs = isset($class_stats) ? Cbse_class_stats::pick($class_stats, $student_value['class_id'], $student_value['section_id'], $subject_array_key) : null; ?>
+                    <td valign="top" class="text-center"><?php echo $cs ? two_digit_float($cs['avg']) : '-'; ?></td>
+                    <td valign="top" class="text-center"><?php echo $cs ? two_digit_float($cs['high']) : '-'; ?></td>
+                    <td valign="top" class="text-center"><?php echo $cs ? two_digit_float($cs['low']) : '-'; ?></td>
                   </tr>
                 <?php
                 }
@@ -479,7 +488,7 @@ foreach ($result as $student_key => $student_value) {
                   <td class="border-t-0"><?php echo $this->lang->line('overall_marks'); ?> : <?php echo two_digit_float($grand_total_term_percentage, 2) . "/" . count($subject_array) * 100; ?></td>
                   <td class="border-t-0"><?php echo $this->lang->line('percentage'); ?> : <?php echo two_digit_float($overall_percentage, 2); ?></td>
                   <td class="border-t-0"><?php echo $this->lang->line('grade'); ?> : <?php echo getGrade($exam_grades, $overall_percentage); ?></td>
-                  <td class="border-t-0"><?php echo $this->lang->line('rank'); ?> : <?php echo $student_value['rank']; ?></td>
+                  <td class="border-t-0"><?php echo $this->lang->line('rank'); ?> : <?php echo $student_value['rank']; ?> <?php $class_size = isset($class_stats) ? Cbse_class_stats::class_size($class_stats, $student_value['class_id'], $student_value['section_id']) : 0; echo ($class_size && $student_value['rank'] !== null && $student_value['rank'] !== '') ? ' out of ' . $class_size : ''; ?></td>
 
                 </tr>
               </tbody>
@@ -542,7 +551,8 @@ foreach ($result as $student_key => $student_value) {
                               if (!empty($parameter_array)) {
 
                                 $parameter_percentage = getPercent($parameter_array['maximum_marks'], $parameter_array['obtain_marks']);
-                                echo getGrade($exam_grades, $parameter_percentage);
+                                // Ratings out of 5 or less (Nigerian affective/psychomotor 1-5) print as the rating itself.
+                                echo ((float) $parameter_array['maximum_marks'] <= 5) ? (0 + $parameter_array['obtain_marks']) : getGrade($exam_grades, $parameter_percentage);
                               } else {
                                 echo "-";
                               }
@@ -614,6 +624,20 @@ foreach ($result as $student_key => $student_value) {
           <td style="padding-bottom: 6px;display: block;">
 
             <b><?php echo $this->lang->line('class_teacher_remark'); ?> :</b> <?php echo $student_value['remark']; ?>
+          </td>
+        </tr>
+        <?php } ?>
+        <?php if ($template['is_remark'] && !empty($student_value['principal_remark'])) { ?>
+        <tr>
+          <td style="padding-bottom: 6px;display: block;">
+            <b>Principal's remark :</b> <?php echo html_escape($student_value['principal_remark']); ?>
+          </td>
+        </tr>
+        <?php } ?>
+        <?php if (!empty($template['next_term_begins']) && $template['next_term_begins'] !== '0000-00-00') { ?>
+        <tr>
+          <td style="padding-bottom: 6px;display: block;">
+            <b>Next term begins :</b> <?php echo date('l, j F Y', strtotime($template['next_term_begins'])); ?>
           </td>
         </tr>
         <?php } ?>
