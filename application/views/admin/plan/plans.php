@@ -41,6 +41,22 @@ $can_delete = $this->rbac->hasPrivilege('plan_list', 'can_delete');
             <?php if ($can_add) { ?><a class="btn btn-primary" href="<?php echo site_url('admin/plan/create'); ?>"><i class="fa fa-plus"></i> Add plan</a><?php } ?>
         </div>
 
+        <div class="box box-primary" id="default_period">
+            <div class="box-header with-border"><h3 class="box-title">Payment period selected first</h3></div>
+            <div class="box-body">
+                <p class="text-muted" style="margin-top:0">On the public pricing calculator and the registration form, schools see this option selected. They can still choose the other one; the price per student is the same.</p>
+                <?php if ($can_edit) { ?>
+                    <form method="post" action="<?php echo site_url('admin/plan/default_period'); ?>" class="form-inline"><?php echo $token; ?>
+                        <label class="radio-inline"><input type="radio" name="period" value="term"<?php echo $default_period === 'term' ? ' checked' : ''; ?>> Each term</label>
+                        <label class="radio-inline" style="margin-right:14px"><input type="radio" name="period" value="year"<?php echo $default_period === 'year' ? ' checked' : ''; ?>> For the year</label>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </form>
+                <?php } else { ?>
+                    <p style="margin:0"><b><?php echo $default_period === 'term' ? 'Each term' : 'For the year'; ?></b></p>
+                <?php } ?>
+            </div>
+        </div>
+
         <?php if (!$plans) { ?>
             <div class="pl-empty">No plans yet. <?php if ($can_add) { ?><a href="<?php echo site_url('admin/plan/create'); ?>">Add the first plan</a>.<?php } ?></div>
         <?php } ?>

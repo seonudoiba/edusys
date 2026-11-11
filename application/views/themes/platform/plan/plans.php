@@ -1,6 +1,9 @@
 <?php
 $this->load->view('themes/platform/_icons');
 $money = function ($v) { return '&#8358;' . number_format((float) $v); };
+$CI = &get_instance();
+$CI->load->library('Plan_pricing');
+$default_period = $CI->plan_pricing->default_period(); // set on admin/plan
 ?>
 <section class="hero hero-sm has-bg">
     <?php $this->load->view('themes/platform/_bg'); ?>
@@ -45,8 +48,8 @@ $money = function ($v) { return '&#8358;' . number_format((float) $v); };
             <div class="field">
                 <span style="display:block;font-size:.92rem;font-weight:600;margin-bottom:7px">Pay</span>
                 <div class="choice">
-                    <label><input type="radio" name="period" value="year" checked><span>For the year</span></label>
-                    <label><input type="radio" name="period" value="term"><span>Each term</span></label>
+                    <label><input type="radio" name="period" value="term"<?php echo $default_period === 'term' ? ' checked' : ''; ?>><span>Each term</span></label>
+                    <label><input type="radio" name="period" value="year"<?php echo $default_period === 'year' ? ' checked' : ''; ?>><span>For the year</span></label>
                 </div>
             </div>
             <table class="sum" aria-live="polite">

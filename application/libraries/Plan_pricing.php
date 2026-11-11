@@ -32,6 +32,14 @@ class Plan_pricing
         $this->CI->load->database();
     }
 
+    /** The period selected first on the public pages (admin/plan): 'term' or 'year'. */
+    public function default_period()
+    {
+        $this->CI->load->library('Platform_settings');
+        $p = (string) $this->CI->platform_settings->get('default_billing_period');
+        return isset(self::PERIODS[$p]) ? $p : 'term';
+    }
+
     /** All bands, smallest first. */
     public function bands()
     {
@@ -74,7 +82,7 @@ class Plan_pricing
     public function price($students, $period, $first_time = true, array $quote = null, $fixed_rate = null)
     {
         $students = (int) $students;
-        $period = isset(self::PERIODS[$period]) ? $period : 'year';
+        $period = isset(self::PERIODS[$period]) ? $period : $this->default_period();
         $terms = $period === 'year' ? self::TERMS_PER_YEAR : 1;
         $out = array('ok' => false, 'error' => null, 'needs_quote' => false, 'students' => $students, 'period' => $period, 'terms' => $terms,
             'days' => $period === 'year' ? self::YEAR_DAYS : self::TERM_DAYS, 'rate' => 0.0, 'setup' => 0.0, 'subscription' => 0.0, 'total' => 0.0);

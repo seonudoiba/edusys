@@ -59,7 +59,7 @@ class subscription extends Front_Controller
         $this->data['bands'] = $this->plan_pricing->bands();
         $this->data['quote'] = $quote;
         $this->data['students'] = $students;
-        $this->data['period'] = isset(Plan_pricing::PERIODS[$period]) ? $period : 'year';
+        $this->data['period'] = isset(Plan_pricing::PERIODS[$period]) ? $period : $this->plan_pricing->default_period();
         $this->load_theme('subscription/subscriptionform');
     }
 
