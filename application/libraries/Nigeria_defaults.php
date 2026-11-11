@@ -147,9 +147,9 @@ class Nigeria_defaults
         if ($this->new) {
             $set['start_month'] = '9';
         }
-        // Transport fees per term, unless the school already set up monthly transport fees.
+        // Transport fees per term, unless the school already has (monthly) transport fees set up.
         if (array_key_exists('transport_billing', $row) && $row['transport_billing'] !== 'term'
-            && ($this->new || $this->db->where('school_id', $this->sid)->count_all_results('transport_feemaster') === 0)) {
+            && $this->db->where('school_id', $this->sid)->count_all_results('transport_feemaster') === 0) {
             $set['transport_billing'] = 'term';
         }
         $naira = $this->db->select('short_name')->where('id', (int) $row['currency'])->get('currencies')->row();

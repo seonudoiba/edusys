@@ -136,8 +136,10 @@ class Studentfee extends Admin_Controller
             if ($module['is_active']) {
                 $month_list = $this->customlib->getTransportPeriods($this->sch_setting_detail->start_month);
                 foreach ($month_list as $key => $value) {
-
-                    $transportfesstype[] = $this->transportfee_model->transportfesstype($this->current_session, $key);
+                    $row = $this->transportfee_model->transportfesstype($this->current_session, $key);
+                    if ($row) { // a period with no transport fee set up for this session
+                        $transportfesstype[] = $row;
+                    }
                 }
 
                 if (!empty($transportfesstype)) {
