@@ -101,12 +101,14 @@ class Platform_mailer
         $CI = $this->CI;
         $CI->load->library('email');
         $CI->email->clear(true);
+        $smtpPort = (int) $CI->config->item('smtp_port');
         $CI->email->initialize(array(
             'protocol' => $CI->config->item('protocol'),
             'smtp_host' => $CI->config->item('smtp_host'),
             'smtp_user' => $CI->config->item('smtp_user'),
             'smtp_pass' => $CI->config->item('smtp_pass'),
-            'smtp_port' => $CI->config->item('smtp_port'),
+            'smtp_port' => $smtpPort,
+            'smtp_crypto' => $smtpPort === 465 ? 'ssl' : 'tls',
             'smtp_timeout' => 10,
             'mailtype' => 'html',
             'charset' => $CI->config->item('charset') ?: 'utf-8',
