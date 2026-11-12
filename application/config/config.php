@@ -1,8 +1,5 @@
 <?php
 
-var_dump(getenv('EDUSYS_SMTP_USER'), getenv('EDUSYS_SMTP_HOST'), strlen((string)getenv('EDUSYS_SMTP_PASS')));
-die();
-
 defined('BASEPATH') or exit('No direct script access allowed');
 
 /*
@@ -526,6 +523,10 @@ $config['routine_update'] = 1529539200;
 $config['proxy_ips'] = '';
 $config['installed'] = true;
 
+error_log('SMTP env check: host=' . (getenv('EDUSYS_SMTP_HOST') !== false ? 'set' : 'missing')
+    . ', user=' . (getenv('EDUSYS_SMTP_USER') !== false ? 'set' : 'missing')
+    . ', pass=' . (getenv('EDUSYS_SMTP_PASS') !== false && getenv('EDUSYS_SMTP_PASS') !== '' ? 'set' : 'missing'));
+
 $config['protocol'] = 'smtp';
 // SMTP credentials come from the server environment; the password is never stored in code.
 $config['smtp_host'] = getenv('EDUSYS_SMTP_HOST') ?: 'smtp.mailgun.org';
@@ -537,5 +538,4 @@ $config['charset'] = 'utf-8';
 $config['wordwrap'] = TRUE;
 $config['newline'] = "\r\n";
 $config['from_email'] = "support@edusys.ng";
-
 
