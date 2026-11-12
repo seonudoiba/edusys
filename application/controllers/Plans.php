@@ -39,6 +39,13 @@ class Plans extends Front_Controller
         $this->load_theme('product');
     }
 
+    /** Every menu a school gets, what it does and which staff roles have it (views/themes/platform/features.php). */
+    public function features()
+    {
+        $this->page('Features', 'Every EduSYS module and tool, what it does, and which staff roles use it: admissions, fees, report cards, CBT, payroll, website and more.', 'features');
+        $this->load_theme('features');
+    }
+
     /** Where school owners sign in: renewals, top-ups and their subscription. */
     public function account()
     {

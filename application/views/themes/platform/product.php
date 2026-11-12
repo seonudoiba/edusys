@@ -11,6 +11,7 @@ $area = function ($icon, $tone, $title, $intro) {
         <p class="crumb">Product</p>
         <h1>What EduSYS does.</h1>
         <p class="lede">One system for the office, the classroom and the home. Each school runs on its own web address, with its own data, staff and branding.</p>
+        <p style="margin:18px 0 0"><a class="link-arrow" href="<?php echo site_url('features'); ?>">See every menu and who uses it <?php echo pf_icon('arrow'); ?></a></p>
     </div>
 </section>
 
