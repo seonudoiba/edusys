@@ -30,7 +30,7 @@ $labels = array('sent' => 'label-success', 'failed' => 'label-danger', 'disabled
                                     <td><?php echo $e($r['recipient']); ?>
                                         <?php if ($r['school_ref']) { ?><div><a href="<?php echo site_url('admin/schools/view/' . (int) $r['school_ref']); ?>" style="font-size:11px">school #<?php echo (int) $r['school_ref']; ?></a></div><?php } ?></td>
                                     <td><?php echo $e($r['subject']); ?>
-                                        <?php if ($r['error']) { ?><div class="text-danger" style="font-size:11px;max-width:520px"><?php echo $e(mb_strimwidth($r['error'], 0, 220, '…')); ?></div><?php } ?></td>
+                                        <?php if ($r['error']) { ?><details class="text-danger" style="font-size:11px;max-width:620px"><summary style="cursor:pointer"><?php echo $e(mb_strimwidth($r['error'], 0, 160, '…')); ?> <u>full error</u></summary><pre style="white-space:pre-wrap;font-size:11px;margin-top:6px"><?php echo $e($r['error']); ?></pre></details><?php } ?></td>
                                     <td class="text-muted"><?php echo $e($r['template_key']); ?></td>
                                     <td><span class="label <?php echo isset($labels[$r['status']]) ? $labels[$r['status']] : 'label-default'; ?>"><?php echo $e($r['status'] === 'disabled' ? 'switched off' : $r['status']); ?></span></td>
                                 </tr>

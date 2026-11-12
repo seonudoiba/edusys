@@ -124,7 +124,11 @@ class Platform_mailer
         $CI->email->message('<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;font-size:14px;color:#333">'
             . $body . '</body></html>');
         $ok = (bool) @$CI->email->send(false);
-        $error = $ok ? null : trim(strip_tags(substr($CI->email->print_debugger(array()), 0, 1500)));
+        // The mail server's answer to the step that failed comes last: keep the end of the conversation.
+        $debug = trim(preg_replace('/[ 	]*
+\s*/', "
+", strip_tags($CI->email->print_debugger(array()))));
+        $error = $ok ? null : (strlen($debug) > 1500 ? '…' . substr($debug, -1500) : $debug);
         return $ok;
     }
 
