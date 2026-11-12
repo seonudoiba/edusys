@@ -1,5 +1,8 @@
 <?php
 
+var_dump(getenv('EDUSYS_SMTP_USER'), getenv('EDUSYS_SMTP_HOST'), strlen((string)getenv('EDUSYS_SMTP_PASS')));
+die();
+
 defined('BASEPATH') or exit('No direct script access allowed');
 
 /*
