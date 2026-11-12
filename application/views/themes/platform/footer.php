@@ -25,6 +25,7 @@ foreach (!empty($footer_menus) ? $footer_menus : array() as $m) {
                     <?php foreach ($links as $l) { ?>
                         <li><a href="<?php echo html_escape($l['url']); ?>"><?php echo html_escape($l['label']); ?></a></li>
                     <?php } ?>
+                    <li><a href="<?php echo html_escape(site_url('features')); ?>">All features</a></li>
                     <li><a href="<?php echo html_escape(site_url('plans/quote')); ?>">Request a quote</a></li>
                     <li><a href="<?php echo html_escape(site_url('subscription/add')); ?>">Register your school</a></li>
                     <li><a href="<?php echo html_escape(site_url('account')); ?>">School owner sign in</a></li>
