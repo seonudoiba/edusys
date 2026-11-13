@@ -389,7 +389,12 @@ if ($fee_deposits_value->description == "") {
                                                             <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                             <td class="text text-left">
 
-                                                                <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                <?php
+                                                                $paymentDate = $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date);
+                                                                if ($paymentDate !== '' && $paymentDate !== false) {
+                                                                    echo date($this->customlib->getSchoolDateFormat(), (int) $paymentDate);
+                                                                }
+                                                                ?>
                                                             </td>
                                                             <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></td>
                                                             <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -600,7 +605,12 @@ if ($fee_deposits_value->description == "") {
                                                         <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                         <td class="text text-left">
 
-                                                            <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                            <?php
+                                                            $paymentDate = $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date);
+                                                            if ($paymentDate !== '' && $paymentDate !== false) {
+                                                                echo date($this->customlib->getSchoolDateFormat(), (int) $paymentDate);
+                                                            }
+                                                            ?>
                                                         </td>
                                                         <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></td>
                                                         <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></td>
