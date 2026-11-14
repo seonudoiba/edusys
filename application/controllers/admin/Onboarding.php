@@ -48,7 +48,7 @@ class Onboarding extends Admin_Controller
         $this->require_edit();
         $hidden = (string) $this->input->post('hidden') === '1';
         $this->school_onboarding->set_hidden($hidden);
-        redirect($hidden ? 'admin/admin/dashboard' : 'admin/onboarding');
+        redirect($hidden ? 'dashboard' : 'admin/onboarding');
     }
 
     public function classes()

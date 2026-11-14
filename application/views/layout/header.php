@@ -112,7 +112,7 @@ $this->load->view('layout/theme');
        <div class="wrapper">
 
             <header class="main-header" id="alert">
-                <a href="<?php echo base_url(); ?>admin/admin/dashboard" class="logo" 12211>
+                <a href="<?php echo site_url('dashboard'); ?>" class="logo" 12211>
                     <span class="logo-mini"><img src="<?php echo $this->customlib->getBaseUrl(); ?>uploads/school_content/admin_small_logo/<?php echo $this->setting_model->getAdminsmalllogo() . img_time();?>" alt="<?php echo $this->customlib->getAppName() ?>" /></span>
                     <span class="logo-lg"><img src="<?php echo $this->customlib->getBaseUrl(); ?>uploads/school_content/admin_logo/<?php echo $this->setting_model->getAdminlogo() . img_time();?>" alt="<?php echo $this->customlib->getAppName() ?>" /></span>
                 </a>

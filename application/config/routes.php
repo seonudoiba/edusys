@@ -33,6 +33,7 @@ $route['cron/(:any)'] = 'cron/index/$1';
 $route['page/(:any)'] = 'welcome/page/$1';
 $route['read/(:any)'] = 'welcome/read/$1';
 $route['online_admission'] = 'welcome/admission';
+$route['dashboard'] = 'admin/admin/dashboard'; // staff dashboard (school portal)
 $route['product'] = 'plans/product';
 $route['features'] = 'plans/features';
 $route['account'] = 'plans/account';
