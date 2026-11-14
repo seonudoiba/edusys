@@ -7,7 +7,6 @@
 $language = $this->customlib->getLanguage();
 $language_name = $language["short_code"];
 ?>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
 
 <!-- Content Wrapper. Contains page content -->
@@ -404,8 +403,8 @@ $language_name = $language["short_code"];
 
 <script>
 
-    document.getElementById("print").style.display = "block";
-    document.getElementById("btnExport").style.display = "block";
+    // the buttons exist only once a report has been searched
+    ["print", "btnExport"].forEach(function (id) { var el = document.getElementById(id); if (el) { el.style.display = "block"; } });
 
     function printDiv() {
 

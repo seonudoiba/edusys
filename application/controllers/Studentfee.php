@@ -711,6 +711,12 @@ class Studentfee extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'studentfee/searchpayment');
         $data['title'] = $this->lang->line('fees_collection');
 
+        // A receipt link (?paymentid=12/3, e.g. from the Takings page) opens straight on that receipt.
+        $linked = (string) $this->input->get('paymentid');
+        if ($this->input->method() !== 'post' && preg_match('#^\d+/\d+$#', $linked)) {
+            $_POST['paymentid'] = $linked;
+            $this->form_validation->set_data(array('paymentid' => $linked));
+        }
         $this->form_validation->set_rules('paymentid', $this->lang->line('payment_id'), 'trim|required|xss_clean');
         if ($this->form_validation->run() == false) {
         } else {
