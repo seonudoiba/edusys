@@ -12,7 +12,7 @@ class Fees_menu
     const ENTRIES = array(
         // url => [label, permission, activate_methods]
         'admin/fees' => array('Overview', "('collect_fees', 'can_view')", 'index,charge,edit,remove,remind'),
-        'admin/fees/collections' => array('Collections', "('collect_fees', 'can_view')", 'collections,followup'),
+        'admin/fees/collections' => array('Collections', "('collect_fees', 'can_view')", 'collections,followup,takings'),
         'admin/fees/create' => array('Create fees', "('fees_master', 'can_add')", 'create,repeat'),
         'admin/fees/adjust' => array('Discounts & balances', "('fees_discount', 'can_view')", 'adjust,discounts,carryforward,catchup'),
     );

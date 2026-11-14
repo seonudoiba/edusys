@@ -4,7 +4,6 @@
     canvas#1_1001{fill: #000 !important}
 </style>
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
 
 <!-- Content Wrapper. Contains page content -->
@@ -316,8 +315,7 @@ $complete_percent   = $value['complete'];
 </script>
 <script>
 
-    document.getElementById("print").style.display = "block";
-    document.getElementById("btnExport").style.display = "block";
+    ["print", "btnExport"].forEach(function (id) { var el = document.getElementById(id); if (el) { el.style.display = "block"; } });
 
     function printDiv() {
         $("#visible").removeClass("hide");

@@ -9,6 +9,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  *                              one row per charge (a fee group in a class section)
  *   admin/fees/charge/F/C/S    one charge: every student's balance, with Collect, Fee bill, WhatsApp
  *   admin/fees/collections     Collections: find a student and collect, transfers to review, receipts
+ *   admin/fees/takings         End-of-day takings: one day's payments by collector and payment mode (libraries/Fee_takings.php)
  *   admin/fees/create          Create fees: items, classes, amounts and due dates, preview, confirm
  *   admin/fees/repeat          Repeat a set of fees for the next term (opens Create fees filled in)
  *   admin/fees/edit|remove|remind/F/C/S   change a charge's amounts and due dates, take it off a class
@@ -113,6 +114,28 @@ class Fees extends Admin_Controller
             'collected_today' => $this->collected_since($today),
             'collected_week' => $this->collected_since(date('Y-m-d', strtotime('-6 days'))),
             'totals' => $this->fees_overview->totals($this->fees_overview->items()),
+            'sch_setting' => $this->sch_setting_detail,
+        ), 'collections');
+    }
+
+    /** End-of-day takings: one day's payments by collector and payment mode, printable for reconciling. */
+    public function takings()
+    {
+        $this->need('collect_fees', 'can_view');
+        $this->load->library('Fee_takings');
+        $date = (string) $this->input->get('date');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !strtotime($date)) {
+            $date = date('Y-m-d');
+        }
+        $by = (string) $this->input->get('by');
+        if (!preg_match('/^(staff-\d+|online)$/', $by)) {
+            $by = '';
+        }
+        $this->render('takings', array(
+            'title' => 'Takings',
+            'date' => $date,
+            'by' => $by,
+            'day' => $this->fee_takings->day($date, $by),
             'sch_setting' => $this->sch_setting_detail,
         ), 'collections');
     }

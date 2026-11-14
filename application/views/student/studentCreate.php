@@ -2,7 +2,6 @@
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
 <link href="<?php echo base_url(); ?>backend/multiselect/css/jquery.multiselect.css" rel="stylesheet">
-<script src="<?php echo base_url(); ?>backend/multiselect/js/jquery.min.js"></script>
 <script src="<?php echo base_url(); ?>backend/multiselect/js/jquery.multiselect.js"></script>
 <div class="content-wrapper">
     <!-- Main content -->
@@ -161,7 +160,7 @@ if (set_value('category_id') == $category['id']) {
         echo "selected=selected";
     }
         ?>><?php echo $category['category'] ?></option>
-        <?php $count++;
+        <?php
     }
     ?>
                                                     </select>
@@ -474,6 +473,7 @@ echo amountFormat($view_total_fees);
 <input type="hidden" name="total_post_fees" value="<?php echo $view_total_fees; ?>">
             </span>
                          </h4>
+                         <p id="fee_class_hint" class="text-muted" style="display:none;margin:4px 0 0"></p>
                                                     <div class="row around10">
                                                         <div class="col-md-12">
                                       <?php
@@ -496,9 +496,10 @@ foreach ($feesessiongroup_model as $feesessiongroup_key => $feesessiongroup_valu
     <div class="panel panel-default1">
       <div class="panel-heading pt5 pb5">
         <h6 class="panel-title panel-title1 overflow-hidden">
-          <input class="fee_group_chk vertical-middle" type="checkbox" name="fee_session_group_id[]" value="<?php echo $feesessiongroup_value->id; ?>" <?php echo set_checkbox('fee_session_group_id[]', $feesessiongroup_value->id); ?>>
+          <input class="fee_group_chk vertical-middle" type="checkbox" name="fee_session_group_id[]" value="<?php echo $feesessiongroup_value->id; ?>" data-charged="<?php echo html_escape(implode(' ', isset($fee_charged_to[$feesessiongroup_value->id]) ? $fee_charged_to[$feesessiongroup_value->id] : array())); ?>" <?php echo set_checkbox('fee_session_group_id[]', $feesessiongroup_value->id); ?>>
           <a class="display-inline collapsed box-plus-panel" data-toggle="collapse" href="#collapse_fees_<?php echo $feesessiongroup_value->id ?>">
              <span class="font14"><?php echo $feesessiongroup_value->group_name; ?></span></a>
+          <span class="label label-success fee_class_tag" style="display:none;margin-left:6px">Charged to this class</span>
           <span class="float-right bmedium pt3 fee_group_total" data-amount="<?php echo ($total_fees); ?>"><?php echo amountFormat($total_fees); ?></span>
         </h6>
       </div>
@@ -950,7 +951,6 @@ if (set_value('sibiling_class_id') == $class['id']) {
     }
     ?>><?php echo $class['class'] ?></option>
                                                 <?php
-$count++;
 }
 ?>
                                 </select>
@@ -1312,43 +1312,38 @@ $('#fee_session_group_id').multiselect({
 
 </script>
 <script type="text/javascript">
-    var total_fees_alloted= parseFloat($("input[name='total_post_fees']").val());
-    $(document).ready(function(){
-        $(document).on('change','.fee_group_chk',function(){
-
-        if ($(this).prop("checked")) {
-            total_fees_alloted +=parseFloat($(this).closest('div').find('span.fee_group_total').data('amount'));
-        }
-        else {
-            total_fees_alloted -=parseFloat($(this).closest('div').find('span.fee_group_total').data('amount'));
-        }
-//==============
+    // Total of the ticked fee groups, formatted by the server in the school's currency format.
+    function feeTotalRefresh() {
+        var total = 0;
+        $('.fee_group_chk:checked').each(function () {
+            total += parseFloat($(this).closest('div').find('span.fee_group_total').data('amount')) || 0;
+        });
+        $("input[name='total_post_fees']").val(total);
         $.ajax({
             type: "POST",
             url: base_url + "admin/currency/getAmountFormat",
-            data: {'total_fees_alloted': total_fees_alloted},
+            data: {'total_fees_alloted': total},
             dataType: "json",
-             beforeSend: function() {
-         $('#fade').css("display", "block");
-         $('#modal').css("display", "block");
-             },
-            success: function (data) {
-                console.log(data);
-                 $('.total_fees_alloted').text(data.amount);
-               $("#fade").fadeOut(1000);
-         $("#modal").fadeOut(1000);
-            },
-             error: function(xhr) { // if error occured
-         $("#fade").fadeOut(1000);
-         $("#modal").fadeOut(1000);
-            },
-            complete: function() {
-              $("#fade").fadeOut(1000);
-         $("#modal").fadeOut(1000);
-            }
+            success: function (data) { $('.total_fees_alloted').text(data.amount); }
         });
-//==============
-
-    });
+    }
+    // Picking a class and section ticks the fees that class already pays, so new students are not missed.
+    function feeTickForClass() {
+        var key = $('#class_id').val() + '-' + $('#section_id').val();
+        var any = false;
+        $('.fee_group_chk').each(function () {
+            var on = (' ' + ($(this).data('charged') || '') + ' ').indexOf(' ' + key + ' ') !== -1;
+            $(this).prop('checked', on);
+            $(this).closest('div').find('.fee_class_tag').toggle(on);
+            any = any || on;
+        });
+        $('#fee_class_hint').toggle(!!$('#section_id').val()).text(any
+            ? 'The fees this class already pays are ticked. Untick any this student should not pay.'
+            : 'No fees have been charged to this class yet. Tick any this student should pay, or charge them later from Fees.');
+        feeTotalRefresh();
+    }
+    $(document).ready(function () {
+        $(document).on('change', '.fee_group_chk', feeTotalRefresh);
+        $(document).on('change', '#section_id', feeTickForClass);
     });
 </script>

@@ -48,7 +48,7 @@ $can_collect = $this->rbac->hasPrivilege('collect_fees', 'can_add');
         </div>
 
         <div class="fw-kpis">
-            <div class="fw-kpi teal"><span>Collected today</span><b><?php echo $m($collected_today[1]); ?></b><small><?php echo (int) $collected_today[0] . ((int) $collected_today[0] === 1 ? ' payment' : ' payments'); ?></small></div>
+            <div class="fw-kpi teal"><span>Collected today</span><b><?php echo $m($collected_today[1]); ?></b><small><?php echo (int) $collected_today[0] . ((int) $collected_today[0] === 1 ? ' payment' : ' payments'); ?> · <a href="<?php echo site_url('admin/fees/takings'); ?>">By collector</a></small></div>
             <div class="fw-kpi"><span>Last 7 days</span><b><?php echo $m($collected_week[1]); ?></b><small><?php echo (int) $collected_week[0] . ((int) $collected_week[0] === 1 ? ' payment' : ' payments'); ?></small></div>
             <div class="fw-kpi gold"><span>Still owed</span><b><?php echo $m($totals['balance']); ?></b><small><?php echo (int) $totals['owing'] . ((int) $totals['owing'] === 1 ? ' student' : ' students'); ?></small></div>
         </div>
@@ -64,6 +64,11 @@ $can_collect = $this->rbac->hasPrivilege('collect_fees', 'can_add');
                 <p>Students with unpaid fees by class, with a WhatsApp reminder to each guardian.</p>
                 <a class="btn btn-default btn-sm" href="<?php echo site_url('admin/fees?status=owing'); ?>">By class</a>
                 <a class="btn btn-default btn-sm" href="<?php echo site_url('studentfee/feesearch'); ?>">By fee type</a>
+            </div>
+            <div class="fw-card">
+                <h4><i class="fa fa-calculator"></i> End-of-day takings</h4>
+                <p>What each collector received today, by cash, transfer and POS, with every receipt. Print it to reconcile the money handed in.</p>
+                <a class="btn btn-default btn-sm" href="<?php echo site_url('admin/fees/takings'); ?>">Today's takings</a>
             </div>
             <div class="fw-card">
                 <h4><i class="fa fa-search"></i> Find a receipt</h4>

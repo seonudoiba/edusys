@@ -372,6 +372,14 @@ class Student extends Admin_Controller
         $data['next_admission_no']     = $this->student_numbers->next();
         $session                       = $this->setting_model->getCurrentSession();
         $data['feesessiongroup_model'] = $this->feesessiongroup_model->getFeesByGroup();
+        // Which classes each fee group is already charged to, so the form can tick a new student's class fees.
+        $data['fee_charged_to'] = array();
+        $this->load->library('fees_overview');
+        foreach ($this->fees_overview->charges() as $c) {
+            if (!$c['is_system']) {
+                $data['fee_charged_to'][$c['fsg_id']][] = $c['class_id'] . '-' . $c['section_id'];
+            }
+        }
         $data['transport_fees']        = $this->transportfee_model->getSessionFees($session);
         $student_result                = $this->student_model->getRecentRecord();
         $data['studentlist']           = $student_result;
