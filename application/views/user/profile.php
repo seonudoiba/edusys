@@ -1271,7 +1271,6 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
                                                         }
                                                         ?>
-                                                        <td>
 
 
 
@@ -1368,11 +1367,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             </thead>
                                             <tbody>
                                                 <?php if (empty($assignstudent)) {
-                                                ?>
-                                                    <td colspan="6">
-                                                        <div class="alert alert-danger"><?php echo $this->lang->line('no_record_found'); ?></div>
-                                                    </td>
-                                                    <?php
+                                                    // left empty: the table plugin shows its own "no data" line (a spanning cell breaks it)
                                                 } else {
 
                                                     foreach ($assignstudent as $assignstudent_value) {

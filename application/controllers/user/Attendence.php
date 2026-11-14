@@ -58,6 +58,7 @@ class Attendence extends Student_Controller
 
     public function getAttendence()
     {
+        $eventdata = array(); // no attendance in the range: an empty list for the calendar
         $date['start']         = $this->input->get('start');
         $date['end']           = $this->input->get('end');
         $student_id            = $this->customlib->getStudentSessionUserID();

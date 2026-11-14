@@ -1196,7 +1196,7 @@ function getCalculatedExam($array, $exam_id)
        });
    });
 
-   document.getElementById("print").style.display = "block";
+   (document.getElementById("print") || {style: {}}).style.display = "block";
 
    function printDiv() {
    document.getElementById("print").style.display = "none";

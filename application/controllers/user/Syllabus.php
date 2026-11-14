@@ -92,6 +92,12 @@ class Syllabus extends Student_Controller
         $student_id            = $this->customlib->getStudentSessionUserID();
         $student               = $this->student_model->get($student_id);
         $subjects              = $this->syllabus_model->getmysubjects($student_current_class->class_id, $student_current_class->section_id);
+        // the view carries an unused class/section filter script copied from the admin page: leave it idle
+        $data['subjects_data']    = array();
+        $data['class_id']         = '';
+        $data['section_id']       = '';
+        $data['subject_group_id'] = '';
+        $data['subject_id']       = '';
 
         foreach ($subjects as $key => $value) {
             $show_status     = 0;
