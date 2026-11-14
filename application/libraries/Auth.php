@@ -79,7 +79,7 @@ class Auth
               
 
                 if ($default_redirect) {
-                    redirect('admin/admin/dashboard');
+                    redirect('dashboard');
                 }
                 return true;
             } else {

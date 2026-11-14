@@ -135,7 +135,7 @@ class Gauthenticate extends Public_Controller
                     if (!$user_using_authenticate || !is_active_2fa()) {
                         $gauthenticate = false;
                         $this->admin_session($result, $setting_result, $lang_array);
-                        $redirect_url = site_url('admin/admin/dashboard');
+                        $redirect_url = site_url('dashboard');
                         if (isset($_SESSION['redirect_to'])) {
                             $redirect_url = $_SESSION['redirect_to'];
                         }
@@ -284,7 +284,7 @@ class Gauthenticate extends Public_Controller
 
                     $this->admin_session($result, $setting_result, $lang_array);
 
-                    $redirect_url = site_url('admin/admin/dashboard');
+                    $redirect_url = site_url('dashboard');
                     if (isset($_SESSION['redirect_to'])) {
                         $redirect_url = $_SESSION['redirect_to'];
                     }

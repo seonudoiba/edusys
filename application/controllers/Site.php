@@ -173,7 +173,7 @@ class Site extends Public_Controller
                     if (isset($_SESSION['redirect_to'])) {
                         redirect($_SESSION['redirect_to']);
                     } else {
-                        redirect('admin/admin/dashboard');
+                        redirect('dashboard');
                     }
 
                 } else {
@@ -223,7 +223,7 @@ class Site extends Public_Controller
         $this->session->set_userdata('impersonated_by', $row['created_by']);
         $this->load->library('Platform_audit');
         $this->platform_audit->record_in_school(Tenant::id(), 'support.login', 'Platform support (' . $row['created_by'] . ') opened the admin panel as ' . $result->email);
-        redirect('admin/admin/dashboard');
+        redirect('dashboard');
     }
 
     /** The admin session of a staff record (the same values login() sets). */

@@ -70,7 +70,7 @@ function login()
         return true;
     }
     list($code, $landing) = fetch("$base/site/login", array('username' => $opt['user'], 'password' => $opt['pass']));
-    return strpos($landing, '/admin/') !== false;
+    return strpos($landing, '/admin/') !== false || preg_match('~/dashboard$~', (string) $landing) === 1;
 }
 if (!login()) {
     fwrite(STDERR, "Login failed for {$opt['user']} ($mode)\n");

@@ -32,7 +32,7 @@ $MYSQL -e "update staff set password='$H1' where id=1 and school_id=1;
 
 # Staff portal
 curl -s -o /dev/null $R -c "$TMP/a" -b "$TMP/a" "$S1/site/login"; PRE=$(sid "$TMP/a")
-check "staff login school 1" "303 $S1/admin/admin/dashboard" "$(code -c "$TMP/a" -b "$TMP/a" -d 'username=superadmin@gmail.com&password=School1%23pw' "$S1/site/login")"
+check "staff login school 1" "303 $S1/dashboard" "$(code -c "$TMP/a" -b "$TMP/a" -d 'username=superadmin@gmail.com&password=School1%23pw' "$S1/site/login")"
 POST=$(sid "$TMP/a")
 check "new session id at staff login" "yes" "$([ "$PRE" != "$POST" ] && echo yes)"
 check "dashboard school 1" "200 " "$(code -b "$TMP/a" "$S1/admin/admin/dashboard")"
@@ -40,7 +40,7 @@ check "school 1 cookie refused on school 2" "307 $S2/site/login" "$(code -b "ci_
 check "school 1 session survives the replay" "200 " "$(code -b "ci_session=$POST" "$S1/admin/admin/dashboard")"
 check "school 1 password refused on school 2" "200 " "$(code -c "$TMP/b" -b "$TMP/b" -d 'username=superadmin@gmail.com&password=School1%23pw' "$S2/site/login")"
 check "school 2 password refused on school 1" "200 " "$(code -c "$TMP/c" -b "$TMP/c" -d 'username=superadmin@gmail.com&password=School2%23pw' "$S1/site/login")"
-check "staff login school 2" "303 $S2/admin/admin/dashboard" "$(code -c "$TMP/d" -b "$TMP/d" -d 'username=superadmin@gmail.com&password=School2%23pw' "$S2/site/login")"
+check "staff login school 2" "303 $S2/dashboard" "$(code -c "$TMP/d" -b "$TMP/d" -d 'username=superadmin@gmail.com&password=School2%23pw' "$S2/site/login")"
 check "cookie is host-only" "xyz.edusys.test" "$(grep -P "\tci_session\t" "$TMP/d" | awk '{print $1}' | sed 's/#HttpOnly_//')"
 
 # Student portal

@@ -21,7 +21,7 @@
         <ul class="sidebar-menu verttop">
             <?php $on_dashboard = $this->router->fetch_class() === 'admin' && $this->router->fetch_method() === 'dashboard'; ?>
             <li class="<?php echo $on_dashboard ? 'active' : ''; ?>">
-                <a href="<?php echo site_url('admin/admin/dashboard'); ?>"<?php echo $on_dashboard ? ' aria-current="page"' : ''; ?>>
+                <a href="<?php echo site_url('dashboard'); ?>"<?php echo $on_dashboard ? ' aria-current="page"' : ''; ?>>
                     <i class="fa fa-tachometer"></i> <span><?php echo $this->lang->line('dashboard') ?: 'Dashboard'; ?></span>
                 </a>
             </li>
@@ -29,7 +29,30 @@
             <!-- //==================sidebar dynamic======================= -->
             <?php
             $side_list = side_menu_list(1);
-            
+
+            // The current page's entry: the one whose controller and methods list this page; otherwise the
+            // one whose address is the longest start of this page's address (admin/fees/charge/... is under
+            // admin/fees). Its menu stays open, so staff see where they are.
+            $active_sub = null;
+            $active_menu = null;
+            $best = -1;
+            $here = trim($this->uri->uri_string(), '/');
+            foreach ((array) $side_list as $m) {
+                foreach (!empty($m->submenus) ? $m->submenus : array() as $s) {
+                    if (activate_submenu($s->activate_controller, explode(',', (string) $s->activate_methods)) === 'active') {
+                        $active_sub = $s->id;
+                        $active_menu = $m->id;
+                        break 2;
+                    }
+                    $u = trim((string) $s->url, '/');
+                    if ($u !== '' && ($here === $u || strpos($here, $u . '/') === 0) && strlen($u) > $best) {
+                        $best = strlen($u);
+                        $active_sub = $s->id;
+                        $active_menu = $m->id;
+                    }
+                }
+            }
+
             if (!empty($side_list)) {
                 foreach ($side_list as $side_list_key => $side_list_value) {
 
@@ -50,7 +73,7 @@
 
                             ?>
 
-                            <li class="treeview <?php echo activate_main_menu($side_list_value->activate_menu); ?>">
+                            <li class="treeview <?php echo $side_list_value->id == $active_menu ? 'active' : ($active_menu === null ? activate_main_menu($side_list_value->activate_menu) : ''); ?>">
 
                                 <a href="#">
                                     <i class="<?php echo $side_list_value->icon; ?>"></i>
@@ -98,9 +121,8 @@
 
                                                 ?>
 
-                                                <li
-                                                    class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', $submenu_value->activate_methods)); ?>">
-                                                    <a href="<?php echo site_url($submenu_value->url); ?>"><i
+                                                <li class="<?php echo $submenu_value->id == $active_sub ? 'active' : ''; ?>">
+                                                    <a href="<?php echo site_url($submenu_value->url); ?>"<?php echo $submenu_value->id == $active_sub ? ' aria-current="page"' : ''; ?>><i
                                                             class="fa fa-angle-double-right"></i><?php echo $this->lang->line($submenu_value->lang_key) ?: html_escape($submenu_value->menu); ?></a>
                                                 </li>
 
@@ -129,3 +151,22 @@
         </ul>
     </section>
 </aside>
+<script>
+    // Keep the current page's menu entry in view in a long sidebar. The sidebar scrolls with slimScroll
+    // (set up by the layout when the page has loaded), so it is moved with slimScroll's scrollTo.
+    window.addEventListener('load', function () {
+        setTimeout(function () {
+            var cur = document.querySelector('.sidebar-menu .treeview-menu > li.active');
+            var box = document.getElementById('sibe-box');
+            if (!cur || !box || box.scrollHeight <= box.clientHeight) { return; }
+            var top = cur.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+            if (top + cur.offsetHeight <= box.clientHeight - 20) { return; } // already in view
+            var to = Math.max(0, Math.round(top - box.clientHeight / 3));
+            if (window.jQuery && jQuery.fn.slimScroll && jQuery(box).parent().hasClass('slimScrollDiv')) {
+                jQuery(box).slimScroll({ scrollTo: to + 'px' });
+            } else {
+                box.scrollTop = to;
+            }
+        }, 50);
+    });
+</script>
