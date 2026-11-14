@@ -81,6 +81,9 @@ class School_provisioner
                     // report cards for teachers, and no sample website of an Indian school.
                     $this->CI->load->library('Nigeria_defaults');
                     $this->CI->nigeria_defaults->apply((int) $school['id'], true);
+                    // The fees workspace at the top of Fees Collection.
+                    $this->CI->load->library('Fees_menu');
+                    $this->CI->fees_menu->install((int) $school['id']);
                 }
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';

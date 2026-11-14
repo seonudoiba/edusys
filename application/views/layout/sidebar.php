@@ -54,7 +54,7 @@
 
                                 <a href="#">
                                     <i class="<?php echo $side_list_value->icon; ?>"></i>
-                                    <span><?php echo $this->lang->line($side_list_value->lang_key); ?></span> <i
+                                    <span><?php echo $this->lang->line($side_list_value->lang_key) ?: html_escape($side_list_value->menu); ?></span> <i
                                         class="fa fa-angle-left pull-right"></i>
                                 </a>
 
@@ -101,7 +101,7 @@
                                                 <li
                                                     class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', $submenu_value->activate_methods)); ?>">
                                                     <a href="<?php echo site_url($submenu_value->url); ?>"><i
-                                                            class="fa fa-angle-double-right"></i><?php echo $this->lang->line($submenu_value->lang_key); ?></a>
+                                                            class="fa fa-angle-double-right"></i><?php echo $this->lang->line($submenu_value->lang_key) ?: html_escape($submenu_value->menu); ?></a>
                                                 </li>
 
 

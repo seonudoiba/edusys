@@ -100,7 +100,7 @@ $faqs = array(
                 </div>
             <?php } ?>
         </div>
-        <p style="margin:28px 0 0"><a class="link-arrow" href="<?php echo site_url('features'); ?>">See every feature and who uses it <?php echo pf_icon('arrow'); ?></a></p>
+        <p style="margin:28px 0 0"><a class="link-arrow" href="<?php echo site_url('product'); ?>">See every feature and who uses it <?php echo pf_icon('arrow'); ?></a></p>
     </div>
 </section>
 

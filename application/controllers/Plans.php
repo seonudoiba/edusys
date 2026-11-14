@@ -35,15 +35,14 @@ class Plans extends Front_Controller
 
     public function product()
     {
-        $this->page('The product', 'Everything a school runs on: admissions, fees, attendance, examinations, staff, communication and its own website.', 'product');
+        $this->page('The product', 'Every EduSYS module and tool, what it does, and which staff roles use it: admissions, fees, report cards, CBT, payroll, website and more.', 'product');
         $this->load_theme('product');
     }
 
-    /** Every menu a school gets, what it does and which staff roles have it (views/themes/platform/features.php). */
+    /** The features page became part of /product. */
     public function features()
     {
-        $this->page('Features', 'Every EduSYS module and tool, what it does, and which staff roles use it: admissions, fees, report cards, CBT, payroll, website and more.', 'features');
-        $this->load_theme('features');
+        redirect('product', 'location', 301);
     }
 
     /** Where school owners sign in: renewals, top-ups and their subscription. */

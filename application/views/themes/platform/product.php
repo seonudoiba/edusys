@@ -1,98 +1,191 @@
 <?php
+/* /product: what EduSYS does, as every sidebar menu a school has, what it does and which staff roles have it by default. */
 $this->load->view('themes/platform/_icons');
-$part = function ($title, $text) { return '<div><h3>' . $title . '</h3><p>' . $text . '</p></div>'; };
-$area = function ($icon, $tone, $title, $intro) {
-    return '<div><span class="card-icon ' . $tone . '">' . pf_icon($icon) . '</span><h2 style="font-size:clamp(1.5rem,2.6vw,2rem)">' . $title . '</h2><p>' . $intro . '</p></div>';
-};
+$data = include __DIR__ . '/_features_data.php';
+$e = function ($v) { return html_escape((string) $v); };
+$modules = 0;
+$tools = 0;
+foreach ($data['areas'] as $a) {
+    $modules += count($a['modules']);
+    foreach ($a['modules'] as $m) { $tools += count($m['entries']); }
+}
+$role_text = array(
+    'Admin' => 'Runs the school day to day: students, fees, staff, exams, the website and settings.',
+    'Teacher' => 'Their classes: attendance, lessons, homework, CBT, report-card scores and remarks.',
+    'Accountant' => 'Money: fees and payments, income, expenses, payroll, store and transport.',
+    'Librarian' => 'The library: books, members, issuing and returns.',
+    'Receptionist' => 'The front office: enquiries, visitors, calls, post and complaints, and admissions.',
+);
+$portal = array(
+    array('Dashboard', 'Notices, today\'s attendance, homework and exams due, calendar and to-do list.', 'Both'),
+    array('Fees', 'What is owed and paid, receipts, a printable fee bill, and payment online or by bank transfer.', 'Both'),
+    array('Report cards and results', 'Term report cards with scores, grades, position and remarks; exam results and timetables.', 'Both'),
+    array('Online exams (CBT)', 'Take tests when they open; answers save as you go and you can resume.', 'Both'),
+    array('Homework', 'Download homework, submit work and see the teacher\'s marks.', 'Both'),
+    array('Attendance', 'The attendance calendar, and leave requests to the school.', 'Both'),
+    array('Timetable and lessons', 'The class timetable, lesson plans and how far each subject has got.', 'Both'),
+    array('Downloads and videos', 'Notes, assignments and videos the school shares with the class.', 'Both'),
+    array('Live classes and courses', 'Join Zoom or Google Meet classes and follow online courses.', 'Both'),
+    array('Library, transport and hostel', 'Books borrowed, the bus route and pickup point, the hostel room.', 'Both'),
+    array('Notice board', 'Notices the school posts for students and parents.', 'Both'),
+    array('Profile', 'Student and guardian details; fields the school allows can be updated.', 'Both'),
+);
 ?>
 <section class="hero hero-sm has-bg">
     <?php $this->load->view('themes/platform/_bg'); ?>
     <div class="wrap">
         <p class="crumb">Product</p>
-        <h1>What EduSYS does.</h1>
-        <p class="lede">One system for the office, the classroom and the home. Each school runs on its own web address, with its own data, staff and branding.</p>
-        <p style="margin:18px 0 0"><a class="link-arrow" href="<?php echo site_url('features'); ?>">See every menu and who uses it <?php echo pf_icon('arrow'); ?></a></p>
-    </div>
-</section>
-
-<section class="strip" aria-label="Sections on this page">
-    <div class="wrap">
-        <p>Jump to</p>
-        <ul style="font-size:.95rem">
-            <li><a href="#students">Students</a></li>
-            <li><a href="#money">Money</a></li>
-            <li><a href="#teaching">Teaching</a></li>
-            <li><a href="#people">People</a></li>
-            <li><a href="#facilities">Facilities</a></li>
+        <h1>What EduSYS does, and who uses it.</h1>
+        <p class="lede">One system for the office, the classroom and the home, at your school's own web address. Here is every menu a school gets, what it does, and which staff use it. Pick a role to see one person's EduSYS.</p>
+        <ul class="feat-stats">
+            <li><b><?php echo $modules; ?></b> modules</li>
+            <li><b><?php echo $tools; ?></b> tools</li>
+            <li><b><?php echo count($data['roles']) + 1; ?></b> staff roles</li>
+            <li><b>1</b> portal for parents and students</li>
         </ul>
     </div>
 </section>
 
-<div class="wrap">
-    <section class="area" id="students">
-        <?php echo $area('users', '', 'Students', 'From the first application to the day they leave.'); ?>
-        <div class="rows">
-            <?php echo $part('Admissions', 'Parents apply online with the form and questions you choose, and pay the form fee. You review the applications and enrol students without typing their details twice.'); ?>
-            <?php echo $part('Student records', 'Personal details, guardians, documents and history for each student, kept from year to year as they move up.'); ?>
-            <?php echo $part('Attendance', 'Daily or by subject, marked by the teacher or by scanning a QR code.'); ?>
-            <?php echo $part('Behaviour', 'Record incidents and see patterns by student, class or house.'); ?>
-            <?php echo $part('Certificates and ID cards', 'Design your own, then generate them for a whole class at once.'); ?>
-            <?php echo $part('Alumni', 'Keep in touch with former students and invite them to events.'); ?>
+<div class="feat-bar" id="feat-bar">
+    <div class="wrap">
+        <div class="feat-roles" role="group" aria-label="Show what a role can use">
+            <span class="feat-label">Show for</span>
+            <button type="button" data-role="" aria-pressed="true">Everyone</button>
+            <?php foreach ($data['roles'] as $r) { ?><button type="button" data-role="<?php echo $e($r); ?>" aria-pressed="false"><?php echo $e($r); ?></button><?php } ?>
         </div>
-    </section>
+        <label class="feat-search"><span class="sr-only">Search features</span>
+            <input type="search" id="feat-q" placeholder="Search, e.g. report card, fees, WhatsApp" autocomplete="off">
+        </label>
+    </div>
+</div>
 
-    <section class="area" id="money">
-        <?php echo $area('wallet', 'green', 'Money', 'Fees, payments and the school\'s accounts.'); ?>
-        <div class="rows">
-            <?php echo $part('Fees', 'Set fees by class, with discounts and late fines. See who has paid and who hasn\'t, and print receipts.'); ?>
-            <?php echo $part('Online payment', 'Parents pay by card or transfer through Paystack, Flutterwave, Monnify, Interswitch or Remita. Each payment is recorded against the right student.'); ?>
-            <?php echo $part('Bank transfers', 'Parents and applicants upload the transfer receipt; the school checks it and confirms the payment.'); ?>
-            <?php echo $part('Income and expenses', 'Record what comes in and goes out, by category.'); ?>
-            <?php echo $part('Payroll', 'Generate staff pay and payslips.'); ?>
-            <?php echo $part('Financial reports', 'See the term\'s income, expenses and what is outstanding.'); ?>
-        </div>
-    </section>
+<div class="wrap feat-layout">
+    <nav class="feat-toc" aria-label="Areas">
+        <p>Areas</p>
+        <ol>
+            <?php foreach ($data['areas'] as $a) { ?>
+                <li><a href="#<?php echo $e($a['key']); ?>"><?php echo $e($a['title']); ?></a></li>
+            <?php } ?>
+            <li><a href="#portal">Parent and student portal</a></li>
+            <li><a href="#roles">Roles</a></li>
+        </ol>
+    </nav>
 
-    <section class="area" id="teaching">
-        <?php echo $area('book', 'yellow', 'Teaching', 'Timetables, lessons, homework and results.'); ?>
-        <div class="rows">
-            <?php echo $part('Classes and timetables', 'Classes, sections, subjects and teachers, with a timetable each student and teacher can see.'); ?>
-            <?php echo $part('Lessons and homework', 'Plan lessons, track the syllabus, set homework and evaluate it.'); ?>
-            <?php echo $part('Examinations', 'Schedules, marks and grades, with results and report cards generated from them.'); ?>
-            <?php echo $part('Online examinations and courses', 'Set tests that students take online, and publish courses they can follow at their own pace.'); ?>
-            <?php echo $part('Live classes', 'Run classes through Zoom or Google Meet. These are add-ons, charged separately.'); ?>
-            <?php echo $part('Download centre', 'Share notes, assignments and other files with a class.'); ?>
-        </div>
-    </section>
+    <div class="feat-main">
+        <p class="feat-result" id="feat-result" aria-live="polite"></p>
+        <?php foreach ($data['areas'] as $a) { ?>
+            <section class="feat-area" id="<?php echo $e($a['key']); ?>">
+                <header class="feat-area-head">
+                    <span class="card-icon"><?php echo pf_icon($a['icon']); ?></span>
+                    <div>
+                        <h2><?php echo $e($a['title']); ?></h2>
+                        <p><?php echo $e($a['intro']); ?></p>
+                    </div>
+                </header>
+                <?php foreach ($a['modules'] as $m) { ?>
+                    <article class="feat-module">
+                        <div class="feat-module-head">
+                            <h3><?php echo $e($m['name']); ?></h3>
+                            <p><?php echo $e($m['what']); ?></p>
+                            <p class="feat-who"><span>Used by</span> <?php echo $e(implode(', ', array_merge(array('Super Admin'), $m['who']))); ?></p>
+                        </div>
+                        <ul class="feat-list">
+                            <?php foreach ($m['entries'] as $x) { ?>
+                                <li data-who="<?php echo $e(implode('|', $x['who'])); ?>">
+                                    <div>
+                                        <h4><?php echo $e($x['name']); ?></h4>
+                                        <p><?php echo $e($x['what']); ?></p>
+                                    </div>
+                                    <div class="feat-chips" aria-label="Roles">
+                                        <?php foreach ($data['roles'] as $r) { $on = in_array($r, $x['who'], true); ?>
+                                            <span class="<?php echo $on ? 'on' : ''; ?>" title="<?php echo $e($r . ($on ? '' : ': not by default')); ?>"><?php echo $e($r); ?></span>
+                                        <?php } ?>
+                                    </div>
+                                </li>
+                            <?php } ?>
+                        </ul>
+                    </article>
+                <?php } ?>
+            </section>
+        <?php } ?>
+        <p class="feat-none" id="feat-none" hidden>Nothing matches. Try another word, or pick Everyone.</p>
 
-    <section class="area" id="people">
-        <?php echo $area('message', 'red', 'People and communication', 'Everyone in the school, with the right access.'); ?>
-        <div class="rows">
-            <?php echo $part('Staff', 'Records, leave and attendance, with roles that decide what each person can see and do.'); ?>
-            <?php echo $part('Logins for everyone', 'Administrators, teachers, parents and students each have their own login and see what concerns them.'); ?>
-            <?php echo $part('Messages', 'Send notices, email and SMS to a class, a group or the whole school. SMS is charged by your provider.'); ?>
-            <?php echo $part('Your own website', 'Your school gets a website at its own address. Arrange its pages with the block editor; news, events and gallery stay up to date from the system.'); ?>
-        </div>
-    </section>
+        <section class="feat-area" id="portal">
+            <header class="feat-area-head">
+                <span class="card-icon green"><?php echo pf_icon('badge'); ?></span>
+                <div>
+                    <h2>Parent and student portal</h2>
+                    <p>Parents and students sign in at the school's own address. A parent with several children picks the child; the school decides which parts parents and students each see.</p>
+                </div>
+            </header>
+            <div class="feat-portal">
+                <?php foreach ($portal as $p) { ?>
+                    <div><h4><?php echo $e($p[0]); ?></h4><p><?php echo $e($p[1]); ?></p></div>
+                <?php } ?>
+            </div>
+        </section>
 
-    <section class="area" id="facilities">
-        <?php echo $area('building', '', 'Facilities', 'The rest of the school\'s operations.'); ?>
-        <div class="rows">
-            <?php echo $part('Library', 'Books, members, issues and returns.'); ?>
-            <?php echo $part('Transport', 'Routes, vehicles and which students use them.'); ?>
-            <?php echo $part('Hostel', 'Rooms and the students assigned to them.'); ?>
-            <?php echo $part('Inventory', 'Stock, suppliers and items issued.'); ?>
-            <?php echo $part('Front office', 'Enquiries, visitors, calls, post and complaints.'); ?>
-        </div>
-    </section>
+        <section class="feat-area" id="roles">
+            <header class="feat-area-head">
+                <span class="card-icon yellow"><?php echo pf_icon('shield'); ?></span>
+                <div>
+                    <h2>Roles</h2>
+                    <p>Every staff member has a role, and a role decides what they see and what they can change. The defaults are below; a school can change any of them, or add its own roles, in System Setting &gt; Roles Permissions.</p>
+                </div>
+            </header>
+            <div class="feat-portal">
+                <div><h4>Super Admin</h4><p>The school owner: everything, including roles, modules and settings.</p></div>
+                <?php foreach ($role_text as $r => $t) { ?>
+                    <div><h4><?php echo $e($r); ?></h4><p><?php echo $e($t); ?></p></div>
+                <?php } ?>
+            </div>
+        </section>
+    </div>
 </div>
 
 <section class="band band-navy">
     <div class="wrap cta">
         <div>
-            <h2>See what it would cost your school.</h2>
-            <p>One price per student, per term, set by the size of your school.</p>
+            <h2>See it with your own school's data.</h2>
+            <p>Register your school, or talk to us and we will walk you through it.</p>
         </div>
-        <div class="actions"><a class="btn" href="<?php echo site_url('plans'); ?>">See pricing <?php echo pf_icon('arrow'); ?></a></div>
+        <div class="actions">
+            <a class="btn" href="<?php echo site_url('subscription/add'); ?>">Register your school <?php echo pf_icon('arrow'); ?></a>
+            <a class="btn btn-ghost" href="<?php echo site_url('page/contact-us'); ?>">Talk to us</a>
+        </div>
     </div>
 </section>
+
+<script>
+(function () {
+    var role = '', q = '';
+    var items = [].slice.call(document.querySelectorAll('.feat-list li'));
+    var modules = [].slice.call(document.querySelectorAll('.feat-module'));
+    var areas = [].slice.call(document.querySelectorAll('.feat-area[id]:not(#portal):not(#roles)'));
+    var result = document.getElementById('feat-result');
+    var none = document.getElementById('feat-none');
+    function apply() {
+        var shown = 0;
+        items.forEach(function (li) {
+            var who = li.getAttribute('data-who').split('|');
+            var text = (li.closest('.feat-module').querySelector('h3').textContent + ' ' + li.textContent).toLowerCase();
+            var ok = (!role || who.indexOf(role) !== -1) && (!q || text.indexOf(q) !== -1);
+            li.hidden = !ok;
+            li.classList.toggle('mine', !!role && ok);
+            if (ok) { shown++; }
+        });
+        modules.forEach(function (m) { m.hidden = !m.querySelector('.feat-list li:not([hidden])'); });
+        areas.forEach(function (a) { a.hidden = !a.querySelector('.feat-module:not([hidden])'); });
+        none.hidden = shown > 0;
+        result.textContent = (role || q) ? shown + ' of ' + items.length + ' tools' + (role ? ' for a ' + role : '') + (q ? ' matching "' + q + '"' : '') : '';
+    }
+    [].slice.call(document.querySelectorAll('[data-role]')).forEach(function (b) {
+        b.addEventListener('click', function () {
+            role = b.getAttribute('data-role');
+            document.querySelectorAll('[data-role]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+            apply();
+        });
+    });
+    document.getElementById('feat-q').addEventListener('input', function () { q = this.value.trim().toLowerCase(); apply(); });
+})();
+</script>
