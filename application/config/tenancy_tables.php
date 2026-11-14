@@ -102,6 +102,7 @@ $config['tenancy_tenant_tables'] = array(
     'fee_groups_feetype',
     'fee_receipt_no',
     'fee_session_groups',
+    'fee_sms_reminders',
     'feemasters',
     'fees_discounts',
     'fees_reminder',

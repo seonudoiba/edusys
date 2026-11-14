@@ -2444,3 +2444,6 @@ $lang['website_enquiries'] = "Website Enquiries";
 $lang['platform_backups'] = "Backups";
 $lang['pricing_bands'] = "Pricing Bands";
 $lang['website_design'] = "Website Design";
+$lang['fees_collections'] = "Collections";
+$lang['fees_create_fees'] = "Create fees";
+$lang['fees_discounts_balances'] = "Discounts & balances";

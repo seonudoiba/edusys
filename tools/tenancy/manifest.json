@@ -2295,5 +2295,14 @@
             "school",
             "subjects"
         ]
+    },
+    {
+        "n": 295,
+        "table": "fee_sms_reminders",
+        "scope": "tenant",
+        "file": "295_fee_sms_reminders.php",
+        "refs": [
+            "school"
+        ]
     }
 ]
