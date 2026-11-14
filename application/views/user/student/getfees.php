@@ -989,15 +989,18 @@ echo $currency_symbol . amountFormat($total_balance_amount);
         return true;
     }
 
-    $('.detail_popover').popover({
-        placement: 'right',
-        title: '',
-        trigger: 'hover',
-        container: 'body',
-        html: true,
-        content: function () {
-            return $(this).closest('td').find('.fee_detail_popover').html();
-        }
+    // Bootstrap loads in the footer, after this page: set the popovers up once it has.
+    $(function () {
+        $('.detail_popover').popover({
+            placement: 'right',
+            title: '',
+            trigger: 'hover',
+            container: 'body',
+            html: true,
+            content: function () {
+                return $(this).closest('td').find('.fee_detail_popover').html();
+            }
+        });
     });
 </script>
 

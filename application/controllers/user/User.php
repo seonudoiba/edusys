@@ -32,10 +32,22 @@ class User extends Student_Controller
         $this->load->view('layout/student/footer');
     }
 
+    /** After sign-in: the portal page the student or parent first asked for (e.g. /pay from a fee reminder), else the dashboard. */
+    private function after_choose()
+    {
+        $to = isset($_SESSION['redirect_to_user']) ? (string) $_SESSION['redirect_to_user'] : '';
+        unset($_SESSION['redirect_to_user']);
+        $home = site_url();
+        if ($to !== '' && strpos($to, $home) === 0 && preg_match('#^(pay|user/)#', substr($to, strlen(rtrim($home, '/')) + 1))) {
+            redirect($to);
+        }
+        redirect('user/user/dashboard');
+    }
+
     public function choose()
     {
         if ($this->session->has_userdata('current_class')) {
-            redirect('user/user/dashboard');
+            $this->after_choose();
         }
 
         $data['sch_setting']      = $this->sch_setting_detail;
@@ -79,7 +91,7 @@ class User extends Student_Controller
             $logged_In_User['student_id'] = $default_login_student_id;
             $this->session->set_userdata('student', $logged_In_User);
             $this->session->set_userdata('current_class', $student_current_class);
-            redirect('user/user/dashboard');
+            $this->after_choose();
         }
 
         $this->form_validation->set_rules('clschg', $this->lang->line('select_class'), 'trim|required|xss_clean');
@@ -93,7 +105,7 @@ class User extends Student_Controller
             $this->studentsession_model->updateById(array('id' => $student_session_id, 'default_login' => 1));
             $student_current_class = array('class_id' => $student['class_id'], 'section_id' => $student['section_id'], 'student_session_id' => $student['student_session_id']);
             $this->session->set_userdata('current_class', $student_current_class);
-            redirect('user/user/dashboard');
+            $this->after_choose();
         }
 
         $this->load->view('user/choose', $data);

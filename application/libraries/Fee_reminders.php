@@ -7,11 +7,15 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * their child's own balance, through the school's SMS gateway (Smsgateway, usually Termii). Every SMS is
  * logged in fee_sms_reminders; a guardian already reminded about the same fees today is skipped.
  *
+ * When the school takes fees online (an online gateway is its payment method and is set up), the message
+ * ends with the school's /pay address (routes.php), which opens the fees page in the parent portal.
+ *
  * EDUSYS_SMS_SINK (tests only): a file path; messages are appended there as JSON lines instead of sent.
  */
 class Fee_reminders
 {
     private $CI;
+    private $pay_link;
 
     public function __construct()
     {
@@ -28,6 +32,23 @@ class Fee_reminders
         }
         $row = $this->CI->smsconfig_model->getActiveSMS();
         return $row ? (string) $row->type : null;
+    }
+
+    /** "jena.edusys.ng/pay" when parents can pay online, else ''. */
+    public function pay_link()
+    {
+        if ($this->pay_link === null) {
+            $this->pay_link = '';
+            $this->CI->load->model('paymentsetting_model');
+            $this->CI->load->library('Payment_gateways');
+            $row = $this->CI->paymentsetting_model->getActiveMethod();
+            if ($row && isset(Payment_gateways::SCHOOL_COLUMNS[$row->payment_type])
+                && !$this->CI->payment_gateways->for_school($row->payment_type, $row)->missing()) {
+                $u = parse_url(site_url('pay'));
+                $this->pay_link = $u['host'] . (isset($u['port']) ? ':' . $u['port'] : '') . $u['path'];
+            }
+        }
+        return $this->pay_link;
     }
 
     /**
@@ -71,7 +92,8 @@ class Fee_reminders
         $when = $due ? ($due < date('Y-m-d') ? ', overdue since ' : ', due ') . date('j M Y', strtotime($due)) : '';
         // Short on purpose: most reminders fit one SMS page (160 characters), which halves the cost.
         $text = 'Dear ' . (trim((string) $guardian) !== '' ? trim($guardian) : 'Parent') . ', ' . $student . ' (' . $class . ') owes '
-            . $amount . ' for ' . $title . $when . '. Please pay. Thank you. ' . $school;
+            . $amount . ' for ' . $title . $when . '. '
+            . ($this->pay_link() !== '' ? 'Pay at ' . $this->pay_link() . ' ' : 'Please pay. Thank you. ') . $school;
         return $this->plain($text);
     }
 
