@@ -801,7 +801,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
                             <label for="inputPassword3" class="col-sm-3 control-label"><?php echo $this->lang->line('payment_mode'); ?></label>
                             <div class="col-sm-9">
                                 <label class="radio-inline">
-                                    <input type="radio" name="payment_mode_fee" value="Cash" checked="checked"><?php echo $this->lang->line('cash'); ?>
+                                    <input type="radio" name="payment_mode_fee" value="Cash"><?php echo $this->lang->line('cash'); ?>
                                 </label>
                                 <label class="radio-inline">
                                     <input type="radio" name="payment_mode_fee" value="Cheque"><?php echo $this->lang->line('cheque'); ?>
@@ -810,7 +810,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
                                     <input type="radio" name="payment_mode_fee" value="DD"><?php echo $this->lang->line('dd'); ?>
                                 </label>
                                 <label class="radio-inline">
-                                    <input type="radio" name="payment_mode_fee" value="bank_transfer"><?php echo $this->lang->line('bank_transfer'); ?>
+                                    <input type="radio" name="payment_mode_fee" value="bank_transfer" checked="checked"><?php echo $this->lang->line('bank_transfer'); ?>
                                 </label>
                                 <label class="radio-inline">
                                     <input type="radio" name="payment_mode_fee" value="upi"><?php echo $this->lang->line('upi'); ?>
