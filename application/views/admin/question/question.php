@@ -263,7 +263,7 @@ function findOption($questionOpt, $find)
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <a class="btn btn-primary pull-right btn-xs mt5" href="<?php echo site_url('admin/question/exportformat'); ?>" target="_blank"><i class="fa fa-download"></i>  </a>
+                <a class="btn btn-primary pull-right btn-xs mt5" href="<?php echo site_url('admin/question/exportformat'); ?>" target="_blank"><i class="fa fa-download"></i> <?php echo $this->lang->line('download_sample_import_file'); ?></a>
                 <h4 class="modal-title"> <?php echo $this->lang->line('import_question'); ?></h4>
             </div>
             <form action="<?php echo site_url('admin/question/uploadfile'); ?>" method="POST" id="formimportquestion">
@@ -315,7 +315,7 @@ if (set_value('class_id') == $class['id']) {
                             </div>
                 <div class="form-group">
                 <label for="exampleInputEmail1"> <?php echo $this->lang->line('attach_file'); ?></label><small class="req"> *</small>
-                <input id="my-file-selector" name="file" placeholder="" type="file" class="filestyle form-control"  value="<?php echo set_value('file'); ?>" />
+                <input id="my-file-selector" name="file" placeholder="" type="file" accept=".xlsx,.csv" class="filestyle form-control"  value="<?php echo set_value('file'); ?>" />
                 <span class="text-danger"><?php echo form_error('file'); ?></span>
                 </div>
                 </div>

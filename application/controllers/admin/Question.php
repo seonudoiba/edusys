@@ -159,44 +159,13 @@ class Question extends Admin_Controller
 
     public function handle_upload()
     {
-        $image_validate = $this->config->item('csv_validate');
-        if (isset($_FILES["file"]) && !empty($_FILES['file']['name']) && $_FILES["file"]["size"] > 0) {
-
-            $file_type         = $_FILES["file"]['type'];
-            $file_size         = $_FILES["file"]["size"];
-            $file_name         = $_FILES["file"]["name"];
-            $allowed_extension = $image_validate['allowed_extension'];
-            $ext               = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-            if ($ext === 'xlsx') { // Excel: a zip file
-                $allowed_extension[] = 'xlsx';
-                $allowed_mime_type = array_merge($allowed_mime_type, array('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip', 'application/octet-stream'));
-            }
-            $allowed_mime_type = $image_validate['allowed_mime_type'];
-
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mtype = finfo_file($finfo, $_FILES['file']['tmp_name']);
-            finfo_close($finfo);
-
-            if (!in_array($mtype, $allowed_mime_type)) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('file_type_not_allowed'));
-                return false;
-            }
-
-            if (!in_array($ext, $allowed_extension) || !in_array($file_type, $allowed_mime_type)) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('extension_not_allowed'));
-                return false;
-            }
-
-            if ($file_size > $image_validate['upload_size']) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('file_size_shoud_be_less_than') . number_format($image_validate['upload_size'] / 1048576, 2) . " MB");
-                return false;
-            }
-
-            return true;
-        } else {
-            $this->form_validation->set_message('handle_upload', $this->lang->line('please_choose_a_file_to_upload'));
+        $this->load->library('Import_sheet');
+        $problem = Import_sheet::upload_problem('file');
+        if ($problem !== '') {
+            $this->form_validation->set_message('handle_upload', $problem);
             return false;
         }
+        return true;
     }
 
     public function add()

@@ -19,8 +19,13 @@ class Examgroup extends Admin_Controller
         $this->sch_setting_detail  = $this->setting_model->getSetting();
     }
 
+    /** The import sample: Excel with the headings and one example row (?format=csv: the old CSV sample). */
     public function exportformat()
     {
+        if ($this->input->get('format') !== 'csv') {
+            $this->load->library('Import_sheet');
+            return $this->import_sheet->download('marks');
+        }
         $this->load->helper('download');
         $filepath = "./backend/import/import_marks_sample_file.csv";
         $data     = file_get_contents($filepath);
@@ -46,13 +51,11 @@ class Examgroup extends Admin_Controller
                 $fileName = $_FILES["file"]["tmp_name"];
                 if (isset($_FILES["file"]) && !empty($_FILES['file']['name']) && $_FILES["file"]["size"] > 0) {
 
-                    $file = fopen($fileName, "r");
-                    $flag = true;
-                    while (($column = fgetcsv($file, 10000, ",")) !== false) {
-                        if ($flag) {
-                            $flag = false;
-                            continue;
-                        }
+                    $this->load->library('Import_sheet');
+                    list($sheet_rows) = Import_sheet::rows($fileName, $_FILES['file']['name']);
+                    array_shift($sheet_rows); // heading row
+                    foreach ($sheet_rows as $column) {
+                        $column = array_pad($column, 4, '');
                         if (trim($column['0']) != "" && trim($column['1']) != "" && trim($column['2']) != "") {
                             $return_array[] = json_encode(
                                 array(
@@ -75,40 +78,13 @@ class Examgroup extends Admin_Controller
 
     public function handle_upload()
     {
-        $image_validate = $this->config->item('csv_validate');
-
-        if (isset($_FILES["file"]) && !empty($_FILES['file']['name']) && $_FILES["file"]["size"] > 0) {
-
-            $file_type         = $_FILES["file"]['type'];
-            $file_size         = $_FILES["file"]["size"];
-            $file_name         = $_FILES["file"]["name"];
-            $allowed_extension = $image_validate['allowed_extension'];
-            $ext               = pathinfo($file_name, PATHINFO_EXTENSION);
-            $allowed_mime_type = $image_validate['allowed_mime_type'];
-            $finfo             = finfo_open(FILEINFO_MIME_TYPE);
-            $mtype             = finfo_file($finfo, $_FILES['file']['tmp_name']);
-            finfo_close($finfo);
-
-            if (!in_array($mtype, $allowed_mime_type)) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('file_type_not_allowed'));
-                return false;
-            }
-
-            if (!in_array($ext, $allowed_extension) || !in_array($file_type, $allowed_mime_type)) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('extension_not_allowed'));
-                return false;
-            }
-            
-            if ($file_size > $image_validate['upload_size']) {
-                $this->form_validation->set_message('handle_upload', $this->lang->line('file_size_shoud_be_less_than') . number_format($image_validate['upload_size'] / 1048576, 2) . " MB");
-                return false;
-            }
-
-            return true;
-        } else {
-            $this->form_validation->set_message('handle_upload', $this->lang->line('the_file_field_is_required'));
+        $this->load->library('Import_sheet');
+        $problem = Import_sheet::upload_problem('file');
+        if ($problem !== '') {
+            $this->form_validation->set_message('handle_upload', $problem);
             return false;
         }
+        return true;
     }
 
     public function index()
