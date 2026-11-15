@@ -60,7 +60,6 @@ class Admission_form
             'student_email'              => $f('student', 'email', 'email', 'email', array('required' => true)),
             'category'                   => $f('student', 'category_id', 'category', 'category'),
             'religion'                   => $f('student', 'religion', 'religion'),
-            'cast'                       => $f('student', 'cast', 'caste'),
             'is_student_house'           => $f('student', 'house', 'house', 'house'),
             'is_blood_group'             => $f('student', 'blood_group', 'blood_group', 'blood_group'),
             'student_height'             => $f('student', 'height', 'height'),

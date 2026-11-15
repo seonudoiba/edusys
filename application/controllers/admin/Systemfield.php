@@ -77,11 +77,7 @@ class Systemfield extends Admin_Controller
                 $data['religion'] = 0;
             }
         } else if ($role == 'cast') {
-            if ($status == "yes") {
-                $data['cast'] = 1;
-            } else {
-                $data['cast'] = 0;
-            }
+            $data['cast'] = 0; // caste is not used (migration 297)
         } else if ($role == 'mobile_no') {
             if ($status == "yes") {
                 $data['mobile_no'] = 1;

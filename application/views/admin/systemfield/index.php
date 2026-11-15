@@ -92,18 +92,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-rtl-right" width="100%"><?php echo $this->lang->line('caste'); ?></td>
-                                        <td>
-                                            <div class="material-switch pull-right">
-                                                <input id="cast" name="cast" type="checkbox" data-role="cast" class="chk" data-rowid="1" value="checked" <?php if ($result->cast == "1") {
-    echo "checked='checked'";
-}
-?> />
-                                                <label for="cast" class="label-success"></label>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
                                         <td class="text-rtl-right" width="100%"><?php echo $this->lang->line('mobile_number'); ?></td>
                                         <td>
                                             <div class="material-switch pull-right">
