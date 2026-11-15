@@ -39,7 +39,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
                         8. <?php echo $this->lang->line('import_student_step8'); ?><br/>
 
-                        9. <?php echo $this->lang->line('import_student_step9'); ?>
+                        9. <?php echo $this->lang->line('import_student_step9'); ?><br/>
+                        10. Put each student's class and section in the <b>class</b> and <b>section</b> columns, using the names under Academics &gt; Class and Section ("JSS 1" and "jss1" both work). Students in different classes can be in the same file. Leave section empty if the class has only one section. The class chosen below is used only for rows where class is empty.
                         <hr/></div>
                     <div class="box-body table-responsive">
                         <table class="table table-striped table-bordered table-hover" id="sampledata">
@@ -47,7 +48,6 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <tr>
                                     <?php
 foreach ($fields as $key => $value) {
-    echo $value;
 
     if ($value == 'adhar_no') {
         $value = "national_identification_no";
@@ -120,7 +120,7 @@ foreach ($fields as $key => $value) {
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('class'); ?></label><small class="req"> *</small>
+                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('class'); ?></label> <small class="text-muted">(optional)</small>
                                         <select autofocus="" id="class_id" name="class_id" class="form-control" >
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php
@@ -136,7 +136,7 @@ foreach ($classlist as $class) {
                                     </div></div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('section'); ?></label><small class="req"> *</small>
+                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('section'); ?></label> <small class="text-muted">(optional)</small>
                                         <select  id="section_id" name="section_id" class="form-control" >
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         </select>

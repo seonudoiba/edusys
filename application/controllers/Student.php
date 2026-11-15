@@ -1047,9 +1047,16 @@ class Student extends Admin_Controller
 
         $fields = array('admission_no', 'roll_no', 'firstname', 'middlename', 'lastname', 'gender', 'dob', 'category_id', 'religion', 'cast', 'mobileno', 'email', 'admission_date', 'blood_group', 'school_house_id', 'height', 'weight', 'measurement_date', 'father_name', 'father_phone', 'father_occupation', 'mother_name', 'mother_phone', 'mother_occupation', 'guardian_is', 'guardian_name', 'guardian_relation', 'guardian_email', 'guardian_phone', 'guardian_occupation', 'guardian_address', 'current_address', 'permanent_address', 'bank_account_no', 'bank_name', 'ifsc_code', 'adhar_no', 'samagra_id', 'rte', 'previous_school', 'note');
 
-        $data["fields"]       = $fields;
+        // the file's columns are matched by heading: sample heading => students column ($fields, same order)
+        $this->load->library('Import_sheet');
+        $templates = Import_sheet::templates();
+        $headings  = array_values(array_diff($templates['student'][1], array('class', 'section')));
+        $columns   = array_combine($headings, $fields);
+
+        $data["fields"]       = array_merge(array('class', 'section'), $fields);
         $data['categorylist'] = $category;
-        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
+        // optional: each row's class and section come from the file; these fill rows that leave class empty
+        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|xss_clean');
         $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean'); // optional: see Student_numbers::default_section
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_csv_upload');
         if ($this->form_validation->run() == false) {
@@ -1058,15 +1065,9 @@ class Student extends Admin_Controller
             $this->load->view('layout/footer', $data);
         } else {
 
-            $student_categorize = 'class';
-            if ($student_categorize == 'class') {
-                $section = 0;
-            } else if ($student_categorize == 'section') {
-
-                $section = $this->input->post('section_id');
-            }
-            $class_id   = $this->input->post('class_id');
-            $section_id = $this->student_numbers->section_or_default($class_id, $this->input->post('section_id'));
+            $form_class_id   = (int) $this->input->post('class_id');
+            $form_section_id = (int) $this->input->post('section_id');
+            $problems        = array();
 
             $session = $this->setting_model->getCurrentSession();
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
@@ -1078,35 +1079,37 @@ class Student extends Admin_Controller
 
                     if (!empty($result)) {
                         $rowcount = 0;
+                        $this->load->library('Class_lookup');
                         for ($i = 1; $i <= count($result); $i++) {
+                            $row   = $result[$i];
+                            $label = 'Row ' . ($i + 1); // the heading is row 1
 
-                            $student_data[$i] = array();
-                            $n                = 0;
-                            foreach ($result[$i] as $key => $value) {
-
-                                $student_data[$i][$fields[$n]] = $this->encoding_lib->toUTF8($result[$i][$key]);
-
-                                $student_data[$i]['is_active'] = 'yes';
-
-                                if (date('Y-m-d', strtotime($result[$i]['date_of_birth'])) === $result[$i]['date_of_birth']) {
-                                    $student_data[$i]['dob'] = date('Y-m-d', strtotime($result[$i]['date_of_birth']));
-                                } else {
-                                    $student_data[$i]['dob'] = null;
-                                }
-
-                                if (date('Y-m-d', strtotime($result[$i]['measurement_date'])) === $result[$i]['measurement_date']) {
-                                    $student_data[$i]['measurement_date'] = date('Y-m-d', strtotime($result[$i]['measurement_date']));
-                                } else {
-                                    $student_data[$i]['measurement_date'] = '';
-                                }
-
-                                if (date('Y-m-d', strtotime($result[$i]['admission_date'])) === $result[$i]['admission_date']) {
-                                    $student_data[$i]['admission_date'] = date('Y-m-d', strtotime($result[$i]['admission_date']));
-                                } else {
-                                    $student_data[$i]['admission_date'] = null;
-                                }
-                                $n++;
+                            // where this student goes: the file's class/section, or the class chosen on the form
+                            $class_text   = trim(isset($row['class']) ? $row['class'] : '');
+                            $section_text = trim(isset($row['section']) ? $row['section'] : '');
+                            if ($class_text !== '') {
+                                list($class_id, $section_id, $problem) = $this->class_lookup->place($class_text, $section_text);
+                            } elseif ($form_class_id) {
+                                list($class_id, $section_id, $problem) = array($form_class_id, $this->student_numbers->section_or_default($form_class_id, $form_section_id), '');
+                            } else {
+                                list($class_id, $section_id, $problem) = array(0, 0, 'the class is empty (fill the class column, or choose a class on the import page).');
                             }
+                            if ($problem === '' && trim(isset($row['first_name']) ? $row['first_name'] : '') === '') {
+                                $problem = 'the first name is empty.';
+                            }
+                            if ($problem !== '') {
+                                $problems[] = $label . ': ' . $problem;
+                                continue;
+                            }
+
+                            $student_data[$i] = array('is_active' => 'yes');
+                            foreach ($columns as $heading => $field) {
+                                $student_data[$i][$field] = isset($row[$heading]) ? $this->encoding_lib->toUTF8($row[$heading]) : '';
+                            }
+                            $valid_date = function ($v) { $v = trim((string) $v); return ($v !== '' && date('Y-m-d', strtotime($v)) === $v) ? $v : null; };
+                            $student_data[$i]['dob']              = $valid_date($student_data[$i]['dob']);
+                            $student_data[$i]['admission_date']   = $valid_date($student_data[$i]['admission_date']);
+                            $student_data[$i]['measurement_date'] = (string) $valid_date($student_data[$i]['measurement_date']);
 
                             $roll_no                           = $student_data[$i]["roll_no"];
                             $adm_no                            = $student_data[$i]["admission_no"];
@@ -1173,17 +1176,18 @@ class Student extends Admin_Controller
 
                                 $this->mailsmsconf->mailsms('student_login_credential', $parent_login_detail);
 
-                                $data['csvData'] = $result;
-                                $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">' . $this->lang->line('students_imported_successfully') . '</div>');
-
                                 $rowcount++;
-                                $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">' . $this->lang->line('total') . ' ' . count($result) . $this->lang->line('records_found_in_csv_file_total') . $rowcount . ' ' . $this->lang->line('records_imported_successfully') . '</div>');
-
                             } else {
-
-                                $this->session->set_flashdata('msg', '<div class="alert alert-danger text-center">' . $this->lang->line('record_already_exist') . '</div>');
+                                $problems[] = $label . ': ' . $this->lang->line('record_already_exist');
                             }
                         }
+                        // how many came in, and each skipped row with the reason
+                        $msg = count($result) . ' ' . ($rowcount == 1 && count($result) == 1 ? 'student' : 'students') . ' in the file, ' . $rowcount . ' imported.';
+                        if ($problems) {
+                            $shown = array_slice($problems, 0, 30);
+                            $msg  .= '<br><b>' . count($problems) . ' row(s) skipped:</b><br>' . implode('<br>', array_map('html_escape', $shown)) . (count($problems) > 30 ? '<br>...' : '');
+                        }
+                        $this->session->set_flashdata('msg', '<div class="alert ' . ($problems ? ($rowcount ? 'alert-warning' : 'alert-danger') : 'alert-success') . ' text-left">' . $msg . '</div>');
                     } else {
 
                         $this->session->set_flashdata('msg', '<div class="alert alert-danger text-center">' . $this->lang->line('no_record_found') . '</div>');
