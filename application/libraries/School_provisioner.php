@@ -84,6 +84,9 @@ class School_provisioner
                     // The fees workspace at the top of Fees Collection.
                     $this->CI->load->library('Fees_menu');
                     $this->CI->fees_menu->install((int) $school['id']);
+                    // Academics > Assign Subject Teachers, after Assign Class Teacher.
+                    $this->CI->load->library('Subject_teachers');
+                    $this->CI->subject_teachers->install_menu((int) $school['id']);
                 }
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';

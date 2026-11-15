@@ -2447,3 +2447,5 @@ $lang['website_design'] = "Website Design";
 $lang['fees_collections'] = "Collections";
 $lang['fees_create_fees'] = "Create fees";
 $lang['fees_discounts_balances'] = "Discounts & balances";
+$lang['assign_subject_teachers'] = "Assign Subject Teachers";
+$lang['access_denied'] = "Access denied";

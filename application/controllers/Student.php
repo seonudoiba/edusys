@@ -77,6 +77,18 @@ class Student extends Admin_Controller
         $this->media_storage->filedownload($doc_details['doc'], "uploads/student_documents/" . $student_id);
     }
 
+    /** A teacher in Teacher Restricted Mode may only open students of the classes and sections they teach. */
+    private function teacher_can_see($student)
+    {
+        $mine = $this->customlib->get_myClassSection();
+        if ($mine === false || empty($student)) {
+            return; // not a restricted teacher
+        }
+        $class = (int) $student['class_id'];
+        if (!isset($mine[$class]) || !in_array((int) $student['section_id'], array_map('intval', $mine[$class]), true)) {
+            access_denied();
+        }
+    }
     public function view($id)
     {
         if (!$this->rbac->hasPrivilege('student', 'can_view')) {
@@ -90,6 +102,7 @@ class Student extends Admin_Controller
 
         $data['title']     = $this->lang->line('student_details');
         $student           = $this->student_model->get($id);
+        $this->teacher_can_see($student); // Teacher Restricted Mode: only their own classes
         $data['gradeList'] = $this->grade_model->get();
         $studentSession    = $this->student_model->getStudentSession($id);
 
@@ -1223,6 +1236,7 @@ class Student extends Admin_Controller
         $data['title']                 = $this->lang->line('edit_student');
         $data['id']                    = $id;
         $student                       = $this->student_model->get($id);
+        $this->teacher_can_see($student); // Teacher Restricted Mode: only their own classes
         $genderList                    = $this->customlib->getGender();
         $data['student']               = $student;
         $data["month"]                 = $this->customlib->getMonthDropdown();
