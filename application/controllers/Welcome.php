@@ -439,6 +439,7 @@ class Welcome extends Front_Controller
                 }
             }
 
+            $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
             if ($this->form_validation->run() == false) {
 
                 $this->load_theme('pages/admission', $this->config->item('front_layout'));
@@ -1004,6 +1005,7 @@ class Welcome extends Front_Controller
                     $this->form_validation->set_rules('guardian_pic', $this->lang->line('guardian_photo'), 'callback_image_handle_upload[guardian_pic]');
                 }
 
+                $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
                 if ($this->form_validation->run() == false) {
                     $this->load_theme('pages/editadmission', $this->config->item('front_layout'));
                 } else {

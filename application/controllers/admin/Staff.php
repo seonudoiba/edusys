@@ -419,6 +419,7 @@ class Staff extends Admin_Controller
 
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
 
+        $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
         if ($this->form_validation->run() == true) {
 
             $custom_field_post  = $this->input->post("custom_fields[staff]");
@@ -997,6 +998,7 @@ class Staff extends Admin_Controller
             )
         );
 
+        $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header', $data);
             $this->load->view('admin/staff/staffedit', $data);

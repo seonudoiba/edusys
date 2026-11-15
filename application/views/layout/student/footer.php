@@ -53,6 +53,7 @@
 <script type="text/javascript" src="<?php echo base_url(); ?>backend/dist/datatables/js/dataTables.responsive.min.js" ></script>
 
 <script type="text/javascript" src="<?php echo base_url(); ?>backend/dist/datatables/js/ss.custom.js" ></script>
+<script src="<?php echo base_url(); ?>backend/custom/form_rules.js?v=1"></script>
 </body>
 </html>
 

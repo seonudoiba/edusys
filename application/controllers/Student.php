@@ -471,6 +471,7 @@ class Student extends Admin_Controller
             $this->form_validation->set_rules('transport_feemaster_id[]', $this->lang->line('fees_month'), 'trim|required|xss_clean');
         }
 
+        $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header', $data);
             $this->load->view('student/studentCreate', $data);
@@ -1307,6 +1308,7 @@ class Student extends Admin_Controller
             $this->form_validation->set_rules('transport_feemaster_id[]', $this->lang->line('fees_month'), 'trim|required|xss_clean');
         }
 
+        $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header', $data);
             $this->load->view('student/studentEdit', $data);

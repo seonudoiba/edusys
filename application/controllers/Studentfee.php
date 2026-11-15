@@ -515,6 +515,7 @@ class Studentfee extends Admin_Controller
         $this->form_validation->set_rules('amount_fine', $this->lang->line('fine'), 'required|trim|numeric|xss_clean');
         $this->form_validation->set_rules('payment_mode', $this->lang->line('payment_mode'), 'required|trim|xss_clean');
 
+        $this->form_validation->check_formats(array('amount', 'amount_discount', 'amount_fine', 'date')); // phone, email, amount and date checks (MY_Form_validation)
         if ($this->form_validation->run() == false) {
             $data = array(
                 'amount'                 => form_error('amount'),
