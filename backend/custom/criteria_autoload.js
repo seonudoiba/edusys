@@ -37,7 +37,8 @@
             var t = $.trim($(this).find('.box-title').first().text()).toLowerCase();
             if (!title || t !== title) { return; }
             $(this).find('form').each(function () {
-                if (this.getAttribute('data-autoload') !== 'off' && $(this).find('button[type=submit], input[type=submit]').length) {
+                // never upload forms (imports): they need a file and their class is a choice, not a filter
+                if (this.getAttribute('data-autoload') !== 'off' && !$(this).find('input[type=file]').length && $(this).find('button[type=submit], input[type=submit]').length) {
                     out.push(this);
                 }
             });
