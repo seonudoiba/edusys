@@ -162,7 +162,7 @@ foreach ($genderList as $key => $value) {
                                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_birth'); ?></label><small class="req"> *</small>
                                                 <input id="dob" name="dob" placeholder="" type="text" class="form-control date"  value="<?php
 if (!empty($staff["dob"])) {
-    echo date($this->customlib->getSchoolDateFormat(), strtotime($staff["dob"]));
+    echo $this->customlib->showDate($staff["dob"]); // empty for 0000-00-00
 }
 ?>" />
                                                 <span class="text-danger"><?php echo form_error('dob'); ?></span>
@@ -175,7 +175,7 @@ if (!empty($staff["dob"])) {
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_joining'); ?></label>
                                                     <input id="date_of_joining" name="date_of_joining" placeholder="" type="text" class="form-control date"  value="<?php
 if ($staff["date_of_joining"]) {
-        echo date($this->customlib->getSchoolDateFormat(), strtotime($staff["date_of_joining"]));
+        echo $this->customlib->showDate($staff["date_of_joining"]); // empty for 0000-00-00
     }
     ?>"  />
                                                     <span class="text-danger"><?php echo form_error('date_of_joining'); ?></span>
@@ -349,7 +349,7 @@ if ($staff["contract_type"] == $key) {
                                                         <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_leaving'); ?></label>
                                                         <input id="date_of_leaving" name="date_of_leaving" placeholder="" type="text" class="form-control date"  value="<?php
 if ($staff["date_of_leaving"]) {
-    echo date($this->customlib->getSchoolDateFormat(), strtotime($staff["date_of_leaving"]));
+    echo $this->customlib->showDate($staff["date_of_leaving"]); // empty for 0000-00-00
 }
 ?>" />
                                                         <span class="text-danger"><?php echo form_error('date_of_leaving'); ?></span>
