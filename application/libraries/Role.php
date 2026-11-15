@@ -8,8 +8,12 @@ class Role {
 
     public function __construct() {
         $this->CI = & get_instance();
-        $this->CI->student_login_prefix = "std";
-        $this->CI->parent_login_prefix = "parent";
+        // Student and parent usernames start with the school's subdomain (jenastd12, jenaparent12),
+        // so they are not simply std1, std2, ... Existing usernames are kept.
+        $school = class_exists('Tenant', false) ? Tenant::school() : null;
+        $sub = $school ? substr(preg_replace('/[^a-z0-9]/', '', strtolower((string) $school['subdomain'])), 0, 12) : '';
+        $this->CI->student_login_prefix = $sub . "std";
+        $this->CI->parent_login_prefix = $sub . "parent";
         $this->CI->teacher_login_prefix = "teacher";
         $this->CI->librarian_login_prefix = "librarian";
         $this->CI->accountant_login_prefix = "accountant";
