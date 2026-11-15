@@ -33,6 +33,8 @@ class Onlineexam extends Admin_Controller
         'delete' => array(array('online_examination', 'can_delete')),
         'ajax_delete' => array(array('online_examination', 'can_delete')),
         'send_marks' => array(array('online_examination', 'can_edit')),
+        'results' => array(array('online_examination', 'can_view')),
+        'results_export' => array(array('online_examination', 'can_view')),
         'report' => array(array('online_exam_wise_report', 'can_view')),
         'dtreportlist' => array(array('online_exam_wise_report', 'can_view')),
         'searchloginvalidation' => array(array('online_exam_wise_report', 'can_view')),
@@ -157,6 +159,7 @@ class Onlineexam extends Admin_Controller
                     $question_list = "<button class='btn btn-default btn-xs exam_ques_list' data-toggle='tooltip' data-recordid=" . $subject_value->id . "    data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>' title='" . $this->lang->line('exam_questions_list') . "' ><i class='fa fa-file-text-o'></i></button>" . " ";
 
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
+                    $question_list .= "<a href='" . site_url('admin/onlineexam/results/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Results'><i class='fa fa-bar-chart'></i></a> ";
                     if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
                         $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Send scores to report card'><i class='fa fa-share-square-o'></i></a> ";
                     }
@@ -271,6 +274,7 @@ class Onlineexam extends Admin_Controller
                     $question_list = "<button type='button'class='btn btn-default btn-xs exam_ques_list' data-toggle='tooltip' data-recordid=" . $subject_value->id . "    data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>' title='" . $this->lang->line('exam_questions_list') . "' ><i class='fa fa-file-text-o'></i></button>" . " ";
 
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
+                    $question_list .= "<a href='" . site_url('admin/onlineexam/results/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Results'><i class='fa fa-bar-chart'></i></a> ";
                     if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
                         $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Send scores to report card'><i class='fa fa-share-square-o'></i></a> ";
                     }
@@ -800,6 +804,53 @@ class Onlineexam extends Admin_Controller
         }
     }
 
+    /** One exam's results: who sat it, scores, what each student missed, and how each question went (Cbt_report). */
+    public function results($id = null)
+    {
+        $this->cbt_refresh((int) $id);
+        $this->load->library('Cbt_report');
+        $report = $this->cbt_report->build((int) $id);
+        if (!$report) {
+            show_404();
+        }
+        $this->session->set_userdata('top_menu', 'Online_Examinations');
+        $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
+        $data = array('report' => $report, 'can_send' => $this->rbac->hasPrivilege('online_examination', 'can_edit'));
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/onlineexam/results', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /** The Results page as an Excel file: a Students sheet's rows (one per student) and the questions below them. */
+    public function results_export($id = null)
+    {
+        $this->cbt_refresh((int) $id);
+        $this->load->library(array('Cbt_report', 'Import_sheet'));
+        $r = $this->cbt_report->build((int) $id);
+        if (!$r) {
+            show_404();
+        }
+        $status = array('done' => 'Submitted', 'pending' => 'Waiting for marking', 'not_taken' => 'Not taken');
+        $rows = array();
+        foreach ($r['students'] as $st) {
+            $done = $st['status'] !== 'not_taken';
+            $rows[] = array($st['admission_no'], $st['name'], trim($st['class'] . ' ' . $st['section']), $status[$st['status']],
+                $done ? (float) $st['score'] . ' / ' . (float) $st['max_score'] : '', $done && $st['percentage'] !== null ? (float) $st['percentage'] . '%' : '',
+                $st['status'] === 'done' && $st['passed'] !== null ? ((int) $st['passed'] ? 'Pass' : 'Fail') : '',
+                $done ? (int) $st['correct_count'] : '', $done ? (int) $st['wrong_count'] : '', $done ? (int) $st['unanswered_count'] : '',
+                implode(', ', array_map(function ($m) { return 'Q' . $m['no']; }, $st['missed'])));
+        }
+        $rows[] = array();
+        $rows[] = array('Question', 'Text', 'Type', 'Right answer', 'Got it right', 'Got it wrong', 'Left it out', '% right', 'Wrong answer chosen most');
+        foreach ($r['questions'] as $q) {
+            $rows[] = array('Q' . $q['no'], $q['text'], $q['question_type'], $q['answer_text'], $q['stats']['correct'], $q['stats']['wrong'], $q['stats']['unanswered'],
+                $q['stats']['correct_pct'] === null ? '' : $q['stats']['correct_pct'] . '%', $q['stats']['top_wrong'] !== '' ? $q['stats']['top_wrong'] . ' (' . $q['stats']['top_wrong_count'] . ')' : '');
+        }
+        $headings = array('Admission no', 'Student', 'Class', 'Status', 'Score', '%', 'Result', 'Right', 'Wrong', 'Left out', 'Questions missed');
+        $first = $rows ? array_shift($rows) : array();
+        $this->load->helper('download');
+        force_download(preg_replace('/[^A-Za-z0-9 _-]+/', '', $r['exam']['exam']) . ' results.xlsx', Import_sheet::xlsx($headings, $first, $rows));
+    }
     /** Send the CBT scores to a subject's marks in Examinations (the report card). GET: the form; POST: send. */
     public function send_marks($id = null)
     {
