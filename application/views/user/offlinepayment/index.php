@@ -50,6 +50,24 @@ echo $this->session->flashdata('msg');
     ?>
                                 <?php }?>
                                 <?php echo $this->customlib->getCSRF(); ?>
+                                <?php
+                                $group_total = 0;
+                                if (!empty($group_fees)) { ?>
+                                <div class="table-responsive">
+                                    <table class="table table-condensed table-bordered" id="transfer_fees">
+                                        <thead><tr><th>Fees this transfer pays</th><th class="text-right">Owing (<?php echo $currency_symbol; ?>)</th></tr></thead>
+                                        <tbody>
+                                        <?php foreach ($group_fees as $gf) {
+                                            $owes = (float) $gf['amount_balance'] + max(0, (float) $gf['fine_balance']);
+                                            $group_total += $owes; ?>
+                                            <tr><td><?php echo html_escape($gf['fee_group_name'] . ' (' . $gf['fee_type_code'] . ')'); ?></td><td class="text-right"><?php echo amountFormat($owes); ?></td></tr>
+                                        <?php } ?>
+                                        </tbody>
+                                        <tfoot><tr><th>Total</th><th class="text-right"><?php echo amountFormat($group_total); ?></th></tr></tfoot>
+                                    </table>
+                                </div>
+                                <p class="text-muted">If you paid less than the total, it is applied to the fees from the top of this list.</p>
+                                <?php } ?>
                                 <div class="row">
                                     <div class="col-md-6">
                                              <div class="form-group">
@@ -88,7 +106,7 @@ echo $this->session->flashdata('msg');
                                  <div class="col-md-6">
                                       <div class="form-group">
                                             <label for="amount"><?php echo $this->lang->line('amount_paid'); ?> (<?php echo $currency_symbol; ?>) </label><small class="req"> *</small>
-                                            <input id="amount" name="amount" placeholder="" type="number" class="form-control"  value="<?php echo set_value('amount'); ?>" />
+                                            <input id="amount" name="amount" placeholder="" type="number" class="form-control"  value="<?php echo set_value('amount', $group_total > 0 ? round($group_total, 2) : ''); ?>" />
                                             <span class="text-danger"><?php echo form_error('amount'); ?></span>
                                         </div>
                                  </div>

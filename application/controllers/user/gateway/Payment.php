@@ -115,6 +115,21 @@ class Payment extends Studentgateway_Controller
 
                 }
 
+                if ($this->input->post('submit_mode') == 'offline_payment') {
+                    // one bank transfer for several fees: the transfer form lists them and splits the amount
+                    $owing = array();
+                    foreach ($fees_master_array as $fee_record) {
+                        if (($fee_record['amount_balance'] + max(0, $fee_record['fine_balance'])) > 0) {
+                            $owing[] = $fee_record;
+                        }
+                    }
+                    if (empty($owing)) {
+                        redirect('user/user/getfees');
+                    }
+                    $this->session->set_userdata('params', array('fees' => $owing));
+                    redirect('user/offlinepayment');
+                }
+
                 $student_id     = $this->customlib->getStudentSessionUserID();
                 $pay_method     = $this->paymentsetting_model->getActiveMethod();
                 $student_record = $this->student_model->get($student_id);
