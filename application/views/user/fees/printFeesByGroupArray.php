@@ -251,7 +251,7 @@ echo $this->customlib->getFullName($feearray[0]->firstname, $feearray[0]->middle
                                         <strong>Date: <?php
 $date = date('d-m-Y');
 
-echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
+echo $this->customlib->showDate($date);
 ?></strong><br/>
 
                                     </address>
@@ -333,7 +333,7 @@ echo $feeList->name;
 if ($feeList->due_date == "0000-00-00") {
 
             } else {
-                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($feeList->due_date));
+                echo $this->customlib->showDate($feeList->due_date);
             }
             ?>
                                                         </td>
@@ -384,7 +384,7 @@ $fee_deposits = json_decode(($feeList->amount_detail));
                                                                 </td>
                                                                 <td class="text text-center"><?php echo $fee_deposits_value->payment_mode; ?></td>
                                                                 <td class="text text-center">
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                 </td>
                                                                 <td class="text text-right"><?php echo ($currency_symbol . number_format($fee_deposits_value->amount, 2, '.', '')); ?></td>
                                                                 <td class="text text-right"><?php echo ($currency_symbol . number_format($fee_deposits_value->amount_fine, 2, '.', '')); ?></td>

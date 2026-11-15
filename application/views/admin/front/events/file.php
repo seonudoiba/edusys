@@ -32,12 +32,12 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="exampleInputEmail1">Event Start --r</label>
-                                        <input id="start_date" name="start_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('start_date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result['event_start']))); ?>" readonly="readonly" />
+                                        <input id="start_date" name="start_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('start_date', $this->customlib->showDate($result['event_start'])); ?>" readonly="readonly" />
                                         <span class="text-danger"><?php echo form_error('event_start'); ?></span>
                                     </div> 
                                     <div class="form-group">
                                         <label for="exampleInputEmail1">Event end --r</label>
-                                        <input id="end_date" name="end_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('end_date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result['event_end']))); ?>" readonly="readonly" />
+                                        <input id="end_date" name="end_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('end_date', $this->customlib->showDate($result['event_end'])); ?>" readonly="readonly" />
 
                                         <span class="text-danger"><?php echo form_error('event_end'); ?></span>
                                     </div>

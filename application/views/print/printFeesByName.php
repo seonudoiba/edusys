@@ -247,7 +247,7 @@ if(in_array('0', $print_copy)){
                                     <strong><?php echo $this->lang->line('date'); ?>: <?php
 $date = date('d-m-Y');
 
-echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
+echo $this->customlib->showDate($date);
 ?></strong><br/>
                      <strong> <?php echo $this->lang->line('payment_id'); ?>:<?php echo $feeList->id . "/" . $sub_invoice_id; ?></strong>
                      <br/>
@@ -311,7 +311,7 @@ $amount    = 0;
         ?>
                                             <tr>
                                                 <td>
-                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($record->date)); ?>
+                                                    <?php echo $this->customlib->showDate($record->date); ?>
                                                 </td>
                                                 <td>                                                     
                                                     <?php
@@ -434,7 +434,7 @@ if (in_array('1', $print_copy)) {
                                         <strong>
                                             Date: <?php
                                             $date = date('d-m-Y');
-                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
+                                            echo $this->customlib->showDate($date);
                                         ?></strong><br/>
                                         <strong> <?php echo $this->lang->line('payment_id'); ?>:  <?php echo $feeList->id . "/" . $sub_invoice_id; ?></strong><br>                                       
                                         
@@ -495,7 +495,7 @@ $amount    = 0;
             ?>
                                                 <tr>
                                                     <td>
-                                                        <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($record->date)); ?>
+                                                        <?php echo $this->customlib->showDate($record->date); ?>
 
                                                     </td>
                                                     <td>
@@ -615,7 +615,7 @@ if (in_array('2', $print_copy)) {
                                         <strong>
                                             Date: <?php
                                             $date = date('d-m-Y');
-                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
+                                            echo $this->customlib->showDate($date);
                                         ?></strong><br/>
                                         <strong> <?php echo $this->lang->line('payment_id'); ?>:  <?php echo $feeList->id . "/" . $sub_invoice_id; ?></strong><br>                                       
                                         
@@ -676,7 +676,7 @@ $amount    = 0;
             ?>
                                                 <tr>
                                                     <td>
-                                                        <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($record->date)); ?>
+                                                        <?php echo $this->customlib->showDate($record->date); ?>
 
                                                     </td>
                                                     <td>                                                         

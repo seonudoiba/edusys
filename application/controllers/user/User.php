@@ -367,7 +367,7 @@ class User extends Student_Controller
         $notification_bydate  = array();
 
         foreach ($unread_notifications as $unread_notifications_key => $unread_notifications_value) {
-            if (date($this->customlib->getSchoolDateFormat()) >= date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($unread_notifications_value->publish_date))) {
+            if (date($this->customlib->getSchoolDateFormat()) >= $this->customlib->showDate($unread_notifications_value->publish_date)) {
                 $notification_bydate[] = $unread_notifications_value;
             }
         }

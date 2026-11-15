@@ -262,7 +262,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                     <?php echo $value['id'] . "/" . $value['inv_no']; ?>
                                                                 </td>
                                                                 <td>
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?>
+                                                                    <?php echo $this->customlib->showDate($value['date']); ?>
                                                                 </td>
                                                                 <td>
                                                                     <?php echo $value['firstname'] . " " . $value['lastname']; ?>
@@ -344,7 +344,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                     <?php echo $value['id']; ?>
                                                                 </td>
                                                                 <td>
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?>
+                                                                    <?php echo $this->customlib->showDate($value['date']); ?>
                                                                 </td>
                                                                 <td>
                                                                     <?php echo $value['exp_category']; ?>
@@ -411,7 +411,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                     <?php echo $values['id']; ?>
                                                                 </td>
                                                                 <td>
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($values['date'])); ?>
+                                                                    <?php echo $this->customlib->showDate($values['date']); ?>
                                                                 </td>
                                                                 <td>
                                                                     <?php echo $values['income_category']; ?>

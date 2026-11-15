@@ -110,7 +110,7 @@ class Paypal extends OnlineAdmission_Controller
                     
                     $apply_date =   date("Y-m-d H:i:s");
         
-                    $date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($apply_date))));  
+                    $date         = $this->customlib->showDate(date("Y-m-d", strtotime($apply_date)));  
         
                     $sender_details = array('firstname' => $online_data->firstname, 'lastname' => $online_data->lastname, 'email' => $online_data->email,'date'=>$date,'reference_no'=>$online_data->reference_no,'mobileno'=>$online_data->mobileno,'paid_amount'=>$this->amount,'guardian_email'=>$online_data->guardian_email,'guardian_phone'=>$online_data->guardian_phone);
                     $this->mailsmsconf->mailsms('online_admission_fees_submission', $sender_details);

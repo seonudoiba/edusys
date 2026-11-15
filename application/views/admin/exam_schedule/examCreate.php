@@ -138,7 +138,7 @@ if (!empty($examSchedule)) {
                                                         <?php
 $exam_date = $value['date_of_exam'];
             if ($exam_date != "") {
-                $exam_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($exam_date));
+                $exam_date = $this->customlib->showDate($exam_date);
             }
             ?>
                                                         <div class="form-group">

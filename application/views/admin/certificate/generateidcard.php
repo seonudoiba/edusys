@@ -136,7 +136,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                 <td><?php echo $student['father_name']; ?></td>
                                                             <?php } ?>
                                                             <td>
-                                                                <?php if(!empty($student['dob'])){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob'])); } ?>
+                                                                <?php if(!empty($student['dob'])){ echo $this->customlib->showDate($student['dob']); } ?>
                                                             </td>
                                                             <td><?php echo $this->lang->line(strtolower($student['gender'])); ?></td>
                                                             <?php if ($sch_setting->category) { ?>

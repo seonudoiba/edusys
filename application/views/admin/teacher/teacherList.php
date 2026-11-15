@@ -109,7 +109,7 @@
 
                                             <td class="mailbox-name"> <?php echo $teacher['name'] ?></td>
                                             <td class="mailbox-name"> <?php echo $teacher['email'] ?></td>
-                                            <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($teacher['dob'])); ?></td>
+                                            <td class="mailbox-name"> <?php echo $this->customlib->showDate($teacher['dob']); ?></td>
                                             <td class="mailbox-name"> <?php echo $teacher['phone'] ?></td>
                                             <td class="mailbox-date pull-right no-print">
                                                 <a href="<?php echo base_url(); ?>admin/teacher/view/<?php echo $teacher['id'] ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('show'); ?>" >

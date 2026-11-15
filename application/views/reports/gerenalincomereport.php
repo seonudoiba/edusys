@@ -157,12 +157,12 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 <td><?php echo $student['father_name']; ?></td>
                                                 <td><?php
                                                     if (!empty($student['dob'])) {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
+                                                        echo $this->customlib->showDate($student['dob']);
                                                     }
                                                     ?></td>
                                                 <td><?php
                                                     if (!empty($student['admission_date'])) {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['admission_date']));
+                                                        echo $this->customlib->showDate($student['admission_date']);
                                                     }
                                                     ?></td>
                                                 <td><?php echo $student['gender']; ?></td>

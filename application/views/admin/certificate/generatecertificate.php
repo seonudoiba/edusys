@@ -130,7 +130,7 @@ if (empty($resultlist)) {
                                                             </td>
                                                             <td><?php echo $student['class'] . "(" . $student['section'] . ")" ?></td>
                                                             <td><?php echo $student['father_name']; ?></td>
-                                                            <td><?php if ($student['dob'] != '' && $student['dob'] != '0000-00-00') {echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));}?></td>
+                                                            <td><?php if ($student['dob'] != '' && $student['dob'] != '0000-00-00') {echo $this->customlib->showDate($student['dob']);}?></td>
                                                             <td><?php echo $this->lang->line(strtolower($student['gender'])); ?></td>
                                                             <td><?php echo $student['category']; ?></td>
                                                             <td><?php echo $student['mobileno']; ?></td>

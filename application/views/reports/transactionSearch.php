@@ -323,7 +323,7 @@ if (empty($expenseList)) {
                                         <?php echo $value['id']; ?>
                                     </td>
                                     <td>
-                                        <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?>
+                                        <?php echo $this->customlib->showDate($value['date']); ?>
                                     </td>
                                     <td>
                                         <?php echo $value['exp_category']; ?>

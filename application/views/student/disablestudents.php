@@ -194,7 +194,7 @@ $count++;
                                                                     <b><?php echo $this->lang->line('date_of_birth'); ?>:
                                                                         <?php
 if ((!empty($student['dob'])) && ($student['dob'] != null)) {
-                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
+                echo $this->customlib->showDate($student['dob']);
             }
             ?><br>
                                                                         <b><?php echo $this->lang->line('gender'); ?>:&nbsp;</b><?php echo $this->lang->line(strtolower($student['gender'])) ?><br>

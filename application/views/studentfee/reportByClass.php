@@ -79,7 +79,7 @@ foreach ($student_fees_array as $key => $student_array) {
                                         <b><?php echo form_error('admission_no'); ?> <?php echo $this->lang->line('admission_no'); ?> :</b> <?php echo $st_detail['admission_no']; ?><br>
                                     </div>
                                     <div class="col-sm-4 invoice-col">
-                                        <b><?php echo form_error('date_of_birth'); ?> <?php echo $this->lang->line('dob'); ?> :</b> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($st_detail['dob'])); ?><br>
+                                        <b><?php echo form_error('date_of_birth'); ?> <?php echo $this->lang->line('dob'); ?> :</b> <?php echo $this->customlib->showDate($st_detail['dob']); ?><br>
                                         <b><?php echo form_error('mobile_no'); ?> <?php echo $this->lang->line('mobile_no'); ?> :</b> <?php echo $st_detail['mobileno']; ?><br>
                                         <b><?php echo form_error('email'); ?> <?php echo $this->lang->line('email'); ?> :</b> <?php echo $st_detail['email']; ?><br>
                                     </div>

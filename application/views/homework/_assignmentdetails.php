@@ -20,12 +20,12 @@
                 <hr class="taskseparator" />
                 <div class="task-info task-single-inline-wrap task-info-start-date">
                     <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                        <span><?php echo $this->lang->line('submission_date'); ?></span>:<?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist['date'])); ?>  
+                        <span><?php echo $this->lang->line('submission_date'); ?></span>:<?php echo $this->customlib->showDate($assignmentlist['date']); ?>  
                     </h5>
                 </div>           
                 <div class="task-info task-single-inline-wrap task-info-start-date">
                     <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                        <span><?php echo $this->lang->line('evaluation_date'); ?></span>:<?php if(!empty($assignmentlist['evaluation_date'])){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist['evaluation_date']));} ?>
+                        <span><?php echo $this->lang->line('evaluation_date'); ?></span>:<?php if(!empty($assignmentlist['evaluation_date'])){ echo $this->customlib->showDate($assignmentlist['evaluation_date']);} ?>
                     </h5>
                 </div>
                 <div class="task-info task-single-inline-wrap ptt10">

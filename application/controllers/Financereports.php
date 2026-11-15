@@ -865,7 +865,7 @@ class Financereports extends Admin_Controller
                 $row[] = $value->name;
                 $row[] = $value->invoice_no;
                 $row[] = $value->income_category;
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date));
+                $row[] = $this->customlib->showDate($value->date);
                 $row[] = $currency_symbol . amountFormat($value->amount);
                 $dt_data[] = $row;
             }
@@ -944,7 +944,7 @@ class Financereports extends Admin_Controller
                 $grand_total += $value->amount;
 
                 $row       = array();
-                $row[]     = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date));
+                $row[]     = $this->customlib->showDate($value->date);
                 $row[]     = $value->exp_category;
                 $row[]     = $value->name;
                 $row[]     = $value->invoice_no;
@@ -1067,7 +1067,7 @@ class Financereports extends Admin_Controller
                 }
                 $row[]      = $value->id;
                 $row[]      = $value->name;
-                $row[]      = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date));
+                $row[]      = $this->customlib->showDate($value->date);
                 $row[]      = $value->invoice_no;
                 $row[]      = amountFormat($value->amount);
                 $dt_data[]  = $row;
@@ -1199,7 +1199,7 @@ class Financereports extends Admin_Controller
 
                 $row[]      = $value->id;
                 $row[]      = $value->name;
-                $row[]      = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date));
+                $row[]      = $this->customlib->showDate($value->date);
                 $row[]      = $value->invoice_no;
                 $row[]      = amountFormat($value->amount);
                 $dt_data[]  = $row;

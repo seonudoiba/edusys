@@ -140,7 +140,7 @@
                                                     <td><?php echo $student['father_name']; ?></td>
                                                     <td><?php
 													if($student['dob'] != '0000-00-00' && $student['dob'] != ''){
-													echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
+													echo $this->customlib->showDate($student['dob']);
 													}
 													?></td>
                                                     <td>

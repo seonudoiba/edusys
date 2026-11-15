@@ -46,7 +46,7 @@
                         <label for="pwd"><?php echo $this->lang->line('date'); ?><small class="req"> *</small></label>
                         <input type="text" id="date_edit" name="date" class="form-control date" value="<?php
                         if (!empty($enquiry_data['date'])) {
-                            echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($enquiry_data['date'])));
+                            echo set_value('date', $this->customlib->showDate($enquiry_data['date']));
                         }
                         ?>" readonly="">
                     </div>
@@ -56,7 +56,7 @@
                         <label for="pwd"><?php echo $this->lang->line('next_follow_up_date'); ?><small class="req"> *</small></label>
                         <input type="text" id="date_of_call_edit" name="follow_up_date"class="form-control date" value="<?php
                         if (!empty($enquiry_data['follow_up_date']) && $enquiry_data['follow_up_date'] != '0000-00-00') {
-                            echo set_value('follow_up_date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($enquiry_data['follow_up_date'])));
+                            echo set_value('follow_up_date', $this->customlib->showDate($enquiry_data['follow_up_date']));
                         }
                         ?>" readonly="">
                     </div>

@@ -109,7 +109,7 @@ class Payu extends OnlineAdmission_Controller
                     
                     $apply_date=date("Y-m-d H:i:s");
                     
-                    $date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($apply_date))));
+                    $date         = $this->customlib->showDate(date("Y-m-d", strtotime($apply_date)));
                     
                     $gateway_response['online_admission_id']   = $reference; 
                     $gateway_response['paid_amount']    = $amount;

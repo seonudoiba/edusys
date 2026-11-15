@@ -69,7 +69,7 @@
                                                 <td class="mailbox-name"> 
                                                 <?php
                                                     if (!empty($teacher['dob']) && $teacher['dob'] != '0000-00-00') {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($teacher['dob']));
+                                                        echo $this->customlib->showDate($teacher['dob']);
                                                     }
                                                 ?>
                                                 </td>

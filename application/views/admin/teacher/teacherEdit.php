@@ -43,7 +43,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_birth'); ?></label>
-                                <input id="dob" name="dob" placeholder="" type="text" class="form-control"  value="<?php echo set_value('dob', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($teacher['dob']))); ?>" readonly="readonly"/>
+                                <input id="dob" name="dob" placeholder="" type="text" class="form-control"  value="<?php echo set_value('dob', $this->customlib->showDate($teacher['dob'])); ?>" readonly="readonly"/>
                                 <span class="text-danger"><?php echo form_error('dob'); ?></span>
                             </div>
                             <div class="form-group">

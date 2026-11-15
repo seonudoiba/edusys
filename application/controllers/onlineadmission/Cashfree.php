@@ -121,7 +121,7 @@ class Cashfree extends OnlineAdmission_Controller
         $online_data = $this->onlinestudent_model->getAdmissionData($reference);
         $apply_date = date("Y-m-d H:i:s");
         
-        $date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($apply_date)))); 
+        $date         = $this->customlib->showDate(date("Y-m-d", strtotime($apply_date))); 
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'https://api.cashfree.com/pg/orders/'.$_GET['order_id']);

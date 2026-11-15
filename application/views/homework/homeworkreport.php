@@ -110,8 +110,8 @@
                                                 <td><?php echo $student['section']; ?></td>
                                                 <td><?php echo $student['name']; ?></td>                           
                                                 <td><?php echo $student['subject_name']; ?><?php if($student['subject_code']){ echo ' ('.$student['subject_code'].')'; }?></td>
-                                                <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['homework_date'])); ?></td>  
-                                                <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['submit_date']));
+                                                <td><?php echo $this->customlib->showDate($student['homework_date']); ?></td>  
+                                                <td><?php echo $this->customlib->showDate($student['submit_date']);
                                                 ?></td>                                                
                                                 <td>
                                                     <a class="studentlist cursor-pointer" id="load" data-toggle="tooltip"  data-clss-id="<?php echo $student['class_id']; ?>" data-section-id="<?php echo $student['section_id']; ?>" data-homework-id="<?php echo $student['id']; ?>" data-type="student_count" ><?php echo $student['student_count']; ?></a>    

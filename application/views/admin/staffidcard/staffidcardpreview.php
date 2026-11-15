@@ -246,7 +246,7 @@
                                     ?>
                                   <?php
                                     if ($idcard->enable_date_of_joining == 1) {
-                                        echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
+                                        echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
                                     }
                                     ?>
                                   <?php
@@ -261,7 +261,7 @@
                                     ?>
                                   <?php
                                     if ($idcard->enable_staff_dob == 1) {
-                                        echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
+                                        echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
                                     }
                                     ?>
                               </ul>
@@ -405,7 +405,7 @@
                                             ?>
                                           <?php
                                             if ($idcard->enable_date_of_joining == 1) {
-                                                echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
+                                                echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
                                             }
                                             ?>
                                           <?php
@@ -420,7 +420,7 @@
                                             ?>
                                           <?php
                                             if ($idcard->enable_staff_dob == 1) {
-                                                echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
+                                                echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
                                             }
                                             ?>
                                       </ul>

@@ -272,7 +272,7 @@ if (isset($resultlist)) {
                                 <td class="desc" style="font-size: 11px;"><h3><?php echo $student['admission_no']; ?></h3></td>
                                 <td class="qty" style="text-align: left;font-size: 11px;"><?php echo $student['firstname'] . " " . $student['lastname']; ?></td>
                                 <td class="qty"  style="text-align: left;font-size: 11px;"><?php echo $student['father_name']; ?></td>
-                                <td  class="qty"  style="text-align: center;font-size: 11px;"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob'])); ?></td>
+                                <td  class="qty"  style="text-align: center;font-size: 11px;"><?php echo $this->customlib->showDate($student['dob']); ?></td>
                                 <td class="qty"  style="text-align: center;font-size: 11px;"><?php echo $student['mobileno']; ?></td>
                                 <td class="qty" style="text-align: center;font-size: 11px;"><?php echo $student['samagra_id']; ?></td>
                                 <td class="qty"  style="text-align: center;font-size: 11px;"><?php echo $student['adhar_no']; ?></td>

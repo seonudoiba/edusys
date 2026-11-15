@@ -883,7 +883,7 @@ class Homework extends Admin_Controller
                 }
 
                 if ($value->evaluation_date) {
-                    $evaluation_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->evaluation_date));
+                    $evaluation_date = $this->customlib->showDate($value->evaluation_date);
                 } else {
                     $evaluation_date = "";
                 }
@@ -899,7 +899,7 @@ class Homework extends Admin_Controller
                 $row[] = $value->section;
                 $row[] = $value->subject_name . ' ' . $code;
                 $row[] = $value->title;
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date));
+                $row[] = $this->customlib->showDate($value->date);
                 $row[] = $evaluation_date;
                 $row[] = $evaluated_by;
                 $row[] = $download . ' ' . '<a onclick="assignmentevaluation(' . $value->id . ')" class="btn btn-default btn-xs" data-target="#assignmentevaluation" data-backdrop="static" data-keyboard="false" data-toggle="modal"  title="' . $this->lang->line('evaluate') . '"><i class="fa fa-newspaper-o"></i></a>' . ' ' . $assignment;
@@ -956,7 +956,7 @@ class Homework extends Admin_Controller
         $id             = $this->input->post('id');
         $assignmentlist = $this->homework_model->getsingledailyassignment($id);
         if ($assignmentlist['evaluation_date'] != "") {
-            $assignmentlist['evaluation_date'] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist['evaluation_date']));
+            $assignmentlist['evaluation_date'] = $this->customlib->showDate($assignmentlist['evaluation_date']);
         } else {
             $assignmentlist['evaluation_date'] = "";
         }
@@ -1137,7 +1137,7 @@ class Homework extends Admin_Controller
                 }
 
                 if ($value->evaluation_date) {
-                    $evaluation_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->evaluation_date));
+                    $evaluation_date = $this->customlib->showDate($value->evaluation_date);
                 } else {
                     $evaluation_date = "";
                 }

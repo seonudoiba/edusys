@@ -28,7 +28,7 @@
             <th><?php echo $this->lang->line('number_of_person'); ?></th>
             <td><?php echo $data['no_of_people']; ?></td>
             <th><?php echo $this->lang->line('date'); ?></th>
-            <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($data['date'])); ?></td>
+            <td><?php echo $this->customlib->showDate($data['date']); ?></td>
         </tr>
         <tr>
             <th><?php echo $this->lang->line('in_time'); ?></th>

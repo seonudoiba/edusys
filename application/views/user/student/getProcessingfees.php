@@ -94,7 +94,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
                                 <?php
                                 if ($fee_value->due_date) {
-                                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_value->due_date));
+                                    echo $this->customlib->showDate($fee_value->due_date);
                                 } else {
                                 }
                                 ?>
@@ -174,7 +174,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                     </td>
                                     <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits->payment_mode)); ?></td>
                                     <td class="text text-left">
-                                        <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits->date)); ?>
+                                        <?php echo $this->customlib->showDate($fee_deposits->date); ?>
                                     </td>
                                     <td class="text text-right"><?php echo (amountFormat($fee_deposits->amount_discount, 2, '.', '')); ?></td>
                                     <td class="text text-right"><?php echo (amountFormat($fee_deposits->amount_fine, 2, '.', '')); ?></td>
@@ -310,7 +310,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                     </td>
                                     <td class="text text-left"><?php echo $this->lang->line(strtolower($trans_fee_deposits->payment_mode)); ?></td>
                                     <td class="text text-left">
-                                        <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($trans_fee_deposits->date)); ?>
+                                        <?php echo $this->customlib->showDate($trans_fee_deposits->date); ?>
                                     </td>
                                     <td class="text text-right"><?php echo (amountFormat($trans_fee_deposits->amount_discount, 2, '.', '')); ?></td>
                                     <td class="text text-right"><?php echo (amountFormat($trans_fee_deposits->amount_fine, 2, '.', '')); ?></td>

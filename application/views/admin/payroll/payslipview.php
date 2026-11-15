@@ -220,7 +220,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                     <table width="100%" class="paytable2">
                         <tr>
                             <th><?php echo $this->lang->line('payslip'); ?> #<?php echo $result["id"] ?></th> <td></td>
-                            <th class="text-right"></th> <th class="text-right"><?php echo $this->lang->line('payment_date'); ?>: <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result['payment_date'])); ?></th>
+                            <th class="text-right"></th> <th class="text-right"><?php echo $this->lang->line('payment_date'); ?>: <?php echo $this->customlib->showDate($result['payment_date']); ?></th>
                         </tr>
                     </table>
                     <hr/>

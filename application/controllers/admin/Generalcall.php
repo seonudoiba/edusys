@@ -147,9 +147,9 @@ class Generalcall extends Admin_Controller
                 $row   = array();
                 $row[] = $value->name;
                 $row[] = $value->contact;
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date));            
+                $row[] = $this->customlib->showDate($value->date);            
                 if ($value->follow_up_date != '' && $value->follow_up_date != '0000-00-00') {
-                    $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->follow_up_date));
+                    $row[] = $this->customlib->showDate($value->follow_up_date);
                 } else {
                     $row[] = "";
                 }

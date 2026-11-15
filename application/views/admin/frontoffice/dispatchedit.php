@@ -39,7 +39,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="pwd"><?php echo $this->lang->line('date'); ?></label>
-                                    <input id="date" name="date" placeholder="" type="text" class="form-control date"  value="<?php if($Dispatch_data['date']){ echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($Dispatch_data['date']))); } ?>" readonly="readonly" />
+                                    <input id="date" name="date" placeholder="" type="text" class="form-control date"  value="<?php if($Dispatch_data['date']){ echo set_value('date', $this->customlib->showDate($Dispatch_data['date'])); } ?>" readonly="readonly" />
                                     <span class="text-danger"><?php echo form_error('date'); ?></span>
                                 </div>
                                 <div class="form-group">
@@ -96,7 +96,7 @@
                                                 <td class="mailbox-name"><?php echo $value->to_title; ?></td>
                                                 <td class="mailbox-name"><?php echo $value->reference_no; ?></td>
                                                 <td class="mailbox-name"> <?php echo $value->from_title; ?></td>
-                                                <td class="mailbox-name"> <?php if($value->date){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date)); } ?></td>
+                                                <td class="mailbox-name"> <?php if($value->date){ echo $this->customlib->showDate($value->date); } ?></td>
                                                 <td class="mailbox-date pull-right white-space-nowrap">
                                                     <a onclick="getRecord(<?php echo $value->id; ?>)" class="btn btn-default btn-xs" data-target="#receviedetails" data-toggle="modal"  title="<?php echo $this->lang->line('view')?>"><i class="fa fa-reorder"></i></a>
                                                     <?php if ($value->image !="") { ?>

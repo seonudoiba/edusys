@@ -105,7 +105,7 @@ if (findSelected($inserted_fields, 'dob')) {
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_birth'); ?></label><small class="req"> *</small>
-                                                <input id="dob" name="dob" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('dob', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']))); ?>" />
+                                                <input id="dob" name="dob" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('dob', $this->customlib->showDate($student['dob'])); ?>" />
                                                 <span class="text-danger"><?php echo form_error('dob'); ?></span>
                                             </div>
                                         </div>
@@ -214,7 +214,7 @@ if (findSelected($inserted_fields, 'admission_date')  && ($sch_setting_detail->a
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('admission_date'); ?></label>
-                                                <input id="admission_date" name="admission_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('admission_date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['admission_date']))); ?>" readonly="readonly" />
+                                                <input id="admission_date" name="admission_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('admission_date', $this->customlib->showDate($student['admission_date'])); ?>" readonly="readonly" />
                                                 <span class="text-danger"><?php echo form_error('admission_date'); ?></span>
                                             </div>
                                         </div>
@@ -328,7 +328,7 @@ if (findSelected($inserted_fields, 'measurement_date')  && ($sch_setting_detail-
                                                         <div class="form-group">
                                                             <label for="exampleInputEmail1"><?php echo $this->lang->line('measurement_date'); ?></label>
 
- <input id="measure_date" name="measurement_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('measure_date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['measurement_date']))); ?>" readonly="readonly"/>
+ <input id="measure_date" name="measurement_date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('measure_date', $this->customlib->showDate($student['measurement_date'])); ?>" readonly="readonly"/>
                                                             <span class="text-danger"><?php echo form_error('measurement_date'); ?></span>
                                                         </div>
                                                     </div>

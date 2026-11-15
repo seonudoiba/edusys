@@ -23,7 +23,7 @@
                                 <b><?php echo $this->lang->line('gender'); ?></b> <a class="pull-right text-aqua"><?php echo $accountant['sex'] ?></a>
                             </li>
                             <li class="list-group-item">
-                                <b><?php echo $this->lang->line('date_of_birth'); ?></b> <a class="pull-right text-aqua"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($accountant['dob'])); ?></a>
+                                <b><?php echo $this->lang->line('date_of_birth'); ?></b> <a class="pull-right text-aqua"><?php echo $this->customlib->showDate($accountant['dob']); ?></a>
                             </li>
                             <li class="list-group-item">
                                 <b><?php echo $this->lang->line('phone'); ?></b> <a class="pull-right text-aqua"><?php echo $accountant['phone'] ?></a>

@@ -87,14 +87,14 @@ if ($enquiry_data["status"] == $enkey) {
             <hr class="taskseparator" />
             <div class="task-info task-single-inline-wrap task-info-start-date">
                 <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                    <span class="text-dark"><?php echo $this->lang->line('enquiry_date'); ?>:</span> <?php print_r(date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($enquiry_data['date'])));?>
+                    <span class="text-dark"><?php echo $this->lang->line('enquiry_date'); ?>:</span> <?php print_r($this->customlib->showDate($enquiry_data['date']));?>
                 </h5>
             </div>
             <div class="task-info task-single-inline-wrap task-info-start-date">
                 <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
                     <span class="text-dark"><?php echo $this->lang->line('last_follow_up_date'); ?>:</span> <?php
 if (!empty($next_date)) {
-    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($next_date[0]['date']));
+    echo $this->customlib->showDate($next_date[0]['date']);
 }
 ?>
                 </h5>
@@ -103,10 +103,10 @@ if (!empty($next_date)) {
                 <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
                     <span class="text-dark"><?php echo $this->lang->line('next_follow_up_date'); ?>:</span> <?php
 if (!empty($next_date)) {
-    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($next_date[0]['next_date']));
+    echo $this->customlib->showDate($next_date[0]['next_date']);
 } else {
     if($enquiry_data['follow_up_date'] != '0000-00-00'){
-        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($enquiry_data['follow_up_date'])); 
+        echo $this->customlib->showDate($enquiry_data['follow_up_date']); 
     }
 }
 ?>

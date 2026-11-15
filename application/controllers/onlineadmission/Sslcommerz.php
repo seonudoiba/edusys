@@ -109,7 +109,7 @@ class Sslcommerz extends OnlineAdmission_Controller
             $online_data                        = $this->onlinestudent_model->getAdmissionData($reference);
             $apply_date=date("Y-m-d H:i:s");
             
-            $date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($apply_date)))); 
+            $date         = $this->customlib->showDate(date("Y-m-d", strtotime($apply_date))); 
             
             $transactionid                      = $_POST['val_id'];
             $gateway_response['online_admission_id']   = $reference;

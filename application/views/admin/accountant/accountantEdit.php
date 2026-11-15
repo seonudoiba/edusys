@@ -49,7 +49,7 @@ foreach ($genderList as $key => $value) {
                             </div>
                             <div class="form-group">
                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_birth'); ?></label>
-                                <input id="dob" name="dob" placeholder="" type="text" class="form-control"  value="<?php echo set_value('dob', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($librarian['dob']))); ?>" readonly="readonly"/>
+                                <input id="dob" name="dob" placeholder="" type="text" class="form-control"  value="<?php echo set_value('dob', $this->customlib->showDate($librarian['dob'])); ?>" readonly="readonly"/>
                                 <span class="text-danger"><?php echo form_error('dob'); ?></span>
                             </div>
                             <div class="form-group">
@@ -108,7 +108,7 @@ foreach ($genderList as $key => $value) {
                                             <tr>
                                                 <td class="mailbox-name"> <?php echo $librarian['name'] ?></td>
                                                 <td class="mailbox-name"> <?php echo $librarian['email'] ?></td>
-                                                <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($librarian['dob'])); ?></td>
+                                                <td class="mailbox-name"> <?php echo $this->customlib->showDate($librarian['dob']); ?></td>
                                                 <td class="mailbox-name"> <?php echo $librarian['phone'] ?></td>
                                                 <td class="mailbox-date pull-right">
                                                     <a href="<?php echo base_url(); ?>admin/accountant/view/<?php echo $librarian['id'] ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('show'); ?>">

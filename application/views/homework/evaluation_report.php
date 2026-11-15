@@ -38,17 +38,17 @@ $admin = $this->customlib->getLoggedInUserData();
             <hr class="taskseparator" />
             <div class="task-info task-single-inline-wrap task-info-start-date">
                 <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                    <span><?php echo $this->lang->line('homework_date'); ?><span>:<?php print_r(date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result[0]['homework_date'])));?>
+                    <span><?php echo $this->lang->line('homework_date'); ?><span>:<?php print_r($this->customlib->showDate($result[0]['homework_date']));?>
                             </h5>
                             </div>
                             <div class="task-info task-single-inline-wrap task-info-start-date">
                                 <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                                    <span><?php echo $this->lang->line('submission_date'); ?><span>:<?php print_r(date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result[0]['submit_date'])));?>
+                                    <span><?php echo $this->lang->line('submission_date'); ?><span>:<?php print_r($this->customlib->showDate($result[0]['submit_date']));?>
                                             </h5>
                                             </div>
                                             <div class="task-info task-single-inline-wrap task-info-start-date">
                                                 <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                                                    <span><?php echo $this->lang->line('evaluation_date'); ?><span>:<?php print_r(date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result[0]['date'])));?>
+                                                    <span><?php echo $this->lang->line('evaluation_date'); ?><span>:<?php print_r($this->customlib->showDate($result[0]['date']));?>
                                                             </h5>
                                                             </div>
                                                             <div class="task-info task-single-inline-wrap ptt10">

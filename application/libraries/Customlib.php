@@ -1034,6 +1034,19 @@ class Customlib
         return strtotime($date);
     }
 
+    /**
+     * A stored Y-m-d date shown in the school's date format; '' for an empty, zero or unreadable date
+     * (date() with '' as the timestamp is a fatal TypeError on PHP 8).
+     */
+    public function showDate($date)
+    {
+        $ts = $this->dateyyyymmddTodateformat($date);
+        if ($ts === '' || $ts === false || $ts === null) {
+            return '';
+        }
+        return date($this->getSchoolDateFormat(), (int) $ts);
+    }
+
     public function dateFront()
     {
         $admin = $this->CI->Setting_model->getSetting();

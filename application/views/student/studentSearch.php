@@ -161,7 +161,7 @@ if (!empty($fields)) {
                                                                 <strong><b><?php echo $this->lang->line('class'); ?>: </b><?php echo $student['class'] . "(" . $student['section'] . ")" ?></strong><br>
                                                                 <b><?php echo $this->lang->line('admission_no'); ?>: </b><?php echo $student['admission_no'] ?><br/>
                                                                 <b><?php echo $this->lang->line('date_of_birth'); ?>:
-            <?php if ($student["dob"] != null && $student["dob"] != '0000-00-00') {echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));}?><br>
+            <?php if ($student["dob"] != null && $student["dob"] != '0000-00-00') {echo $this->customlib->showDate($student['dob']);}?><br>
                                                                     <b><?php echo $this->lang->line('gender'); ?>:&nbsp;</b><?php echo $this->lang->line(strtolower($student['gender'])) ?><br>
                                                                     </address>
                                                                     </div>

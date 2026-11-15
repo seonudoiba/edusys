@@ -53,9 +53,9 @@
                             <div class="form-group">
                                 <?php 
                                     if($assignmentlist['evaluation_date'] !=''){
-                                       $evaluation_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist['evaluation_date']));
+                                       $evaluation_date = $this->customlib->showDate($assignmentlist['evaluation_date']);
                                     }else{
-                                       $evaluation_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date('Y-m-d')));
+                                       $evaluation_date = $this->customlib->showDate(date('Y-m-d'));
                                     }
                                 ?>
                                 <input type="text" id="evaluation_date" name="evaluation_date" class="form-control modalddate97 date" value="<?php echo $evaluation_date; ?>" readonly="">

@@ -104,8 +104,8 @@ if (!empty($resultlist)) {
         ?>
                                     <tr>
                                         <td><?php echo $homework["subject_name"]; ?> <?php if($homework["subject_code"]){ echo '('.$homework["subject_code"].')'; } ?></td>
-                                        <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($homework['homework_date'])); ?></td>
-                                        <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($homework['submit_date'])); ?></td>
+                                        <td><?php echo $this->customlib->showDate($homework['homework_date']); ?></td>
+                                        <td><?php echo $this->customlib->showDate($homework['submit_date']); ?></td>
                                         <td><?php
 if (!empty($report[$homework['id']])) {
             echo $report[$homework['id']]['completed'] . "/" . ($report[$homework['id']]["total"] - $report[$homework['id']]["completed"]);

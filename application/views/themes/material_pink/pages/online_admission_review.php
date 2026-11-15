@@ -218,7 +218,7 @@
                 <div class="form-group">
                 
                   <label><b><?php echo $this->lang->line('date_of_birth'); ?></b></label>
-                  <p><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dob)); ?></p>
+                  <p><?php echo $this->customlib->showDate($dob); ?></p>
                 </div>
             </div> 
             <?php if ($this->customlib->getfieldstatus('mobile_no')) {?>

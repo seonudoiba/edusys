@@ -42,7 +42,7 @@
                                                 <td class="mailbox-name"><?php echo $value['contact']; ?></td>
                                                 <td class="mailbox-name"><?php echo $value['id_proof']; ?></td>
                                                 <td class="mailbox-name"><?php echo $value['no_of_people']; ?></td>
-                                                <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?></td>
+                                                <td class="mailbox-name"> <?php echo $this->customlib->showDate($value['date']); ?></td>
                                                 <td class="mailbox-name"> <?php echo $value['in_time']; ?></td>
                                                 <td class="mailbox-name"> <?php echo $value['out_time']; ?></td>
                                             </tr>

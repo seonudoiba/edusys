@@ -519,13 +519,13 @@ class Onlinestudent extends Admin_Controller
                 }
 
                 if ($value->dob != null) {
-                    $dob = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->dob));
+                    $dob = $this->customlib->showDate($value->dob);
                 } else {
                     $dob = "";
                 }
 
                 if ($value->submit_date != null) {
-                    $submit_date = " (" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->submit_date)) . ")";
+                    $submit_date = " (" . $this->customlib->showDate($value->submit_date) . ")";
                 } else {
                     $submit_date = "";
                 }
@@ -579,7 +579,7 @@ class Onlinestudent extends Admin_Controller
                 }
 
                 $row[]     =  $enroll;
-                $row[]     =  date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($value->created_at))));
+                $row[]     =  $this->customlib->showDate(date("Y-m-d", strtotime($value->created_at)));
                 
                 $row[]     = $document . ' ' . $printbtn . ' ' . $editbtn . ' ' . $deletebtn;
                 $dt_data[] = $row;

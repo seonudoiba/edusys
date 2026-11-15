@@ -176,9 +176,9 @@ class Issueitem extends Admin_Controller
                 if ($value->return_date == "0000-00-00") {
                     $return_date = "";
                 } else {
-                    $return_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->return_date));
+                    $return_date = $this->customlib->showDate($value->return_date);
                 }
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->issue_date)) . " - " . $return_date;
+                $row[] = $this->customlib->showDate($value->issue_date) . " - " . $return_date;
 
                 $row[] = $value->staff_name . " " . $value->surname . " (" . $value->employee_id . ")";
                 $row[] = $value->issueby_staff_name . " " . $value->issueby_surname . " (" . $value->issueby_employee_id . ")";
