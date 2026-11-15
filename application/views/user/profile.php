@@ -599,6 +599,92 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <?php
                                 } else {
                                 ?>
+                                    <?php
+                                    // What is still owed, fee by fee, for the Pay buttons and "Pay all"
+                                    $can_pay_online   = !empty($payment_method);
+                                    $can_pay_transfer = !empty($sch_setting->is_offline_fee_payment);
+                                    $pay_rows  = array();
+                                    $pay_total = 0;
+                                    if ($can_pay_online || $can_pay_transfer) {
+                                        foreach ($student_due_fee as $pf) {
+                                            foreach ($pf->fees as $pv) {
+                                                $p_paid = 0; $p_disc = 0; $p_fine = 0;
+                                                foreach ((array) json_decode((string) $pv->amount_detail) as $pd) { if (!is_object($pd)) { continue; }
+                                                    $p_paid += $pd->amount; $p_disc += $pd->amount_discount; $p_fine += $pd->amount_fine;
+                                                }
+                                                $p_bal = $pv->amount - ($p_paid + $p_disc);
+                                                if ($p_bal <= 0) {
+                                                    continue;
+                                                }
+                                                $p_late = ($pv->due_date != '0000-00-00' && $pv->due_date != null && strtotime($pv->due_date) < strtotime(date('Y-m-d')));
+                                                $p_owes = $p_bal + ($p_late ? max(0, $pv->fine_amount - $p_fine) : 0);
+                                                $pay_rows['fees_' . $pf->id . '_' . $pv->fee_groups_feetype_id] = array('cat' => 'fees', 'master' => $pf->id, 'fgt' => $pv->fee_groups_feetype_id, 'trans' => 0, 'owes' => $p_owes);
+                                                $pay_total += $p_owes;
+                                            }
+                                        }
+                                        foreach ((!empty($transport_fees) && is_array($transport_fees)) ? $transport_fees : array() as $pt) { if (!is_object($pt)) { continue; }
+                                            $p_paid = 0; $p_disc = 0; $p_fine = 0;
+                                            foreach ((array) json_decode((string) $pt->amount_detail) as $pd) { if (!is_object($pd)) { continue; }
+                                                $p_paid += $pd->amount; $p_disc += $pd->amount_discount; $p_fine += $pd->amount_fine;
+                                            }
+                                            $p_bal = $pt->fees - ($p_paid + $p_disc);
+                                            if ($p_bal <= 0) {
+                                                continue;
+                                            }
+                                            $p_late = ($pt->due_date != '0000-00-00' && $pt->due_date != null && strtotime($pt->due_date) < strtotime(date('Y-m-d')));
+                                            $p_fine_due = $p_late ? (is_null($pt->fine_percentage) ? $pt->fine_amount : percentageAmount($pt->fees, $pt->fine_percentage)) : 0;
+                                            $p_owes = $p_bal + max(0, $p_fine_due - $p_fine);
+                                            $pay_rows['transport_' . $pt->id] = array('cat' => 'transport', 'master' => 0, 'fgt' => 0, 'trans' => $pt->id, 'owes' => $p_owes);
+                                            $pay_total += $p_owes;
+                                        }
+                                    }
+                                    $pay_menu = function ($key) use ($pay_rows, $can_pay_online, $can_pay_transfer) {
+                                        if (!isset($pay_rows[$key])) {
+                                            return '';
+                                        }
+                                        $r = $pay_rows[$key];
+                                        $data = ' data-cat="' . $r['cat'] . '" data-master="' . (int) $r['master'] . '" data-fgt="' . (int) $r['fgt'] . '" data-trans="' . (int) $r['trans'] . '"';
+                                        $h = '<div class="btn-group pull-right fee-pay-menu"><button type="button" class="btn btn-xs btn-primary dropdown-toggle" data-toggle="dropdown"><i class="fa fa-money"></i> ' . $this->lang->line('pay') . ' <span class="caret"></span></button><ul class="dropdown-menu dropdown-menu-right">';
+                                        if ($can_pay_online) {
+                                            $h .= '<li><a href="#" class="fee-pay-one" data-mode="online_payment"' . $data . '>Pay online</a></li>';
+                                        }
+                                        if ($can_pay_transfer) {
+                                            $h .= '<li><a href="#" class="fee-pay-one" data-mode="offline_payment"' . $data . '>I paid by bank transfer</a></li>';
+                                        }
+                                        return $h . '</ul></div>';
+                                    };
+                                    if (!empty($pay_rows)) { ?>
+                                    <div class="alert alert-warning clearfix" id="fee_pay_all_bar" style="margin-bottom:10px">
+                                        <span style="line-height:30px">Outstanding: <b><?php echo $currency_symbol . amountFormat($pay_total); ?></b> for <?php echo count($pay_rows); ?> fee<?php echo count($pay_rows) == 1 ? '' : 's'; ?>. Click <b>Pay</b> on a fee, or pay everything at once.</span>
+                                        <div class="btn-group pull-right">
+                                            <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-toggle="dropdown"><i class="fa fa-money"></i> Pay all <span class="caret"></span></button>
+                                            <ul class="dropdown-menu dropdown-menu-right">
+                                                <?php if ($can_pay_online) { ?><li><a href="#" class="fee-pay-all" data-mode="online_payment">Pay all online</a></li><?php } ?>
+                                                <?php if ($can_pay_transfer) { ?><li><a href="#" class="fee-pay-all" data-mode="offline_payment">I paid all by bank transfer</a></li><?php } ?>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <form id="fee_pay_all_form" action="<?php echo site_url('user/gateway/payment/grouppay'); ?>" method="POST" style="display:none">
+                                        <?php echo $this->customlib->getCSRF(); ?>
+                                        <input type="hidden" name="submit_mode" value="">
+                                        <?php $rc = 0; foreach ($pay_rows as $r) { $rc++; ?>
+                                        <input type="hidden" name="row_counter[]" value="<?php echo $rc; ?>">
+                                        <input type="hidden" name="fee_category_<?php echo $rc; ?>" value="<?php echo $r['cat']; ?>">
+                                        <input type="hidden" name="trans_fee_id_<?php echo $rc; ?>" value="<?php echo (int) $r['trans']; ?>">
+                                        <input type="hidden" name="fee_groups_feetype_id_<?php echo $rc; ?>" value="<?php echo (int) $r['fgt']; ?>">
+                                        <input type="hidden" name="student_fees_master_id_<?php echo $rc; ?>" value="<?php echo (int) $r['master']; ?>">
+                                        <?php } ?>
+                                    </form>
+                                    <form id="fee_pay_one_form" action="<?php echo site_url('user/gateway/payment/pay'); ?>" method="POST" style="display:none">
+                                        <?php echo $this->customlib->getCSRF(); ?>
+                                        <input type="hidden" name="submit_mode" value="">
+                                        <input type="hidden" name="fee_category" value="">
+                                        <input type="hidden" name="student_transport_fee_id" value="0">
+                                        <input type="hidden" name="student_fees_master_id" value="0">
+                                        <input type="hidden" name="fee_groups_feetype_id" value="0">
+                                        <input type="hidden" name="student_id" value="<?php echo (int) $student['id']; ?>">
+                                    </form>
+                                    <?php } ?>
                                     <div class="table-responsive">
                                         <table class="table table-striped" id="feetable">
                                             <thead>
@@ -679,7 +765,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                     } else {
                                                                         echo $fee_value->name . " (" . $fee_value->type . ")";
                                                                     }
-
+                                                                    echo $pay_menu('fees_' . $fee->id . '_' . $fee_value->fee_groups_feetype_id);
                                                                     ?>
 
                                                                 </td>
@@ -840,7 +926,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                 }
                                                                     ?>
 
-                                                                    <td align="left"><?php echo $this->lang->line('transport_fees'); ?></td>
+                                                                    <td align="left"><?php echo $this->lang->line('transport_fees'); ?><?php echo $pay_menu('transport_' . $transport_fee_value->id); ?></td>
                                                                     <td align="left"><?php echo $transport_fee_value->month; ?></td>
                                                                     <td align="left" class="text text-left">
                                                                         <?php echo $this->customlib->dateformat($transport_fee_value->due_date); ?> </td>
@@ -3266,3 +3352,32 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
 //-----------CBSE Exam End----------------------
 
 
+
+?>
+<script>
+    // Fees tab: Pay on a fee (online or "I paid by bank transfer") and Pay all
+    $(function () {
+        $(document).on('click', '.fee-pay-one', function (e) {
+            e.preventDefault();
+            var a = $(this), f = $('#fee_pay_one_form');
+            f.find('[name=submit_mode]').val(a.data('mode'));
+            f.find('[name=fee_category]').val(a.data('cat'));
+            f.find('[name=student_fees_master_id]').val(a.data('master'));
+            f.find('[name=fee_groups_feetype_id]').val(a.data('fgt'));
+            f.find('[name=student_transport_fee_id]').val(a.data('trans'));
+            f.submit();
+        });
+        $(document).on('click', '.fee-pay-all', function (e) {
+            e.preventDefault();
+            var f = $('#fee_pay_all_form');
+            f.find('[name=submit_mode]').val($(this).data('mode'));
+            f.submit();
+        });
+        // the table scrolls sideways on small screens, which would cut the Pay menu off
+        $('#feetable').on('show.bs.dropdown', '.fee-pay-menu', function () {
+            $(this).closest('.table-responsive').css('overflow', 'visible');
+        }).on('hidden.bs.dropdown', '.fee-pay-menu', function () {
+            $(this).closest('.table-responsive').css('overflow', '');
+        });
+    });
+</script>

@@ -40,6 +40,11 @@ class Offlinepayment extends Student_Controller
         
         $sessionData   = $this->customlib->getLoggedInUserData();
         $payment_session=$this->session->userdata("params");
+        // reached without choosing a fee (old link, expired session): nothing to attach the transfer to
+        if (empty($payment_session) || (!isset($payment_session['fees']) && !isset($payment_session['student_fees_master_id']))) {
+            redirect('user/user/getfees');
+        }
+        $group_fees = isset($payment_session['fees']) ? $payment_session['fees'] : null;
         $data['title'] = 'Change Username';
         $this->form_validation->set_rules('payment_date', $this->lang->line('date_of_payment'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('bank_from', $this->lang->line('payment_mode'), 'trim|required|xss_clean');
@@ -59,16 +64,38 @@ class Offlinepayment extends Student_Controller
                 $insert_data['bank_account_transferred']=$this->input->post('bank_account_transferred');
                 $insert_data['reference']=$this->input->post('reference');
                 $insert_data['amount']=convertCurrencyFormatToBaseAmount($this->input->post('amount'));
-                $insert_data['student_fees_master_id']=($payment_session['student_fees_master_id'] !=0) ? $payment_session['student_fees_master_id']:NULL;
-                $insert_data['fee_groups_feetype_id']=($payment_session['fee_groups_feetype_id'] !=0) ? $payment_session['fee_groups_feetype_id'] :NULL;
-                $insert_data['student_transport_fee_id']=($payment_session['student_transport_fee_id'] !=0) ? $payment_session['student_transport_fee_id'] : NULL ;
+                $insert_data['student_fees_master_id']=(!empty($payment_session['student_fees_master_id'])) ? $payment_session['student_fees_master_id']:NULL;
+                $insert_data['fee_groups_feetype_id']=(!empty($payment_session['fee_groups_feetype_id'])) ? $payment_session['fee_groups_feetype_id'] :NULL;
+                $insert_data['student_transport_fee_id']=(!empty($payment_session['student_transport_fee_id'])) ? $payment_session['student_transport_fee_id'] : NULL ;
                 $insert_data['submit_date']=date('Y-m-d H:i:s');
 
             $img_name = $this->media_storage->fileupload("attachment", upload_root() . "offline_payments/");
 
             $insert_data['attachment']=$img_name;
 
-            $this->offlinePayment_model->add($insert_data);
+            if ($group_fees) {
+                // one transfer for several fees: one request per fee, the amount split in order
+                // (each fee up to what it owes, fine included; anything left over goes on the last one)
+                $left = (float) $insert_data['amount'];
+                $last = count($group_fees) - 1;
+                foreach (array_values($group_fees) as $i => $fee_record) {
+                    $owes  = (float) $fee_record['amount_balance'] + max(0, (float) $fee_record['fine_balance']);
+                    $share = ($i == $last) ? $left : min($left, $owes);
+                    if ($share <= 0) {
+                        break;
+                    }
+                    $row = $insert_data;
+                    $row['amount']                   = round($share, 2);
+                    $row['student_fees_master_id']   = !empty($fee_record['student_fees_master_id']) ? $fee_record['student_fees_master_id'] : null;
+                    $row['fee_groups_feetype_id']    = !empty($fee_record['fee_groups_feetype_id']) ? $fee_record['fee_groups_feetype_id'] : null;
+                    $row['student_transport_fee_id'] = !empty($fee_record['student_transport_fee_id']) ? $fee_record['student_transport_fee_id'] : null;
+                    $this->offlinePayment_model->add($row);
+                    $left -= $share;
+                }
+            } else {
+                $this->offlinePayment_model->add($insert_data);
+            }
+            $this->session->unset_userdata('params');
 
             $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('thank_you_for_the_payment_we_will_review_and_update_your_payment') . '</div>');
             redirect('user/user/getfees');
@@ -76,7 +103,8 @@ class Offlinepayment extends Student_Controller
         }
         
         $data['setting'] = $this->setting_model->getSetting();
-        
+        $data['group_fees'] = $group_fees;
+
         $this->data['id']       = $sessionData['id'];
         $this->data['username'] = $sessionData['username'];
         $this->load->view('layout/student/header', $data);

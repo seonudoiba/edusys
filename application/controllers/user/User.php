@@ -249,6 +249,7 @@ class User extends Student_Controller
             $timeline                     = $this->timeline_model->getStudentTimeline($student["id"], $status = 'yes');
             $data["timeline_list"]        = $timeline;
             $data['sch_setting']          = $this->sch_setting_detail;
+            $data['payment_method']       = !empty($this->payment_method);
             $data['adm_auto_insert']      = $this->sch_setting_detail->adm_auto_insert;
             $data['examSchedule']         = array();
             $data['exam_result']          = $this->examgroupstudent_model->searchStudentExams($student['student_session_id'], true, true);
