@@ -16,6 +16,51 @@ class Teacher extends Admin_Controller
         $this->current_session = $this->setting_model->getCurrentSession();
     }
 
+    /**
+     * Academics > Assign Subject Teachers: pick a class and section, then a teacher for each of its
+     * subjects (Subject_teachers). Also switches Teacher Restricted Mode, which limits teachers to
+     * the classes and sections they teach or are class teacher of.
+     */
+    public function subject_teachers()
+    {
+        if (!$this->rbac->hasPrivilege('assign_class_teacher', 'can_view')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'Academics');
+        $this->session->set_userdata('sub_menu', 'admin/teacher/subject_teachers');
+        $this->load->library('Subject_teachers');
+        $can_edit   = $this->rbac->hasPrivilege('assign_class_teacher', 'can_edit');
+        $class_id   = (int) ($this->input->post('class_id') ?: $this->input->get('class_id'));
+        $section_id = (int) ($this->input->post('section_id') ?: $this->input->get('section_id'));
+
+        if ($this->input->method() === 'post' && $can_edit) {
+            if ($this->input->post('restricted') !== null) {
+                $on = $this->input->post('restricted') === 'yes';
+                $this->db->update('sch_settings', array('class_teacher' => $on ? 'yes' : 'no'));
+                $this->session->set_flashdata('msg', '<div class="alert alert-success">' . ($on
+                    ? 'Teacher Restricted Mode is on: teachers now see only the classes and sections they teach or are class teacher of.'
+                    : 'Teacher Restricted Mode is off: teachers see every class.') . '</div>');
+            } elseif ($class_id && is_array($this->input->post('teacher'))) {
+                $n = $this->subject_teachers->save($class_id, $section_id, $this->input->post('teacher'));
+                $this->session->set_flashdata('msg', '<div class="alert alert-success">' . ($n ? 'Saved: ' . $n . ' subject teacher' . ($n == 1 ? '' : 's') . ' changed.' : 'Nothing changed.') . '</div>');
+            }
+            redirect('admin/teacher/subject_teachers' . ($class_id ? '?class_id=' . $class_id . '&section_id=' . $section_id : ''));
+        }
+
+        $data = array(
+            'classlist'  => $this->class_model->get(),
+            'class_id'   => $class_id,
+            'section_id' => $section_id,
+            'subjects'   => $class_id && $section_id ? $this->subject_teachers->subjects($class_id, $section_id) : array(),
+            'teachers'   => $this->staff_model->getStaffbyrole(2),
+            'restricted' => $this->setting_model->getSetting()->class_teacher === 'yes',
+            'can_edit'   => $can_edit,
+        );
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/teacher/subject_teachers', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
     public function index()
     {
         $this->session->set_userdata('top_menu', 'Academics');
