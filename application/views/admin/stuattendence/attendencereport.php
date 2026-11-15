@@ -109,7 +109,7 @@ if ($class_id == $class['id']) {
     }
     ?>><?php echo $class['class'] ?></option>
                                                         <?php
-$count++;
+
 }
 ?>
                                         </select>

@@ -1,4 +1,4 @@
-<div class="content-wrapper">
+<?php $count = 0; // counted in the lists below ?><div class="content-wrapper">
     <!-- Main content -->
     <section class="content">
         <div class="row">

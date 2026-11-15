@@ -35,7 +35,7 @@
                                         ?>><?php echo $value ?></option>
 
                                         <?php
-                                        $count++;
+                                        
                                     }
                                     ?>
 

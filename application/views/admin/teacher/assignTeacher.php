@@ -28,7 +28,7 @@
                                         ?>
                                         <option value="<?php echo $class['id'] ?>"><?php echo $class['class'] ?></option>
                                         <?php
-                                        $count++;
+                                        
                                     }
                                     ?>
                                 </select>
@@ -105,7 +105,7 @@ foreach ($subjectlist as $subject) {
     ?>
             row += '<option value="<?php echo $subject['id'] ?>"><?php echo $subject['name'] . " (" . $subject['type'] . ")" ?></option>';
     <?php
-    $count++;
+    
 }
 ?>
         row += '</select>';
@@ -119,7 +119,7 @@ foreach ($teacherlist as $teacher) {
     ?>
             row += '<option value="<?php echo $teacher['id'] ?>"><?php echo str_replace("'", "\\'", $teacher['name']) ?></option>';
     <?php
-    $count++;
+    
 }
 ?>
         row += '</select>';
@@ -227,7 +227,7 @@ foreach ($subjectlist as $subject) {
             row += '<option value="<?php echo $subject['id'] ?>" ' + selected + '><?php echo $subject['name'] . " (" . $subject['type'] . ")" ?></option>';
 
     <?php
-    $count++;
+    
 }
 ?>
         row += '</select>';
@@ -247,7 +247,7 @@ foreach ($teacherlist as $teacher) {
             row += '<option value="<?php echo $teacher['id'] ?>" ' + selected + '><?php echo str_replace("'", "\\'", $teacher['name'] . " " . $teacher['surname'] . "(" . $teacher["employee_id"] . ")") ?></option>';
 
     <?php
-    $count++;
+    
 }
 ?>
         row += '</select>';

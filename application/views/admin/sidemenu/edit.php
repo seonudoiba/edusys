@@ -73,7 +73,7 @@ foreach ($custom_field_table as $custom_field_table_key => $custom_field_table_v
                                             <option value="<?php echo $custom_field_table_key; ?>" <?php echo set_select('belong_to', $custom_field_table_key, (set_value('belong_to', $cus_field->belong_to) == $custom_field_table_key) ? true : false); ?>><?php echo $custom_field_table_value; ?></option>
 
                                             <?php
-$count++;
+
     }
     ?>
                                     </select>
@@ -89,7 +89,7 @@ foreach ($custom_fields_list as $custom_fields_list_key => $custom_fields_list_v
                                             <option value="<?php echo $custom_fields_list_key; ?>" <?php echo set_select('type', $custom_fields_list_key, (set_value('type', $cus_field->type) == $custom_fields_list_key) ? true : false); ?>><?php echo $custom_fields_list_value; ?></option>
 
                                             <?php
-$count++;
+
     }
     ?>
                                     </select>

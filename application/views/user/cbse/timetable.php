@@ -102,7 +102,7 @@
 
 
 <script type="text/javascript">
-    document.getElementById("print").style.display = "block";
+    (document.getElementById("print") || {style: {}}).style.display = "block";
 
     function printDiv() {
         $("#visible").removeClass("hide");

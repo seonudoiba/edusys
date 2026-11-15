@@ -31,7 +31,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 ?>
                                                 <option value="<?php echo $class['id'] ?>" <?php if (set_value('class_id') == $class['id']) echo "selected=selected" ?>><?php echo $class['class'] ?></option>
                                                 <?php
-                                                $count++;
+                                                
                                             }
                                             ?>
                                         </select>

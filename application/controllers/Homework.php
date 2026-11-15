@@ -827,6 +827,9 @@ class Homework extends Admin_Controller
         $class             = $this->class_model->get();
         $data['classlist'] = $class;
         $data['class_id']  = "";
+        $data['section_id'] = $data['subject_group_id'] = $data['subject_id'] = ""; // nothing chosen yet
+        $language = $this->customlib->getLanguage();
+        $data['language_name'] = $language['short_code'];
         $this->load->view("layout/header");
         $this->load->view("homework/dailyassignmentlist", $data);
         $this->load->view("layout/footer");

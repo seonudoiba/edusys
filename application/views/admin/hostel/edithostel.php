@@ -1,4 +1,4 @@
-<!-- Content Wrapper. Contains page content -->
+<?php $count = 0; // counted in the lists below ?><!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">

@@ -1,4 +1,4 @@
-<div class="content-wrapper"> 
+<?php $count = 0; // counted in the lists below ?><div class="content-wrapper"> 
     <section class="content-header">
         <h1>
             <i class="fa fa-mortar-board"></i> <?php echo $this->lang->line('academics'); ?> <small><?php echo $this->lang->line('student_fees1'); ?></small>        </h1>

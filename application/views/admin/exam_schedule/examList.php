@@ -1,4 +1,4 @@
-<div class="content-wrapper" style="min-height: 946px;">
+<?php $count = 0; // counted in the lists below ?><div class="content-wrapper" style="min-height: 946px;">
     <section class="content-header">
         <h1></h1>
     </section>

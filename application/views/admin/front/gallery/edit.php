@@ -209,7 +209,7 @@
                 {
                         toolbar: "FrontCMS",
                     extraPlugins: '',
-                    customConfig: baseurl + '/backend/js/ckeditor_config.js',
+                    customConfig: baseurl + 'backend/js/ckeditor_config.js',
                     entities: false//
                 });
 

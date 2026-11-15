@@ -41,7 +41,7 @@
                                                                                                 }
                                                                                                 ?>><?php echo $value["type"]; ?></option>
                                             <?php
-                                                $count++;
+                                                
                                             }
                                             ?>
                                         </select>
@@ -62,7 +62,7 @@
                                                                                         }
                                                                                         ?>><?php echo $month; ?></option>
                                             <?php
-                                                $count++;
+                                                
                                             }
                                             ?>
                                         </select>

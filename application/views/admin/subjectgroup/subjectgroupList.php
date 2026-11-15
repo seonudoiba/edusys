@@ -273,8 +273,8 @@ if ($this->rbac->hasPrivilege('subject_group', 'can_delete')) {
     }
     
     $(".no_print").css("display", "block");
-    document.getElementById("print").style.display = "block";
-    document.getElementById("btnExport").style.display = "block";
+    (document.getElementById("print") || {style: {}}).style.display = "block";
+    (document.getElementById("btnExport") || {style: {}}).style.display = "block";
 
     function printDiv() {
         $(".no_print").css("display", "none");

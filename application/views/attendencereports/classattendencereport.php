@@ -40,7 +40,7 @@
                                                 }
                                                 ?>><?php echo $class['class'] ?></option>
                                                         <?php
-                                                        $count++;
+                                                        
                                                     }
                                                     ?>
                                         </select>
@@ -70,7 +70,7 @@
                                                 }
                                                 ?>><?php echo $month; ?></option>
                                                         <?php
-                                                        $count++;
+                                                        
                                                     }
                                                     ?>
                                         </select>

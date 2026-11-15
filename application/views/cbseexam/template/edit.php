@@ -278,6 +278,6 @@
         allowedContent: true,
         enterMode: CKEDITOR.ENTER_BR,
         shiftEnterMode: CKEDITOR.ENTER_P,
-        customConfig: baseurl + '/backend/js/ckeditor_config.js'
+        customConfig: baseurl + 'backend/js/ckeditor_config.js'
     });   
 </script>

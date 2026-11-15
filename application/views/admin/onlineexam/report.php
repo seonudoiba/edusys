@@ -43,7 +43,7 @@ if (set_value('exam_id') == $exam_value->id) {
     }
     ?>><?php echo $exam_value->exam; ?></option>
                                                         <?php
-$count++;
+
 }
 ?>
                                         </select>
@@ -64,7 +64,7 @@ if (set_value('class_id') == $class['id']) {
     }
     ?>><?php echo $class['class'] ?></option>
                                                         <?php
-$count++;
+
 }
 ?>
                                         </select>

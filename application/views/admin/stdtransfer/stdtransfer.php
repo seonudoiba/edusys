@@ -1,4 +1,4 @@
-<div class="content-wrapper" style="min-height: 946px;">
+<?php $count = 0; // counted in the lists below ?><div class="content-wrapper" style="min-height: 946px;">
     <!-- Content Header (Page header) -->
     <section class="content-header">
         <h1><i class="fa fa-user-plus"></i> <?php //echo $this->lang->line('student_information'); ?> <small><?php //echo $this->lang->line('student_fees1'); ?></small> </h1>

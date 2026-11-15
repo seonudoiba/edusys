@@ -1,4 +1,4 @@
-<?php
+<?php $count = 0; // counted in the lists below ?><?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 $month_list= $this->customlib->getMonthDropdown($start_month);
 ?> 

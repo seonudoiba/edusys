@@ -43,7 +43,7 @@
                                                     ?>><?php echo $feegroup['name'] ?></option>
 
                                                     <?php
-                                                    $count++;
+                                                    
                                                 }
                                                 ?>
                                             </select>
@@ -63,7 +63,7 @@
                                                     }
                                                     ?>><?php echo $feetype['type'] ?></option>
                                                     <?php
-                                                    $count++;
+                                                    
                                                 }
                                                 ?>
                                             </select>
