@@ -137,7 +137,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                     <select  id="section_id" name="section_id" class="form-control" >
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         <?php
-                                        foreach ($section_list as $value) {
+                                        foreach ((isset($section_list) && is_array($section_list)) ? $section_list : array() as $value) {
                                             ?>
                                             <option  <?php
                                             if ($value['section_id'] == $section_id) {

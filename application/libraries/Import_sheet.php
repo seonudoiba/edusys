@@ -24,13 +24,13 @@ class Import_sheet
     {
         return array(
             'student' => array('student_import_sample.xlsx',
-                array('class', 'section', 'admission_no', 'roll_no', 'first_name', 'middlename', 'last_name', 'gender', 'date_of_birth', 'category', 'religion', 'caste',
+                array('class', 'section', 'admission_no', 'roll_no', 'first_name', 'middlename', 'last_name', 'gender', 'date_of_birth', 'category', 'religion',
                     'mobile_no', 'email', 'admission_date', 'blood_group', 'student_house', 'height', 'weight', 'measurement_date', 'father_name',
                     'father_phone', 'father_occupation', 'mother_name', 'mother_phone', 'mother_occupation', 'guardian_is', 'guardian_name',
                     'guardian_relation', 'guardian_email', 'guardian_phone', 'guardian_occupation', 'guardian_address', 'current_address',
                     'permanent_address', 'bank_account_no', 'bank_name', 'ifsc_code', 'national_identification_no', 'local_identification_no',
                     'rte', 'previous_school', 'note'),
-                array('JSS 1', 'A', '', '1', 'Chinedu', 'Emeka', 'Okafor', 'Male', '2015-03-14', '', 'Christianity', '',
+                array('JSS 1', 'A', '', '1', 'Chinedu', 'Emeka', 'Okafor', 'Male', '2015-03-14', '', 'Christianity',
                     '08031234567', 'chinedu.okafor@example.com', '2025-09-15', 'O+', '', '120 cm', '30 kg', '', 'Emeka Okafor',
                     '08031234567', 'Engineer', 'Ngozi Okafor', '08059876543', 'Teacher', 'Father', 'Emeka Okafor',
                     'Father', 'emeka.okafor@example.com', '08031234567', 'Engineer', '12 Allen Avenue, Ikeja, Lagos', '12 Allen Avenue, Ikeja, Lagos',
