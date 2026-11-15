@@ -58,6 +58,11 @@
                             </div>
                         </form>
                     </div>
+                    <?php $this->load->view('admin/_import_box', array('import' => array(
+                        'id' => 'subject_import', 'title' => 'Import Subjects',
+                        'action' => site_url('admin/subject/import'), 'sample' => site_url('admin/subject/exportformat'),
+                        'help' => 'Download the sample, put one subject per row (name, code, type: Theory or Practical), then import it. Subjects that already exist are skipped.',
+                    ))); ?>
                 </div>
             <?php } ?>
             <div class="col-md-<?php

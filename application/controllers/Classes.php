@@ -56,6 +56,34 @@ class Classes extends Admin_Controller
         $this->load->view('layout/footer', $data);
     }
 
+    /** Excel sample for the class import: class, sections and one example row. */
+    public function exportformat()
+    {
+        if (!$this->rbac->hasPrivilege('class', 'can_add')) {
+            access_denied();
+        }
+        $this->load->library('Import_sheet');
+        $this->import_sheet->download('class');
+    }
+
+    /** Classes and their sections from an Excel or CSV file (Academic_import::classes). */
+    public function import()
+    {
+        if (!$this->rbac->hasPrivilege('class', 'can_add')) {
+            access_denied();
+        }
+        $this->load->library(array('Import_sheet', 'Academic_import'));
+        $problem = Import_sheet::upload_problem('file');
+        if ($problem !== '') {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">' . html_escape($problem) . '</div>');
+            redirect('classes');
+        }
+        $rows = Import_sheet::keyed_rows($_FILES['file']['tmp_name'], $_FILES['file']['name']);
+        list($count, $problems) = $this->academic_import->classes($rows);
+        $this->session->set_flashdata('msg', Academic_import::message('classes', count($rows), $count, $problems));
+        redirect('classes');
+    }
+
     public function delete($id)
     {
         if (!$this->rbac->hasPrivilege('class', 'can_delete')) {

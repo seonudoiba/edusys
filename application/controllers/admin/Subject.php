@@ -45,6 +45,34 @@ class Subject extends Admin_Controller
         }
     }
 
+    /** Excel sample for the subject import: name, code, type and one example row. */
+    public function exportformat()
+    {
+        if (!$this->rbac->hasPrivilege('subject', 'can_add')) {
+            access_denied();
+        }
+        $this->load->library('Import_sheet');
+        $this->import_sheet->download('subject');
+    }
+
+    /** Subjects from an Excel or CSV file (Academic_import::subjects). */
+    public function import()
+    {
+        if (!$this->rbac->hasPrivilege('subject', 'can_add')) {
+            access_denied();
+        }
+        $this->load->library(array('Import_sheet', 'Academic_import'));
+        $problem = Import_sheet::upload_problem('file');
+        if ($problem !== '') {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">' . html_escape($problem) . '</div>');
+            redirect('admin/subject/index');
+        }
+        $rows = Import_sheet::keyed_rows($_FILES['file']['tmp_name'], $_FILES['file']['name']);
+        list($count, $problems) = $this->academic_import->subjects($rows);
+        $this->session->set_flashdata('msg', Academic_import::message('subjects', count($rows), $count, $problems));
+        redirect('admin/subject/index');
+    }
+
     public function view($id)
     {
         if (!$this->rbac->hasPrivilege('subject', 'can_view')) {
