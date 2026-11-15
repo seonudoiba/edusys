@@ -65,6 +65,11 @@
                             </div>
                         </form>
                     </div>
+                    <?php $this->load->view('admin/_import_box', array('import' => array(
+                        'id' => 'class_import', 'title' => 'Import Classes',
+                        'action' => site_url('classes/import'), 'sample' => site_url('classes/exportformat'),
+                        'help' => 'Download the sample, put one class per row with its sections separated by commas (for example JSS 1 &mdash; A, B), then import it. New sections are created; a class that already exists only gets the sections it is missing.',
+                    ))); ?>
 
                 </div><!--/.col (right) -->
                 <!-- left column -->
