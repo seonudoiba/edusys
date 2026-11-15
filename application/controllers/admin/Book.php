@@ -183,10 +183,10 @@ class Book extends Admin_Controller
         } else {
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-                if ($ext == 'csv') {
+                if (in_array(strtolower($ext), array('csv', 'xlsx'), true)) {
                     $file = $_FILES['file']['tmp_name'];
-                    $this->load->library('CSVReader');
-                    $result = $this->csvreader->parse_file($file);
+                    $this->load->library('Import_sheet');
+                    $result = Import_sheet::keyed_rows($file, $_FILES['file']['name']);
 
                     $rowcount = 0;
                     if (!empty($result)) {
@@ -226,10 +226,10 @@ class Book extends Admin_Controller
 
         if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-            if ($ext == 'csv') {
+            if (in_array(strtolower($ext), array('csv', 'xlsx'), true)) {
                 $file = $_FILES['file']['tmp_name'];
-                $this->load->library('CSVReader');
-                $result = $this->csvreader->parse_file($file);
+                $this->load->library('Import_sheet');
+                $result = Import_sheet::keyed_rows($file, $_FILES['file']['name']);
 
                 $rowcount = 0;
                 if (!empty($result)) {
@@ -264,45 +264,22 @@ class Book extends Admin_Controller
 
     public function handle_csv_upload()
     {
-        $error = "";
-        if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-            $allowedExts = array('csv');
-            $mimes       = array('text/csv',
-                'text/plain',
-                'application/csv',
-                'text/comma-separated-values',
-                'application/excel',
-                'application/vnd.ms-excel',
-                'application/vnd.msexcel',
-                'text/anytext',
-                'application/octet-stream',
-                'application/txt');
-            $temp      = explode(".", $_FILES["file"]["name"]);
-            $extension = end($temp);
-            if ($_FILES["file"]["error"] > 0) {
-                $error .= "Error opening the file<br />";
-            }
-            if (!in_array($_FILES['file']['type'], $mimes)) {
-                $error .= "Error opening the file<br />";
-                $this->form_validation->set_message('handle_csv_upload', $this->lang->line('file_type_not_allowed'));
-                return false;
-            }
-            if (!in_array($extension, $allowedExts)) {
-                $error .= "Error opening the file<br />";
-                $this->form_validation->set_message('handle_csv_upload', $this->lang->line('extension_not_allowed'));
-                return false;
-            }
-            if ($error == "") {
-                return true;
-            }
-        } else {
-            $this->form_validation->set_message('handle_csv_upload', $this->lang->line('please_select_file'));
+        $this->load->library('Import_sheet');
+        $problem = Import_sheet::upload_problem('file');
+        if ($problem !== '') {
+            $this->form_validation->set_message('handle_csv_upload', $problem);
             return false;
         }
+        return true;
     }
 
+    /** The import sample: Excel with the headings and one example row (?format=csv: the old CSV sample). */
     public function exportformat()
     {
+        if ($this->input->get('format') !== 'csv') {
+            $this->load->library('Import_sheet');
+            return $this->import_sheet->download('book');
+        }
         $this->load->helper('download');
         $filepath = "./backend/import/import_book_sample_file.csv";
         $data     = file_get_contents($filepath);

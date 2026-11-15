@@ -108,7 +108,7 @@ foreach ($roles as $key => $role) {
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="exampleInputFile"><?php echo $this->lang->line('select_csv_file'); ?></label><small class="req"> *</small>
-                                        <div><input class="filestyle form-control" type='file' name='file' id="file" size='20' />
+                                        <div><input class="filestyle form-control" type='file' name='file' id="file" size='20' accept=".xlsx,.csv" />
                                             <span class="text-danger"><?php echo form_error('file'); ?></span></div>
                                     </div></div>
                                 <div class="col-md-6 pt20">

@@ -6,7 +6,7 @@
             <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
 
                 <div class="input-group mb10">
-                    <input id="my-file-selector" data-height="34" class="dropify" type="file">
+                    <input id="my-file-selector" data-height="34" class="dropify" type="file" accept=".xlsx,.csv">
                     <div class="input-group-btn">
                         <input type="submit" class="btn btn-primary" value="<?php echo $this->lang->line('submit') ?>" id="btnSubmit"/>
                     </div>

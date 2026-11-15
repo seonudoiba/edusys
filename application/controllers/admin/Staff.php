@@ -1464,11 +1464,11 @@ class Staff extends Admin_Controller
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
 
                 $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-                if ($ext == 'csv') {
+                if (in_array(strtolower($ext), array('csv', 'xlsx'), true)) {
 
                     $file = $_FILES['file']['tmp_name'];
-                    $this->load->library('CSVReader');
-                    $result = $this->csvreader->parse_file($file);
+                    $this->load->library('Import_sheet');
+                    $result = Import_sheet::keyed_rows($file, $_FILES['file']['name']);
 
                     $rowcount = 0;
 
@@ -1517,8 +1517,8 @@ class Staff extends Admin_Controller
                                 $result[$r_key]['joining_letter']       = $this->encoding_lib->toUTF8($result[$r_key]['joining_letter']);
                                 $result[$r_key]['resignation_letter']   = $this->encoding_lib->toUTF8($result[$r_key]['resignation_letter']);
                                 $result[$r_key]['user_id']              = $this->input->post('role');
-                                $result[$r_key]['designation']          = $this->input->post('designation');
-                                $result[$r_key]['department']           = $this->input->post('department');
+                                $result[$r_key]['designation']          = ctype_digit((string) $this->input->post('designation')) ? $this->input->post('designation') : null; // optional; the placeholder posts "select"
+                                $result[$r_key]['department']           = ctype_digit((string) $this->input->post('department')) ? $this->input->post('department') : null;
                                 $result[$r_key]['is_active']            = 1;
 
                                 $password = $this->role->get_random_password($chars_min = 6, $chars_max = 6, $use_upper_case = false, $include_numbers = true, $include_special_chars = false);
@@ -1540,7 +1540,7 @@ class Staff extends Admin_Controller
                         } ///Result loop
                     } //Not emprty l
 
-                    $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('records_found_in_CSV_file_total') . $rowcount . $this->lang->line('records_imported_successfully'));
+                    $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('records_found_in_csv_file_total') . $rowcount . $this->lang->line('records_imported_successfully'));
                 }
             } else {
                 $msg = array(
@@ -1549,52 +1549,29 @@ class Staff extends Admin_Controller
                 $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
             }
 
-            $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">' . $this->lang->line('total') . ' ' . count($result) . " " . $this->lang->line('records_found_in_CSV_file_total') . ' ' . $rowcount . ' ' . $this->lang->line('records_imported_successfully') . '</div>');
+            $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">' . $this->lang->line('total') . ' ' . count($result) . " " . $this->lang->line('records_found_in_csv_file_total') . ' ' . $rowcount . ' ' . $this->lang->line('records_imported_successfully') . '</div>');
             redirect('admin/staff/import');
         }
     }
 
     public function handle_csv_upload()
     {
-        $error = "";
-        if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
-            $allowedExts = array('csv');
-            $mimes       = array('text/csv',
-                'text/plain',
-                'application/csv',
-                'text/comma-separated-values',
-                'application/excel',
-                'application/vnd.ms-excel',
-                'application/vnd.msexcel',
-                'text/anytext',
-                'application/octet-stream',
-                'application/txt');
-            $temp      = explode(".", $_FILES["file"]["name"]);
-            $extension = end($temp);
-            if ($_FILES["file"]["error"] > 0) {
-                $error .= "Error opening the file<br />";
-            }
-            if (!in_array($_FILES['file']['type'], $mimes)) {
-                $error .= "Error opening the file<br />";
-                $this->form_validation->set_message('handle_csv_upload', $this->lang->line('file_type_not_allowed'));
-                return false;
-            }
-            if (!in_array($extension, $allowedExts)) {
-                $error .= "Error opening the file<br />";
-                $this->form_validation->set_message('handle_csv_upload', $this->lang->line('extension_not_allowed'));
-                return false;
-            }
-            if ($error == "") {
-                return true;
-            }
-        } else {
-            $this->form_validation->set_message('handle_csv_upload', $this->lang->line('please_select_file'));
+        $this->load->library('Import_sheet');
+        $problem = Import_sheet::upload_problem('file');
+        if ($problem !== '') {
+            $this->form_validation->set_message('handle_csv_upload', $problem);
             return false;
         }
+        return true;
     }
 
+    /** The import sample: Excel with the headings and one example row (?format=csv: the old CSV sample). */
     public function exportformat()
     {
+        if ($this->input->get('format') !== 'csv') {
+            $this->load->library('Import_sheet');
+            return $this->import_sheet->download('staff');
+        }
         $this->load->helper('download');
         $filepath = "./backend/import/staff_csvfile.csv";
         $data     = file_get_contents($filepath);
