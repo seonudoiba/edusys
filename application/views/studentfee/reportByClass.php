@@ -28,7 +28,7 @@ foreach ($classlist as $class) {
     }
     ?>><?php echo $class['class'] ?></option>
                                                 <?php
-$count++;
+
 }
 ?>
                                         </select>

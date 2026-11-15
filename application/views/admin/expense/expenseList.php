@@ -45,7 +45,7 @@ if (set_value('exp_head_id') == $exphead['id']) {
         ?>><?php echo $exphead['exp_category'] ?></option>
 
                                             <?php
-$count++;
+
     }
     ?>
                                     </select>

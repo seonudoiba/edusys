@@ -132,7 +132,7 @@ foreach ($categorylist as $category) {
         }
         ?>><?php echo $category['category']; ?></option>
                                                         <?php
-$count++;
+
     }
     ?>
                                                 </select>

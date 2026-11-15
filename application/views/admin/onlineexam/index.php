@@ -440,7 +440,7 @@ foreach ($classList as $class_key => $class_value) {
 
                      enterMode : CKEDITOR.ENTER_BR,
                      shiftEnterMode: CKEDITOR.ENTER_P,
-                     customConfig: baseurl+'/backend/js/ckeditor_config.js',
+                     customConfig: baseurl+'backend/js/ckeditor_config.js',
                 });
 
         $('.detail_popover').popover({

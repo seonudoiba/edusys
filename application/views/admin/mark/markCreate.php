@@ -37,7 +37,7 @@ if ($exam_id == $exam['id']) {
     }
     ?>><?php echo $exam['name'] ?></option>
                                                         <?php
-$count++;
+
 }
 ?>
                                         </select>
@@ -59,7 +59,7 @@ if ($class_id == $class['id']) {
     ?>><?php echo $class['class'] ?></option>
 
                                                 <?php
-$count++;
+
 }
 ?>
                                         </select>

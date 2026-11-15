@@ -31,7 +31,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 ?>
                                                 <option value="<?php echo $class['id'] ?>" <?php if (set_value('class_id') == $class['id']) echo "selected=selected" ?>><?php echo $class['class'] ?></option>
                                                 <?php
-                                                $count++;
+                                                
                                             }
                                             ?>
                                         </select>
@@ -305,8 +305,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 </script>
 <script>
 
-    document.getElementById("print").style.display = "block";
-    document.getElementById("btnExport").style.display = "block";
+    (document.getElementById("print") || {style: {}}).style.display = "block";
+    (document.getElementById("btnExport") || {style: {}}).style.display = "block";
 
     function printDiv() {
         document.getElementById("print").style.display = "none";

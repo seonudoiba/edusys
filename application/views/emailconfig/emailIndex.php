@@ -130,7 +130,7 @@
                                         <?php echo $this->lang->line('access_key_id'); ?>
                                     </label>
                                     <div class="col-md-6 col-sm-6 col-xs-12">
-                                        <input id="access_key" name="access_key" placeholder="" type="text" class="form-control col-md-7 col-xs-12" value="<?php echo set_value('access_key', $emaillist->api_key); ?>" />
+                                        <input id="access_key" name="access_key" placeholder="" type="text" class="form-control col-md-7 col-xs-12" value="<?php echo set_value('access_key', (isset($emaillist->api_key) ? $emaillist->api_key : '')); ?>" />
                                         <span class="text-danger"><?php echo form_error('access_key'); ?></span>
                                     </div>
                                 </div>
@@ -138,14 +138,14 @@
                                     <label class="control-label col-md-3 col-sm-3 col-xs-12" for="exampleInputEmail1">
                                         <?php echo $this->lang->line('secret_access_key'); ?>
                                     </label><div class="col-md-6 col-sm-6 col-xs-12">
-                                        <input id="secret_access_key" name="secret_access_key" placeholder="" type="password" class="form-control col-md-7 col-xs-12"  value="<?php echo set_value('secret_access_key', $emaillist->api_secret); ?>" />
+                                        <input id="secret_access_key" name="secret_access_key" placeholder="" type="password" class="form-control col-md-7 col-xs-12"  value="<?php echo set_value('secret_access_key', (isset($emaillist->api_secret) ? $emaillist->api_secret : '')); ?>" />
                                         <span class="text-danger"><?php echo form_error('secret_access_key'); ?></span>
                                     </div></div>
                                 <div class="form-group">
                                     <label class="control-label col-md-3 col-sm-3 col-xs-12" for="exampleInputEmail1">
                                         <?php echo $this->lang->line('region'); ?>
                                     </label><div class="col-md-6 col-sm-6 col-xs-12">
-                                        <input id="region" name="region" placeholder="" type="text" class="form-control col-md-7 col-xs-12"  value="<?php echo set_value('region', $emaillist->region); ?>"  />
+                                        <input id="region" name="region" placeholder="" type="text" class="form-control col-md-7 col-xs-12"  value="<?php echo set_value('region', (isset($emaillist->region) ? $emaillist->region : '')); ?>"  />
                                         <span class="text-danger"><?php echo form_error('region'); ?></span>
                                     </div>  
                                 </div>

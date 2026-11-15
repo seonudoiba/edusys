@@ -45,7 +45,7 @@ if (set_value('item_category_id') == $item_category['id']) {
     ?>><?php echo $item_category['item_category'] ?></option>
 
                                         <?php
-$count++;
+
 }
 ?>
                                 </select>

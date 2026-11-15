@@ -39,7 +39,7 @@ if ($class_id == $class['id']) {
     }
     ?>><?php echo $class['class'] ?></option>
                                                         <?php
-$count++;
+
 }
 ?>
                                         </select>
@@ -69,7 +69,7 @@ if ($month_selected == $m_key) {
     }
     ?>><?php echo $month; ?></option>
                                                         <?php
-$count++;
+
 }
 ?>
                                         </select>

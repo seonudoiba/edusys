@@ -362,8 +362,8 @@ if ($this->rbac->hasPrivilege('topic', 'can_add')) {
 </script>
 
 <script>
-    document.getElementById("print").style.display = "block";
-    document.getElementById("btnExport").style.display = "block";
+    (document.getElementById("print") || {style: {}}).style.display = "block";
+    (document.getElementById("btnExport") || {style: {}}).style.display = "block";
 
     function printDiv() {
         document.getElementById("print").style.display = "none";

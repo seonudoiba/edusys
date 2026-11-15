@@ -380,6 +380,7 @@ class Alumni extends Admin_Controller
 
     public function getevent()
     {
+        $eventdata  = array(); // no events in the range: an empty list for the calendar
         $start      = $this->input->get('start');
         $end        = $this->input->get('end');
         $event_data = $this->alumni_model->get_eventbydaterange($start, $end);

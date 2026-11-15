@@ -375,7 +375,7 @@ if (set_value('class_id') == $class['id']) {
                   enterMode : CKEDITOR.ENTER_BR,
                   shiftEnterMode: CKEDITOR.ENTER_P,
                    maxlength: '2',
-                  customConfig: baseurl+'/backend/js/ckeditor_config.js',
+                  customConfig: baseurl+'backend/js/ckeditor_config.js',
 
                   });
 
@@ -419,7 +419,7 @@ console.log(data);
                   extraPlugins: 'ckeditor_wiris',
                   enterMode : CKEDITOR.ENTER_BR,
                   shiftEnterMode: CKEDITOR.ENTER_P,
-                     customConfig: baseurl+'/backend/js/ckeditor_config.js'
+                     customConfig: baseurl+'backend/js/ckeditor_config.js'
                 });
                  });
                 $('#myModal').modal('show');

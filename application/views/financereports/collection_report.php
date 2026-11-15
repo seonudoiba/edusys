@@ -1,4 +1,4 @@
-<?php
+<?php $count = 0; // counted in the lists below ?><?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
 <div class="content-wrapper">
@@ -378,8 +378,8 @@ if ($search_type == 'period') {
 }
 ?>
 
-document.getElementById("print").style.display = "block";
-document.getElementById("btnExport").style.display = "block";
+(document.getElementById("print") || {style: {}}).style.display = "block";
+(document.getElementById("btnExport") || {style: {}}).style.display = "block";
 document.getElementById("printhead").style.display = "none";
 
 function printDiv() {

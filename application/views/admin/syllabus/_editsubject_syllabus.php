@@ -115,7 +115,7 @@
     $(".ckeditor").each(function (_, ckeditor) {
         CKEDITOR.replace(ckeditor, {
             toolbar: 'Ques',
-            customConfig: baseurl + '/backend/js/ckeditor_config.js'
+            customConfig: baseurl + 'backend/js/ckeditor_config.js'
         });
     });
 

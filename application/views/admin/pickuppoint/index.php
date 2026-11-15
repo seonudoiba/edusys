@@ -11,6 +11,7 @@
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
 
+<script>window.initMap = window.initMap || function () {}; // the map is drawn on demand (loadMap); Google calls this when its script is ready</script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDSFi9EkS9zhnuYqfumbkuUsVv4Z-n60mg&callback=initMap"></script>
 
 <div class="content-wrapper">

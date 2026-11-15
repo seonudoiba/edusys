@@ -1,4 +1,4 @@
-<style type="text/css">
+<?php $count = 0; // counted in the lists below ?><style type="text/css">
     @media print
     {
         .no-print, .no-print *

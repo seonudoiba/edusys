@@ -38,7 +38,7 @@ if ($role_selected == $value["type"]) {
     }
     ?>><?php echo $value["type"]; ?></option>
                                                         <?php
-$count++;
+
 }
 ?>
                                         </select>

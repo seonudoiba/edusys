@@ -128,7 +128,7 @@ foreach ($classlist as $class) {
     ?>
                                                 <option value="<?php echo $class['id'] ?>"><?php echo $class['class'] ?></option>
                                                 <?php
-$count++;
+
 }
 ?>
                                         </select>

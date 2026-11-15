@@ -43,7 +43,7 @@
                                                                                                 }
                                                                                                 ?>><?php echo $value["type"]; ?></option>
                                             <?php
-                                                $count++;
+                                                
                                             }
                                             ?>
                                         </select>

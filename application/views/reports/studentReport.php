@@ -30,7 +30,7 @@ foreach ($classlist as $class) {
     }
     ?>><?php echo $class['class'] ?></option>
                                                 <?php
-$count++;
+
 }
 ?>
                                         </select>
@@ -61,7 +61,7 @@ foreach ($categorylist as $category) {
         }
         ?>><?php echo $category['category'] ?></option>
                                                     <?php
-$count++;
+
     }
     ?>
                                             </select>
@@ -102,7 +102,7 @@ foreach ($RTEstatusList as $k => $rte) {
         ?>><?php echo $rte; ?></option>
 
                                                     <?php
-$count++;
+
     }
     ?>
                                             </select>

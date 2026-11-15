@@ -1,4 +1,4 @@
-<?php
+<?php $count = 0; // counted in the lists below ?><?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
 <link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">

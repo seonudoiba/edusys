@@ -104,7 +104,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             }
                                             ?>><?php echo $class['class'] ?></option>
                                                     <?php
-                                                    $count++;
+                                                    
                                                 }
                                                 ?>
                                     </select>

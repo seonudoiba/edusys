@@ -452,8 +452,8 @@ $losson_count++;
 
 <script>
 
-    document.getElementById("print").style.display = "block";
-    document.getElementById("btnExport").style.display = "block";
+    (document.getElementById("print") || {style: {}}).style.display = "block";
+    (document.getElementById("btnExport") || {style: {}}).style.display = "block";
 
     function printDiv() {
         $("#visible").removeClass("hide");

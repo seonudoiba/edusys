@@ -94,11 +94,7 @@ if (isset($resultlist)) {
                                     <tbody>
                                         <?php
 if (empty($resultlist)) {
-        ?>
-                                            <tr>
-                                                <td colspan="4" class="text-danger text text-center"><?php echo $this->lang->line('no_record_found'); ?></td>
-                                            </tr>
-                                            <?php
+        // left empty: the table plugin shows its own "no data" line (a spanning cell breaks it)
 } else {
         $count = 1;
         foreach ($resultlist as $staff) {
