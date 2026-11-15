@@ -148,6 +148,7 @@ class Onlinestudent extends Admin_Controller
         }
        
 
+        $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header', $data);
             $this->load->view('admin/onlinestudent/studentEdit', $data);

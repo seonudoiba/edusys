@@ -1109,6 +1109,7 @@ class User extends Student_Controller
         $this->form_validation->set_rules('mother_pic', $this->lang->line('image'), 'callback_edit_handle_upload[mother_pic]');
         $this->form_validation->set_rules('guardian_pic', $this->lang->line('image'), 'callback_edit_handle_upload[guardian_pic]');
         
+        $this->form_validation->check_formats(); // phone, email, amount and date checks (MY_Form_validation)
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/student/header', $data);
             $this->load->view('user/edit', $data);

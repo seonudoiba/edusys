@@ -103,6 +103,7 @@ if ($language_name != 'en') {
     window.EDUSYS_CRITERIA_TITLE = <?php echo json_encode((string) $this->lang->line('select_criteria')); ?>;
 </script>
 <script src="<?php echo base_url(); ?>backend/custom/criteria_autoload.js?v=2"></script>
+<script src="<?php echo base_url(); ?>backend/custom/form_rules.js?v=1"></script>
 
 </body>
 
