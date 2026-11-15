@@ -24,6 +24,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                         <br/>
                         1. <?php echo $this->lang->line('import_staff_step1'); ?><br/>
                         2. <?php echo $this->lang->line('import_staff_step2'); ?><br/>
+                        3. Put each staff member's role in the <b>role</b> column (Admin, Teacher, Accountant, Librarian, Receptionist, or a role your school created). The role chosen below is used only for rows where role is empty.<br/>
 
                         <hr/></div>
                     <div class="box-body table-responsive" style="overflow-x:auto;">
@@ -61,7 +62,7 @@ foreach ($field as $key => $value) {
                                 <div class="col-md-3">
 
                                     <div class="form-group">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('role'); ?></label><small class="req"> *</small>
+                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('role'); ?></label> <small class="text-muted">(optional)</small>
                                         <select  id="role" name="role" class="form-control" >
                                             <option value=""   ><?php echo $this->lang->line('select'); ?></option>
                                             <?php

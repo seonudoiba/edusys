@@ -1455,7 +1455,8 @@ class Staff extends Admin_Controller
         $data["department"]  = $department;
 
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_csv_upload');
-        $this->form_validation->set_rules('role', $this->lang->line('role'), 'required');
+        // optional: each row's role comes from the file's role column; this one fills rows that leave it empty
+        $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim');
 
         if ($this->form_validation->run() == false) {
             $this->load->view("layout/header", $data);
@@ -1473,12 +1474,44 @@ class Staff extends Admin_Controller
                     $result = Import_sheet::keyed_rows($file, $_FILES['file']['name']);
 
                     $rowcount = 0;
+                    $problems = array();
+                    // role names (any spacing or case) => id; Super Admin is never given out by an import
+                    $this->load->library('Class_lookup');
+                    $role_ids = array();
+                    foreach ($roles as $r) {
+                        if (empty($r['is_superadmin'])) {
+                            $role_ids[Class_lookup::norm($r['name'])] = (int) $r['id'];
+                        }
+                    }
+                    $form_role = (int) $this->input->post('role');
+                    $templates = Import_sheet::templates();
+                    $staff_columns = array_fill_keys(array_diff($templates['staff'][1], array('role')), '');
 
                     if (!empty($result)) {
 
                         foreach ($result as $r_key => $r_value) {
+                            $label     = 'Row ' . ($r_key + 1);
+                            $role_text = trim(isset($r_value['role']) ? $r_value['role'] : '');
+                            // only the sample's staff columns: a missing one is empty, an unknown one is ignored (role is not a staff column)
+                            $result[$r_key] = array_merge($staff_columns, array_intersect_key($r_value, $staff_columns));
+                            if ($role_text !== '') {
+                                if (!isset($role_ids[Class_lookup::norm($role_text)])) {
+                                    $problems[] = $label . ': no role called "' . $role_text . '". Use one of: ' . implode(', ', array_map(function ($r) { return $r['name']; }, array_filter($roles, function ($r) { return empty($r['is_superadmin']); }))) . '.';
+                                    continue;
+                                }
+                                $role_id = $role_ids[Class_lookup::norm($role_text)];
+                            } elseif ($form_role) {
+                                $role_id = $form_role;
+                            } else {
+                                $problems[] = $label . ': the role is empty (fill the role column, or choose a role on the import page).';
+                                continue;
+                            }
+                            if (trim(isset($r_value['name']) ? $r_value['name'] : '') === '') {
+                                $problems[] = $label . ': the name is empty.';
+                                continue;
+                            }
 
-                            $check_exists      = $this->staff_model->import_check_data_exists($result[$r_key]['name'], $result[$r_key]['employee_id']);
+                            $check_exists     = $this->staff_model->import_check_data_exists($result[$r_key]['name'], $result[$r_key]['employee_id']);
                             $check_emailexists = $this->staff_model->import_check_email_exists($result[$r_key]['name'], $result[$r_key]['email']);
 
                             if ($check_exists == 0 && $check_emailexists == 0) {
@@ -1493,10 +1526,10 @@ class Staff extends Admin_Controller
                                 $result[$r_key]['contact_no']           = $this->encoding_lib->toUTF8($result[$r_key]['contact_no']);
                                 $result[$r_key]['emergency_contact_no'] = $this->encoding_lib->toUTF8($result[$r_key]['emergency_contact_no']);
                                 $result[$r_key]['email']                = $this->encoding_lib->toUTF8($result[$r_key]['email']);
-                                $result[$r_key]['dob']                  = $this->encoding_lib->toUTF8($result[$r_key]['dob']);
+                                $result[$r_key]['dob']                  = trim((string) $result[$r_key]['dob']) === "" ? null : $this->encoding_lib->toUTF8($result[$r_key]['dob']); // empty: no date (not 0000-00-00)
                                 $result[$r_key]['marital_status']       = $this->encoding_lib->toUTF8($result[$r_key]['marital_status']);
-                                $result[$r_key]['date_of_joining']      = $this->encoding_lib->toUTF8($result[$r_key]['date_of_joining']);
-                                $result[$r_key]['date_of_leaving']      = $this->encoding_lib->toUTF8($result[$r_key]['date_of_leaving']);
+                                $result[$r_key]['date_of_joining']      = trim((string) $result[$r_key]['date_of_joining']) === "" ? null : $this->encoding_lib->toUTF8($result[$r_key]['date_of_joining']); // empty: no date (not 0000-00-00)
+                                $result[$r_key]['date_of_leaving']      = trim((string) $result[$r_key]['date_of_leaving']) === "" ? null : $this->encoding_lib->toUTF8($result[$r_key]['date_of_leaving']); // empty: no date (not 0000-00-00)
                                 $result[$r_key]['local_address']        = $this->encoding_lib->toUTF8($result[$r_key]['local_address']);
                                 $result[$r_key]['permanent_address']    = $this->encoding_lib->toUTF8($result[$r_key]['permanent_address']);
                                 $result[$r_key]['note']                 = $this->encoding_lib->toUTF8($result[$r_key]['note']);
@@ -1518,7 +1551,7 @@ class Staff extends Admin_Controller
                                 $result[$r_key]['resume']               = $this->encoding_lib->toUTF8($result[$r_key]['resume']);
                                 $result[$r_key]['joining_letter']       = $this->encoding_lib->toUTF8($result[$r_key]['joining_letter']);
                                 $result[$r_key]['resignation_letter']   = $this->encoding_lib->toUTF8($result[$r_key]['resignation_letter']);
-                                $result[$r_key]['user_id']              = $this->input->post('role');
+                                $result[$r_key]['user_id']              = $role_id;
                                 $result[$r_key]['designation']          = ctype_digit((string) $this->input->post('designation')) ? $this->input->post('designation') : null; // optional; the placeholder posts "select"
                                 $result[$r_key]['department']           = ctype_digit((string) $this->input->post('department')) ? $this->input->post('department') : null;
                                 $result[$r_key]['is_active']            = 1;
@@ -1527,7 +1560,7 @@ class Staff extends Admin_Controller
 
                                 $result[$r_key]['password'] = $this->enc_lib->passHashEnc($password);
 
-                                $role_array = array('role_id' => $this->input->post('role'), 'staff_id' => 0);
+                                $role_array = array('role_id' => $role_id, 'staff_id' => 0);
 
                                 $insert_id = $this->staff_model->batchInsert($result[$r_key], $role_array);
                                 $staff_id  = $insert_id;
@@ -1538,6 +1571,8 @@ class Staff extends Admin_Controller
                                     $this->mailsmsconf->mailsms('login_credential', $teacher_login_detail);
                                 }
                                 $rowcount++;
+                            } else {
+                                $problems[] = $label . ': this staff ID or email is already used by another staff member.';
                             }
                         } ///Result loop
                     } //Not emprty l
@@ -1551,7 +1586,8 @@ class Staff extends Admin_Controller
                 $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
             }
 
-            $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">' . $this->lang->line('total') . ' ' . count($result) . " " . $this->lang->line('records_found_in_csv_file_total') . ' ' . $rowcount . ' ' . $this->lang->line('records_imported_successfully') . '</div>');
+            $this->load->library('Academic_import');
+            $this->session->set_flashdata('msg', Academic_import::message('staff', count((array) $result), (int) $rowcount, isset($problems) ? $problems : array()));
             redirect('admin/staff/import');
         }
     }
