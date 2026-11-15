@@ -781,7 +781,7 @@ class Welcome extends Front_Controller
                 $this->data['measurement_date'] = "";
             }
 
-            $this->data['application_date'] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($result['created_at']))));
+            $this->data['application_date'] = $this->customlib->showDate(date("Y-m-d", strtotime($result['created_at'])));
 
             $this->data['student_pic'] = $result['image'];
 
@@ -915,7 +915,7 @@ class Welcome extends Front_Controller
             $this->data['lastname'] = $result['lastname'];
             $this->data['gender'] = $result['gender'];
             if ($result['dob'] != null && $result['dob'] != '0000-00-00') {
-                $this->data['dob'] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result['dob']));
+                $this->data['dob'] = $this->customlib->showDate($result['dob']);
             } else {
                 $this->data['dob'] = "";
             }
@@ -929,7 +929,7 @@ class Welcome extends Front_Controller
             $this->data['height'] = $result['height'];
             $this->data['weight'] = $result['weight'];
             if ($result['measurement_date'] != null && $result['measurement_date'] != '0000-00-00' && $result['measurement_date'] != '1970-01-01') {
-                $this->data['measurement_date'] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result['measurement_date']));
+                $this->data['measurement_date'] = $this->customlib->showDate($result['measurement_date']);
             } else {
                 $this->data['measurement_date'] = "";
             }
@@ -1423,7 +1423,7 @@ class Welcome extends Front_Controller
         $this->onlinestudent_model->edit(array('id' => $admission_id, 'form_status' => 1, 'submit_date' => $date));
         $result = $this->onlinestudent_model->get($admission_id);
         $sender_details = array('firstname' => $result['firstname'], 'lastname' => $result['lastname'], 'email' => $result['email'],
-            'date' => date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date)),
+            'date' => $this->customlib->showDate($date),
             'reference_no' => $result['reference_no'], 'mobileno' => $result['mobileno'], 'guardian_email' => $result['guardian_email'], 'guardian_phone' => $result['guardian_phone']);
         $this->mailsmsconf->mailsms('online_admission_form_submission', $sender_details);
         return $result['reference_no'];

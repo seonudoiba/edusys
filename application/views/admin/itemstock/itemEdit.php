@@ -117,7 +117,7 @@ if (set_value('store_id', $item['store_id']) == $itemstore['id']) {
                                 <?php
 if ($item['date'] != '0000-00-00') {
 
-        $item_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($item['date']));
+        $item_date = $this->customlib->showDate($item['date']);
     }
     ?>
                                 <div class="form-group">
@@ -223,7 +223,7 @@ if ($items['description'] == "") {
                                                 </td>
 
                                                 <td class="mailbox-name">
-                                                    <?php if ($items['date'] != '0000-00-00') {echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($items['date']));}?>
+                                                    <?php if ($items['date'] != '0000-00-00') {echo $this->customlib->showDate($items['date']);}?>
                                                 </td>
 
                                                 <td class="mailbox-date pull-right">

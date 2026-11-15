@@ -8,9 +8,9 @@
         </tr>
         <tr>
             <th><?php echo $this->lang->line('date'); ?></th>
-            <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($Call_data['date'])); ?></td>
+            <td><?php echo $this->customlib->showDate($Call_data['date']); ?></td>
             <th><?php echo $this->lang->line('next_follow_up_date'); ?></th>
-            <td><?php if($Call_data['follow_up_date']!='' && $Call_data['follow_up_date']!='0000-00-00'){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($Call_data['follow_up_date'])); } ?></td>
+            <td><?php if($Call_data['follow_up_date']!='' && $Call_data['follow_up_date']!='0000-00-00'){ echo $this->customlib->showDate($Call_data['follow_up_date']); } ?></td>
         </tr>
         <tr>
             <th class="white-space-nowrap"><?php echo $this->lang->line('call_duration'); ?></th>

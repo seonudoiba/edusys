@@ -28,7 +28,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="pwd"><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small> 
-                                    <input id="date" name="date" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($Call_data['date']))); ?>" readonly="readonly" />
+                                    <input id="date" name="date" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date', $this->customlib->showDate($Call_data['date'])); ?>" readonly="readonly" />
                                 </div>
                                 <div class="form-group">
                                     <label for="email"><?php echo $this->lang->line('description'); ?></label> 
@@ -39,7 +39,7 @@
                                         <label for="pwd"><?php echo $this->lang->line('next_follow_up_date'); ?></label>
                                         <input id="follow_up_date" name="follow_up_date" placeholder="" type="text" class="form-control date"  value="<?php
                                         if ($Call_data['follow_up_date'] != '0000-00-00') {
-                                            echo set_value('follow_up_date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($Call_data['follow_up_date'])));
+                                            echo set_value('follow_up_date', $this->customlib->showDate($Call_data['follow_up_date']));
                                         }
                                         ?>" readonly="readonly" />
                                         <span class="text-danger"><?php echo form_error('follow_up_date'); ?></span>
@@ -112,8 +112,8 @@
                                             <tr>
                                                 <td class="mailbox-name"><?php echo $value['name']; ?></td>
                                                 <td class="mailbox-name"><?php echo $value['contact']; ?></td>
-                                                <td class="mailbox-name"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?> </td>
-                                                <td class="mailbox-name"> <?php if($value['follow_up_date']!='' && $value['follow_up_date']!='0000-00-00'){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['follow_up_date'])); }  ?></td>
+                                                <td class="mailbox-name"><?php echo $this->customlib->showDate($value['date']); ?> </td>
+                                                <td class="mailbox-name"> <?php if($value['follow_up_date']!='' && $value['follow_up_date']!='0000-00-00'){ echo $this->customlib->showDate($value['follow_up_date']); }  ?></td>
                                                 <td class="mailbox-name"> <?php echo $value['call_type']; ?></td>
                                                 <td class="mailbox-date pull-right white-space-nowrap">
                                                     <a  onclick="getRecord(<?php echo $value['id']; ?>)" class="btn btn-default btn-xs" data-target="#calldetails" data-toggle="modal" title="<?php echo $this->lang->line('view'); ?>"><i class="fa fa-reorder"></i></a>  

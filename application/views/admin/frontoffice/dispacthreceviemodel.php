@@ -10,7 +10,7 @@
             <th class="white-space-nowrap"><?php echo $this->lang->line('from_title'); ?></th>
             <td><?php echo $data['from_title']; ?></td>
             <th><?php echo $this->lang->line('date'); ?></th>
-            <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($data['date'])); ?></td>
+            <td><?php echo $this->customlib->showDate($data['date']); ?></td>
         </tr>
         <tr>
             <th class="white-space-nowrap"><?php echo $this->lang->line('address'); ?></th>

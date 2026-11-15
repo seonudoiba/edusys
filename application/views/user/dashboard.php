@@ -74,7 +74,7 @@
                                             <img src="<?php echo base_url() ?>backend/images/unread_two.png">
                                         <?php }?>
 										
-										&nbsp;<?php  echo $notification['title']; ?> (<?php if(!empty($notification)){ echo "<i class='fa fa-clock-o text-aqua'></i>". ' '. date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($notification['date']));} ?>)
+										&nbsp;<?php  echo $notification['title']; ?> (<?php if(!empty($notification)){ echo "<i class='fa fa-clock-o text-aqua'></i>". ' '. $this->customlib->showDate($notification['date']);} ?>)
 					                </a><?php } ?>
 									</div>                
 
@@ -222,7 +222,7 @@
 				                <div class="set-flex">
 					                <div class="media-title font-16"><?php if(!empty($homework)){ ?><a href="<?php echo base_url(); ?>user/homework" class="displayinline text-muted" target="_blank"><?php  echo $homework['subject_name']; ?> (<?php  echo $homework['subject_code']; ?>)									
 									</a><?php } ?></div>
-					                <div class="text-muted mb0"><?php if(!empty($homework)){ echo $this->lang->line('homework_date').': '. date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($homework['homework_date'])) .',';} ?> <?php if(!empty($homework)){ echo $this->lang->line('submission_date'). ': '. date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($homework['submit_date'])) .',';} ?> <?php if(!empty($homework)){
+					                <div class="text-muted mb0"><?php if(!empty($homework)){ echo $this->lang->line('homework_date').': '. $this->customlib->showDate($homework['homework_date']) .',';} ?> <?php if(!empty($homework)){ echo $this->lang->line('submission_date'). ': '. $this->customlib->showDate($homework['submit_date']) .',';} ?> <?php if(!empty($homework)){
 
                                         if ($homework["status"] == 'submitted') {
                                             $status_class = "class= 'label label-warning'";
@@ -330,7 +330,7 @@
 					                <div class="text-muted mb0">
 										<b><?php echo $visitor_value['name']; ?></b><br> (<?php echo $this->lang->line('purpose'); ?>: <?php echo $visitor_value['purpose']; ?>)				
 									</div>									
-					                <div class="text-muted mb0"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($visitor_value['date'])); ?>
+					                <div class="text-muted mb0"><?php echo $this->customlib->showDate($visitor_value['date']); ?>
 					               </div>
 			            		</div> 			               
 			                </li><!-- /.item -->
@@ -379,7 +379,7 @@
                                         <td class="mailbox-name"> 
                                             <?php
                                             if ($value['issue_date'] != '') {
-                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['issue_date']));
+                                                echo $this->customlib->showDate($value['issue_date']);
                                             }
                                             ?>
                                         </td> 
@@ -387,7 +387,7 @@
 
                                             <?php
                                             if ($value['duereturn_date'] != '') {
-                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['duereturn_date']));
+                                                echo $this->customlib->showDate($value['duereturn_date']);
                                             }
                                             ?> 
 											

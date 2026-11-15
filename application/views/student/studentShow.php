@@ -120,7 +120,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                     <b><?php echo $this->lang->line('disable_note'); ?></b> <span class="pull-right text-aqua"><?php echo $student['dis_note'] ?></span>
                                 </li>
                                 <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('disable_date'); ?></b> <span class="pull-right text-aqua"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['disable_at'])); ?></span>
+                                    <b><?php echo $this->lang->line('disable_date'); ?></b> <span class="pull-right text-aqua"><?php echo $this->customlib->showDate($student['disable_at']); ?></span>
                                 </li>
                             <?php } ?>
 
@@ -411,7 +411,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                     <td class="col-md-5">
                                                         <?php
                                                         if (!empty($student['admission_date'])) {
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($student['admission_date']))));
+                                                            echo $this->customlib->showDate(date("Y-m-d", strtotime($student['admission_date'])));
                                                         }
                                                         ?></td>
                                                 </tr>
@@ -420,7 +420,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                 <td><?php echo $this->lang->line('date_of_birth'); ?></td>
                                                 <td><?php
                                                     if (!empty($student['dob']) && $student['dob'] != '0000-00-00') {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
+                                                        echo $this->customlib->showDate($student['dob']);
                                                     }
                                                     ?></td>
                                             </tr>
@@ -749,7 +749,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                     <td><?php echo $this->lang->line('measurement_date'); ?></td>
                                                     <td><?php
                                                         if (!empty($student['measurement_date']) && $student['measurement_date'] != '0000-00-00') {
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['measurement_date']));
+                                                            echo $this->customlib->showDate($student['measurement_date']);
                                                         }
                                                         ?></td>
                                                 </tr>
@@ -1115,7 +1115,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                             if ($fee_value->due_date == "0000-00-00") {
                                                             } else {
                                                                 if ($fee_value->due_date) {
-                                                                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_value->due_date));
+                                                                    echo $this->customlib->showDate($fee_value->due_date);
                                                                 }
                                                             }
                                                             ?>
@@ -1202,7 +1202,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                     </td>
                                                                     <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                     <td class="text text-center">
-                                                                        <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                        <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                     </td>
                                                                     <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></td>
                                                                     <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -1348,7 +1348,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                         </td>
                                                                         <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                         <td class="text text-left">
-                                                                            <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                            <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                         </td>
                                                                         <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></td>
                                                                         <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -1560,7 +1560,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                         <?php
                                                         if (!empty($value['timeline_date'])) {
 
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($value['timeline_date']))));
+                                                            echo $this->customlib->showDate(date("Y-m-d", strtotime($value['timeline_date'])));
                                                         }
                                                         ?>
                                                     </span>

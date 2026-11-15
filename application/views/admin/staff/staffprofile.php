@@ -186,7 +186,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <li class="list-group-item listnoback">
                                     <b><?php echo $this->lang->line('date_of_joining'); ?></b> <a class="pull-right text-aqua"><?php
                                                                                                                                 if (!empty($staff["date_of_joining"]) && $staff["date_of_joining"] != '0000-00-00') {
-                                                                                                                                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($staff['date_of_joining']));
+                                                                                                                                    echo $this->customlib->showDate($staff['date_of_joining']);
                                                                                                                                 }
                                                                                                                                 ?></a>
                                 </li>
@@ -376,7 +376,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 <td><?php echo $this->lang->line('date_of_birth'); ?></td>
                                                 <td><?php
                                                     if (!empty($staff["dob"]) && $staff["dob"] != '0000-00-00') {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($staff['dob']));
+                                                        echo $this->customlib->showDate($staff['dob']);
                                                     }
                                                     ?></td>
                                             </tr>
@@ -627,7 +627,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                     <div class="fee_detail_popover" style="display: none"><?php echo $payroll_value['remark']; ?></div>
                                                 </td>
                                                 <td><?php echo $this->lang->line(strtolower($payroll_value['month'])) . " - " . $payroll_value['year']; ?></td>
-                                                <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($payroll_value['payment_date'])); ?></td>
+                                                <td><?php echo $this->customlib->showDate($payroll_value['payment_date']); ?></td>
                                                 <td><?php
                                                     if (!empty($payroll_value['payment_mode'])) {
                                                         echo $payment_mode[$payroll_value['payment_mode']];
@@ -779,7 +779,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             ?>
                                                 <li class="time-label">
                                                     <span class="bg-blue"> <?php
-                                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['timeline_date']));
+                                                                            echo $this->customlib->showDate($value['timeline_date']);
                                                                             ?></span>
                                                 </li>
                                                 <li>
@@ -1054,9 +1054,9 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             ?>
                                                 <tr>
                                                     <td><?php echo $value["type"]; ?></td>
-                                                    <td class="white-space-nowrap"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['leave_from'])) . " - " . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['leave_to'])); ?></td>
+                                                    <td class="white-space-nowrap"><?php echo $this->customlib->showDate($value['leave_from']) . " - " . $this->customlib->showDate($value['leave_to']); ?></td>
                                                     <td><?php echo $value["leave_days"]; ?></td>
-                                                    <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?></td>
+                                                    <td><?php echo $this->customlib->showDate($value['date']); ?></td>
                                                     <td><small style="text-transform: capitalize;" <?php echo $label ?>><?php echo $status[$status1]; ?></small></td>
                                                     <td class="text-right white-space-nowrap"><a href="#leavedetails" onclick="getRecord('<?php echo $value["id"] ?>')" role="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>"><i class="fa fa-eye"></i></a>
                                                         <?php if (!empty($value['document_file'])) { ?>

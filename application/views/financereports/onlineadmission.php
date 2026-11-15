@@ -94,7 +94,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 										<td><?php echo $this->lang->line(strtolower($collect->payment_mode)); ?></td>
 										<td><?php echo $collect->transaction_id ; ?></td>
                                         <td><?php $data	= date('Y-m-d', strtotime($collect->date)); 
-										echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($data)); ?></td>		
+										echo $this->customlib->showDate($data); ?></td>		
                                         <td class="text text-right"><?php echo $amount = amountFormat($collect->paid_amount);  ?></td>                                                
                                     </tr>
                                     <?php

@@ -238,7 +238,7 @@ if ($fee_value->is_system) {
 
                                                         <?php
             if ($fee_value->due_date) {
-                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_value->due_date));
+                echo $this->customlib->showDate($fee_value->due_date);
             } else {
 
                 

@@ -790,10 +790,10 @@ class Report extends Admin_Controller
                 if ($value->return_date == "0000-00-00") {
                     $return_date = "";
                 } else {
-                    $return_date = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->return_date));
+                    $return_date = $this->customlib->showDate($value->return_date);
                 }
 
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->issue_date)) . " - " . $return_date;
+                $row[] = $this->customlib->showDate($value->issue_date) . " - " . $return_date;
                 $row[]     = $value->staff_name . " " . $value->surname . "(" . $value->employee_id . ")";
                 $row[]     = $value->issued_by_name . " " . $value->issued_by_surname . "(" . $value->issued_by_employee_id . ")";
 
@@ -1402,7 +1402,7 @@ class Report extends Admin_Controller
                     $row[] = $student->father_name;
                 }
                 if ($student->dob != null && $student->dob != '0000-00-00') {
-                    $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student->dob));
+                    $row[] = $this->customlib->showDate($student->dob);
                 } else {
                     $row[] = "";
                 }
@@ -1410,7 +1410,7 @@ class Report extends Admin_Controller
                 if ($sch_setting->admission_date) {
                     if ($student->admission_date != null && $student->admission_date != '0000-00-00') {
 
-                        $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student->admission_date));
+                        $row[] = $this->customlib->showDate($student->admission_date);
                     } else {
                         $row[] = "";
                     }
@@ -1709,8 +1709,8 @@ class Report extends Admin_Controller
                 $row   = array();
                 $row[] = $value->book_title;
                 $row[] = $value->book_no;
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->issue_date));
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->duereturn_date));
+                $row[] = $this->customlib->showDate($value->issue_date);
+                $row[] = $this->customlib->showDate($value->duereturn_date);
                 $row[] = $value->members_id;
                 $row[] = $value->library_card_no;
 
@@ -1803,8 +1803,8 @@ class Report extends Admin_Controller
                 $row   = array();
                 $row[] = $value->book_title;
                 $row[] = $value->book_no;
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->issue_date));
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->duereturn_date));
+                $row[] = $this->customlib->showDate($value->issue_date);
+                $row[] = $this->customlib->showDate($value->duereturn_date);
                 $row[] = $value->members_id;
                 $row[] = $value->library_card_no;
                 if ($value->admission != 0) {
@@ -1899,7 +1899,7 @@ class Report extends Admin_Controller
                 $row[] = $value->qty - $value->total_issue;
                 $row[]     = $value->qty - ($value->qty - $value->total_issue);
                 $row[]     = ($currency_symbol . amountFormat($value->perunitcost));
-                $row[]     = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->postdate));
+                $row[]     = $this->customlib->showDate($value->postdate);
                 $row[]     = $editbtn . " " . $deletebtn;
                 $dt_data[] = $row;
             }
@@ -1976,7 +1976,7 @@ class Report extends Admin_Controller
                 }
 
                 if ($online_admission->dob != null) {
-                    $dob = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($online_admission->dob));
+                    $dob = $this->customlib->showDate($online_admission->dob);
                 }
 
                 if ($sch_setting->online_admission_payment == 'yes') {
@@ -2104,7 +2104,7 @@ class Report extends Admin_Controller
                     $row[] = $student->father_name;
                 }
                 if ($student->dob != null && $student->dob != '0000-00-00') {
-                    $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student->dob));
+                    $row[] = $this->customlib->showDate($student->dob);
                 } else {
                     $row[] = "";
                 }
@@ -2280,7 +2280,7 @@ class Report extends Admin_Controller
                 $row[] = $this->customlib->getFullName($student->firstname, $student->middlename, $student->lastname, $sch_setting->middlename, $sch_setting->lastname);
 
                 if ($student->admission_date != null && $student->admission_date != '0000-00-00') {
-                    $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student->admission_date));
+                    $row[] = $this->customlib->showDate($student->admission_date);
                 } else {
                     $row[] = "";
                 }

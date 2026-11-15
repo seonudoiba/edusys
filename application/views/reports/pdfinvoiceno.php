@@ -247,7 +247,7 @@ if (isset($student_due_fee)) {
                             ?>
                             <tr>
                                 <td class="desc"><h3><?php echo $fee['id']; ?></h3></td>
-                                <td class="qty"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee['date'])); ?></td>
+                                <td class="qty"><?php echo $this->customlib->showDate($fee['date']); ?></td>
                                 <td class="qty"><?php echo $fee['category']; ?></td>
                                 <td class="qty"><?php echo $fee['type']; ?></td>
                             </tr>
@@ -386,7 +386,7 @@ if (isset($student_due_fee)) {
                             ?>
                             <tr>
                                 <td class="desc"><h3><?php echo $fee['id']; ?></h3></td>
-                                <td class="qty"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee['date'])); ?></td>
+                                <td class="qty"><?php echo $this->customlib->showDate($fee['date']); ?></td>
                                 <td class="qty"><?php echo $fee['category']; ?></td>
                                 <td class="qty"><?php echo $fee['type']; ?></td>
                             </tr>

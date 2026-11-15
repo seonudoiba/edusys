@@ -10,7 +10,7 @@
             <li class="time-label">
                 <span class="bg-blue">
                     <?php
-                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date']));
+                    echo $this->customlib->showDate($value['date']);
                     ?>
                 </span>
             </li>

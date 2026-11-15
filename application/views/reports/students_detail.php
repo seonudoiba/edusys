@@ -280,7 +280,7 @@ if (isset($student_due_fee)) {
 
                                         echo ($fee['date']);
                                     } else {
-                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee['date']));
+                                        echo $this->customlib->showDate($fee['date']);
                                     }
                                     ;
                                     ?></td>

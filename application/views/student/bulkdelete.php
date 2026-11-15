@@ -119,7 +119,7 @@
                                                                 <td class="white-space-nowrap"><?php echo $student['class'] . "(" . $student['section'] . ")" ?></td>
                                                                 <td><?php
                                                                     if ($student["dob"] != null && $student["dob"]!='0000-00-00') {
-                                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
+                                                                        echo $this->customlib->showDate($student['dob']);
                                                                     }
                                                                     ?></td>
                                                                 <td><?php echo $this->lang->line(strtolower($student['gender'])); ?></td>

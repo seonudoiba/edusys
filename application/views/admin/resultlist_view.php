@@ -34,7 +34,7 @@
                                                                 <?php if (!$adm_auto_insert) { ?>
                                                                     <b><?php echo $this->lang->line('admission_no'); ?>: </b><?php echo $student['admission_no'] ?><br/><?php } ?>
                                                                 <b><?php echo $this->lang->line('date_of_birth'); ?>:</b>
-                                                                <?php if ($student["dob"] != null && $student["dob"]!='0000-00-00') { echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob'])); } ?><br>
+                                                                <?php if ($student["dob"] != null && $student["dob"]!='0000-00-00') { echo $this->customlib->showDate($student['dob']); } ?><br>
                                                                 <b><?php echo $this->lang->line('gender'); ?>:&nbsp;&nbsp;</b><?php echo $this->lang->line(strtolower($student['gender'])) ?><br>
                                                             </address>
                                                         </div>

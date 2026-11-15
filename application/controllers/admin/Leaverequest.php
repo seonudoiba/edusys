@@ -117,10 +117,10 @@ class Leaverequest extends Admin_Controller
         $id                   = $this->input->post("id");
         $result               = $this->staff_model->getLeaveRecord($id);
         $leave_from           = date("m/d/Y", strtotime($result->leave_from));
-        $result->leavefrom    = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result->leave_from));
-        $result->date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result->date));
+        $result->leavefrom    = $this->customlib->showDate($result->leave_from);
+        $result->date         = $this->customlib->showDate($result->date);
         $leave_to             = date("m/d/Y", strtotime($result->leave_to));
-        $result->leaveto      = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result->leave_to));
+        $result->leaveto      = $this->customlib->showDate($result->leave_to);
         $result->days         = $this->dateDifference($leave_from, $leave_to);
         $result->leave_status = $this->lang->line($result->status);
         echo json_encode($result);

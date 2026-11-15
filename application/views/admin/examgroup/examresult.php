@@ -106,7 +106,7 @@ if (empty($resultlist)) {
                                                                 <td><?php echo $student->father_name; ?></td>
                                                                 <td><?php
 if ($student->dob != null) {
-                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student->dob));
+                    echo $this->customlib->showDate($student->dob);
                 }
                 ?></td>
                                                                 <td><?php echo $student->gender; ?></td>

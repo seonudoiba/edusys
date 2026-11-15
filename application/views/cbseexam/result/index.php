@@ -109,7 +109,7 @@
                                                         <td><?php echo $student_value->father_name; ?></td>
                                                         <td><?php 
                                                             if (!empty($student_value->dob) && $student_value->dob != '0000-00-00') {
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student_value->dob)); }?></td>
+                                                            echo $this->customlib->showDate($student_value->dob); }?></td>
                                                         <td><?php echo $this->lang->line(strtolower($student_value->gender)); ?></td>                  
                                                         <td><?php echo $student_value->mobileno; ?></td>
                                                              <td class="text-right white-space-nowrap">                

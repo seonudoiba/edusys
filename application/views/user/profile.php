@@ -199,7 +199,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                     <td class="col-md-5">
                                                         <?php
                                                         if (!empty($student['admission_date']) && $student['admission_date'] != '0000-00-00') {
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['admission_date']));
+                                                            echo $this->customlib->showDate($student['admission_date']);
                                                         }
                                                         ?>
                                                     </td>
@@ -209,7 +209,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 <td><?php echo $this->lang->line('date_of_birth'); ?></td>
                                                 <td><?php
                                                     if (!empty($student['dob'])) {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
+                                                        echo $this->customlib->showDate($student['dob']);
                                                     }
                                                     ?></td>
                                             </tr>
@@ -539,7 +539,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                     <td width="35%"><?php echo $this->lang->line('measurement_date'); ?></td>
                                                     <td class="col-md-5"><?php
                                                                             if (!empty($student['measurement_date']) && $student['measurement_date'] != '0000-00-00') {
-                                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['measurement_date']));
+                                                                                echo $this->customlib->showDate($student['measurement_date']);
                                                                             }
                                                                             ?></td>
                                                 </tr>
@@ -698,7 +698,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                 <td class="text text-left">
                                                                     <?php
                                                                     if ($fee_value->due_date) {
-                                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_value->due_date));
+                                                                        echo $this->customlib->showDate($fee_value->due_date);
                                                                     } else {
                                                                     }
                                                                     ?>
@@ -779,7 +779,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                             </td>
                                                                             <td class="text text-center"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                             <td class="text text-center">
-                                                                                <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                                <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                             </td>
                                                                             <td class="text text-right"><?php echo (amountFormat($fee_deposits_value->amount_discount)); ?></td>
                                                                             <td class="text text-right"><?php echo (amountFormat($fee_deposits_value->amount_fine)); ?></td>
@@ -943,7 +943,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                                 <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                                 <td class="text text-left">
 
-                                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                                 </td>
                                                                                 <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></td>
                                                                                 <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -1072,7 +1072,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 <li class="time-label">
                                                     <span class="bg-blue">
                                                         <?php if ($value['timeline_date'] != '0000-00-00') {
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['timeline_date']));
+                                                            echo $this->customlib->showDate($value['timeline_date']);
                                                         } ?>
 
                                                     </span>

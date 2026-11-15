@@ -116,7 +116,7 @@ foreach ($genderList as $key => $value) {
                                             <tr>
                                                 <td class="mailbox-name"> <?php echo $librarian['name'] ?></td>
                                                 <td class="mailbox-name"> <?php echo $librarian['email'] ?></td>
-                                                <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($librarian['dob'])); ?></td>
+                                                <td class="mailbox-name"> <?php echo $this->customlib->showDate($librarian['dob']); ?></td>
                                                 <td class="mailbox-name"> <?php echo $librarian['phone'] ?></td>
                                                 <td class="mailbox-date pull-right no-print">
                                                     <a href="<?php echo base_url(); ?>admin/accountant/view/<?php echo $librarian['id'] ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('show'); ?>">

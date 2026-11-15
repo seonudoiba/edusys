@@ -214,14 +214,14 @@ if (empty($student_attendences)) {
                                                     <?php }?>
                                                 <td><?php
 if (!empty($student['dob'])) {
-            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
+            echo $this->customlib->showDate($student['dob']);
         }
         ?></td>
                                                     <?php if ($sch_setting->admission_date) {
             ?>
                                                     <td><?php
 if (!empty($student['admission_date'])) {
-                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['admission_date']));
+                echo $this->customlib->showDate($student['admission_date']);
             }
             ?></td><?php }?>
                                                 <td><?php echo $this->lang->line(strtolower($student['gender'])); ?></td>

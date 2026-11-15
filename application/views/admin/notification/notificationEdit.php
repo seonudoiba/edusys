@@ -38,14 +38,14 @@ foreach ($prev_roles as $prev_roles_key => $prev_roles_value) {
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="exampleInputEmail1"><?php echo $this->lang->line('notice_date'); ?><small class="req"> *</small></label>
-                                        <input id="date" name="date"  placeholder="" type="text" class="form-control date"  value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($notification['date']))); ?>" />
+                                        <input id="date" name="date"  placeholder="" type="text" class="form-control date"  value="<?php echo set_value('date', $this->customlib->showDate($notification['date'])); ?>" />
                                         <span class="text-danger"><?php echo form_error('date'); ?></span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="exampleInputEmail1"><?php echo $this->lang->line('publish_on'); ?><small class="req"> *</small></label>
-                                        <input id="publish_date" name="publish_date"  placeholder="" type="text" class="form-control date"  value="<?php echo set_value('publish_date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($notification['publish_date']))); ?>" />
+                                        <input id="publish_date" name="publish_date"  placeholder="" type="text" class="form-control date"  value="<?php echo set_value('publish_date', $this->customlib->showDate($notification['publish_date'])); ?>" />
                                         <span class="text-danger"><?php echo form_error('publish_date'); ?></span>
                                     </div>
                                 </div>

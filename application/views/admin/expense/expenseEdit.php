@@ -67,7 +67,7 @@ if ($expense['exp_head_id'] == $exphead['id']) {
                                 </div>
                                 <div class="form-group">
                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
-                                    <input id="date" name="date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($expense['date']))); ?>" readonly="readonly" />
+                                    <input id="date" name="date" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('date', $this->customlib->showDate($expense['date'])); ?>" readonly="readonly" />
                                     <span class="text-danger"><?php echo form_error('date'); ?></span>
                                 </div>
                                 <div class="form-group">

@@ -54,21 +54,21 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                         <td class="mailbox-name">
                                                             <?php
 if ($book['issue_date'] != '') {
-                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($book['issue_date']));
+                    echo $this->customlib->showDate($book['issue_date']);
                 }
                 ?>
                                                         </td>
                                                         <td >
                                                             <?php
 if ($book['duereturn_date'] != '') {
-                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($book['duereturn_date']));
+                    echo $this->customlib->showDate($book['duereturn_date']);
                 }
                 ?>
                                                         </td>
                                                         <td >
                                                             <?php
 if ($book['return_date'] != '') {
-                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($book['return_date']));
+                    echo $this->customlib->showDate($book['return_date']);
                 }
                 ?>
                                                         </td>

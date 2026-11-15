@@ -98,7 +98,7 @@
                                                 <td class="mailbox-name"><?php echo $value->to_title; ?></td>
                                                 <td class="mailbox-name"><?php echo $value->reference_no; ?></td>
                                                 <td class="mailbox-name"> <?php echo $value->from_title; ?></td>
-                                                <td class="mailbox-name"> <?php if($value->date){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date)); } ?></td>
+                                                <td class="mailbox-name"> <?php if($value->date){ echo $this->customlib->showDate($value->date); } ?></td>
                                                 <td class="mailbox-date pull-right white-space-nowrap">
                                                     <a onclick="getRecord('<?php echo $value->id; ?>')" class="btn btn-default btn-xs" data-target="#receviedetails" data-toggle="modal" data-original-title="<?php echo $this->lang->line('view')?>">
                                                         <i class="fa fa-reorder"></i>

@@ -17,7 +17,7 @@
                             <div class="col-lg-3 col-md-3 col-sm-4">
                                 <div class="form-group">
                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('date'); ?></label> <small class="req"> *</small>
-                                    <input id="dob" name="dob" placeholder="" type="text" class="form-control date" value="<?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date('Y-m-d'))); ?>" />
+                                    <input id="dob" name="dob" placeholder="" type="text" class="form-control date" value="<?php echo $this->customlib->showDate(date('Y-m-d')); ?>" />
                                 </div>
                             </div>
                         </div>

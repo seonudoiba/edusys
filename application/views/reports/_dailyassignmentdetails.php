@@ -46,7 +46,7 @@
 
                 if($assignmentlist_value['evaluation_date'] !=''){
                     $evaluation_date =  '';
-                    $evaluation_date =  date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist_value['evaluation_date']));
+                    $evaluation_date =  $this->customlib->showDate($assignmentlist_value['evaluation_date']);
                 }else{
                     $evaluation_date = "" ;
                 }
@@ -57,7 +57,7 @@
                     <td class="mailbox-name"> <?php echo $assignmentlist_value['title']; ?></td>
                     <td class="mailbox-name"> <?php echo $assignmentlist_value['description']; ?></td>
                     <td class="mailbox-name"> <?php echo $assignmentlist_value['remark']; ?></td>
-                    <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist_value['date'])); ?></td>
+                    <td class="mailbox-name"> <?php echo $this->customlib->showDate($assignmentlist_value['date']); ?></td>
                     <td class="mailbox-name"> <?php echo $evaluation_date; ?></td>
                     <td class="mailbox-name"> <?php echo $evaluated_by; ?></td>
                     <td class="text-right">

@@ -97,7 +97,7 @@ $count       = 1;
                                                     <?php echo $count; ?>
                                                 </td>
                                                 <td>
-                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?>
+                                                    <?php echo $this->customlib->showDate($value['date']); ?>
                                                 </td>
                                                 <td>
                                                     <?php echo $value['name']; ?>

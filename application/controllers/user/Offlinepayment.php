@@ -148,7 +148,7 @@ class Offlinepayment extends Student_Controller
 
                $row   = array();
                 $row[] = $value->id;
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->payment_date)); 
+                $row[] = $this->customlib->showDate($value->payment_date); 
                 $row[] = $this->customlib->dateyyyymmddToDateTimeformat($value->submit_date, false);
                 $row[] = amountFormat($value->amount);
                 $row[] = $status;

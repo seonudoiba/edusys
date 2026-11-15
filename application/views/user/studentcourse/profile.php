@@ -52,7 +52,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <?php
                                     if (!empty($guest_details[0]->created_at)) {
                                         
-                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($guest_details[0]->created_at));
+                                        echo $this->customlib->showDate($guest_details[0]->created_at);
                                          
                                     }
                                 ?> 
@@ -72,7 +72,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <?php
                                     if (!empty($guest_details[0]->dob)) {
                                         
-                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($guest_details[0]->dob));
+                                        echo $this->customlib->showDate($guest_details[0]->dob);
                                               
                                     }
                                 ?>

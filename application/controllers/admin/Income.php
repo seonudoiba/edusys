@@ -374,7 +374,7 @@ class Income extends Admin_Controller
                 $row[]     = $value->name;
                 $row[]     = $value->invoice_no;
                 $row[]     = $value->income_category;
-                $row[]     = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->date));
+                $row[]     = $this->customlib->showDate($value->date);
                 $row[]     = $currency_symbol . amountFormat($value->amount);
                 $dt_data[] = $row;
             }

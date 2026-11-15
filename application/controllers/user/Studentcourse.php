@@ -1234,7 +1234,7 @@ class Studentcourse extends Student_Controller
         $student_id            = $_POST['student_id'];
         $guest_details         = $this->studentcourse_model->read_user_information($student_id);
         if($guest_details[0]->dob){
-            $data['dob']           = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($guest_details[0]->dob));
+            $data['dob']           = $this->customlib->showDate($guest_details[0]->dob);
         }else{
             $data['dob']           = '';
         }

@@ -23,8 +23,8 @@ class Syllabus extends Student_Controller
         $sunday                  = strtotime(date("Y-m-d", $monday) . " +6 days");
         $this_week_start         = date("Y-m-d", $monday);
         $this_week_end           = date("Y-m-d", $sunday);
-        $data['this_week_start'] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($this_week_start));
-        $data['this_week_end']   = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($this_week_end));
+        $data['this_week_start'] = $this->customlib->showDate($this_week_start);
+        $data['this_week_end']   = $this->customlib->showDate($this_week_end);
         $this->load->view('layout/student/header', $data);
         $this->load->view('user/syllabus/syllabus', $data);
         $this->load->view('layout/student/footer', $data);

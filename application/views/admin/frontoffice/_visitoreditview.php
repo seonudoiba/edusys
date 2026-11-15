@@ -127,7 +127,7 @@
         <div class="col-sm-4">
             <div class="form-group">
                 <label for="pwd"><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
-                <input type="text" id="date" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($visitor_data['date']))); ?>"  name="date" readonly="">
+                <input type="text" id="date" class="form-control date" value="<?php echo set_value('date', $this->customlib->showDate($visitor_data['date'])); ?>"  name="date" readonly="">
                 <span class="text-danger"><?php echo form_error('date'); ?></span>
             </div>
         </div>

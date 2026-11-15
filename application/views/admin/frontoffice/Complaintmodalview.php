@@ -16,7 +16,7 @@
         <th><?php echo $this->lang->line('phone'); ?></th>
         <td><?php echo $complaint_data['contact']; ?></td>
         <th><?php echo $this->lang->line('date'); ?></th>
-        <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($complaint_data['date'])); ?></td>
+        <td><?php echo $this->customlib->showDate($complaint_data['date']); ?></td>
     </tr>
     <tr>
         <th><?php echo $this->lang->line('assigned'); ?></th>

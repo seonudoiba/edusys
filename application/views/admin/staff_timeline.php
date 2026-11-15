@@ -6,7 +6,7 @@
             ?>      
             <li class="time-label">
                 <span class="bg-blue">    <?php
-                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['timeline_date']));
+                    echo $this->customlib->showDate($value['timeline_date']);
                     ?></span>
             </li> 
             <li>

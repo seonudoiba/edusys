@@ -167,17 +167,17 @@
                                                             <td class="mailbox-name"><?php echo $value['source']; ?></td>
                                                             <td class="mailbox-name"> <?php
                                                             if (!empty($value["date"])) {
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date']));
+                                                                echo $this->customlib->showDate($value['date']);
                                                             }
                                                             ?></td>
                                                             <td class="mailbox-name"> <?php
                                                             if (!empty($value["followupdate"])) {
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['followupdate']));
+                                                                echo $this->customlib->showDate($value['followupdate']);
                                                             }
                                                             ?></td>
                                                             <td class="mailbox-name"> <?php
                                                             if (!empty($next_date) && $next_date != '0000-00-00') {
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($next_date));
+                                                                echo $this->customlib->showDate($next_date);
                                                             }
                                                             ?></td>
                                                             <td> <?php echo $enquiry_status[$value["status"]] ?></td>

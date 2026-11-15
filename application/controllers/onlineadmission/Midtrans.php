@@ -50,7 +50,7 @@ class Midtrans extends OnlineAdmission_Controller
         $online_data = $this->onlinestudent_model->getAdmissionData($reference);
         $apply_date=date("Y-m-d H:i:s");
         
-        $date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($apply_date))));        
+        $date         = $this->customlib->showDate(date("Y-m-d", strtotime($apply_date)));        
         
         $amount = $this->amount;
         $response                           = json_decode($_POST['result_data']);

@@ -80,13 +80,13 @@
                                                         if ($event['event_start'] != "" && $event['event_end'] != "") {
 
                                                             if ($start == $end) {
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($event['event_start']));
+                                                                echo $this->customlib->showDate($event['event_start']);
                                                             } else {
 
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($event['event_start'])) . " - " . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($event['event_end']));
+                                                                echo $this->customlib->showDate($event['event_start']) . " - " . $this->customlib->showDate($event['event_end']);
                                                             }
                                                         } elseif ($event['event_start'] != "" && $event['event_end'] == "") {
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($event['event_start']));
+                                                            echo $this->customlib->showDate($event['event_start']);
                                                         }
                                                         ?></td>
 

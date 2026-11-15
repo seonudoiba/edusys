@@ -430,8 +430,8 @@ class Book extends Admin_Controller
 
                 $row[] = $value->book_title;
                 $row[] = $value->book_no;
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->issue_date));
-                $row[] = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value->return_date));
+                $row[] = $this->customlib->showDate($value->issue_date);
+                $row[] = $this->customlib->showDate($value->return_date);
                 $row[] = $value->members_id;
                 $row[] = $value->library_card_no;
 

@@ -51,7 +51,7 @@
                                 <div class="form-group">
                                     <div class="form-group">
                                         <label for="pwd"><?php echo $this->lang->line('date'); ?></label>
-                                        <input type="text" class="form-control date" value="<?php if($complaint_data['date'] != '0000-00-00'){ echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($complaint_data['date']))); } ?>"  name="date" id="date" readonly>
+                                        <input type="text" class="form-control date" value="<?php if($complaint_data['date'] != '0000-00-00'){ echo set_value('date', $this->customlib->showDate($complaint_data['date'])); } ?>"  name="date" id="date" readonly>
                                         <span class="text-danger"><?php echo form_error('date'); ?></span>
                                     </div>
                                 </div>
@@ -133,7 +133,7 @@
                                                 <td class="mailbox-name"><?php echo $value['name']; ?><?php if(!empty($value['email'])){ ?> ( <?php echo $value['email']; ?> )
 												<?php } ?> </td>
                                                 <td class="mailbox-name"> <?php echo $value['contact']; ?></td>
-                                                <td class="mailbox-name white-space-nowrap"> <?php if($value['date'] != '0000-00-00'){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); } ?></td>
+                                                <td class="mailbox-name white-space-nowrap"> <?php if($value['date'] != '0000-00-00'){ echo $this->customlib->showDate($value['date']); } ?></td>
                                                 <td class="mailbox-date pull-right white-space-nowrap">
                                                 
                                                     <a onclick="getRecord(<?php echo $value['id']; ?>)" class="btn btn-default btn-xs" data-target="#complaintdetails" title="<?php echo $this->lang->line('view') ?>" data-toggle="modal"  data-original-title="<?php echo $this->lang->line('view') ?>"><i class="fa fa-reorder"></i></a>        

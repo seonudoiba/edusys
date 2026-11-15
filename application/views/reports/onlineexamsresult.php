@@ -160,8 +160,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         <tr>
                                             <td class="mailbox-name"> <?php echo $subject_value->exam; ?></td>
                                             <td class="mailbox-name"> <?php echo $subject_value->attempt; ?></td>
-                                            <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($subject_value->exam_from)); ?> </td>
-                                            <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($subject_value->exam_to)); ?> </td>
+                                            <td class="mailbox-name"> <?php echo $this->customlib->showDate($subject_value->exam_from); ?> </td>
+                                            <td class="mailbox-name"> <?php echo $this->customlib->showDate($subject_value->exam_to); ?> </td>
                                             <td class="mailbox-name"> <?php echo $subject_value->duration; ?></td>
                                             <td class="text text-center"><?php echo ($subject_value->is_active == 1) ? "<i class='fa fa-check-square-o'></i>" : "<i class='fa fa-exclamation-circle'></i>"; ?></td>
                                             <td class="text text-center"><?php echo ($subject_value->publish_result == 1) ? "<i class='fa fa-check-square-o'></i>" : "<i class='fa fa-exclamation-circle'></i>"; ?></td>

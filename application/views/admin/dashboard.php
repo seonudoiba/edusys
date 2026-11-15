@@ -49,7 +49,7 @@ foreach ($notifications as $notice_key => $notice_value) {
 
     if ($role_id == 7) {
         $show = true;
-    } elseif (date($this->customlib->getSchoolDateFormat()) >= date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($notice_value->publish_date))) {
+    } elseif (date($this->customlib->getSchoolDateFormat()) >= $this->customlib->showDate($notice_value->publish_date)) {
         $show = true;
     }
     if ($show) {

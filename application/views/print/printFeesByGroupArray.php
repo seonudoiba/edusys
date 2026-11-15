@@ -250,7 +250,7 @@ if(in_array('0', $print_copy)){
                                     <strong>Date :<?php
                                         $date = date('d-m-Y');
 
-                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
+                                        echo $this->customlib->showDate($date);
                                         ?></strong><br/>
 
                                 </address>                               
@@ -345,7 +345,7 @@ if(in_array('0', $print_copy)){
 
                                                             <?php
                                                             if ($feeList->due_date) {
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($feeList->due_date));
+                                                                echo $this->customlib->showDate($feeList->due_date);
                                                             } else {
 
                                                                 
@@ -419,7 +419,7 @@ if ($feeList->fine_amount != "") {
                                                                 </td>
                                                                 <td class="text text-center"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                 <td class="text text-center">
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                 </td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount); ?></td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -464,7 +464,7 @@ if ($feeList->fine_amount != "") {
                                                                 
                                                             } else {
 
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($feeList->due_date));
+                                                                echo $this->customlib->showDate($feeList->due_date);
                                                             }
                                                             ?>
                                                         </td>
@@ -534,7 +534,7 @@ if ($feeList->fine_amount != "") {
                                                                 </td>
                                                                 <td class="text text-center"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                 <td class="text text-center">
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                 </td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount); ?></td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -647,7 +647,7 @@ if(in_array('0', $print_copy)){
                                             <strong>Date: <?php
                                                 $date = date('d-m-Y');
 
-                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
+                                                echo $this->customlib->showDate($date);
                                                 ?></strong><br/>
 
                                         </address>                              
@@ -743,7 +743,7 @@ if(in_array('0', $print_copy)){
 
                                                             <?php
                                                             if ($feeList->due_date) {
-                                                                 echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($feeList->due_date));
+                                                                 echo $this->customlib->showDate($feeList->due_date);
                                                             } else {
                                                                
                                                             }
@@ -816,7 +816,7 @@ if ($feeList->fine_amount != "") {
                                                                 </td>
                                                                 <td class="text text-center"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                 <td class="text text-center">
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                 </td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount); ?></td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -859,7 +859,7 @@ if ($feeList->fine_amount != "") {
                                                                 
                                                             } else {
 
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($feeList->due_date));
+                                                                echo $this->customlib->showDate($feeList->due_date);
                                                             }
                                                             ?>
                                                         </td>
@@ -929,7 +929,7 @@ if ($feeList->fine_amount != "") {
                                                                 </td>
                                                                 <td class="text text-center"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                 <td class="text text-center">
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                 </td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount); ?></td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -1034,7 +1034,7 @@ if ($feeList->fine_amount != "") {
                                             <strong>Date: <?php
                                                 $date = date('d-m-Y');
 
-                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($date));
+                                                echo $this->customlib->showDate($date);
                                                 ?></strong><br/>
 
                                         </address>                              
@@ -1130,7 +1130,7 @@ if ($feeList->fine_amount != "") {
 
                                                             <?php
                                                             if ($feeList->due_date) {
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($feeList->due_date));
+                                                                echo $this->customlib->showDate($feeList->due_date);
                                                             } else {
                                                                 
                                                             }
@@ -1204,7 +1204,7 @@ if ($feeList->fine_amount != "") {
                                                                 </td>
                                                                 <td class="text text-center"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                 <td class="text text-center">
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                 </td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount); ?></td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount_fine); ?></td>
@@ -1249,7 +1249,7 @@ if ($feeList->fine_amount != "") {
                                                                 
                                                             } else {
 
-                                                                echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($feeList->due_date));
+                                                                echo $this->customlib->showDate($feeList->due_date);
                                                             }
                                                             ?>
                                                         </td>
@@ -1324,7 +1324,7 @@ if ($feeList->fine_amount != "") {
                                                                 </td>
                                                                 <td class="text text-center"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                                 <td class="text text-center">
-                                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); ?>
+                                                                    <?php echo $this->customlib->showDate($fee_deposits_value->date); ?>
                                                                 </td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount); ?></td>
                                                                 <td class="text text-right"><?php echo $currency_symbol . amountFormat($fee_deposits_value->amount_fine); ?></td>

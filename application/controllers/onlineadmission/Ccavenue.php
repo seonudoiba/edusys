@@ -65,7 +65,7 @@ class Ccavenue extends OnlineAdmission_Controller
  
         $apply_date=date("Y-m-d H:i:s");
         
-        $date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($apply_date))));  
+        $date         = $this->customlib->showDate(date("Y-m-d", strtotime($apply_date)));  
 
         if (!empty($total_amount)) {
 

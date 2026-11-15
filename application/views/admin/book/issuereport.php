@@ -65,14 +65,14 @@
                                                 <td class="mailbox-name">
                                                     <?php
                                                     if ($book['issue_date'] != '') {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($book['issue_date']));
+                                                        echo $this->customlib->showDate($book['issue_date']);
                                                     }
                                                     ?></td>
                                                     <?php ?>
                                                 <td class="mailbox-name">
                                                     <?php
                                                     if ($book['return_date'] != '') {
-                                                        echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($book['return_date']));
+                                                        echo $this->customlib->showDate($book['return_date']);
                                                     }
                                                     ?></td>
                                                 <td >

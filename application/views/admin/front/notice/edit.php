@@ -40,7 +40,7 @@
                                 <label class="control-label" for="email">
                                     <?php echo $this->lang->line('date'); ?>
                                 </label><small class="req"> *</small>
-                                <input class="form-control date" id="date" name="date" readonly="readonly" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result['date']))); ?>" type="text"/>
+                                <input class="form-control date" id="date" name="date" readonly="readonly" value="<?php echo set_value('date', $this->customlib->showDate($result['date'])); ?>" type="text"/>
                                 <span class="text-danger"><?php echo form_error('date'); ?></span>
                             </div>
                             <div class="dividerhr"></div>

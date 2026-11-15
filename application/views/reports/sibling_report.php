@@ -143,7 +143,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                     <td>
                                                                         <?php
                                                                         if (!empty($value['admission_date'])) {
-                                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['admission_date']));
+                                                                            echo $this->customlib->showDate($value['admission_date']);
                                                                         }
                                                                         ?>     
                                                                     </td>

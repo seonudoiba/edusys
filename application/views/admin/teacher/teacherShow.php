@@ -17,7 +17,7 @@
                                 <b><?php echo $this->lang->line('gender'); ?></b> <a class="pull-right text-aqua"><?php echo $teacher['sex'] ?></a>
                             </li>
                             <li class="list-group-item">
-                                <b><?php echo $this->lang->line('date_of_birth'); ?></b> <a class="pull-right text-aqua"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($teacher['dob'])); ?></a>
+                                <b><?php echo $this->lang->line('date_of_birth'); ?></b> <a class="pull-right text-aqua"><?php echo $this->customlib->showDate($teacher['dob']); ?></a>
                             </li>
                             <li class="list-group-item">
                                 <b><?php echo $this->lang->line('phone'); ?></b> <a class="pull-right text-aqua"><?php echo $teacher['phone'] ?></a>
