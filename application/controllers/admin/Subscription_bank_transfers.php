@@ -9,7 +9,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  */
 class Subscription_bank_transfers extends Admin_Controller
 {
-    const PERMISSION = 'subscription_list';
+    const PERMISSION = 'subscription_transfers';
 
     private $statuses = array('pending', 'awaiting_receipt', 'approved', 'rejected');
 
@@ -85,7 +85,7 @@ class Subscription_bank_transfers extends Admin_Controller
 
     public function approve($id = null)
     {
-        $this->require_privilege();
+        $this->require_privilege('can_edit');
         $transfer = $this->checked_post($id);
 
         $this->db->trans_begin();
@@ -109,7 +109,7 @@ class Subscription_bank_transfers extends Admin_Controller
 
     public function reject($id = null)
     {
-        $this->require_privilege();
+        $this->require_privilege('can_edit');
         $transfer = $this->checked_post($id);
         $note = trim((string) $this->input->post('review_note'));
         if ($note === '') {
@@ -134,9 +134,9 @@ class Subscription_bank_transfers extends Admin_Controller
         );
     }
 
-    private function require_privilege()
+    private function require_privilege($action = 'can_view')
     {
-        if (!$this->rbac->hasPrivilege(self::PERMISSION, 'can_view')) {
+        if (!$this->rbac->hasPrivilege(self::PERMISSION, $action)) {
             access_denied();
         }
     }

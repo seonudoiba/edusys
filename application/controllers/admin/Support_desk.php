@@ -7,7 +7,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  */
 class Support_desk extends Admin_Controller
 {
-    const PERMISSION = 'platform_settings';
+    const PERMISSION = 'support_desk';
 
     public function __construct()
     {

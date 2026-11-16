@@ -22,7 +22,7 @@ class Schools extends Admin_Controller
         Tenant::require_platform();
         parent::__construct();
         $this->load->model(array('School_model', 'Subscription_model', 'Guest_model', 'Platform_school_model', 'plan_model'));
-        $this->load->library(array('School_provisioner', 'Platform_audit', 'Platform_mailer', 'Plan_limits'));
+        $this->load->library(array('School_provisioner', 'Platform_audit', 'Platform_mailer', 'Plan_limits', 'School_discounts'));
     }
 
     // ------------------------------------------------------------------ pages
@@ -32,12 +32,12 @@ class Schools extends Admin_Controller
         $this->require_privilege('can_view');
         $this->menu();
         $schools = $this->Platform_school_model->all();
-        $tabs = array('all', 'waiting_approval', 'active', 'disabled', 'expiring', 'expired', 'awaiting_payment');
+        $tabs = array('all', 'waiting_approval', 'active', 'disabled', 'expiring', 'expired', 'onboarding', 'awaiting_payment');
         $tab = in_array($this->input->get('tab'), $tabs, true) ? $this->input->get('tab') : 'all';
         $q = trim((string) $this->input->get('q'));
 
         $shown = array_values(array_filter($schools, function ($s) use ($tab, $q) {
-            if ($tab === 'expiring' || $tab === 'expired') {
+            if ($tab === 'expiring' || $tab === 'expired' || $tab === 'onboarding') {
                 if ($s['expiry'] !== $tab) {
                     return false;
                 }
@@ -96,6 +96,8 @@ class Schools extends Admin_Controller
             'domains' => $this->db->where('school_ref', (int) $school['id'])->order_by('id')->get('platform_school_domains')->result_array(),
             'storage_bytes' => $school['set_up'] ? $this->plan_limits->storage_bytes($school['id']) : 0,
             'invoices' => $this->db->where('school_ref', (int) $school['id'])->order_by('id', 'desc')->get('platform_invoices')->result_array(),
+            'discount' => $this->school_discounts->active($school['id']),
+            'discount_history' => $this->school_discounts->history($school['id']),
         );
         $this->load->view('layout/header', $data);
         $this->load->view('admin/school/school_view', $data);
@@ -191,7 +193,7 @@ class Schools extends Admin_Controller
     /** Sets the subdomain (if given) and sets the school up: default data, super admin, set-password link. */
     public function setup($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'school_approve');
         $school = $this->checked_post($id);
         if ($school['set_up']) {
             $this->back($school['id'], null, 'This school is already set up.');
@@ -221,7 +223,7 @@ class Schools extends Admin_Controller
 
     public function toggle_status($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'school_status');
         $school = $this->checked_post($id);
         if (!empty($school['is_platform'])) {
             $this->back($school['id'], null, 'The platform school can\'t be disabled.');
@@ -269,14 +271,14 @@ class Schools extends Admin_Controller
      */
     public function extend($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'school_billing');
         $school = $this->checked_post($id);
         $days = (int) $this->input->post('days');
         if ($days < 1 || $days > self::EXTEND_MAX_DAYS) {
             $this->back($school['id'], null, 'Enter between 1 and ' . self::EXTEND_MAX_DAYS . ' days.');
         }
         $paid = $school['paid_subscription'];
-        if ($paid) {
+        if ($paid && $paid['kind'] !== 'setup') { // only a setup fee paid: record a subscription below
             $this->db->where('id', (int) $paid['id'])->set('days', 'days + ' . $days, false)->update('subscription');
             $this->platform_audit->record('subscription.extend', "Extended the subscription by $days days", $school['id']);
             if ($school['status_reason'] === 'expired' && $this->plan_limits->current($school['id'])['state'] !== 'lapsed') {
@@ -317,6 +319,32 @@ class Schools extends Admin_Controller
         $this->back($school['id'], "Subscription recorded: {$plan['title']}, $days days (no payment collected).");
     }
 
+    /** Gives the school a discount on what its owner pays next (or on every payment): School_discounts. */
+    public function add_discount($id = null)
+    {
+        $this->require_privilege('can_add', 'school_billing');
+        $school = $this->checked_post($id);
+        try {
+            $this->school_discounts->add($school['id'], (string) $this->input->post('type'), $this->input->post('value'), (string) $this->input->post('applies'),
+                $this->input->post('note'), $this->customlib->getStaffID());
+        } catch (InvalidArgumentException $e) {
+            $this->back($school['id'], null, $e->getMessage());
+        }
+        $d = $this->school_discounts->active($school['id']);
+        $this->platform_audit->record('subscription.discount', 'Gave a discount: ' . School_discounts::describe($d), $school['id']);
+        $this->back($school['id'], 'Discount saved: ' . School_discounts::describe($d) . '. It is applied when the owner pays from their account.');
+    }
+
+    public function remove_discount($id = null)
+    {
+        $this->require_privilege('can_delete', 'school_billing');
+        $school = $this->checked_post($id);
+        if ($this->school_discounts->remove($school['id'])) {
+            $this->platform_audit->record('subscription.discount', 'Removed the discount', $school['id']);
+        }
+        $this->back($school['id'], 'Discount removed.');
+    }
+
     /** Deletes a school that was never set up (a set-up school has data; disable it instead). */
     public function delete($id = null)
     {
@@ -346,7 +374,7 @@ class Schools extends Admin_Controller
      */
     public function impersonate($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_view', 'school_impersonate');
         $school = $this->checked_post($id);
         if (!$school['set_up'] || !empty($school['is_platform'])) {
             $this->back($school['id'], null, 'Only a school that is set up can be opened.');
@@ -381,7 +409,7 @@ class Schools extends Admin_Controller
     /** Internal note on a school (never shown to the school). */
     public function add_note($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_add', 'school_notes');
         $school = $this->checked_post($id);
         $note = trim((string) $this->input->post('note'));
         if ($note === '' || mb_strlen($note) > 5000) {
@@ -398,7 +426,7 @@ class Schools extends Admin_Controller
 
     public function delete_note($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_delete', 'school_notes');
         $school = $this->checked_post($id);
         $this->db->where(array('id' => (int) $this->input->post('note_id'), 'school_ref' => (int) $school['id']))->delete('platform_school_notes');
         $this->back($school['id'], 'Note deleted.');
@@ -407,7 +435,7 @@ class Schools extends Admin_Controller
     /** Switches one of the school's modules on or off (what its Modules page does, from the platform). */
     public function toggle_module($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'school_modules');
         $school = $this->checked_post($id);
         if (!$school['set_up'] || !empty($school['is_platform'])) {
             $this->back($school['id'], null, 'Modules can be changed once the school is set up.');
@@ -435,7 +463,7 @@ class Schools extends Admin_Controller
      */
     public function export($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_view', 'school_data');
         $school = $this->checked_post($id);
         if (!empty($school['is_platform'])) {
             $this->back($school['id'], null, 'Back up the platform from Platform > Backups instead.');
@@ -496,7 +524,7 @@ class Schools extends Admin_Controller
      */
     public function purge($id = null)
     {
-        $this->require_privilege('can_delete');
+        $this->require_privilege('can_delete', 'school_data');
         $school = $this->checked_post($id);
         if (!empty($school['is_platform'])) {
             $this->back($school['id'], null, 'The platform school can\'t be purged.');
@@ -546,7 +574,7 @@ class Schools extends Admin_Controller
     /** Adds a domain the school will be served on (it works once verified). */
     public function add_domain($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_add', 'school_domains');
         $school = $this->checked_post($id);
         $domain = strtolower(trim((string) $this->input->post('domain')));
         $domain = preg_replace('~^https?://~', '', rtrim($domain, '/'));
@@ -568,7 +596,7 @@ class Schools extends Admin_Controller
     /** Checks the DNS record that proves the school controls the domain. */
     public function verify_domain($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'school_domains');
         $school = $this->checked_post($id);
         $d = $this->domain_row($school, (int) $this->input->post('domain_id'));
         $target = $school['subdomain'] . '.' . $this->config->item('tenancy_base_domain');
@@ -594,7 +622,7 @@ class Schools extends Admin_Controller
     /** Uses a verified domain in links and emails instead of the subdomain (or stops doing so). */
     public function primary_domain($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'school_domains');
         $school = $this->checked_post($id);
         $d = $this->domain_row($school, (int) $this->input->post('domain_id'));
         if (!$d['verified_at']) {
@@ -611,7 +639,7 @@ class Schools extends Admin_Controller
 
     public function remove_domain($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_delete', 'school_domains');
         $school = $this->checked_post($id);
         $d = $this->domain_row($school, (int) $this->input->post('domain_id'));
         $this->db->where('id', (int) $d['id'])->delete('platform_school_domains');
@@ -661,9 +689,9 @@ class Schools extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'admin/schools');
     }
 
-    private function require_privilege($action)
+    private function require_privilege($action, $permission = self::PERMISSION)
     {
-        if (!$this->rbac->hasPrivilege(self::PERMISSION, $action)) {
+        if (!$this->rbac->hasPrivilege($permission, $action)) {
             access_denied();
         }
     }

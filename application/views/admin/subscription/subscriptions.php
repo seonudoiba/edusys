@@ -72,12 +72,13 @@ $filtered = $f['method'] !== '' || $f['plan'] || $f['from'] || $f['to'] || $f['q
                                         <?php } else { ?><b><?php echo $e($r['name']); ?></b> <span class="sb-sub">(sign-up not completed)</span><?php } ?>
                                         <div class="sb-sub"><?php echo $e($r['owner_name']); ?> · <?php echo $e($r['email_address']); ?> · <?php echo $e($r['phone_number']); ?></div>
                                     </td>
-                                    <td><?php echo $e($r['plan_title'] ?: 'Plan #' . $r['plan_id']); ?><div class="sb-sub"><?php echo (int) $r['days']; ?> days</div></td>
+                                    <td><?php if ($r['kind'] === 'setup') { ?>Setup fee only<div class="sb-sub">subscription paid later</div><?php } else { ?><?php echo $e($r['plan_title'] ?: 'Plan #' . $r['plan_id']); ?><div class="sb-sub"><?php echo (int) $r['days']; ?> days</div><?php } ?></td>
                                     <td><?php echo $e(isset($method_names[$r['method']]) ? $method_names[$r['method']] : ucwords(str_replace('_', ' ', $r['method']))); ?>
                                         <?php if ($r['reference']) { ?><div class="sb-sub" title="Payment reference"><?php echo $e(mb_strimwidth($r['reference'], 0, 18, '…')); ?></div><?php } ?></td>
                                     <td class="text-right"><?php echo $money($r['total']); ?>
                                         <?php if ((float) $r['discount_amt'] > 0) { ?><div class="sb-sub"><s><?php echo $money($r['price']); ?></s></div><?php } ?></td>
-                                    <td><?php if ($r['paid']) { ?>
+                                    <td><?php if ($r['paid'] && $r['kind'] === 'setup') { ?><span class="sb-sub">Paid <?php echo $e(date('d M Y', strtotime($r['starts']))); ?></span>
+                                        <?php } elseif ($r['paid']) { ?>
                                             <?php echo $e(date('d M Y', strtotime($r['starts']))); ?> → <?php echo $e(date('d M Y', strtotime($r['ends']))); ?>
                                             <div class="sb-sub"><?php echo $r['days_left'] < 0 ? 'ended ' . abs($r['days_left']) . ' days ago' : $r['days_left'] . ' days left'; ?></div>
                                         <?php } else { ?><span class="sb-sub">Starts when paid</span><?php } ?></td>

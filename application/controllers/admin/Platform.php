@@ -120,7 +120,7 @@ class Platform extends Admin_Controller
 
     public function emails()
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_view', 'email_templates');
         $this->menu('admin/platform/emails');
         $data = array(
             'templates' => $this->db->order_by('recipient', 'asc')->order_by('name', 'asc')->get('platform_email_templates')->result_array(),
@@ -136,7 +136,7 @@ class Platform extends Admin_Controller
 
     public function email_edit($key = '')
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'email_templates');
         $this->menu('admin/platform/emails');
         $template = $this->template_or_404($key);
         if ($this->input->method() === 'post') {
@@ -170,7 +170,7 @@ class Platform extends Admin_Controller
     /** Restores a template's original text (from the migration that created it). */
     public function email_reset($key = '')
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'email_templates');
         $this->form_token->require_post();
         $template = $this->template_or_404($key);
         require_once APPPATH . 'migrations/253_create_platform_email_templates.php';
@@ -186,7 +186,7 @@ class Platform extends Admin_Controller
 
     public function email_test($key = '')
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'email_templates');
         $this->form_token->require_post();
         $template = $this->template_or_404($key);
         $to = trim((string) $this->input->post('to'));
@@ -202,7 +202,7 @@ class Platform extends Admin_Controller
 
     public function email_log()
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_view', 'email_templates');
         $this->menu('admin/platform/email_log');
         $status = (string) $this->input->get('status');
         $school = (int) $this->input->get('school');
@@ -346,9 +346,9 @@ class Platform extends Admin_Controller
         $this->session->set_userdata('sub_menu', $sub);
     }
 
-    private function require_privilege($action)
+    private function require_privilege($action, $permission = self::PERMISSION)
     {
-        if (!$this->rbac->hasPrivilege(self::PERMISSION, $action)) {
+        if (!$this->rbac->hasPrivilege($permission, $action)) {
             access_denied();
         }
     }

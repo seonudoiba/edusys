@@ -110,7 +110,11 @@ class Subscription_list extends Admin_Controller
             $r['ends'] = date('Y-m-d H:i:s', strtotime($r['created_at']) + (int) $r['days'] * 86400);
             $r['days_left'] = (int) floor((strtotime($r['ends']) - $now) / 86400);
             $r['state'] = !$r['paid'] ? 'pending' : ($r['days_left'] < 0 ? 'expired' : 'active');
-            $r['expiring'] = $r['state'] === 'active' && $r['days_left'] <= self::EXPIRING_DAYS;
+            if ($r['paid'] && $r['kind'] === 'setup') { // a setup fee alone: no period, nothing expires
+                $r['state'] = 'active';
+                $r['days_left'] = 0;
+            }
+            $r['expiring'] = $r['state'] === 'active' && $r['kind'] !== 'setup' && $r['days_left'] <= self::EXPIRING_DAYS;
             $r['name'] = $r['registered_name'] ?: $r['school_name'];
         }
         return $rows;

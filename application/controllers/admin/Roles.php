@@ -61,6 +61,13 @@ class Roles extends Admin_Controller
 
         $data['role_permission'] = $role_permission;
 
+        if ($this->input->server('REQUEST_METHOD') == "POST" && $this->input->post('perms_json') !== null) {
+            // The page sends every permission as one JSON field: the form has more fields than PHP's
+            // max_input_vars (1000), and fields past the limit were dropped, which wiped permissions.
+            $this->save_permissions((int) $role['id'], json_decode((string) $this->input->post('perms_json', false), true));
+            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
+            redirect('admin/roles/permission/' . $id);
+        }
         if ($this->input->server('REQUEST_METHOD') == "POST") {
 
             $per_cat_post = $this->input->post('per_cat');
@@ -104,6 +111,48 @@ class Roles extends Admin_Controller
         $this->load->view('layout/header');
         $this->load->view('admin/roles/allotmodule', $data);
         $this->load->view('layout/footer');
+    }
+
+    /**
+     * $perms = [perm_cat_id => ['can_view' => 1|0, 'can_add' => ..., 'can_edit' => ..., 'can_delete' => ...]] for the permissions on
+     * the page. Only those permissions change; existing rows are found in the database, not trusted
+     * from the form.
+     */
+    private function save_permissions($role_id, $perms)
+    {
+        if (!is_array($perms) || !$role_id) {
+            return;
+        }
+        $valid = array();
+        foreach ($this->db->select('id')->get('permission_category')->result_array() as $r) {
+            $valid[(int) $r['id']] = true;
+        }
+        $existing = array();
+        foreach ($this->db->select('id, perm_cat_id')->where('role_id', $role_id)->get('roles_permissions')->result_array() as $r) {
+            $existing[(int) $r['perm_cat_id']] = (int) $r['id'];
+        }
+        $insert = $update = $delete = array();
+        foreach ($perms as $cat => $flags) {
+            $cat = (int) $cat;
+            if (!isset($valid[$cat]) || !is_array($flags)) {
+                continue;
+            }
+            $row = array();
+            foreach ($this->perm_category as $name) {
+                $row[$name] = !empty($flags[$name]) ? 1 : 0;
+            }
+            $any = array_sum($row) > 0;
+            if (isset($existing[$cat])) {
+                if ($any) {
+                    $update[] = $row + array('id' => $existing[$cat]);
+                } else {
+                    $delete[] = $existing[$cat];
+                }
+            } elseif ($any) {
+                $insert[] = $row + array('role_id' => $role_id, 'perm_cat_id' => $cat);
+            }
+        }
+        $this->role_model->getInsertBatch($role_id, $insert, $update, $delete);
     }
 
     public function edit($id)

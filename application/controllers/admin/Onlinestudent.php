@@ -501,6 +501,8 @@ class Onlinestudent extends Admin_Controller
                     }
                 }
 
+                $reviewbtn = "<a href='" . site_url('admin/onlinestudent/review/' . (int) $value->id) . "' class='btn btn-default btn-xs mt-5 pull-right' data-toggle='tooltip' title='Review: details, payment, approve'><i class='fa fa-eye'></i></a>";
+
                 if ($this->rbac->hasPrivilege('online_admission', 'can_delete')) {
                     $deletebtn = '';
 
@@ -546,7 +548,7 @@ class Onlinestudent extends Admin_Controller
                 }
 
                 $row   = array();
-                $row[] = $value->reference_no;
+                $row[] = "<a href='" . site_url('admin/onlinestudent/review/' . (int) $value->id) . "'>" . html_escape($value->reference_no) . "</a>";
                 $row[] = $value->firstname . " " . $middlename. " " . $last_name;
                 $row[] = $value->class . "(" . $value->section . ")";
 
@@ -562,8 +564,9 @@ class Onlinestudent extends Admin_Controller
                     $row[] = $value->mobileno;
                 }
 
+                $decision = $value->review_status === 'approved' ? ' <span class="label label-primary">Approved</span>' : ($value->review_status === 'rejected' ? ' <span class="label label-default">Rejected</span>' : '');
                 if ($value->form_status == 1) {
-                    $row[] = '<span class="label label-success">' . $this->lang->line('submitted') . '  ' . $submit_date . '</span>';
+                    $row[] = '<span class="label label-success">' . $this->lang->line('submitted') . '  ' . $submit_date . '</span>' . $decision;
                 } else if ($value->form_status == 0) {
                     $row[] = '<span class="label label-danger">' . $this->lang->line('not_submitted') . '</span>';
                 }
@@ -582,7 +585,7 @@ class Onlinestudent extends Admin_Controller
                 $row[]     =  $enroll;
                 $row[]     =  $this->customlib->showDate(date("Y-m-d", strtotime($value->created_at)));
                 
-                $row[]     = $document . ' ' . $printbtn . ' ' . $editbtn . ' ' . $deletebtn;
+                $row[]     = $document . ' ' . $printbtn . ' ' . $editbtn . ' ' . $deletebtn . ' ' . $reviewbtn;
                 $dt_data[] = $row;
             }
         }
@@ -596,6 +599,77 @@ class Onlinestudent extends Admin_Controller
         echo json_encode($json_data);
     }
 
+    /**
+     * One application on a page: the applicant's details, documents and photos, the form-fee payment
+     * (online payments and bank transfers, with approve / reject), and the decision: approve (then
+     * enroll on the edit page) or reject with a reason.
+     */
+    public function review($id = null)
+    {
+        if (!$this->rbac->hasPrivilege('online_admission', 'can_view')) {
+            access_denied();
+        }
+        $application = ctype_digit((string) $id) ? $this->onlinestudent_model->get((int) $id) : null;
+        if (!$application || empty($application['id'])) {
+            show_404();
+        }
+        $this->session->set_userdata('top_menu', 'Student Information');
+        $this->session->set_userdata('sub_menu', 'onlinestudent');
+        $this->load->model('admission_bank_transfer_model');
+        $row = $this->db->select('submit_date, review_status, review_note, reviewed_by, reviewed_at')->where('id', (int) $id)->get('online_admissions')->row_array();
+        $reviewer = $row && $row['reviewed_by'] ? $this->db->select('name, surname')->where('id', (int) $row['reviewed_by'])->get('staff')->row_array() : null;
+        $student = $application['is_enroll'] && $application['admission_no'] !== '' ? $this->db->select('id')->where('admission_no', (string) $application['admission_no'])->get('students')->row_array() : null;
+        $data = array(
+            'a' => $application,
+            'review' => $row,
+            'reviewer' => $reviewer,
+            'payments' => $this->db->where('online_admission_id', (int) $id)->order_by('id', 'desc')->get('online_admission_payment')->result_array(),
+            'bank_transfer' => $this->admission_bank_transfer_model->latest((int) $id),
+            'sch_setting' => $this->sch_setting_detail,
+            'enrolled_student_id' => $student ? (int) $student['id'] : 0,
+            'can_edit' => $this->rbac->hasPrivilege('online_admission', 'can_edit'),
+        );
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/onlinestudent/review', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /** POST action approve | reject (with a reason) | reopen, from the review page. Approving goes on to enrolling. */
+    public function decide($id = null)
+    {
+        if (!$this->rbac->hasPrivilege('online_admission', 'can_edit') || $this->input->method() !== 'post') {
+            access_denied();
+        }
+        $application = $this->db->select('id, is_enroll')->where('id', (int) $id)->get('online_admissions')->row_array();
+        if (!$application) {
+            show_404();
+        }
+        $action = $this->input->post('action');
+        $note = mb_substr(trim(strip_tags((string) $this->input->post('note'))), 0, 500);
+        $set = array('reviewed_by' => (int) $this->customlib->getStaffID() ?: null, 'reviewed_at' => date('Y-m-d H:i:s'));
+        if ($action === 'approve') {
+            $this->db->where('id', (int) $id)->update('online_admissions', $set + array('review_status' => 'approved', 'review_note' => $note !== '' ? $note : null));
+            if ($application['is_enroll']) {
+                $this->session->set_flashdata('msg', '<div class="alert alert-success">Application approved.</div>');
+                redirect('admin/onlinestudent/review/' . (int) $id);
+            }
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">Application approved. Check the details, choose the fees, then click Save and Enroll to make the applicant a student.</div>');
+            redirect('admin/onlinestudent/edit/' . (int) $id);
+        }
+        if ($action === 'reject') {
+            if ($note === '') {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger">Give a reason for rejecting the application; the applicant sees it when they check their application.</div>');
+                redirect('admin/onlinestudent/review/' . (int) $id);
+            }
+            $this->db->where('id', (int) $id)->update('online_admissions', $set + array('review_status' => 'rejected', 'review_note' => $note));
+            $this->session->set_flashdata('msg', '<div class="alert alert-warning">Application rejected. The applicant sees your reason when they check their application.</div>');
+        } elseif ($action === 'reopen') {
+            $this->db->where('id', (int) $id)->update('online_admissions', array('review_status' => null, 'review_note' => null, 'reviewed_by' => null, 'reviewed_at' => null));
+            $this->session->set_flashdata('msg', '<div class="alert alert-info">The application is waiting for review again.</div>');
+        }
+        redirect('admin/onlinestudent/review/' . (int) $id);
+    }
+
     /** Approve or reject an applicant's bank transfer of the form fee (from the application's page). */
     public function transfer_review()
     {
@@ -607,7 +681,7 @@ class Onlinestudent extends Admin_Controller
         if (!$transfer) {
             show_404();
         }
-        $back = 'admin/onlinestudent/edit/' . (int) $transfer['online_admission_id'];
+        $back = 'admin/onlinestudent/' . ($this->input->post('from') === 'review' ? 'review/' : 'edit/') . (int) $transfer['online_admission_id'];
         $action = $this->input->post('action');
         $note = trim(strip_tags((string) $this->input->post('note')));
         $staff = (int) $this->customlib->getStaffID();

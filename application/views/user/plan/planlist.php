@@ -14,12 +14,18 @@ $has_counts = $sub && !empty($sub['student_count']);
                 <div class="box box-primary">
                     <div class="box-header with-border"><h3 class="box-title">Your subscription</h3></div>
                     <div class="box-body">
+                        <?php if ($onboarding) { ?>
+                            <div class="alert alert-info" id="onboarding_note">Your setup fee is paid and we are setting up your school. <b>Students and parents can sign in once you pay the subscription</b> below.</div>
+                        <?php } ?>
+                        <?php if ($discount) { ?>
+                            <div class="alert alert-success" id="discount_note"><i class="fa fa-tag"></i> You have a discount: <b><?php echo $e(School_discounts::describe($discount)); ?></b>. It is taken off the total below.</div>
+                        <?php } ?>
                         <?php if (!$sub) { ?>
                             <p class="text-muted">No subscription has been paid yet.</p>
                         <?php } else { ?>
                             <div class="row">
                                 <div class="col-sm-3"><small class="text-muted">Status</small><br><b><?php echo $e($status); ?></b></div>
-                                <div class="col-sm-3"><small class="text-muted">Ends</small><br><b><?php echo $e(date('j M Y', $ends)); ?></b><?php if ($days_left >= 0) { ?> <span class="text-muted">(<?php echo (int) $days_left; ?> days)</span><?php } ?></div>
+                                <?php if (!$onboarding) { ?><div class="col-sm-3"><small class="text-muted">Ends</small><br><b><?php echo $e(date('j M Y', $ends)); ?></b><?php if ($days_left >= 0) { ?> <span class="text-muted">(<?php echo (int) $days_left; ?> days)</span><?php } ?></div><?php } ?>
                                 <div class="col-sm-3"><small class="text-muted">Active students</small><br><b><?php echo number_format($active); ?></b><?php if ($has_counts) { ?> <span class="text-muted">of <?php echo number_format((int) $sub['student_count']); ?> paid for</span><?php } ?></div>
                                 <?php if ($has_counts) { ?><div class="col-sm-3"><small class="text-muted">Rate</small><br><b><?php echo $naira($sub['rate_per_term']); ?></b> <span class="text-muted">per student, per term</span></div><?php } ?>
                             </div>
@@ -35,10 +41,10 @@ $has_counts = $sub && !empty($sub['student_count']);
         <div class="row">
             <div class="col-md-6">
                 <div class="box box-default">
-                    <div class="box-header with-border"><h3 class="box-title">Renew</h3></div>
+                    <div class="box-header with-border"><h3 class="box-title"><?php echo $onboarding ? 'Pay your subscription' : 'Renew'; ?></h3></div>
                     <form method="get" action="<?php echo site_url('subscription/edit'); ?>">
                         <div class="box-body">
-                            <p class="text-muted">The next period starts when the current one ends, so renewing early doesn't lose any days. There is no setup fee.</p>
+                            <p class="text-muted"><?php echo $onboarding ? 'Your subscription starts the day you pay. The setup fee is already paid.' : 'The next period starts when the current one ends, so renewing early doesn\'t lose any days. There is no setup fee.'; ?></p>
                             <div class="form-group"><label for="r_students">Students to pay for</label>
                                 <input id="r_students" name="students" type="number" min="<?php echo max(1, $active); ?>" required class="form-control" value="<?php echo max($active, $has_counts ? (int) $sub['student_count'] : 0, 1); ?>"></div>
                             <div class="form-group"><label for="r_period">Pay</label>
@@ -74,6 +80,8 @@ $has_counts = $sub && !empty($sub['student_count']);
         </div>
         <script>
             (function () {
+                var disc = <?php echo json_encode($discount ? array('type' => $discount['type'], 'value' => (float) $discount['value']) : null); ?>;
+                var less = function (t) { if (!disc || t <= 0) { return t; } var o = disc.type === 'percent' ? t * Math.min(100, disc.value) / 100 : disc.value; return Math.max(0, t - Math.min(t, o)); };
                 var bands = <?php echo json_encode($bands, JSON_HEX_TAG | JSON_HEX_AMP); ?>, agreed = <?php echo $has_counts && !empty($sub['quote_id']) ? (float) $sub['rate_per_term'] : 'null'; ?>;
                 var fmt = function (n) { return '₦' + Math.round(n).toLocaleString('en-NG'); };
                 var rate = function (n) {
@@ -87,14 +95,14 @@ $has_counts = $sub && !empty($sub['student_count']);
                 var $ = function (id) { return document.getElementById(id); };
                 function renew() {
                     var n = +$('r_students').value, r = rate(n);
-                    $('r_total').textContent = r === null ? 'Please contact us for a quote at this size.' : 'Total: ' + fmt(n * r * ($('r_period').value === 'year' ? 3 : 1));
+                    $('r_total').textContent = r === null ? 'Please contact us for a quote at this size.' : 'Total: ' + fmt(less(n * r * ($('r_period').value === 'year' ? 3 : 1))) + (disc ? ' (after your discount)' : '');
                 }
                 $('r_students').addEventListener('input', renew);
                 $('r_period').addEventListener('change', renew);
                 renew();
                 if ($('t_students')) {
                     var paid = <?php echo $has_counts ? (int) $sub['student_count'] : 0; ?>, cur = <?php echo $has_counts ? (float) $sub['rate_per_term'] : 0; ?>, terms = <?php echo (int) $topup_terms; ?>;
-                    var top = function () { var extra = +$('t_students').value - paid; $('t_total').textContent = extra > 0 ? 'Total: ' + fmt(extra * cur * terms) : ''; };
+                    var top = function () { var extra = +$('t_students').value - paid; $('t_total').textContent = extra > 0 ? 'Total: ' + fmt(less(extra * cur * terms)) + (disc ? ' (after your discount)' : '') : ''; };
                     $('t_students').addEventListener('input', top);
                     top();
                 }

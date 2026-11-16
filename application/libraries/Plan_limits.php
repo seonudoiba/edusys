@@ -33,7 +33,7 @@ class Plan_limits
     /**
      * @return array plan, subscription, modules (null = all), max_students, max_staff,
      *               max_storage_mb, expires_at (timestamp|null), days_left, grace_ends, state
-     *               (none, active, grace, lapsed)
+     *               (none, active, grace, lapsed, onboarding: only the setup fee is paid, see onboarding())
      */
     public function current($school_id)
     {
@@ -58,7 +58,9 @@ class Plan_limits
         if ($sub && !empty($sub['student_count'])) {
             $out['max_students'] = (int) $sub['student_count'];
         }
-        if ($sub) {
+        if ($sub && isset($sub['kind']) && $sub['kind'] === 'setup') {
+            $out['state'] = 'onboarding'; // no end date until the first subscription payment
+        } elseif ($sub) {
             $expires = strtotime($sub['created_at']) + (int) $sub['days'] * 86400;
             $grace = max(0, (int) $this->CI->platform_settings->get('grace_days'));
             $out['expires_at'] = $expires;
@@ -67,6 +69,15 @@ class Plan_limits
             $out['state'] = time() <= $expires ? 'active' : (time() <= $out['grace_ends'] ? 'grace' : 'lapsed');
         }
         return $this->memo[$school_id] = $out;
+    }
+
+    /**
+     * True when the school has paid only the setup fee (registration "setup fee now, subscription
+     * later"): staff can set it up, students and parents can't sign in until the subscription is paid.
+     */
+    public function onboarding($school_id)
+    {
+        return $this->current($school_id)['state'] === 'onboarding';
     }
 
     public function usage($school_id)

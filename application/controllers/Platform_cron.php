@@ -41,8 +41,8 @@ class Platform_cron extends CI_Controller
                 ->from('subscription')->join('plan', 'plan.plan_id = subscription.plan_id', 'left')
                 ->where(array('subscription.school_id' => (int) $school['id'], 'subscription.payment_status' => 1))
                 ->order_by('subscription.id', 'desc')->limit(1)->get()->row_array();
-            if (!$sub) {
-                continue;
+            if (!$sub || $sub['kind'] === 'setup') {
+                continue; // nothing yet, or only the setup fee paid: no end date until the subscription is paid
             }
             $expires = strtotime($sub['created_at']) + (int) $sub['days'] * 86400;
             $days_left = (int) floor(($expires - time()) / 86400);

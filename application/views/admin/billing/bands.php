@@ -28,7 +28,7 @@
                         </tbody>
                     </table>
                 </div>
-                <?php if ($this->rbac->hasPrivilege('subscription_list', 'can_edit')) { ?>
+                <?php if ($this->rbac->hasPrivilege('pricing_bands', 'can_edit')) { ?>
                     <div class="box-footer"><button class="btn btn-primary" type="submit">Save prices</button></div>
                 <?php } ?>
             </form>

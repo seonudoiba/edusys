@@ -96,11 +96,17 @@ if ($this->session->flashdata('msg')) { $this->session->unset_userdata('msg'); }
         </div>
     </div>
 
+    <?php if (!empty($review_status)) { ?>
+        <div class="alert alert-<?php echo $review_status === 'approved' ? 'success' : 'danger'; ?>" role="status" id="decision_note">
+            <b><?php echo $review_status === 'approved' ? 'The school has accepted this application.' : 'The school did not accept this application.'; ?></b>
+            <?php if (!empty($review_note)) { ?><br><?php echo $e($review_note); ?><?php } ?>
+        </div>
+    <?php } ?>
     <ol class="st-rev-steps st-rev-noprint" aria-label="Progress">
         <li class="done">Details filled in</li>
         <li class="<?php echo $sent ? 'done' : 'current'; ?>">Application submitted</li>
         <?php if ($fee_on) { ?><li class="<?php echo (int) $paid_status === 1 ? 'done' : ($sent ? 'current' : ''); ?>">Form fee paid</li><?php } ?>
-        <li>School reviews it</li>
+        <li class="<?php echo !empty($review_status) ? 'done' : ''; ?>">School reviews it</li>
     </ol>
 
     <dl class="st-rev-facts">
