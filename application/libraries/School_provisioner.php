@@ -87,6 +87,10 @@ class School_provisioner
                     // Academics > Assign Subject Teachers, after Assign Class Teacher.
                     $this->CI->load->library('Subject_teachers');
                     $this->CI->subject_teachers->install_menu((int) $school['id']);
+                } else {
+                    // The platform admin's finer permissions, Platform Manager role and Plan > Pricing bands.
+                    $this->CI->load->library('Platform_admin_setup');
+                    $this->CI->platform_admin_setup->install((int) $school['id']);
                 }
                 // The ready-made homepage (Front CMS > Pages > Page builder).
                 require_once APPPATH . 'libraries/Page_widgets.php';
