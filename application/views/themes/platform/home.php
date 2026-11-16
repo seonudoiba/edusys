@@ -10,9 +10,6 @@ $CI->load->library('Plan_pricing');
 $bands = $CI->plan_pricing->bands();
 $rates = array_filter(array_column($bands, 'rate_per_term'));
 $money = function ($v) { return '&#8358;' . number_format((float) $v); };
-// The first Front CMS banner image (if any) is the hero photo.
-$this->load->view('themes/platform/_bg', array(), true);
-$photo = !empty($CI->platform_bg_images) ? $CI->platform_bg_images[0] : null;
 $areas = array(
     array('users', '', 'Students', 'Online admission, records, attendance with QR codes, behaviour, certificates, ID cards and alumni.'),
     array('wallet', 'green', 'Fees and finance', 'Fees by class with discounts and fines, online payment, reminders, income, expenses and payroll.'),
@@ -30,52 +27,7 @@ $faqs = array(
     'What happens if our school grows during the year?' => '<p>You pay for the extra students at your current rate, for the terms left in the period. Your end date does not change.</p>',
 );
 ?>
-<section class="hero hero-home has-bg">
-    <div class="wrap hero-grid">
-        <div>
-            <span class="pill"><b>New</b> Admission forms, online fees and bank transfers</span>
-            <h1>Run your whole school on one system.</h1>
-            <p class="lede">EduSYS brings admissions, fees, attendance, examinations, staff and parent communication together for Nigerian schools, at your school's own web address.</p>
-            <div class="actions">
-                <a class="btn btn-red" href="<?php echo site_url('subscription/add'); ?>">Register your school <?php echo pf_icon('arrow'); ?></a>
-                <a class="btn btn-ghost" href="<?php echo site_url('plans'); ?>">See pricing</a>
-            </div>
-            <?php if ($rates) { ?><p class="from">From <?php echo $money(min($rates)); ?> per student, per term. Implementation and training included in a one-time fee.</p><?php } ?>
-            <ul class="ticks">
-                <li><?php echo pf_icon('check'); ?>Your own web address</li>
-                <li><?php echo pf_icon('check'); ?>Online fee payment</li>
-                <li><?php echo pf_icon('check'); ?>Training for your staff</li>
-            </ul>
-        </div>
-        <div class="preview" aria-hidden="true">
-            <?php if ($photo) { ?>
-                <div class="preview-photo"><img src="<?php echo html_escape($photo); ?>" alt=""></div>
-            <?php } else { ?>
-                <div class="panel-ui">
-                    <div class="ui-head"><span>Fees this term</span><span class="ui-dots"><i></i><i></i><i></i></span></div>
-                    <table><tr><th>Student</th><th>Class</th><th>Status</th></tr>
-                        <tr><td>Student A</td><td>JSS 1</td><td><span class="tag tag-paid">Paid</span></td></tr>
-                        <tr><td>Student B</td><td>JSS 2</td><td><span class="tag tag-due">Due</span></td></tr>
-                        <tr><td>Student C</td><td>SS 1</td><td><span class="tag tag-paid">Paid</span></td></tr>
-                    </table>
-                </div>
-            <?php } ?>
-            <div class="preview-cards">
-                <div class="preview-card preview-fees">
-                    <div class="muted">Term fees collected</div>
-                    <div class="big">78%</div>
-                    <div class="bar"><span style="width:78%"></span></div>
-                </div>
-                <div class="preview-card preview-att">
-                    <div class="muted">Attendance today</div>
-                    <div class="row-mini"><span>Present</span><b>412</b></div>
-                    <div class="row-mini"><span>Absent</span><b>9</b></div>
-                    <div class="row-mini"><span>Late</span><b>14</b></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<?php $this->load->view('themes/platform/_hero_slider', array('from_price' => $rates ? $money(min($rates)) : null)); ?>
 
 <section class="strip" aria-label="Online payment partners">
     <div class="wrap">
