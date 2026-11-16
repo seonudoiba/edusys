@@ -194,7 +194,7 @@ class Site_theme
         return 0.2126 * $l[0] + 0.7152 * $l[1] + 0.0722 * $l[2];
     }
 
-    private function contrast($a, $b)
+    public function contrast($a, $b)
     {
         $la = $this->luminance($a);
         $lb = $this->luminance($b);

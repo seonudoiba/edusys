@@ -17,7 +17,7 @@
                                             <?php
                                             if ($result->image == "") {
                                                 ?>
-                                                <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/login_image/default_login_bg.jpg'); ?>" class="" alt="" width="304" height="236"></div>
+                                                <div class="card-body-logo-img"><img src="<?php echo html_escape(login_background_url('')); ?>" class="" alt="" width="304" height="236"></div>
                                                 <?php
                                             } else {
                                                 ?>
@@ -42,7 +42,7 @@
                                             <?php
                                             if ($result->image == "") {
                                                 ?>
-                                                <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/login_image/default_login_bg.jpg'); ?>" class="" alt="" width="304" height="236"></div>
+                                                <div class="card-body-logo-img"><img src="<?php echo html_escape(login_background_url('')); ?>" class="" alt="" width="304" height="236"></div>
                                                 <?php
                                             } else {
                                                 ?>

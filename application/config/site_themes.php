@@ -10,6 +10,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 // Fonts a school can choose, loaded from Google Fonts: key => [label, Google Fonts family, CSS stack].
 $config['site_theme_fonts'] = array(
+    'jakarta' => array('Plus Jakarta Sans', 'Plus+Jakarta+Sans:wght@500;600;700;800', '"Plus Jakarta Sans", "Inter", system-ui, sans-serif'),
     'inter' => array('Inter', 'Inter:wght@400;500;600;700', '"Inter", system-ui, sans-serif'),
     'source_sans' => array('Source Sans 3', 'Source+Sans+3:wght@400;600;700', '"Source Sans 3", system-ui, sans-serif'),
     'lato' => array('Lato', 'Lato:wght@400;700', '"Lato", system-ui, sans-serif'),

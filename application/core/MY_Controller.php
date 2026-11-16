@@ -429,6 +429,21 @@ class Front_Controller extends CI_Controller
             $this->theme_path = 'material_pink';
             $content_theme = 'material_pink';
         }
+        if ($this->theme_path === 'platform') {
+            // The platform's own website: its design and slider from Front CMS > Website design.
+            $this->load->library('Platform_theme');
+            $override = null;
+            $preview = $this->session->userdata('site_theme_preview');
+            if ($this->input->get('st_preview') && $this->session->userdata('admin') && is_array($preview) && isset($preview['platform'])) {
+                $override = $preview['platform'];
+            }
+            $pt = $this->platform_theme->design($this->front_setting, $override);
+            $this->data['pt'] = $pt;
+            $this->data['pt_css'] = $this->platform_theme->css($pt['options']);
+            $this->data['pt_fonts_url'] = $this->platform_theme->fonts_url($pt['options']);
+            $this->data['pt_classes'] = $this->platform_theme->body_classes($pt['options']);
+            $this->data['pt_color'] = $this->platform_theme->theme_color($pt['options']);
+        }
         $this->data['main_menus'] = '';
         $this->data['school_setting'] = $this->school_details;
         $this->data['front_setting'] = $this->front_setting;
