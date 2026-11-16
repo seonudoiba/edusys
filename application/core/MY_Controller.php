@@ -3,6 +3,24 @@
 define('THEMES_DIR', 'themes');
 define('BASE_URI', str_replace('index.php', '', $_SERVER['SCRIPT_NAME']));
 
+/**
+ * Students and parents of a school that has paid only its setup fee (onboarding) are signed out:
+ * the school is being set up and its subscription isn't paid yet (Plan_limits::onboarding).
+ */
+function portal_closed_while_onboarding($CI)
+{
+    if (!class_exists('Tenant', false) || !Tenant::has() || Tenant::is_platform()) {
+        return;
+    }
+    $CI->load->library('Plan_limits');
+    if (!$CI->plan_limits->onboarding(Tenant::id())) {
+        return;
+    }
+    $CI->session->unset_userdata('student');
+    $CI->session->set_flashdata('disable_message', 'The school is still being set up. Student and parent sign-in opens once it is ready.');
+    redirect('site/login');
+}
+
 class MY_Controller extends CI_Controller
 {
 
@@ -216,6 +234,7 @@ class Student_Controller extends MY_Controller
         $this->load->library('cart');
         $this->config->load('app-config');
         $this->auth->is_logged_in_user('student');
+        portal_closed_while_onboarding($this);
         require_own_password($this);
         $is_lock_panel = check_lock_enabled();
 
@@ -260,6 +279,7 @@ class Studentgateway_Controller extends MY_Controller
         $this->load->library('studentmodule_lib');
         $this->config->load('app-config');
         $this->auth->is_logged_in_user('student');
+        portal_closed_while_onboarding($this);
         require_own_password($this);
 
     }
@@ -308,6 +328,7 @@ class Parent_Controller extends MY_Controller
     {
         parent::__construct();
         $this->auth->is_logged_in_user('parent');
+        portal_closed_while_onboarding($this);
         require_own_password($this);
         $this->config->load('app-config');
         $this->load->library('parentmodule_lib');

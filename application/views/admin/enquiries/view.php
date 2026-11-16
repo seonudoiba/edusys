@@ -69,7 +69,7 @@ $action = function ($name) use ($r) { return site_url('admin/enquiries/' . $name
                                 <?php } ?>
                             </form>
                         <?php } ?>
-                        <?php if ($this->rbac->hasPrivilege('platform_settings', 'can_delete')) { ?>
+                        <?php if ($this->rbac->hasPrivilege('platform_enquiries', 'can_delete')) { ?>
                             <form method="post" action="<?php echo $action('delete'); ?>" style="display:inline" onsubmit="return confirm('Delete this enquiry?');">
                                 <?php echo $token; ?><button class="btn btn-link btn-xs text-danger" type="submit">delete</button>
                             </form>

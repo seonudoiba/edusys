@@ -52,7 +52,7 @@ $short = $t['amount'] !== null && (float) $t['amount'] < (float) $t['total'];
                         </table>
                         <p class="text-muted">Check the money has arrived in the platform's account before approving.</p>
                     </div>
-                    <?php if ($t['status'] === 'pending') { ?>
+                    <?php if ($t['status'] === 'pending' && $this->rbac->hasPrivilege('subscription_transfers', 'can_edit')) { ?>
                         <div class="box-footer">
                             <form method="post" action="<?php echo site_url('admin/subscription_bank_transfers/approve/' . (int) $t['id']); ?>" style="margin-bottom:15px"
                                   onsubmit="return confirm('Approve this payment and activate the subscription?');">

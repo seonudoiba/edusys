@@ -825,6 +825,10 @@ class Welcome extends Front_Controller
             $this->data['admission_id'] = $id;
             $this->data['reference_no'] = $result['reference_no'];
             $this->data['id'] = $id;
+            // The school's decision (Online Admission > Review).
+            $decision = $this->db->select('review_status, review_note, is_enroll')->where('id', (int) $id)->get('online_admissions')->row_array();
+            $this->data['review_status'] = $decision ? ($decision['is_enroll'] ? 'approved' : $decision['review_status']) : null;
+            $this->data['review_note'] = $decision ? $decision['review_note'] : null;
 
             $this->data['online_admission_payment'] = $this->sch_setting_detail->online_admission_payment;
             $this->data['online_admission_amount'] = $this->sch_setting_detail->online_admission_amount;

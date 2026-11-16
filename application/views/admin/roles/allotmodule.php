@@ -1,5 +1,6 @@
 <div class="content-wrapper">
     <section class="content">
+        <?php if ($this->session->flashdata('msg')) { echo $this->session->flashdata('msg'); } ?>
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary">
@@ -162,6 +163,24 @@ if ($new_feature_value->enable_delete == 1) {
                             <button type="submit" class="btn btn-info pull-right"><?php echo $this->lang->line('save'); ?></button>
                         </div>
                     </form>
+                    <script>
+                        // Sent as one field: the form has more fields than PHP accepts (max_input_vars), see Roles::permission.
+                        document.getElementById('form1').addEventListener('submit', function () {
+                            var form = this, perms = {};
+                            form.querySelectorAll('input[name="per_cat[]"]').forEach(function (cat) {
+                                var row = {};
+                                ['can_view', 'can_add', 'can_edit', 'can_delete'].forEach(function (p) {
+                                    var box = form.querySelector('input[name="' + p + '-perm_' + cat.value + '"]');
+                                    row[p] = box && box.checked ? 1 : 0;
+                                });
+                                perms[cat.value] = row;
+                            });
+                            form.querySelectorAll('input').forEach(function (i) { if (i.type !== 'hidden' || /^(per_cat|roles_permissions_id_)/.test(i.name)) { i.disabled = true; } });
+                            var field = document.createElement('input');
+                            field.type = 'hidden'; field.name = 'perms_json'; field.value = JSON.stringify(perms);
+                            form.appendChild(field);
+                        });
+                    </script>
                 </div>
             </div>
         </div>

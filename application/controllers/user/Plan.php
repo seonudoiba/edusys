@@ -29,13 +29,17 @@ class Plan extends Student_Controller
         $current = $this->db->where(array('school_id' => $school_id, 'payment_status' => 1))->order_by('id', 'desc')->limit(1)->get('subscription')->row_array();
         $ends = $current ? strtotime($current['created_at']) + (int) $current['days'] * 86400 : 0;
         $days_left = $current ? (int) floor(($ends - time()) / 86400) : -1;
-        $topup = $current && !empty($current['student_count']) ? $this->plan_pricing->topup($current, (int) $current['student_count'] + 1) : null;
+        $onboarding = $current && $current['kind'] === 'setup'; // only the setup fee paid so far
+        $topup = !$onboarding && $current && !empty($current['student_count']) ? $this->plan_pricing->topup($current, (int) $current['student_count'] + 1) : null;
+        $this->load->library('School_discounts');
         $this->load->view('layout/student/header');
         $this->load->view('user/plan/planlist', array(
             'current' => $current,
             'ends' => $ends,
             'days_left' => $days_left,
-            'status' => $days_left >= 0 ? 'Active' : 'Expired',
+            'status' => $onboarding ? 'Setup fee paid: subscription not paid yet' : ($days_left >= 0 ? 'Active' : 'Expired'),
+            'onboarding' => $onboarding,
+            'discount' => $this->school_discounts->active($school_id),
             'active' => (int) $this->db->without_tenant(function ($db) use ($school_id) {
                 return $db->where(array('school_id' => $school_id, 'is_active' => 'yes'))->count_all_results('students');
             }),

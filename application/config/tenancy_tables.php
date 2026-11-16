@@ -274,6 +274,7 @@ $config['tenancy_platform_tables'] = array(
     'platform_plan_bands',
     'platform_quotes',
     'platform_reminder_log',
+    'platform_school_discounts',
     'platform_school_domains',
     'platform_school_notes',
     'platform_settings',

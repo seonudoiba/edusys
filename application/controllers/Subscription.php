@@ -80,7 +80,10 @@ class subscription extends Front_Controller
         if ($this->signup_price['needs_quote']) {
             redirect('plans/quote?students=' . $students);
         }
-        $total = $this->signup_price['total'];
+        // "Setup fee only": the school is set up now and pays its subscription later (kind 'setup',
+        // Plan_limits::onboarding: staff only until then).
+        $setup_only = $this->input->post('pay_now') === 'setup';
+        $total = $setup_only ? $this->signup_price['setup'] : $this->signup_price['total'];
         $discount = 0;
         // A coupon (checked again here, whatever the page showed).
         $this->signup_plan = $plan;
@@ -114,16 +117,16 @@ class subscription extends Front_Controller
         $p = $this->signup_price;
         $subscription_id = $this->subscription_model->add(array(
             'plan_id' => $plan['plan_id'],
-            'kind' => 'new',
+            'kind' => $setup_only ? 'setup' : 'new',
             'student_count' => $p['students'],
             'billing_period' => $p['period'],
             'rate_per_term' => $p['rate'],
-            'terms' => $p['terms'],
+            'terms' => $setup_only ? 0 : $p['terms'],
             'setup_fee' => $p['setup'],
             'quote_id' => $quote ? (int) $quote['id'] : null,
-            'end_date' => date('Y-m-d', strtotime('+' . $p['days'] . ' days')),
+            'end_date' => $setup_only ? date('Y-m-d') : date('Y-m-d', strtotime('+' . $p['days'] . ' days')),
             'price' => $total,
-            'days' => $p['days'],
+            'days' => $setup_only ? 0 : $p['days'],
             'discount_amt' => $discount,
             'coupon_code' => $coupon && $this->platform_coupons->error($coupon, $plan) === null ? $coupon['code'] : null,
             'payment_method' => ($payable > 0) ? $this->input->post('payment_method') : '',
@@ -175,6 +178,7 @@ class subscription extends Front_Controller
             $this->renewal_error($p['error'] . ($p['needs_quote'] ? ' Please contact us to renew.' : ''));
         }
         $plan = $this->plan_pricing->plan();
+        list($discount, $off) = $this->school_discount($school_id, $p['total']);
         $id = $this->subscription_model->add(array(
             'plan_id' => $plan['plan_id'],
             'kind' => 'renewal',
@@ -185,10 +189,11 @@ class subscription extends Front_Controller
             'setup_fee' => 0,
             'end_date' => date('Y-m-d', strtotime('+' . $p['days'] . ' days')),
             'price' => $p['total'],
-            'discount_amt' => 0,
+            'discount_amt' => $off,
+            'school_discount_id' => $discount ? (int) $discount['id'] : null,
             'payment_method' => $method,
             'status' => 0,
-            'total' => $p['total'],
+            'total' => $p['total'] - $off,
             'school_name' => $row->school_name,
             'email_address' => $row->email_address,
             'phone_number' => $row->phone_number,
@@ -211,6 +216,7 @@ class subscription extends Front_Controller
         if (!$t['ok']) {
             $this->renewal_error($t['error']);
         }
+        list($discount, $off) = $this->school_discount($school_id, $t['total']);
         $id = $this->subscription_model->add(array(
             'plan_id' => $current['plan_id'],
             'kind' => 'topup',
@@ -222,10 +228,11 @@ class subscription extends Front_Controller
             'quote_id' => $current['quote_id'],
             'end_date' => date('Y-m-d', strtotime('+' . $t['days'] . ' days')),
             'price' => $t['total'],
-            'discount_amt' => 0,
+            'discount_amt' => $off,
+            'school_discount_id' => $discount ? (int) $discount['id'] : null,
             'payment_method' => $method,
             'status' => 0,
-            'total' => $t['total'],
+            'total' => $t['total'] - $off,
             'school_name' => $row->school_name,
             'email_address' => $row->email_address,
             'phone_number' => $row->phone_number,
@@ -247,6 +254,14 @@ class subscription extends Front_Controller
         }
         $current = $this->db->where(array('school_id' => $school_id, 'payment_status' => 1))->order_by('id', 'desc')->limit(1)->get('subscription')->row_array();
         return array($school_id, $row, $current);
+    }
+
+    /** [the school's active discount or null, naira off $total] (School_discounts, set by the platform). */
+    private function school_discount($school_id, $total)
+    {
+        $this->load->library('School_discounts');
+        $discount = $this->school_discounts->active($school_id);
+        return array($discount, School_discounts::amount($discount, (float) $total));
     }
 
     private function chosen_method()
@@ -294,6 +309,9 @@ class subscription extends Front_Controller
     private function initialize_payment($subscription_id, $edit = false)
     {
         $s = $this->subscription_model->get($subscription_id);
+        if ((float) $s['total'] <= 0) {
+            return $this->data_set($subscription_id, $edit); // nothing to pay (a full discount)
+        }
         $gateway = (string) $s['payment_method'];
         $methods = $this->payment_gateways->platform_enabled();
         if (!isset($methods[$gateway])) {
@@ -476,6 +494,9 @@ class subscription extends Front_Controller
     {
         $quote = $this->plan_pricing->quote($this->input->get('quote'));
         $p = $this->plan_pricing->price((int) $this->input->get('students'), (string) $this->input->get('period'), true, $quote);
+        if ($p['ok'] && $this->input->get('pay_now') === 'setup') {
+            $p['total'] = $p['setup'];
+        }
         $plan = $this->plan_pricing->plan();
         $out = array('ok' => false, 'message' => $p['error']);
         if ($p['ok'] && $plan) {

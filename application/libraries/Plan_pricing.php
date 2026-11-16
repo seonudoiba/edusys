@@ -159,6 +159,9 @@ class Plan_pricing
         $rate = $symbol . number_format((float) $sub['rate_per_term']);
         $terms = (int) $sub['terms'];
         $what = $terms . ' term' . ($terms === 1 ? '' : 's');
+        if (isset($sub['kind']) && $sub['kind'] === 'setup') {
+            return "EduSYS implementation and training (setup fee) for $n students; the subscription is paid separately";
+        }
         if (isset($sub['kind']) && $sub['kind'] === 'topup') {
             return "EduSYS top-up to $n students at $rate per student per term, $what";
         }

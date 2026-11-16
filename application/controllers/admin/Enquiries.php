@@ -8,7 +8,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  */
 class Enquiries extends Admin_Controller
 {
-    const PERMISSION = 'platform_settings';
+    const PERMISSION = 'platform_enquiries';
     const STATUSES = array('new' => array('New', 'label-warning'), 'replied' => array('Replied', 'label-info'), 'closed' => array('Closed', 'label-default'));
 
     public function __construct()

@@ -12,6 +12,22 @@ $state_labels = array(
 $l = $state_labels[$s['state']];
 $can_edit = $this->rbac->hasPrivilege('schools', 'can_edit');
 $can_delete = $this->rbac->hasPrivilege('schools', 'can_delete');
+// Finer platform permissions (System Settings > Roles, "School" group; migration 299).
+$can = function ($perm, $action) { return $this->rbac->hasPrivilege($perm, $action); };
+$can_impersonate = $can('school_impersonate', 'can_view');
+$can_status = $can('school_status', 'can_edit');
+$can_approve = $can('school_approve', 'can_edit');
+$can_billing = $can('school_billing', 'can_edit');
+$can_modules = $can('school_modules', 'can_edit');
+$can_export = $can('school_data', 'can_view');
+$can_purge = $can('school_data', 'can_delete');
+$can_domain_add = $can('school_domains', 'can_add');
+$can_domain_edit = $can('school_domains', 'can_edit');
+$can_domain_delete = $can('school_domains', 'can_delete');
+$can_note_add = $can('school_notes', 'can_add');
+$can_note_delete = $can('school_notes', 'can_delete');
+// A subscription that can be extended (a setup fee alone can't: a subscription is recorded instead).
+$extendable = $s['paid_subscription'] && $s['expiry'] !== 'onboarding';
 $action = function ($name) use ($s) { return site_url('admin/schools/' . $name . '/' . (int) $s['id']); };
 $token = '<input type="hidden" name="form_token" value="' . html_escape($form_token) . '">';
 $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'label-default', 'approved' => 'label-success', 'rejected' => 'label-danger');
@@ -44,7 +60,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                 <?php if ($site_url && $s['set_up']) { ?>
                     <a class="btn btn-default" href="<?php echo $e($site_url); ?>" target="_blank" rel="noopener"><i class="fa fa-external-link"></i> Open school site</a>
                 <?php } ?>
-                <?php if ($can_edit && $s['set_up'] && $s['enabled'] && empty($s['is_platform'])) { ?>
+                <?php if ($can_impersonate && $s['set_up'] && $s['enabled'] && empty($s['is_platform'])) { ?>
                     <form method="post" action="<?php echo $action('impersonate'); ?>" target="_blank"
                           onsubmit="return confirm('Open the admin panel of this school as its super admin? It is recorded in both audit trails.');">
                         <?php echo $token; ?>
@@ -53,6 +69,8 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                 <?php } ?>
                 <?php if ($can_edit) { ?>
                     <a class="btn btn-default" href="<?php echo site_url('admin/schools/edit/' . (int) $s['id']); ?>"><i class="fa fa-pencil"></i> Edit details</a>
+                <?php } ?>
+                <?php if ($can_status) { ?>
                     <?php if ($s['set_up'] && empty($s['is_platform'])) { ?>
                         <form method="post" action="<?php echo $action('toggle_status'); ?>"
                               onsubmit="return confirm('<?php echo $s['enabled'] ? 'Disable this school? Nobody will be able to log in until it is enabled again.' : 'Enable this school?'; ?>');">
@@ -91,7 +109,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                     <?php } ?>
                     <p>Setting up creates the school's data (sessions, menus, settings, default lists) and its super admin account
                         (<b><?php echo $e($s['email_address']); ?></b>). The owner then gets a one-time link to choose a password.</p>
-                    <?php if ($can_edit) { ?>
+                    <?php if ($can_approve) { ?>
                         <form method="post" action="<?php echo $action('setup'); ?>" class="form-inline" onsubmit="return confirm('Set up this school now?');">
                             <?php echo $token; ?>
                             <div class="form-group">
@@ -134,7 +152,9 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                 <div class="box box-primary">
                     <div class="box-header with-border"><h3 class="box-title">Subscription</h3></div>
                     <div class="box-body">
-                        <?php if ($s['paid_subscription']) { $p = $s['paid_subscription']; ?>
+                        <?php if ($s['expiry'] === 'onboarding') { $p = $s['paid_subscription']; ?>
+                            <div class="alert alert-info" style="margin-bottom:10px"><b>Setup fee paid on <?php echo $date($p['created_at']); ?>; subscription not paid yet.</b> Staff can sign in and set the school up; students and parents can't sign in until the owner pays the subscription (from their account) or you record one below.</div>
+                        <?php } elseif ($s['paid_subscription']) { $p = $s['paid_subscription']; ?>
                             <div class="row">
                                 <div class="col-sm-4"><div class="sv-muted">Plan</div><b><?php echo $e($p['plan_title'] ?: 'Plan #' . $p['plan_id']); ?></b></div>
                                 <div class="col-sm-4"><div class="sv-muted">Started</div><b><?php echo $date($p['created_at']); ?></b> · <?php echo (int) $p['days']; ?> days</div>
@@ -148,12 +168,12 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                         <?php } else { ?>
                             <p class="sv-muted">No paid subscription.</p>
                         <?php } ?>
-                        <?php if ($can_edit && empty($s['is_platform'])) { ?>
+                        <?php if ($can_billing && empty($s['is_platform'])) { ?>
                             <hr>
                             <form method="post" action="<?php echo $action('extend'); ?>" class="form-inline"
-                                  onsubmit="return confirm('<?php echo $s['paid_subscription'] ? 'Add these days to the current subscription?' : 'Record this subscription without a payment?'; ?>');">
+                                  onsubmit="return confirm('<?php echo $extendable ? 'Add these days to the current subscription?' : 'Record this subscription without a payment?'; ?>');">
                                 <?php echo $token; ?>
-                                <?php if (!$s['paid_subscription']) { ?>
+                                <?php if (!$extendable) { ?>
                                     <div class="form-group">
                                         <label for="plan_id">Plan</label>
                                         <select id="plan_id" name="plan_id" class="form-control" required>
@@ -169,15 +189,67 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                                     </div>
                                 <?php } ?>
                                 <div class="form-group">
-                                    <label for="days"><?php echo $s['paid_subscription'] ? 'Extend by' : 'Days'; ?></label>
-                                    <input id="days" name="days" type="number" min="1" max="3650" class="form-control" style="width:110px" required value="<?php echo $s['paid_subscription'] ? 30 : ''; ?>"> days
+                                    <label for="days"><?php echo $extendable ? 'Extend by' : 'Days'; ?></label>
+                                    <input id="days" name="days" type="number" min="1" max="3650" class="form-control" style="width:110px" required value="<?php echo $extendable ? 30 : ''; ?>"> days
                                 </div>
-                                <button type="submit" class="btn btn-default"><i class="fa fa-calendar-plus-o"></i> <?php echo $s['paid_subscription'] ? 'Extend subscription' : 'Record subscription'; ?></button>
+                                <button type="submit" class="btn btn-default"><i class="fa fa-calendar-plus-o"></i> <?php echo $extendable ? 'Extend subscription' : 'Record subscription'; ?></button>
                             </form>
-                            <p class="sv-muted" style="margin-top:6px"><?php echo $s['paid_subscription'] ? 'For a goodwill extension or a payment received outside the system.' : 'For a school added by the platform or paid outside the system. No payment is collected.'; ?></p>
+                            <p class="sv-muted" style="margin-top:6px"><?php echo $extendable ? 'For a goodwill extension or a payment received outside the system.' : 'For a school added by the platform or paid outside the system. No payment is collected.'; ?></p>
                         <?php } ?>
                     </div>
                 </div>
+
+                <?php if (empty($s['is_platform']) && ($discount || $discount_history || $this->rbac->hasPrivilege('school_billing', 'can_add'))) { ?>
+                <div class="box box-default" id="discount_box">
+                    <div class="box-header with-border"><h3 class="box-title">Discount</h3></div>
+                    <div class="box-body">
+                        <?php if ($discount) { ?>
+                            <p style="margin-bottom:6px"><span class="label label-success">Active</span> <b><?php echo $e(School_discounts::describe($discount)); ?></b>
+                                <?php if ($discount['note']) { ?><span class="sv-muted">&middot; <?php echo $e($discount['note']); ?></span><?php } ?></p>
+                            <p class="sv-muted" style="font-size:12px">Applied automatically when the owner pays the subscription, renews or adds students from their account.</p>
+                            <?php if ($this->rbac->hasPrivilege('school_billing', 'can_delete')) { ?>
+                                <form method="post" action="<?php echo $action('remove_discount'); ?>" onsubmit="return confirm('Remove this discount?');" style="margin-bottom:10px">
+                                    <?php echo $token; ?><button class="btn btn-default btn-sm" type="submit"><i class="fa fa-times"></i> Remove discount</button>
+                                </form>
+                            <?php } ?>
+                        <?php } else { ?>
+                            <p class="sv-muted">No discount.</p>
+                        <?php } ?>
+                        <?php if ($this->rbac->hasPrivilege('school_billing', 'can_add')) { ?>
+                            <form method="post" action="<?php echo $action('add_discount'); ?>" class="form-inline" id="discount_form">
+                                <?php echo $token; ?>
+                                <div class="form-group">
+                                    <label class="sr-only" for="d_value">Discount</label>
+                                    <input id="d_value" name="value" type="number" min="0.01" step="0.01" class="form-control" style="width:110px" required placeholder="10">
+                                </div>
+                                <div class="form-group">
+                                    <select name="type" class="form-control" aria-label="Percentage or amount">
+                                        <option value="percent">% off</option>
+                                        <option value="amount"><?php echo $e($currency_symbol); ?> off</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <select name="applies" class="form-control" aria-label="Which payments">
+                                        <option value="once">the next payment</option>
+                                        <option value="always">every payment</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-top:6px">
+                                    <input name="note" type="text" maxlength="255" class="form-control" style="width:260px" placeholder="Reason (only the platform sees it)">
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="margin-top:6px"><i class="fa fa-tag"></i> <?php echo $discount ? 'Replace discount' : 'Give discount'; ?></button>
+                            </form>
+                        <?php } ?>
+                        <?php $past = array_values(array_filter($discount_history, function ($d) { return !$d['is_active']; })); if ($past) { ?>
+                            <details style="margin-top:10px"><summary class="sv-muted" style="cursor:pointer">Earlier discounts (<?php echo count($past); ?>)</summary>
+                                <ul class="sv-muted" style="padding-left:18px;margin:6px 0 0">
+                                    <?php foreach ($past as $d) { ?><li><?php echo $e(School_discounts::describe($d)); ?>, given <?php echo $date($d['created_at']); ?><?php echo $d['used_at'] ? ', used ' . $date($d['used_at']) : ', removed'; ?></li><?php } ?>
+                                </ul>
+                            </details>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
 
                 <div class="box box-default">
                     <div class="box-header with-border"><h3 class="box-title">Subscription history</h3></div>
@@ -250,7 +322,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                             <div class="row">
                                 <?php foreach ($modules as $m) { $on = (int) $m['is_active'] === 1; ?>
                                     <div class="col-sm-6 col-lg-4" style="margin-bottom:6px">
-                                        <?php if ($can_edit && (int) $m['system'] !== 1) { ?>
+                                        <?php if ($can_modules && (int) $m['system'] !== 1) { ?>
                                             <form method="post" action="<?php echo $action('toggle_module'); ?>" style="display:inline">
                                                 <?php echo $token; ?><input type="hidden" name="module_id" value="<?php echo (int) $m['id']; ?>">
                                                 <button type="submit" class="btn btn-xs <?php echo $on ? 'btn-success' : 'btn-default'; ?>" title="<?php echo $on ? 'Switch off' : 'Switch on'; ?>" style="min-width:34px"><?php echo $on ? 'On' : 'Off'; ?></button>
@@ -364,21 +436,21 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                     </div>
                 <?php } ?>
 
-                <?php if (empty($s['is_platform']) && ($can_edit || $can_delete)) { ?>
+                <?php if (empty($s['is_platform']) && ($can_export || $can_purge)) { ?>
                 <div class="box box-default">
                     <div class="box-header with-border"><h3 class="box-title">Data</h3></div>
                     <div class="box-body">
                         <?php if ($s['status_reason'] === 'purged') { ?>
                             <p class="text-danger"><i class="fa fa-trash"></i> This school's data and files were purged. Its subscriptions and invoices are kept.</p>
                         <?php } else { ?>
-                            <?php if ($can_edit) { ?>
+                            <?php if ($can_export) { ?>
                                 <form method="post" action="<?php echo $action('export'); ?>" style="margin-bottom:8px">
                                     <?php echo $token; ?>
                                     <button class="btn btn-default btn-sm" type="submit"><i class="fa fa-download"></i> Export data and files</button>
                                     <div class="sv-muted" style="font-size:11px;margin-top:4px">An SQL file of the school's rows plus its uploads (.tar.gz).</div>
                                 </form>
                             <?php } ?>
-                            <?php if ($can_delete && $s['state'] === 'disabled') { ?>
+                            <?php if ($can_purge && $s['state'] === 'disabled') { ?>
                                 <form method="post" action="<?php echo $action('purge'); ?>" style="border-top:1px solid #f2dede;padding-top:8px"
                                       onsubmit="return confirm('Delete ALL data and files of <?php echo $e(addslashes($s['school_name'])); ?> for good? This cannot be undone.');">
                                     <?php echo $token; ?>
@@ -388,7 +460,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                                         <span class="input-group-btn"><button class="btn btn-danger" type="submit"><i class="fa fa-trash"></i> Purge</button></span>
                                     </div>
                                 </form>
-                            <?php } elseif ($can_delete && $s['set_up']) { ?>
+                            <?php } elseif ($can_purge && $s['set_up']) { ?>
                                 <p class="sv-muted" style="font-size:11px">To delete all its data for good, disable the school first.</p>
                             <?php } ?>
                         <?php } ?>
@@ -411,22 +483,22 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                                         CNAME <code><?php echo $e($d['domain']); ?></code> → <code><?php echo $e($cname_target); ?></code><br>
                                         or TXT <code>_edusys.<?php echo $e($d['domain']); ?></code> = <code><?php echo $e($d['verify_token']); ?></code></div>
                                 <?php } ?>
-                                <?php if ($can_edit) { ?>
+                                <?php if (($can_domain_edit || $can_domain_delete)) { ?>
                                     <div class="sv-actions" style="margin-top:4px">
-                                        <?php if (!$d['verified_at']) { ?>
+                                        <?php if (!$can_domain_edit) { /* remove only */ } elseif (!$d['verified_at']) { ?>
                                             <form method="post" action="<?php echo $action('verify_domain'); ?>"><?php echo $token; ?><input type="hidden" name="domain_id" value="<?php echo (int) $d['id']; ?>">
                                                 <button class="btn btn-xs btn-success" type="submit"><i class="fa fa-check"></i> Verify</button></form>
                                         <?php } else { ?>
                                             <form method="post" action="<?php echo $action('primary_domain'); ?>"><?php echo $token; ?><input type="hidden" name="domain_id" value="<?php echo (int) $d['id']; ?>">
                                                 <button class="btn btn-xs btn-default" type="submit"><?php echo (int) $d['is_primary'] ? 'Use the subdomain as main' : 'Make main address'; ?></button></form>
                                         <?php } ?>
-                                        <form method="post" action="<?php echo $action('remove_domain'); ?>" onsubmit="return confirm('Remove <?php echo $e(addslashes($d['domain'])); ?>? It stops opening the school.');"><?php echo $token; ?><input type="hidden" name="domain_id" value="<?php echo (int) $d['id']; ?>">
-                                            <button class="btn btn-xs btn-link text-danger" type="submit">remove</button></form>
+                                        <?php if ($can_domain_delete) { ?><form method="post" action="<?php echo $action('remove_domain'); ?>" onsubmit="return confirm('Remove <?php echo $e(addslashes($d['domain'])); ?>? It stops opening the school.');"><?php echo $token; ?><input type="hidden" name="domain_id" value="<?php echo (int) $d['id']; ?>">
+                                            <button class="btn btn-xs btn-link text-danger" type="submit">remove</button></form><?php } ?>
                                     </div>
                                 <?php } ?>
                             </div>
                         <?php } ?>
-                        <?php if ($can_edit) { ?>
+                        <?php if ($can_domain_add) { ?>
                             <form method="post" action="<?php echo $action('add_domain'); ?>" style="margin-top:10px">
                                 <?php echo $token; ?>
                                 <div class="input-group input-group-sm">
@@ -443,7 +515,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                     <div class="box-header with-border"><h3 class="box-title">Notes</h3>
                         <span class="sv-muted" style="margin-left:8px">internal, never shown to the school</span></div>
                     <div class="box-body">
-                        <?php if ($can_edit) { ?>
+                        <?php if ($can_note_add) { ?>
                             <form method="post" action="<?php echo $action('add_note'); ?>" style="margin-bottom:10px">
                                 <?php echo $token; ?>
                                 <textarea name="note" class="form-control" rows="2" maxlength="5000" required placeholder="Call notes, agreements, follow-ups"></textarea>
@@ -455,7 +527,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                             <div style="border-top:1px solid #eee;padding:8px 0">
                                 <div><?php echo nl2br($e($n['note'])); ?></div>
                                 <div class="sv-muted" style="font-size:11px"><?php echo $date($n['created_at'], 'd M Y H:i'); ?> · <?php echo $e($n['created_by']); ?>
-                                    <?php if ($can_edit) { ?>
+                                    <?php if ($can_note_delete) { ?>
                                         <form method="post" action="<?php echo $action('delete_note'); ?>" style="display:inline" onsubmit="return confirm('Delete this note?');">
                                             <?php echo $token; ?><input type="hidden" name="note_id" value="<?php echo (int) $n['id']; ?>">
                                             <button type="submit" class="btn btn-link btn-xs text-danger" style="padding:0 4px">delete</button>

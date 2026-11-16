@@ -63,6 +63,14 @@ $locked = !empty($quote);
                         <label><input type="radio" name="billing_period" value="term" <?php echo $s_period === 'term' ? 'checked' : ''; ?>><span>Each term</span></label>
                     </div>
                 </div>
+                <div class="field">
+                    <span style="display:block;font-size:.9rem;font-weight:500;margin-bottom:6px">What to pay now</span>
+                    <div class="choice" style="flex-wrap:wrap">
+                        <label><input type="radio" name="pay_now" value="all" <?php echo set_value('pay_now') !== 'setup' ? 'checked' : ''; ?>><span>Setup and subscription</span></label>
+                        <label><input type="radio" name="pay_now" value="setup" <?php echo set_value('pay_now') === 'setup' ? 'checked' : ''; ?>><span>Setup fee only</span></label>
+                    </div>
+                    <span class="hint" id="pay_now_hint">With the setup fee only, we set up your school and train your staff now. Students and parents can sign in once you pay the subscription from your account.</span>
+                </div>
                 <div class="field" id="method_field">
                     <label for="payment_method">Payment method</label>
                     <select id="payment_method" name="payment_method">
@@ -89,7 +97,7 @@ $locked = !empty($quote);
                 <h2 style="font-size:1.4rem;margin-bottom:6px">Your price</h2>
                 <p id="s_none" class="hint" style="margin:0">Enter the number of students.</p>
                 <table class="sum" id="s_table" style="display:none">
-                    <tr><td id="s_line"></td><td id="s_sub"></td></tr>
+                    <tr id="s_sub_row"><td id="s_line"></td><td id="s_sub"></td></tr>
                     <tr><td>Implementation and training, once</td><td id="s_setup"></td></tr>
                     <tr id="s_off_row" style="display:none"><td>Coupon</td><td id="s_off"></td></tr>
                     <tr class="total"><td>Total</td><td id="s_total"></td></tr>
@@ -108,6 +116,7 @@ $locked = !empty($quote);
     var form = q('reg'), off = 0, plans = '<?php echo site_url('plans/quote'); ?>';
     var naira = function (n) { return '₦' + Math.round(n).toLocaleString('en-NG'); };
     var year = function () { return form.querySelector('[name=billing_period]:checked').value === 'year'; };
+    var setupOnly = function () { var r = form.querySelector('[name=pay_now]:checked'); return !!r && r.value === 'setup'; };
     function band(n) {
         for (var i = 0; i < bands.length; i++) {
             var b = bands[i];
@@ -123,7 +132,7 @@ $locked = !empty($quote);
             q('s_none').innerHTML = 'Schools this size get a custom quote. <a href="' + plans + '?students=' + n + '">Request one</a>.';
             return;
         }
-        var rate = agreed ? agreed.rate : +b.rate_per_term, setup = agreed ? agreed.setup : +b.setup_fee, sub = n * rate * (year() ? 3 : 1), total = Math.max(0, sub + setup - off);
+        var rate = agreed ? agreed.rate : +b.rate_per_term, setup = agreed ? agreed.setup : +b.setup_fee, sub = n * rate * (year() ? 3 : 1), total = Math.max(0, (setupOnly() ? 0 : sub) + setup - off);
         q('s_table').style.display = ''; q('s_none').style.display = 'none';
         q('s_line').textContent = n.toLocaleString('en-NG') + ' students at ' + naira(rate) + (year() ? ' for 3 terms' : ' for one term');
         q('s_sub').textContent = naira(sub);
@@ -131,18 +140,19 @@ $locked = !empty($quote);
         q('s_off_row').style.display = off > 0 ? '' : 'none';
         q('s_off').textContent = '-' + naira(off);
         q('s_total').textContent = naira(total);
-        q('s_next').textContent = 'After that, ' + naira(sub) + (year() ? ' a year.' : ' a term.');
+        q('s_sub_row').style.display = setupOnly() ? 'none' : '';
+        q('s_next').textContent = setupOnly() ? 'Then ' + naira(sub) + (year() ? ' a year' : ' a term') + ', paid when you are ready to start.' : 'After that, ' + naira(sub) + (year() ? ' a year.' : ' a term.');
         q('method_field').style.display = total > 0 ? '' : 'none';
     }
     form.addEventListener('input', function (e) { if (e.target.name === 'student_count') { off = 0; q('coupon_result').textContent = ''; } price(); });
-    form.addEventListener('change', function (e) { if (e.target.name === 'billing_period') { off = 0; q('coupon_result').textContent = ''; } price(); });
+    form.addEventListener('change', function (e) { if (e.target.name === 'billing_period' || e.target.name === 'pay_now') { off = 0; q('coupon_result').textContent = ''; } price(); });
     price();
 
     q('apply_coupon').addEventListener('click', function () {
         var code = q('coupon_code').value.trim(), out = q('coupon_result');
         if (!code) { off = 0; out.textContent = ''; price(); return; }
         var url = '<?php echo site_url('subscription/check_coupon'); ?>?code=' + encodeURIComponent(code) + '&students=' + encodeURIComponent(q('student_count').value)
-            + '&period=' + (year() ? 'year' : 'term') + (token ? '&quote=' + token : '');
+            + '&period=' + (year() ? 'year' : 'term') + (setupOnly() ? '&pay_now=setup' : '') + (token ? '&quote=' + token : '');
         fetch(url, { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) {
             off = d.ok ? +d.discount : 0;
             out.textContent = d.message || 'This coupon code is not valid.';

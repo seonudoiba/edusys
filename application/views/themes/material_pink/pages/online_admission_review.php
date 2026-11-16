@@ -85,6 +85,7 @@
     $guardian_photo = base_url()."uploads/student_images/no_image.png";
   }
  ?> 
+ <?php if (!empty($review_status)) { ?><div class="alert alert-<?php echo $review_status === 'approved' ? 'success' : 'danger'; ?>" id="decision_note"><b><?php echo $review_status === 'approved' ? 'The school has accepted this application.' : 'The school did not accept this application.'; ?></b><?php if (!empty($review_note)) { ?><br><?php echo html_escape($review_note); ?><?php } ?></div><?php } ?>
  <div class="alert alert-success" id="completeformdiv" ><?php echo $this->lang->line('form_has_been_submitted_successfully'); ?> </div>
    <div id="divtoprint" class="spaceb50">
     <div class="row" id="printheader">

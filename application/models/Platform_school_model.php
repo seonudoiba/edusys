@@ -55,13 +55,15 @@ class Platform_school_model extends CI_Model
     /** Count of schools per state, plus expiring and expired (for tabs and the dashboard). */
     public function counts(array $schools)
     {
-        $c = array('all' => count($schools), 'awaiting_payment' => 0, 'waiting_approval' => 0, 'active' => 0, 'disabled' => 0, 'expiring' => 0, 'expired' => 0);
+        $c = array('all' => count($schools), 'awaiting_payment' => 0, 'waiting_approval' => 0, 'active' => 0, 'disabled' => 0, 'expiring' => 0, 'expired' => 0, 'onboarding' => 0);
         foreach ($schools as $s) {
             $c[$s['state']]++;
             if ($s['expiry'] === 'expiring') {
                 $c['expiring']++;
             } elseif ($s['expiry'] === 'expired') {
                 $c['expired']++;
+            } elseif ($s['expiry'] === 'onboarding') {
+                $c['onboarding']++;
             }
         }
         return $c;
@@ -211,7 +213,9 @@ class Platform_school_model extends CI_Model
         $s['expires_at'] = null;
         $s['days_left'] = null;
         $s['expiry'] = 'none';
-        if ($paid) {
+        if ($paid && $paid['kind'] === 'setup') {
+            $s['expiry'] = 'onboarding'; // setup fee paid, subscription not yet: no end date
+        } elseif ($paid) {
             $expires = strtotime($paid['created_at']) + ((int) $paid['days']) * 86400;
             $s['expires_at'] = date('Y-m-d', $expires);
             $s['days_left'] = (int) floor(($expires - time()) / 86400);

@@ -76,6 +76,10 @@ class Subscription_activation
             $db->where('code', $subscription['coupon_code'])->set('used_count', 'used_count + 1', false)->update('platform_coupons');
             $db->where('id', (int) $subscription_id)->update('subscription', array('coupon_counted' => 1));
         }
+        if (!empty($subscription['school_discount_id'])) {
+            $this->CI->load->library('School_discounts');
+            $this->CI->school_discounts->used((int) $subscription['school_discount_id'], (int) $subscription_id);
+        }
         if (!empty($subscription['quote_id'])) {
             $db->where('id', (int) $subscription['quote_id'])->update('platform_quotes', array('status' => 'used'));
         }
@@ -160,7 +164,9 @@ class Subscription_activation
             'owner_name' => $subscription['owner_name'],
             'email' => $subscription['email_address'],
             'phone' => $subscription['phone_number'],
-            'plan' => $plan ? $plan->title : '',
+            'plan' => isset($subscription['kind']) && $subscription['kind'] === 'setup'
+                ? 'Setup fee only: pay the subscription from your account when you are ready for students and parents to sign in'
+                : ($plan ? $plan->title : ''),
             'amount' => number_format((float) $subscription['total'], 2),
             'account_password' => $guest_password !== '' ? $guest_password : '(unchanged)',
             'account_url' => site_url('course/guestlogin'),

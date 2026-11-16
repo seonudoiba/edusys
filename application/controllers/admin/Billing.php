@@ -22,7 +22,7 @@ class Billing extends Admin_Controller
 
     public function bands()
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_view', 'pricing_bands');
         $this->session->set_userdata('top_menu', 'subscription');
         $this->session->set_userdata('sub_menu', 'admin/billing/bands');
         $this->load->library('Plan_pricing');
@@ -35,7 +35,7 @@ class Billing extends Admin_Controller
     /** New prices apply to new payments; what schools have already paid doesn't change. */
     public function save_bands()
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'pricing_bands');
         $this->form_token->require_post();
         $this->load->library('Plan_pricing');
         $changes = array();
@@ -65,7 +65,7 @@ class Billing extends Admin_Controller
 
     public function invoices()
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_view', 'platform_invoices');
         $this->menu('admin/billing/invoices');
         $q = trim((string) $this->input->get('q'));
         $this->db->from('platform_invoices');
@@ -88,7 +88,7 @@ class Billing extends Admin_Controller
 
     public function invoice($id = null)
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_view', 'platform_invoices');
         $invoice = $this->invoice_or_404($id);
         $pdf = $this->platform_invoices->pdf($invoice);
         header('Content-Type: application/pdf');
@@ -100,7 +100,7 @@ class Billing extends Admin_Controller
 
     public function resend_invoice($id = null)
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_edit', 'platform_invoices');
         $this->form_token->require_post();
         $invoice = $this->invoice_or_404($id);
         $ok = $this->platform_invoices->send_receipt($invoice);
@@ -112,7 +112,7 @@ class Billing extends Admin_Controller
     /** Issues the invoices missing for paid subscriptions (e.g. paid before invoices existed). */
     public function issue_missing()
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_edit', 'platform_invoices');
         $this->form_token->require_post();
         $ids = array_column($this->db->select('subscription.id')->from('subscription')
             ->join('platform_invoices', 'platform_invoices.subscription_id = subscription.id', 'left')
@@ -133,7 +133,7 @@ class Billing extends Admin_Controller
 
     public function coupons()
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_view', 'platform_coupons');
         $this->menu('admin/billing/coupons');
         $data = array(
             'coupons' => $this->db->order_by('id', 'desc')->get('platform_coupons')->result_array(),
@@ -148,7 +148,7 @@ class Billing extends Admin_Controller
 
     public function coupon($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_view', 'platform_coupons');
         $this->menu('admin/billing/coupons');
         $coupon = ctype_digit((string) $id) ? $this->db->where('id', (int) $id)->get('platform_coupons')->row_array() : null;
         if ($id !== null && !$coupon) {
@@ -163,7 +163,7 @@ class Billing extends Admin_Controller
 
     public function save_coupon($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege($id ? 'can_edit' : 'can_add', 'platform_coupons');
         $this->form_token->require_post();
         $id = ctype_digit((string) $id) ? (int) $id : null;
         $in = function ($k) { return trim((string) $this->input->post($k)); };
@@ -215,7 +215,7 @@ class Billing extends Admin_Controller
 
     public function toggle_coupon($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_edit', 'platform_coupons');
         $this->form_token->require_post();
         $c = $this->coupon_or_404($id);
         $on = !(int) $c['is_active'];
@@ -227,7 +227,7 @@ class Billing extends Admin_Controller
 
     public function delete_coupon($id = null)
     {
-        $this->require_privilege('can_edit');
+        $this->require_privilege('can_delete', 'platform_coupons');
         $this->form_token->require_post();
         $c = $this->coupon_or_404($id);
         if ((int) $c['used_count'] > 0 || $this->db->where('coupon_code', $c['code'])->count_all_results('subscription') > 0) {
@@ -244,7 +244,7 @@ class Billing extends Admin_Controller
 
     public function reports()
     {
-        $this->require_privilege('can_view');
+        $this->require_privilege('can_view', 'billing_reports');
         $this->menu('admin/billing/reports');
         $months = in_array((int) $this->input->get('months'), array(3, 6, 12, 24), true) ? (int) $this->input->get('months') : 12;
         $keys = array();
@@ -361,9 +361,9 @@ class Billing extends Admin_Controller
         $this->session->set_userdata('sub_menu', $sub);
     }
 
-    private function require_privilege($action)
+    private function require_privilege($action, $permission = self::PERMISSION)
     {
-        if (!$this->rbac->hasPrivilege(self::PERMISSION, $action)) {
+        if (!$this->rbac->hasPrivilege($permission, $action)) {
             access_denied();
         }
     }
