@@ -116,7 +116,9 @@ $e = function ($v) { return html_escape((string) $v); };
             var root = document.getElementById('heroSlider');
             var slides = root.querySelectorAll('.slide'), dots = root.querySelectorAll('.slider-dots button');
             var pauseBtn = root.querySelector('.pause'), speed = +root.getAttribute('data-speed') * 1000;
-            var at = 0, timer = null, stopped = window.matchMedia('(prefers-reduced-motion: reduce)').matches, hold = false;
+            // Plays on its own unless the visitor presses pause. With reduced motion the slides change without the
+            // animation (site.css), so they still advance; the pause button stops them.
+            var at = 0, timer = null, stopped = false, hold = false;
             function show(n) {
                 n = (n + slides.length) % slides.length;
                 for (var i = 0; i < slides.length; i++) {
@@ -148,11 +150,15 @@ $e = function ($v) { return html_escape((string) $v); };
                     tick();
                 });
             }
-            // Wait while the visitor points at or tabs into the slider.
-            root.addEventListener('mouseenter', function () { hold = true; tick(); });
-            root.addEventListener('mouseleave', function () { hold = false; tick(); });
-            root.addEventListener('focusin', function () { hold = true; tick(); });
+            // Wait while a keyboard user is inside the slider (a mouse click on an arrow or dot doesn't hold it,
+            // and resting the pointer on the slider, which fills the first screen, doesn't either).
+            root.addEventListener('focusin', function (ev) {
+                var kb = true;
+                try { kb = ev.target.matches(':focus-visible'); } catch (e) {}
+                hold = kb; tick();
+            });
             root.addEventListener('focusout', function (ev) { if (!root.contains(ev.relatedTarget)) { hold = false; tick(); } });
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) { tick(); } });
             var x0 = null;
             root.addEventListener('touchstart', function (ev) { x0 = ev.touches[0].clientX; }, { passive: true });
             root.addEventListener('touchend', function (ev) {
