@@ -71,7 +71,7 @@ class Platform_admin_setup
 
     /** sidebar_menus lang_key => access_permissions */
     const MENUS = array(
-        'subscription' => "('subscription', 'can_view') || ('subscription_list', 'can_view') || ('subscription_transfers', 'can_view') || ('pricing_bands', 'can_view') || ('platform_invoices', 'can_view') || ('platform_coupons', 'can_view') || ('billing_reports', 'can_view')",
+        'subscription' => "('subscription', 'can_view') || ('subscription_list', 'can_view') || ('subscription_transfers', 'can_view') || ('platform_invoices', 'can_view') || ('platform_coupons', 'can_view') || ('billing_reports', 'can_view')",
         'platform_communication' => "('platform_settings', 'can_view') || ('email_templates', 'can_view')",
         'platform_support' => "('platform_settings', 'can_view') || ('support_desk', 'can_view') || ('platform_enquiries', 'can_view')",
     );
@@ -86,6 +86,8 @@ class Platform_admin_setup
             'access_permissions' => "('pricing_bands', 'can_view') || ('plan_type', 'can_view') || ('plan_list', 'can_view')"));
         $db->where(array('school_id' => $sid, 'url' => 'admin/plan'))->update('sidebar_sub_menus', array('url' => 'admin/billing/bands',
             'access_permissions' => "('pricing_bands', 'can_view')", 'activate_controller' => 'billing', 'activate_methods' => 'bands'));
+        // Pricing Bands is no longer repeated under Subscription List (Plan > Plan opens it).
+        $db->where(array('school_id' => $sid, 'lang_key' => 'pricing_bands', 'url' => 'admin/billing/bands'))->delete('sidebar_sub_menus');
 
         $groups = array();
         foreach ($db->where('school_id', $sid)->where_in('short_code', array('school_information', 'subscription', 'platform_admin'))->get('permission_group')->result_array() as $g) {
