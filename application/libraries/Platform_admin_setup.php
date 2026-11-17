@@ -164,6 +164,48 @@ class Platform_admin_setup
         }
     }
 
+    /** Permission groups that are all about running the platform. */
+    const PLATFORM_GROUPS = array('school_information', 'plan_list', 'subscription', 'platform_admin');
+
+    /** Permissions the platform uses that no sidebar item names (Platform team pages). */
+    const PLATFORM_EXTRA = array('disable_staff', 'can_see_other_users_profile');
+
+    /**
+     * The permission short codes that matter on the platform: the platform groups, what the platform's
+     * shown sidebar menus and items ask for, and PLATFORM_EXTRA. Roles and permissions on the platform
+     * lists only these (the school modules stay in the database, unlisted and unchanged).
+     */
+    public function platform_permission_codes($sid)
+    {
+        $db = $this->CI->db;
+        $codes = array_fill_keys(self::PLATFORM_EXTRA, true);
+        $rules = array();
+        // The items' rules (a menu's own rule lists everything it ever held, so it's used only for a menu without items).
+        foreach ($db->select('id, access_permissions')->where(array('school_id' => $sid, 'sidebar_display' => 1))->get('sidebar_menus')->result_array() as $m) {
+            $items = $db->select('access_permissions')->where(array('school_id' => $sid, 'sidebar_menu_id' => (int) $m['id'], 'is_active' => 1))->get('sidebar_sub_menus')->result_array();
+            if (!$items) {
+                $rules[] = $m['access_permissions'];
+            }
+            foreach ($items as $s) {
+                $rules[] = $s['access_permissions'];
+            }
+        }
+        foreach ($rules as $rule) {
+            if (preg_match_all("/\\(\\s*'([a-z0-9_]+)'\\s*,/", (string) $rule, $m)) {
+                foreach ($m[1] as $code) {
+                    $codes[$code] = true;
+                }
+            }
+        }
+        $groups = array_column($db->select('id')->where('school_id', $sid)->where_in('short_code', self::PLATFORM_GROUPS)->get('permission_group')->result_array(), 'id');
+        if ($groups) {
+            foreach ($db->select('short_code')->where('school_id', $sid)->where_in('perm_group_id', $groups)->get('permission_category')->result_array() as $c) {
+                $codes[$c['short_code']] = true;
+            }
+        }
+        return $codes;
+    }
+
     private function grant($sid, $role_id, $cat_id, array $f)
     {
         if (!array_sum($f)) {
