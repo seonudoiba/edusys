@@ -35,7 +35,10 @@ class Plan_policy_hook
         $route = strtolower($CI->router->fetch_class() . '/' . $CI->router->fetch_method());
 
         if (isset(self::ADDS[$route])) {
-            $count = substr($route, -7) === '/import' ? $this->import_rows() : 1;
+            // An import is refused here only when there is no place left at all (and a file was sent);
+            // otherwise its rows are added until the limit, and the rest are listed as skipped
+            // (Student::import, Staff::import use Plan_limits::places_left).
+            $count = substr($route, -7) === '/import' ? ($this->has_upload() ? 1 : 0) : 1;
             $error = $count > 0 ? $CI->plan_limits->add_error($school_id, self::ADDS[$route], $count) : null;
             if ($error !== null) {
                 $this->refuse($CI, $error);
@@ -51,26 +54,16 @@ class Plan_policy_hook
         }
     }
 
-    /** Data rows in the uploaded import file (CSV: lines after the header). */
-    private function import_rows()
+    /** True when the request carries an uploaded file (an import's sheet). */
+    private function has_upload()
     {
         foreach ($_FILES as $f) {
             $tmp = is_array($f['tmp_name']) ? reset($f['tmp_name']) : $f['tmp_name'];
             if ($tmp && is_uploaded_file($tmp)) {
-                $lines = 0;
-                $h = fopen($tmp, 'r');
-                while ($h && ($row = fgetcsv($h)) !== false) {
-                    if (array_filter($row, 'strlen')) {
-                        $lines++;
-                    }
-                }
-                if ($h) {
-                    fclose($h);
-                }
-                return max(0, $lines - 1);
+                return true;
             }
         }
-        return 0;
+        return false;
     }
 
     private function upload_bytes(array $files)

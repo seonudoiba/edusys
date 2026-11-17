@@ -114,7 +114,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                             if ($student['is_active'] == 'no') {
                             ?>
                                 <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('disable_reason'); ?></b> <span class="pull-right text-aqua"><?php echo $reason_data['reason'] ?></span>
+                                    <b><?php echo $this->lang->line('disable_reason'); ?></b> <span class="pull-right text-aqua"><?php echo isset($reason_data['reason']) ? html_escape($reason_data['reason']) : ''; ?></span>
                                 </li>
                                 <li class="list-group-item listnoback">
                                     <b><?php echo $this->lang->line('disable_note'); ?></b> <span class="pull-right text-aqua"><?php echo $student['dis_note'] ?></span>
@@ -3145,20 +3145,7 @@ $currency_symbol = $admin_session['currency_symbol'];
         if (confirm("<?php echo $this->lang->line('are_you_sure_you_want_to_enable_this_record'); ?>")) {
             var student_id = '<?php echo $student["id"] ?>';
 
-            $.ajax({
-                type: "post",
-                url: base_url + "student/getUserLoginDetails",
-                data: {
-                    'student_id': student_id
-                },
-                dataType: "json",
-                success: function(response) {
-
-                    var userid = response.id;
-                    changeStatus(userid, 'yes', 'student');
-                }
-            });
-
+            // The student first (refused when the subscription's student limit is reached), then their login.
             $.ajax({
                 type: "post",
                 url: base_url + "student/enablestudent/" + student_id,
@@ -3167,8 +3154,23 @@ $currency_symbol = $admin_session['currency_symbol'];
                 },
                 dataType: "json",
                 success: function(data) {
-                    window.location.reload(true);
-
+                    if (!data || data.status !== 'success') {
+                        errorMsg(data && data.error ? data.error : 'The student could not be enabled.');
+                        return;
+                    }
+                    $.ajax({
+                        type: "post",
+                        url: base_url + "student/getUserLoginDetails",
+                        data: {
+                            'student_id': student_id
+                        },
+                        dataType: "json",
+                        success: function(response) {
+                            $.post(base_url + "admin/users/changeStatus", {id: response.id, status: 'yes', role: 'student'})
+                                .always(function () { window.location.reload(true); });
+                        },
+                        error: function () { window.location.reload(true); }
+                    });
                 }
             });
 

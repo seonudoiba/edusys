@@ -125,6 +125,20 @@ class Plan_limits
     }
 
     /**
+     * How many more active students (or staff) the school can have, or null when there is no limit.
+     * @param string $what students | staff
+     */
+    public function places_left($school_id, $what)
+    {
+        $c = $this->current($school_id);
+        $max = $what === 'students' ? $c['max_students'] : $c['max_staff'];
+        if ($max <= 0) {
+            return null;
+        }
+        return max(0, $max - $this->usage($school_id)[$what]);
+    }
+
+    /**
      * Why $count more students or staff can't be added, or null when they can.
      * @param string $what students | staff
      */
