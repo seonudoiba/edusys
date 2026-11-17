@@ -206,6 +206,13 @@ class Platform_school_model extends CI_Model
     private function decorate(array &$s, $latest, $paid)
     {
         $s['set_up'] = (int) $s['cron_flag'] === 1;
+        // A school with data that wasn't set up through the platform (imported, moved in) is running too.
+        if (!$s['set_up'] && empty($s['is_platform']) && (string) ($s['status_reason'] ?? '') !== 'purged') {
+            $id = (int) $s['id'];
+            $s['set_up'] = $this->db->without_tenant(function ($db) use ($id) {
+                return $db->where('school_id', $id)->count_all_results('sch_settings') > 0;
+            });
+        }
         $s['enabled'] = (int) $s['status'] === 1;
         $s['plan_title'] = $latest ? $latest['plan_title'] : null;
         $s['latest_subscription'] = $latest;

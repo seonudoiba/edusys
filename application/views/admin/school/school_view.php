@@ -33,8 +33,10 @@ $token = '<input type="hidden" name="form_token" value="' . html_escape($form_to
 $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'label-default', 'approved' => 'label-success', 'rejected' => 'label-danger');
 ?>
 <style>
+    .sv-header { padding: 15px 15px 0; }
     .sv-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
-    .sv-head h1 { margin: 0; font-size: 24px; }
+    .sv-head h1 { margin: 0; font-size: 24px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .sv-head h1 .label { margin-left: 0; }
     .sv-head .label { font-size: 12px; vertical-align: middle; margin-left: 6px; }
     .sv-actions { display: flex; flex-wrap: wrap; gap: 6px; }
     .sv-actions form { display: inline; margin: 0; }
@@ -48,7 +50,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
     .sv-setup { border-left: 4px solid #f39c12; }
 </style>
 <div class="content-wrapper">
-    <section class="content-header">
+    <section class="sv-header"><!-- not content-header: the admin theme hides that (style-main.css) -->
         <div class="sv-head">
             <h1>
                 <a href="<?php echo site_url('admin/schools'); ?>" class="sv-muted" title="All schools"><i class="fa fa-arrow-left"></i></a>
