@@ -413,9 +413,7 @@ class Staff extends Admin_Controller
                 array('check_exists', array($this->staff_model, 'valid_email_id')),
             )
         );
-        if (!$this->sch_setting_detail->staffid_auto_insert) {
-            $this->form_validation->set_rules('employee_id', $this->lang->line('staff_id'), 'callback_username_check');
-        }
+        // The staff ID is given by the system (libraries/Staff_ids.php); there is no field for it.
 
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
 
@@ -618,35 +616,8 @@ class Staff extends Admin_Controller
 //==========================
             $insert                                = true;
             $data_setting                          = array();
-            $data_setting['id']                    = $this->sch_setting_detail->id;
-            $data_setting['staffid_auto_insert']   = $this->sch_setting_detail->staffid_auto_insert;
-            $data_setting['staffid_update_status'] = $this->sch_setting_detail->staffid_update_status;
-            $employee_id                           = 0;
-
-            if ($this->sch_setting_detail->staffid_auto_insert) {
-                if ($this->sch_setting_detail->staffid_update_status) {
-
-                    $employee_id = $this->sch_setting_detail->staffid_prefix . $this->sch_setting_detail->staffid_start_from;
-
-                    $last_student = $this->staff_model->lastRecord();
-
-                    $last_admission_digit = str_replace($this->sch_setting_detail->staffid_prefix, "", $last_student->employee_id);
-
-                    $employee_id                = $this->sch_setting_detail->staffid_prefix . sprintf("%0" . $this->sch_setting_detail->staffid_no_digit . "d", $last_admission_digit + 1);
-                    $data_insert['employee_id'] = $employee_id;
-                } else {
-                    $employee_id                = $this->sch_setting_detail->staffid_prefix . $this->sch_setting_detail->staffid_start_from;
-                    $data_insert['employee_id'] = $employee_id;
-                }
-
-                $employee_id_exists = $this->staff_model->check_staffid_exists($employee_id);
-                if ($employee_id_exists) {
-                    $insert = false;
-                }
-            } else {
-
-                $data_insert['employee_id'] = $this->input->post('employee_id');
-            }
+            $this->load->library('Staff_ids');
+            $data_insert['employee_id']            = $this->staff_ids->next($this->sch_setting_detail);
             //==========================
             if ($insert) {
 
@@ -701,7 +672,7 @@ class Staff extends Admin_Controller
                 }
                 //==========================
 
-                $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>');
+                $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . ' ' . $this->lang->line('staff_id') . ': <b>' . html_escape($data_insert['employee_id']) . '</b></div>');
 
                 redirect('admin/staff');
             } else {
@@ -988,9 +959,7 @@ class Staff extends Admin_Controller
         $this->form_validation->set_rules('second_doc', $this->lang->line('image'), 'callback_handle_second_upload');
         $this->form_validation->set_rules('third_doc', $this->lang->line('image'), 'callback_handle_third_upload');
         $this->form_validation->set_rules('fourth_doc', $this->lang->line('image'), 'callback_handle_fourth_upload');
-        if (!$this->sch_setting_detail->staffid_auto_insert) {
-            $this->form_validation->set_rules('employee_id', $this->lang->line('staff_id'), 'callback_username_check');
-        }
+        // The staff ID was given by the system when the staff member was added; it isn't changed here.
 
         $this->form_validation->set_rules(
             'email', $this->lang->line('email'), array('required', 'valid_email',
@@ -1098,9 +1067,6 @@ class Staff extends Admin_Controller
 
             $data1['date_of_leaving'] = $this->customlib->dateFormatToYYYYMMDD($date_of_leaving);
 
-            if (!$this->sch_setting_detail->staffid_auto_insert) {
-                $data1['employee_id'] = $employee_id;
-            }
 
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
                 $img_name       = $this->media_storage->fileupload("file", upload_root() . "staff_images/");
@@ -1511,6 +1477,10 @@ class Staff extends Admin_Controller
                                 continue;
                             }
 
+                            if (trim((string) $result[$r_key]['employee_id']) === '') { // empty: the system gives the next staff ID
+                                $this->load->library('Staff_ids');
+                                $result[$r_key]['employee_id'] = $this->staff_ids->next($this->sch_setting_detail);
+                            }
                             $check_exists     = $this->staff_model->import_check_data_exists($result[$r_key]['name'], $result[$r_key]['employee_id']);
                             $check_emailexists = $this->staff_model->import_check_email_exists($result[$r_key]['name'], $result[$r_key]['email']);
 

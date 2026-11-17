@@ -28,20 +28,7 @@
                                     <?php echo $this->customlib->getCSRF(); ?>
 
                                     <div class="row">
-                                        <?php
-if (!$staffid_auto_insert) {
-    ?>
-
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="exampleInputEmail1"><?php echo $this->lang->line('staff_id'); ?></label><small class="req"> *</small>
-                                                    <input autofocus="" id="employee_id" name="employee_id"  placeholder="" type="text" class="form-control"  value="<?php echo set_value('employee_id') ?>" />
-                                                    <span class="text-danger"><?php echo form_error('employee_id'); ?></span>
-                                                </div>
-                                            </div>
-                                            <?php
-}
-?>
+                                        <?php // no Staff ID field: the system gives the next ID when the staff member is saved (libraries/Staff_ids.php) ?>
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('role'); ?></label><small class="req"> *</small>
