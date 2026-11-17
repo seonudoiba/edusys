@@ -78,35 +78,25 @@
                                         <div class="form-group row">
                                             <label class="col-sm-3"><?php echo $this->lang->line('auto_staff_id'); ?></label>
                                             <div class="col-sm-9">
-                                                <label class="radio-inline">
-                                                    <input type="radio" name="staffid_auto_insert" value="0" <?php
-                                                    if ($result->staffid_auto_insert == 0) {
-                                                        echo "checked";
-                                                    }
-                                                    ?>  ><?php echo $this->lang->line('disabled'); ?>
-                                                </label>
-                                                <label class="radio-inline">
-                                                    <input type="radio" name="staffid_auto_insert" value="1" <?php
-                                                    if ($result->staffid_auto_insert == 1) {
-                                                        echo "checked";
-                                                    }
-                                                    ?>><?php echo $this->lang->line('enabled'); ?>
-                                                </label>
+                                                <input type="hidden" name="staffid_auto_insert" value="1">
+                                                <p class="form-control-static">Always on. Every new staff member gets the next free staff ID, so IDs never clash.
+                                                    Next staff ID: <b><?php echo html_escape($next_staff_id); ?></b></p>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
                                         <div class="form-group row">
-                                            <label class="col-sm-3"><?php echo $this->lang->line('staff_id_prefix') ?><small class="req"> *</small></label>
+                                            <label class="col-sm-3"><?php echo $this->lang->line('staff_id_prefix') ?></label>
                                             <div class="col-sm-9">
-                                                <input id="staffid_prefix" value="<?php echo $result->staffid_prefix; ?>" name="staffid_prefix" placeholder="" type="text" class="form-control" />
+                                                <input id="staffid_prefix" value="<?php echo html_escape($result->staffid_prefix); ?>" name="staffid_prefix" placeholder="<?php echo html_escape($staff_id_format['prefix']); ?>" maxlength="40" type="text" class="form-control" />
+                                                <p class="help-block">Optional. Empty uses <?php echo Staff_ids::PREFIX; ?>, for example <?php echo Staff_ids::PREFIX . str_pad('1', Staff_ids::DIGITS, '0', STR_PAD_LEFT); ?>.</p>
                                                 <span class="text-danger"><?php echo form_error('staffid_prefix'); ?></span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
                                         <div class="form-group row">
-                                            <label class="col-sm-3"><?php echo $this->lang->line('staff_no_digit') ?><small class="req"> *</small></label>
+                                            <label class="col-sm-3"><?php echo $this->lang->line('staff_no_digit') ?></label>
                                             <div class="col-sm-9">
                                                 <select  id="staffid_no_digit" name="staffid_no_digit" class="form-control" >
                                                     <option value=""><?php echo $this->lang->line('select'); ?></option>
@@ -125,10 +115,10 @@
                                     </div>
                                     <div class="col-md-12">
                                         <div class="form-group row">
-                                            <label class="col-sm-3"><?php echo $this->lang->line('staff_id_start_from') ?><small class="req"> *</small></label>
+                                            <label class="col-sm-3"><?php echo $this->lang->line('staff_id_start_from') ?></label>
                                             <div class="col-sm-9">
 
-                                                <input id="staffid_start_from" value="<?php echo $result->staffid_start_from; ?>" name="staffid_start_from" placeholder="" type="text" class="form-control" />
+                                                <input id="staffid_start_from" value="<?php echo html_escape($result->staffid_start_from); ?>" name="staffid_start_from" placeholder="" type="text" class="form-control" />
                                                 <span class="text-danger"><?php echo form_error('staffid_start_from'); ?></span>
                                             </div>
                                         </div>

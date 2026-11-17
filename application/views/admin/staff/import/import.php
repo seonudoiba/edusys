@@ -25,6 +25,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                         1. <?php echo $this->lang->line('import_staff_step1'); ?><br/>
                         2. <?php echo $this->lang->line('import_staff_step2'); ?><br/>
                         3. Put each staff member's role in the <b>role</b> column (Admin, Teacher, Accountant, Librarian, Receptionist, or a role your school created). The role chosen below is used only for rows where role is empty.<br/>
+                        4. Leave <b>employee_id</b> (staff ID) empty and the system gives each staff member the next staff ID.<br/>
 
                         <hr/></div>
                     <div class="box-body table-responsive" style="overflow-x:auto;">
@@ -33,7 +34,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <tr>
                                     <?php
 foreach ($field as $key => $value) {
-    if ($value == 'staff_id' || $value == 'first_name' || $value == 'email' || $value == 'gender' || $value == 'date_of_birth') {
+    if ($value == 'first_name' || $value == 'email' || $value == 'gender' || $value == 'date_of_birth') {
         $req = "<span class='text-red'>*</span>";
     } else {
         $req = "";

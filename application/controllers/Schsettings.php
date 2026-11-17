@@ -598,6 +598,9 @@ class Schsettings extends Admin_Controller
         $this->load->view('layout/header');
         $this->load->library('Student_numbers');
         $data['next_admission_no'] = $this->student_numbers->next();
+        $this->load->library('Staff_ids');
+        $data['next_staff_id']     = $this->staff_ids->next($setting);
+        $data['staff_id_format']   = $this->staff_ids->format($setting);
         $this->load->view('setting/idautogeneration', $data);
         $this->load->view('layout/footer');
     }
@@ -611,12 +614,10 @@ class Schsettings extends Admin_Controller
             $this->form_validation->set_rules('adm_start_from', $this->lang->line('admission_start_from'), 'trim|integer|required|xss_clean');
             $this->form_validation->set_rules('adm_no_digit', $this->lang->line('admission_no_digit'), 'trim|integer|required|xss_clean|callback_check_admission_digit');
         }
-        if ($this->input->post('staffid_auto_insert')) {
-
-            $this->form_validation->set_rules('staffid_prefix', $this->lang->line('staff_id_prefix'), 'trim|required|xss_clean');
-            $this->form_validation->set_rules('staffid_start_from', $this->lang->line('staff_id_start_from'), 'trim|integer|required|xss_clean');
-            $this->form_validation->set_rules('staffid_no_digit', $this->lang->line('staff_id_digit'), 'trim|integer|required|xss_clean|callback_check_staff_id_digit');
-        }
+        // Staff IDs are always given by the system (libraries/Staff_ids.php); empty settings use STF, 4 digits, from 1.
+        $this->form_validation->set_rules('staffid_prefix', $this->lang->line('staff_id_prefix'), 'trim|max_length[40]|xss_clean');
+        $this->form_validation->set_rules('staffid_start_from', $this->lang->line('staff_id_start_from'), 'trim|is_natural|xss_clean');
+        $this->form_validation->set_rules('staffid_no_digit', $this->lang->line('staff_id_digit'), 'trim|is_natural|xss_clean');
 
         if ($this->form_validation->run() == false) {
             $data = array(
@@ -641,7 +642,7 @@ class Schsettings extends Admin_Controller
                 'staffid_start_from'  => $this->input->post('staffid_start_from'),
                 'staffid_prefix'      => $this->input->post('staffid_prefix'),
                 'staffid_no_digit'    => $this->input->post('staffid_no_digit'),
-                'staffid_auto_insert' => $this->input->post('staffid_auto_insert'),
+                'staffid_auto_insert' => 1, // always on (Staff_ids)
             );
 
             $data['adm_update_status']     = 1;
@@ -655,14 +656,6 @@ class Schsettings extends Admin_Controller
                 }
             }
 
-            if ($this->input->post('staffid_auto_insert')) {
-                if ($setting_result->staffid_prefix != $this->input->post('staffid_prefix') ||
-                    $setting_result->staffid_start_from != $this->input->post('staffid_start_from') ||
-                    $setting_result->staffid_no_digit != $this->input->post('staffid_no_digit')
-                ) {
-                    $data['staffid_update_status'] = 0;
-                }
-            }
 
             $data['adm_update_status'];
             $this->setting_model->add($data);
