@@ -1454,9 +1454,17 @@ class Staff extends Admin_Controller
                     $staff_columns = array_fill_keys(array_diff($templates['staff'][1], array('role')), '');
 
                     if (!empty($result)) {
+                        // The plan's staff limit (if it has one): rows past it aren't added.
+                        $this->load->library('Plan_limits');
+                        $places = $this->plan_limits->places_left(Tenant::id(), 'staff');
+                        $over   = array();
 
                         foreach ($result as $r_key => $r_value) {
                             $label     = 'Row ' . ($r_key + 1);
+                            if ($places !== null && $rowcount >= $places) {
+                                $over[] = $r_key + 1;
+                                continue;
+                            }
                             $role_text = trim(isset($r_value['role']) ? $r_value['role'] : '');
                             // only the sample's staff columns: a missing one is empty, an unknown one is ignored (role is not a staff column)
                             $result[$r_key] = array_merge($staff_columns, array_intersect_key($r_value, $staff_columns));
@@ -1545,6 +1553,10 @@ class Staff extends Admin_Controller
                                 $problems[] = $label . ': this staff ID or email is already used by another staff member.';
                             }
                         } ///Result loop
+                        if ($over) {
+                            array_unshift($problems, (count($over) === 1 ? 'Row ' . $over[0] : 'Rows ' . $over[0] . ' to ' . end($over) . ' (' . count($over) . ' staff)')
+                                . ' not imported: ' . $this->plan_limits->add_error(Tenant::id(), 'staff', count($over)));
+                        }
                     } //Not emprty l
 
                     $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('records_found_in_csv_file_total') . $rowcount . $this->lang->line('records_imported_successfully'));

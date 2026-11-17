@@ -1094,9 +1094,17 @@ class Student extends Admin_Controller
                     if (!empty($result)) {
                         $rowcount = 0;
                         $this->load->library('Class_lookup');
+                        // The subscription's student limit: rows past it aren't added (listed below).
+                        $this->load->library('Plan_limits');
+                        $places   = $this->plan_limits->places_left(Tenant::id(), 'students');
+                        $over     = array();
                         for ($i = 1; $i <= count($result); $i++) {
                             $row   = $result[$i];
                             $label = 'Row ' . ($i + 1); // the heading is row 1
+                            if ($places !== null && $rowcount >= $places) {
+                                $over[] = $i + 1;
+                                continue;
+                            }
 
                             // where this student goes: the file's class/section, or the class chosen on the form
                             $class_text   = trim(isset($row['class']) ? $row['class'] : '');
@@ -1195,11 +1203,15 @@ class Student extends Admin_Controller
                                 $problems[] = $label . ': ' . $this->lang->line('record_already_exist');
                             }
                         }
+                        if ($over) {
+                            array_unshift($problems, (count($over) === 1 ? 'Row ' . $over[0] : 'Rows ' . $over[0] . ' to ' . end($over) . ' (' . count($over) . ' students)')
+                                . ' not imported: ' . $this->plan_limits->add_error(Tenant::id(), 'students', count($over)));
+                        }
                         // how many came in, and each skipped row with the reason
                         $msg = count($result) . ' ' . ($rowcount == 1 && count($result) == 1 ? 'student' : 'students') . ' in the file, ' . $rowcount . ' imported.';
                         if ($problems) {
                             $shown = array_slice($problems, 0, 30);
-                            $msg  .= '<br><b>' . count($problems) . ' row(s) skipped:</b><br>' . implode('<br>', array_map('html_escape', $shown)) . (count($problems) > 30 ? '<br>...' : '');
+                            $msg  .= '<br><b>' . (count($problems) + ($over ? count($over) - 1 : 0)) . ' row(s) skipped:</b><br>' . implode('<br>', array_map('html_escape', $shown)) . (count($problems) > 30 ? '<br>...' : '');
                         }
                         $this->session->set_flashdata('msg', '<div class="alert ' . ($problems ? ($rowcount ? 'alert-warning' : 'alert-danger') : 'alert-success') . ' text-left">' . $msg . '</div>');
                     } else {
@@ -1395,7 +1407,7 @@ class Student extends Admin_Controller
                 'guardian_address'  => $this->input->post('guardian_address'),
                 'hostel_room_id'    => $hostel_room_id,
                 'note'              => $this->input->post('note'),
-                'is_active'         => 'yes',
+                // is_active is left as it is: a disabled student is enabled with the Enable button (which checks the student limit)
             );
             if ($this->sch_setting_detail->guardian_occupation) {
                 $data['guardian_occupation'] = $this->input->post('guardian_occupation');
@@ -1857,9 +1869,21 @@ class Student extends Admin_Controller
 
     public function enablestudent($id)
     {
-        $data = array('is_active' => "yes");
-        $this->student_model->disableStudent($id, $data);
-        echo "0";
+        $student = $this->db->select('id, is_active')->where('id', (int) $id)->get('students')->row_array();
+        if (!$student) {
+            show_404();
+        }
+        if ($student['is_active'] !== 'yes') {
+            // An enabled student counts toward the subscription's student limit like a new one.
+            $this->load->library('Plan_limits');
+            $error = Tenant::has() && !Tenant::is_platform() ? $this->plan_limits->add_error(Tenant::id(), 'students', 1) : null;
+            if ($error !== null) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => 'fail', 'error' => $error)));
+                return;
+            }
+        }
+        $this->student_model->disableStudent((int) $id, array('is_active' => 'yes'));
+        $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => 'success')));
     }
 
     public function savemulticlass()
