@@ -198,9 +198,7 @@ class Schools extends Admin_Controller
         if ($school['set_up']) {
             $this->back($school['id'], null, 'This school is already set up.');
         }
-        if ($school['status_reason'] === 'purged') {
-            $this->back($school['id'], null, 'This school was purged; register it again as a new school instead.');
-        }
+        // A purged school can be set up again: a fresh, empty school, its old subscriptions and invoices kept.
         $subdomain = strtolower(trim((string) $this->input->post('subdomain')));
         if ($subdomain !== '' && $subdomain !== (string) $school['subdomain']) {
             $error = $this->school_provisioner->subdomain_error($subdomain, (int) $school['id']);

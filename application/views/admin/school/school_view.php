@@ -102,17 +102,20 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
             </div>
         <?php } ?>
 
-        <?php if (!$s['set_up'] && empty($s['is_platform']) && $s['status_reason'] !== 'purged') { ?>
+        <?php $purged = $s['status_reason'] === 'purged'; ?>
+        <?php if (!$s['set_up'] && empty($s['is_platform'])) { ?>
             <div class="box box-warning sv-setup">
-                <div class="box-header with-border"><h3 class="box-title"><i class="fa fa-rocket"></i> Approve and set up this school</h3></div>
+                <div class="box-header with-border"><h3 class="box-title"><i class="fa fa-rocket"></i> <?php echo $purged ? 'Set up this school again' : 'Approve and set up this school'; ?></h3></div>
                 <div class="box-body">
-                    <?php if ($s['state'] === 'awaiting_payment') { ?>
+                    <?php if ($purged) { ?>
+                        <div class="alert alert-info">This school's data was purged. Setting it up again gives it a fresh, empty school (nothing of its old data comes back; restore the export for that). Its old subscriptions and invoices stay; record a subscription below if it should be paid up.</div>
+                    <?php } elseif ($s['state'] === 'awaiting_payment') { ?>
                         <div class="alert alert-warning">This school hasn't paid yet. Check the payment before setting it up, or record a manual subscription below.</div>
                     <?php } ?>
                     <p>Setting up creates the school's data (sessions, menus, settings, default lists) and its super admin account
                         (<b><?php echo $e($s['email_address']); ?></b>). The owner then gets a one-time link to choose a password.</p>
                     <?php if ($can_approve) { ?>
-                        <form method="post" action="<?php echo $action('setup'); ?>" class="form-inline" onsubmit="return confirm('Set up this school now?');">
+                        <form method="post" action="<?php echo $action('setup'); ?>" class="form-inline" onsubmit="return confirm('<?php echo $purged ? 'Set up this school again, empty?' : 'Set up this school now?'; ?>');">
                             <?php echo $token; ?>
                             <div class="form-group">
                                 <label for="subdomain">School address</label>
@@ -123,7 +126,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                                     <span class="input-group-addon">.<?php echo $e($base_domain); ?></span>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-warning"><i class="fa fa-check"></i> Approve &amp; set up</button>
+                            <button type="submit" class="btn btn-warning"><i class="fa fa-check"></i> <?php echo $purged ? 'Set up again' : 'Approve &amp; set up'; ?></button>
                         </form>
                         <p class="sv-muted" style="margin-top:8px">Lowercase letters, digits and hyphens. It can't be changed once the school is set up.</p>
                     <?php } ?>
@@ -454,7 +457,7 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                             <?php } ?>
                             <?php if ($can_purge && $s['state'] === 'disabled') { ?>
                                 <form method="post" action="<?php echo $action('purge'); ?>" style="border-top:1px solid #f2dede;padding-top:8px"
-                                      onsubmit="return confirm('Delete ALL data and files of <?php echo $e(addslashes($s['school_name'])); ?> for good? This cannot be undone.');">
+                                      onsubmit="return window.confirm('Delete ALL data and files of <?php echo $e(addslashes($s['school_name'])); ?> for good? This cannot be undone.');">
                                     <?php echo $token; ?>
                                     <label style="font-weight:normal;font-size:12px">Purge for good: export first, then type <b><?php echo $e($s['subdomain']); ?></b></label>
                                     <div class="input-group input-group-sm">

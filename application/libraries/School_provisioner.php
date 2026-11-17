@@ -99,7 +99,7 @@ class School_provisioner
                     $db->where(array('school_id' => (int) $school['id'], 'is_homepage' => 1))
                         ->update('front_cms_pages', array('builder_layout' => $starter, 'builder_draft' => $starter));
                 }
-                $db->where('id', (int) $school['id'])->update('school', array('status' => 1, 'cron_flag' => 1));
+                $db->where('id', (int) $school['id'])->update('school', array('status' => 1, 'cron_flag' => 1, 'status_reason' => null)); // a purged school set up again starts clean
                 return $map;
             });
             if ($db->trans_status() === false) {
