@@ -58,6 +58,21 @@ class Roles extends Admin_Controller
 
         $data['role']    = $role;
         $role_permission = $this->role_model->find($role['id']);
+        if (Tenant::is_platform()) {
+            // Only what the platform is run with; school modules (students, fees, exams ...) are left out
+            // and keep whatever they had (saving changes only the permissions listed).
+            $this->load->library('Platform_admin_setup');
+            $keep = $this->platform_admin_setup->platform_permission_codes((int) Tenant::id());
+            foreach ($role_permission as $i => $group) {
+                $group->permission_category = array_values(array_filter($group->permission_category, function ($c) use ($keep) {
+                    return isset($keep[$c->short_code]);
+                }));
+                if (!$group->permission_category) {
+                    unset($role_permission[$i]);
+                }
+            }
+            $role_permission = array_values($role_permission);
+        }
 
         $data['role_permission'] = $role_permission;
 
