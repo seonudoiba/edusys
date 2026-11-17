@@ -359,9 +359,32 @@ class Schools extends Admin_Controller
         if ($school['set_up'] || $has_data) {
             $this->back($school['id'], null, 'This school has been set up and has data. Disable it instead of deleting it.');
         }
-        $this->Subscription_model->removebySchool($school['id']);
-        $this->Guest_model->removebySchool($school['id']);
-        $this->School_model->delete($school['id']);
+        $sid = (int) $school['id'];
+        if ($this->db->where('school_ref', $sid)->count_all_results('platform_invoices') > 0) {
+            $this->back($sid, null, 'This school has invoices (a payment was recorded). Keep it for the accounts: set it up, or disable it, instead of deleting it.');
+        }
+        // Rows a registration leaves behind (its login, payment attempts, captcha, logs...) would block the
+        // delete (foreign keys to school): cleared like a purge, with the registration's subscriptions.
+        $this->load->library('Data_dump');
+        $this->data_dump->purge_school($sid);
+        $subs = array_map('intval', array_column($this->db->select('id')->where('school_id', $sid)->get('subscription')->result_array(), 'id'));
+        if ($subs) {
+            $this->db->where_in('subscription_id', $subs)->delete('platform_reminder_log');
+            $this->db->where_in('subscription_id', $subs)->delete('subscription_bank_transfers');
+        }
+        $this->db->where('school_id', $sid)->delete('platform_school_discounts');
+        $this->Subscription_model->removebySchool($sid);
+        $this->Guest_model->removebySchool($sid);
+        $this->remove_tree(FCPATH . 'uploads/s' . $sid);
+        $debug = $this->db->db_debug;
+        $this->db->db_debug = false;
+        $deleted = $this->School_model->delete($sid);
+        $err = $this->db->error();
+        $this->db->db_debug = $debug;
+        if (!$deleted || !empty($err['code'])) {
+            log_message('error', 'Deleting school ' . $sid . ' failed: ' . $err['message']);
+            $this->back($sid, null, 'The school could not be deleted: ' . $err['message']);
+        }
         $this->platform_audit->record('school.delete', 'Deleted ' . $school['school_name'] . ' (#' . (int) $school['id'] . ')', null);
         $this->session->set_flashdata('schools_msg', 'Deleted ' . $school['school_name'] . '.');
         redirect('admin/schools');
