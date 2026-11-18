@@ -278,19 +278,90 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                     </div>
                 </div>
 
-                <?php if ($invoices) { ?>
-                    <div class="box box-default">
+                <?php $can_bill = $this->rbac->hasPrivilege('school_billing', 'can_add'); ?>
+                <?php if (empty($s['is_platform']) && $can_bill && $s['status_reason'] !== 'purged') { ?>
+                    <div class="box box-default <?php echo $invoices ? 'collapsed-box' : ''; ?>" id="bill_school">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><i class="fa fa-file-text-o"></i> Bill this school</h3>
+                            <span class="sv-muted" style="margin-left:8px">an invoice to pay online, by bank transfer, or marked paid here</span>
+                            <div class="box-tools pull-right"><button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa <?php echo $invoices ? 'fa-plus' : 'fa-minus'; ?>"></i></button></div>
+                        </div>
+                        <div class="box-body" <?php echo $invoices ? 'style="display:none"' : ''; ?>>
+                            <form method="post" action="<?php echo $action('bill'); ?>" onsubmit="return confirm('Create this invoice?');">
+                                <?php echo $token; ?>
+                                <?php $this->load->view('admin/school/_billing_fields', array(
+                                    'bands' => $bands,
+                                    'preview_url' => $action('bill_preview'),
+                                    'owner_email' => $s['email_address'],
+                                    'currency_symbol' => $currency_symbol,
+                                )); ?>
+                                <button type="submit" class="btn btn-primary" style="margin-top:10px"><i class="fa fa-file-text-o"></i> Create invoice</button>
+                                <span class="sv-muted" style="margin-left:8px">The subscription starts when the invoice is paid.</span>
+                            </form>
+                        </div>
+                    </div>
+                <?php } ?>
+
+                <?php if ($invoices) { $inv_labels = array('unpaid' => 'label-warning', 'paid' => 'label-success', 'void' => 'label-default'); ?>
+                    <div class="box box-default" id="invoices">
                         <div class="box-header with-border"><h3 class="box-title">Invoices</h3></div>
                         <div class="box-body table-responsive no-padding">
-                            <table class="table table-condensed">
-                                <?php foreach ($invoices as $inv) { ?>
+                            <table class="table table-condensed" style="margin-bottom:0">
+                                <thead><tr><th>Invoice</th><th>Issued</th><th>Due / paid</th><th class="text-right">Amount</th><th>Status</th><th></th></tr></thead>
+                                <?php foreach ($invoices as $inv) {
+                                    $st = $inv['status'];
+                                    $overdue = $st === 'unpaid' && $inv['due_date'] && $inv['due_date'] < date('Y-m-d');
+                                    $public = site_url('subscription/invoice/' . $inv['token']); ?>
                                     <tr>
-                                        <td><b><?php echo $e($inv['invoice_no']); ?></b></td>
+                                        <td><b><?php echo $e($inv['invoice_no']); ?></b><div class="sv-muted" style="font-size:11px;max-width:260px"><?php echo $e($inv['description']); ?></div></td>
                                         <td><?php echo $date($inv['issued_at']); ?></td>
-                                        <td><?php echo $e($inv['description']); ?></td>
+                                        <td><?php echo $st === 'paid' ? $date($inv['paid_at'] ?: $inv['issued_at']) : ($inv['due_date'] ? $date($inv['due_date']) : '—'); ?></td>
                                         <td class="text-right"><?php echo $money($inv['total']); ?></td>
-                                        <td class="text-right"><a class="btn btn-xs btn-default" href="<?php echo site_url('admin/billing/invoice/' . (int) $inv['id']); ?>" target="_blank">PDF</a></td>
+                                        <td><span class="label <?php echo $overdue ? 'label-danger' : $inv_labels[$st]; ?>"><?php echo $overdue ? 'Overdue' : $e(Platform_invoices::STATUSES[$st]); ?></span></td>
+                                        <td class="text-right" style="white-space:nowrap">
+                                            <a class="btn btn-xs btn-default" href="<?php echo $e($public); ?>" target="_blank" title="Preview and print"><i class="fa fa-eye"></i> View / print</a>
+                                            <a class="btn btn-xs btn-default" href="<?php echo $e($public . '?pdf=1&download=1'); ?>" title="Download the PDF"><i class="fa fa-download"></i> PDF</a>
+                                            <?php if ($st !== 'void' && $can_billing) { ?>
+                                                <button type="button" class="btn btn-xs btn-default" onclick="var r=document.getElementById('inv_send_<?php echo (int) $inv['id']; ?>');r.style.display=r.style.display==='none'?'':'none'"><i class="fa fa-envelope-o"></i> Send</button>
+                                            <?php } ?>
+                                            <?php if ($st === 'unpaid' && $can_billing) { ?>
+                                                <button type="button" class="btn btn-xs btn-success" onclick="var r=document.getElementById('inv_paid_<?php echo (int) $inv['id']; ?>');r.style.display=r.style.display==='none'?'':'none'"><i class="fa fa-check"></i> Mark paid</button>
+                                            <?php } ?>
+                                            <?php if ($st === 'unpaid' && $this->rbac->hasPrivilege('school_billing', 'can_delete')) { ?>
+                                                <form method="post" action="<?php echo $action('invoice_action'); ?>" style="display:inline" onsubmit="return confirm('Cancel invoice <?php echo $e($inv['invoice_no']); ?>? The school can no longer pay it.');">
+                                                    <?php echo $token; ?><input type="hidden" name="invoice_id" value="<?php echo (int) $inv['id']; ?>"><input type="hidden" name="do" value="void">
+                                                    <button class="btn btn-xs btn-default text-danger" type="submit" title="Cancel the invoice"><i class="fa fa-ban"></i></button>
+                                                </form>
+                                            <?php } ?>
+                                        </td>
                                     </tr>
+                                    <?php if ($st !== 'void' && $can_billing) { ?>
+                                        <tr id="inv_send_<?php echo (int) $inv['id']; ?>" style="display:none"><td colspan="6" style="background:#fafafa">
+                                            <form method="post" action="<?php echo $action('invoice_action'); ?>" class="form-inline">
+                                                <?php echo $token; ?><input type="hidden" name="invoice_id" value="<?php echo (int) $inv['id']; ?>"><input type="hidden" name="do" value="send">
+                                                <label for="inv_email_<?php echo (int) $inv['id']; ?>"><?php echo $st === 'paid' ? 'Send the receipt to' : 'Send the invoice to'; ?></label>
+                                                <input id="inv_email_<?php echo (int) $inv['id']; ?>" name="email" type="email" class="form-control input-sm" style="width:260px" value="<?php echo $e($inv['bill_to_email'] ?: $s['email_address']); ?>" required>
+                                                <button class="btn btn-sm btn-primary" type="submit"><i class="fa fa-paper-plane"></i> Send</button>
+                                            </form>
+                                        </td></tr>
+                                    <?php } ?>
+                                    <?php if ($st === 'unpaid' && $can_billing) { ?>
+                                        <tr id="inv_paid_<?php echo (int) $inv['id']; ?>" style="display:none"><td colspan="6" style="background:#f6fbf7">
+                                            <form method="post" action="<?php echo $action('invoice_action'); ?>" class="form-inline" onsubmit="return confirm('Record the payment of <?php echo $e($inv['invoice_no']); ?> (<?php echo $e($money($inv['total'])); ?>)? The subscription starts today and the receipt is emailed.');">
+                                                <?php echo $token; ?><input type="hidden" name="invoice_id" value="<?php echo (int) $inv['id']; ?>"><input type="hidden" name="do" value="paid">
+                                                <label>Paid by</label>
+                                                <select name="method" class="form-control input-sm" required>
+                                                    <option value="bank_transfer">Bank transfer</option>
+                                                    <option value="cash">Cash</option>
+                                                    <option value="cheque">Cheque</option>
+                                                    <option value="paystack">Paystack (outside the system)</option>
+                                                    <option value="manual">Other</option>
+                                                </select>
+                                                <input name="reference" type="text" maxlength="200" class="form-control input-sm" style="width:220px" placeholder="Reference (optional)">
+                                                <button class="btn btn-sm btn-success" type="submit"><i class="fa fa-check"></i> Record payment</button>
+                                            </form>
+                                        </td></tr>
+                                    <?php } ?>
                                 <?php } ?>
                             </table>
                         </div>

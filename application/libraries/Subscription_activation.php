@@ -42,6 +42,21 @@ class Subscription_activation
             return false;
         }
 
+        // The period starts when it is paid (an invoice or a bank transfer can be paid days after it
+        // was issued); a top-up keeps the end date it was priced for. renewed() moves the start
+        // to the end of a period still running.
+        if (!isset($subscription['kind']) || $subscription['kind'] !== 'topup') {
+            $now = date('Y-m-d H:i:s');
+            $db->where('id', (int) $subscription_id)->update('subscription', array(
+                'created_at' => $now, 'end_date' => date('Y-m-d H:i:s', time() + (int) $subscription['days'] * 86400)));
+            $subscription['created_at'] = $now;
+        }
+        // A subscription billed to a school already registered (the platform's invoice): no new
+        // school, the school's period is extended as for a renewal, and the receipt is the email.
+        $billed = !$renewal && !empty($subscription['school_id']);
+        if ($billed) {
+            $renewal = true;
+        }
         $guest_password = '';
         $update_data = array();
         if (!$renewal) {
@@ -83,7 +98,11 @@ class Subscription_activation
         if (!empty($subscription['quote_id'])) {
             $db->where('id', (int) $subscription['quote_id'])->update('platform_quotes', array('status' => 'used'));
         }
-        $this->send_emails($subscription, $guest_password);
+        if ($billed) {
+            $db->where('id', (int) $subscription['school_id'])->update('school', array('payment_status' => 1));
+        } else {
+            $this->send_emails($subscription, $guest_password);
+        }
         $this->CI->load->library('Platform_invoices');
         $this->CI->platform_invoices->issue((int) $subscription_id);
         return true;

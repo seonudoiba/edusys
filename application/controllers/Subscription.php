@@ -147,8 +147,106 @@ class subscription extends Front_Controller
         }
         if ($this->input->post('payment_method') == self::BANK_TRANSFER) {
             $token = $this->subscription_bank_transfer_model->create($subscription_id);
+            // The invoice to pay, emailed to the owner (viewable, printable from the bank transfer page).
+            $this->load->library('Platform_invoices');
+            $invoice = $this->platform_invoices->issue_unpaid($subscription_id);
+            if ($invoice) {
+                $this->platform_invoices->send_invoice($invoice);
+            }
             redirect('subscription/bank_transfer/' . $token);
         }
+    }
+
+    /**
+     * The registration form's "Preview invoice" (POST, new tab): a pro-forma invoice of what the
+     * form would be charged, nothing saved; ?pdf=1 downloads it.
+     */
+    public function preview_invoice()
+    {
+        if ($this->input->method() !== 'post') {
+            redirect('subscription/add');
+        }
+        $plan = $this->plan_pricing->plan();
+        $token = (string) $this->input->post('quote');
+        $quote = $token !== '' ? $this->plan_pricing->quote($token) : null;
+        $students = (int) $this->input->post('student_count');
+        $period = (string) $this->input->post('billing_period');
+        $p = $plan ? $this->plan_pricing->price($students, $period, true, $quote) : array('ok' => false, 'error' => 'Pricing is not set up on this server.');
+        if (empty($p['ok'])) {
+            show_error(html_escape($p['error'] ?: 'Enter the number of students.') . '<br><br><a href="javascript:window.close()">Close</a>', 400, 'The invoice can\'t be prepared yet');
+        }
+        $setup_only = $this->input->post('pay_now') === 'setup';
+        $total = $setup_only ? $p['setup'] : $p['total'];
+        $discount = 0;
+        $code = Platform_coupons::normalize($this->input->post('coupon_code'));
+        $coupon = $code !== '' ? $this->platform_coupons->find($code) : null;
+        if ($coupon && $this->platform_coupons->error($coupon, $plan) === null) {
+            $discount = $this->platform_coupons->discount($coupon, $total);
+        } else {
+            $coupon = null;
+        }
+        $clip = function ($k, $n = 255) { return mb_substr(trim(strip_tags((string) $this->input->post($k))), 0, $n); };
+        $sub = array(
+            'id' => 0, 'school_id' => null, 'plan_id' => $plan['plan_id'], 'plan_title' => $plan['title'],
+            'kind' => $setup_only ? 'setup' : 'new', 'student_count' => $p['students'], 'billing_period' => $p['period'],
+            'rate_per_term' => $p['rate'], 'terms' => $setup_only ? 0 : $p['terms'], 'setup_fee' => $p['setup'],
+            'days' => $setup_only ? 0 : $p['days'], 'price' => $total, 'discount_amt' => $discount, 'total' => max(0, $total - $discount),
+            'coupon_code' => $coupon ? $coupon['code'] : null, 'payment_method' => '', 'reference' => null,
+            'school_name' => $clip('school_name') ?: 'Your school', 'owner_name' => $clip('owner_name'),
+            'email_address' => $clip('email_address'), 'phone_number' => $clip('phone_number', 60),
+        );
+        $this->load->library('Platform_invoices');
+        $invoice = $this->platform_invoices->draft($sub, null, 'Pro-forma for ' . $sub['school_name'] . '. Your invoice number is given when you register.');
+        $fields = array();
+        foreach (array('school_name', 'owner_name', 'email_address', 'phone_number', 'student_count', 'billing_period', 'pay_now', 'coupon_code', 'quote') as $k) {
+            $fields[$k] = (string) $this->input->post($k);
+        }
+        if ($this->input->get('pdf')) {
+            return $this->send_pdf($this->platform_invoices->pdf($invoice), 'Pro-forma-invoice.pdf', true);
+        }
+        $this->output->set_header('X-Robots-Tag: noindex')->set_output($this->platform_invoices->page($invoice, array(
+            'pdf_url' => site_url('subscription/preview_invoice?pdf=1'),
+            'pdf_post' => $fields,
+        )));
+    }
+
+    /** Pays an unpaid invoice from its page (POST): online with a gateway, or by bank transfer. */
+    public function pay_invoice($token = '')
+    {
+        $invoice = $this->invoice_or_404($token);
+        $sub = $this->db->where('id', (int) $invoice['subscription_id'])->get('subscription')->row_array();
+        if ($this->input->method() !== 'post' || !$sub || $invoice['status'] !== 'unpaid' || (int) $sub['payment_status'] === 1) {
+            redirect('subscription/invoice/' . $invoice['token']);
+        }
+        $method = (string) $this->input->post('method');
+        if ($method === self::BANK_TRANSFER) {
+            $this->db->where('id', (int) $sub['id'])->update('subscription', array('payment_method' => self::BANK_TRANSFER));
+            redirect('subscription/bank_transfer/' . $this->subscription_bank_transfer_model->create((int) $sub['id']));
+        }
+        if (!isset($this->payment_gateways->platform_enabled()[$method])) {
+            redirect('subscription/invoice/' . $invoice['token']);
+        }
+        $this->db->where('id', (int) $sub['id'])->update('subscription', array('payment_method' => $method));
+        return $this->initialize_payment((int) $sub['id']);
+    }
+
+    private function invoice_or_404($token)
+    {
+        $invoice = preg_match('/^[0-9a-f]{40}$/', (string) $token) ? $this->db->where('token', $token)->get('platform_invoices')->row_array() : null;
+        if (!$invoice) {
+            show_404();
+        }
+        return $invoice;
+    }
+
+    private function send_pdf($pdf, $name, $download = false)
+    {
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: ' . ($download ? 'attachment' : 'inline') . '; filename="' . $name . '"');
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
+        echo $pdf;
+        exit;
     }
 
     /** Form validation callback: the number of students has a price. */
@@ -294,7 +392,11 @@ class subscription extends Front_Controller
     private function data_set($subscription_id, $edit = false)
     {
         $this->load->library('Subscription_activation');
+        $billed = $this->db->where(array('subscription_id' => (int) $subscription_id, 'status' => 'unpaid'))->get('platform_invoices')->row_array();
         $this->subscription_activation->activate((int) $subscription_id, (bool) $edit);
+        if ($billed) {
+            redirect('subscription/invoice/' . $billed['token'] . '?paid=1'); // an invoice paid from its page: it is now the receipt
+        }
         if ($edit) {
             redirect('user/plan/success');
         } else {
@@ -513,21 +615,28 @@ class subscription extends Front_Controller
         $this->output->set_content_type('application/json')->set_output(json_encode($out));
     }
 
-    /** An invoice, for the owner (private link in the receipt email). */
+    /**
+     * An invoice, for the owner (private link in the invoice and receipt emails): the page with
+     * Print, Download PDF and, while unpaid, Pay; ?pdf=1 the PDF.
+     */
     public function invoice($token = '')
     {
-        $invoice = preg_match('/^[0-9a-f]{40}$/', (string) $token) ? $this->db->where('token', $token)->get('platform_invoices')->row_array() : null;
-        if (!$invoice) {
-            show_404();
-        }
+        $invoice = $this->invoice_or_404($token);
         $this->load->library('Platform_invoices');
-        $pdf = $this->platform_invoices->pdf($invoice);
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: inline; filename="' . $invoice['invoice_no'] . '.pdf"');
-        header('Cache-Control: private, no-store');
-        header('X-Content-Type-Options: nosniff');
-        echo $pdf;
-        exit;
+        if ($this->input->get('pdf')) {
+            return $this->send_pdf($this->platform_invoices->pdf($invoice), $invoice['invoice_no'] . '.pdf', (bool) $this->input->get('download'));
+        }
+        $notice = null;
+        if ($this->input->get('paid') && $invoice['status'] === 'paid') {
+            $notice = 'Thank you: your payment was received. This invoice is now your receipt.';
+        }
+        $this->output->set_header('X-Robots-Tag: noindex')->set_header('Cache-Control: private, no-store')
+            ->set_output($this->platform_invoices->page($invoice, array(
+                'pdf_url' => site_url('subscription/invoice/' . $invoice['token'] . '?pdf=1&download=1'),
+                'pay_url' => site_url('subscription/pay_invoice/' . $invoice['token']),
+                'online_methods' => $this->payment_gateways->platform_enabled(),
+                'notice' => $notice,
+            )));
     }
 
     /** Form validation callback: a real date, not in the future. */
@@ -561,6 +670,7 @@ class subscription extends Front_Controller
         $this->data['bank_instructions'] = $settings ? (string) $settings->offline_bank_payment_instruction : '';
         $this->data['currency_symbol'] = $this->customlib->getSchoolCurrencyFormat();
         $this->data['upload_error'] = $upload_error;
+        $this->data['invoice'] = $this->db->where('subscription_id', (int) $transfer['subscription_id'])->where_in('status', array('unpaid', 'paid'))->get('platform_invoices')->row_array();
         $this->data['active_menu'] = 'plans';
         $this->data['setting_data'] = $this->setting_model->get();
         $this->data['page_side_bar'] = false;

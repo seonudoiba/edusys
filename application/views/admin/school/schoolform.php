@@ -53,7 +53,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1">
                                                     <?php echo $this->lang->line('school_code'); ?>
-                                                </label><small class="req"> *</small>
+                                                </label>
                                                 <input id="school_code" name="school_code" placeholder="" type="text"
                                                     class="form-control"
                                                     value="<?php echo set_value('school_code', isset($school['school_code']) ? $school['school_code'] : ''); ?>" />
@@ -167,7 +167,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1">
                                                     <?php echo $this->lang->line('website'); ?>
-                                                </label><small class="req"> *</small>
+                                                </label>
                                                 <input id="website" name="website" placeholder="" type="text"
                                                     class="form-control"
                                                     value="<?php echo set_value('website', isset($school['website']) ? $school['website'] : ''); ?>" />
@@ -182,7 +182,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1">
                                                     <?php echo $this->lang->line('principal_name'); ?>
-                                                </label><small class="req"> *</small>
+                                                </label>
                                                 <input id="principal_name" name="principal_name" placeholder=""
                                                     type="text" class="form-control"
                                                     value="<?php echo set_value('principal_name', isset($school['principal_name']) ? $school['principal_name'] : ''); ?>" />
@@ -208,6 +208,32 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 </div>
                             </div>
                         </div>
+
+                        <?php if (!isset($school['id']) && $this->rbac->hasPrivilege('school_billing', 'can_add')) { ?>
+                            <div class="around10" style="border-top:1px solid #eee;padding-top:12px">
+                                <div class="checkbox" style="margin-top:0">
+                                    <label style="font-size:15px;font-weight:600">
+                                        <input type="checkbox" name="bill_on" id="bill_on" value="1" <?php echo set_checkbox('bill_on', '1'); ?>>
+                                        Bill this school now
+                                    </label>
+                                    <span class="text-muted" style="margin-left:6px">creates an invoice (unpaid until the school pays) and can email it to the owner</span>
+                                </div>
+                                <?php if (!empty($bill_error)) { ?><div class="alert alert-danger" style="margin:8px 0"><?php echo html_escape($bill_error); ?></div><?php } ?>
+                                <div id="bill_box" style="<?php echo set_value('bill_on') ? '' : 'display:none'; ?>;margin-top:8px">
+                                    <?php $this->load->view('admin/school/_billing_fields', array(
+                                        'bands' => isset($bands) ? $bands : array(),
+                                        'preview_url' => site_url('admin/schools/bill_preview/0'),
+                                        'owner_email' => '',
+                                        'currency_symbol' => $currency_symbol,
+                                    )); ?>
+                                </div>
+                            </div>
+                            <script>
+                                document.getElementById('bill_on').addEventListener('change', function () {
+                                    document.getElementById('bill_box').style.display = this.checked ? '' : 'none';
+                                });
+                            </script>
+                        <?php } ?>
 
                         <div class="mainstudent">
                             <div id="fade"></div>

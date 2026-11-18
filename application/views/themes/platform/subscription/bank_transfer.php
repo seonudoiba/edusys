@@ -40,6 +40,10 @@ $can_upload = in_array($status, array('awaiting_receipt', 'rejected'), true);
             <div>
                 <h2>Amount to pay</h2>
                 <p class="amount"><?php echo html_escape($currency_symbol) . number_format($amount_due, 2); ?></p>
+                <?php if (!empty($invoice)) { ?>
+                    <p class="hint">Invoice <b><?php echo html_escape($invoice['invoice_no']); ?></b> (use it as the payment reference):
+                        <a href="<?php echo html_escape(site_url('subscription/invoice/' . $invoice['token'])); ?>" target="_blank" rel="noopener">view, print or download it</a>.</p>
+                <?php } ?>
                 <h2>Bank account</h2>
                 <?php if (trim(strip_tags($bank_instructions)) !== '') { ?>
                     <div class="prose"><?php echo $bank_instructions; ?></div>

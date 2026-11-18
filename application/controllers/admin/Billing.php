@@ -79,7 +79,7 @@ class Billing extends Admin_Controller
                     $r['price'], $r['discount'], $r['total'], $r['method'], $r['reference']); }, $rows));
         }
         $data = array('rows' => $rows, 'q' => $q, 'token' => $this->form_token->field(),
-            'total' => array_sum(array_column($rows, 'total')),
+            'total' => array_sum(array_column(array_filter($rows, function ($r) { return $r['status'] === 'paid'; }), 'total')),
             'message' => $this->session->flashdata('billing_msg'), 'error' => $this->session->flashdata('billing_error'));
         $this->load->view('layout/header');
         $this->load->view('admin/billing/invoices', $data);
@@ -103,7 +103,7 @@ class Billing extends Admin_Controller
         $this->require_privilege('can_edit', 'platform_invoices');
         $this->form_token->require_post();
         $invoice = $this->invoice_or_404($id);
-        $ok = $this->platform_invoices->send_receipt($invoice);
+        $ok = $this->platform_invoices->send_invoice($invoice);
         $this->platform_audit->record('invoice.resend', 'Sent invoice ' . $invoice['invoice_no'] . ' again', $invoice['school_ref']);
         $this->session->set_flashdata($ok ? 'billing_msg' : 'billing_error', $ok ? 'Invoice ' . $invoice['invoice_no'] . ' sent to ' . $invoice['bill_to_email'] . '.' : 'The email could not be sent: see the email log.');
         redirect('admin/billing/invoices');
