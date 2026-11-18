@@ -22,7 +22,7 @@ class Schools extends Admin_Controller
         Tenant::require_platform();
         parent::__construct();
         $this->load->model(array('School_model', 'Subscription_model', 'Guest_model', 'Platform_school_model', 'plan_model'));
-        $this->load->library(array('School_provisioner', 'Platform_audit', 'Platform_mailer', 'Plan_limits', 'School_discounts'));
+        $this->load->library(array('School_provisioner', 'Platform_audit', 'Platform_mailer', 'Plan_limits', 'School_discounts', 'Platform_invoices', 'Plan_pricing'));
     }
 
     // ------------------------------------------------------------------ pages
@@ -98,6 +98,7 @@ class Schools extends Admin_Controller
             'invoices' => $this->db->where('school_ref', (int) $school['id'])->order_by('id', 'desc')->get('platform_invoices')->result_array(),
             'discount' => $this->school_discounts->active($school['id']),
             'discount_history' => $this->school_discounts->history($school['id']),
+            'bands' => $this->plan_pricing->bands(),
         );
         $this->load->view('layout/header', $data);
         $this->load->view('admin/school/school_view', $data);
@@ -109,7 +110,7 @@ class Schools extends Admin_Controller
         $this->require_privilege('can_add');
         $this->menu();
         $this->load->view('layout/header');
-        $this->load->view('admin/school/schoolform', array());
+        $this->load->view('admin/school/schoolform', array('bands' => $this->plan_pricing->bands()));
         $this->load->view('layout/footer');
     }
 
@@ -143,9 +144,16 @@ class Schools extends Admin_Controller
         $this->form_validation->set_rules('principal_name', $this->lang->line('principal_name'), 'trim|max_length[255]|xss_clean');
         $this->form_validation->set_rules('owner_name', $this->lang->line('owner_name'), 'trim|required|max_length[255]|xss_clean');
 
-        if ($this->form_validation->run() == false) {
+        // Add school: billing it now is optional (the "Bill this school" fields).
+        $bill = !$id && $this->input->post('bill_on') && $this->rbac->hasPrivilege('school_billing', 'can_add');
+        $bill_error = null;
+        if ($bill) {
+            $bill_error = $this->billing_subscription(array('id' => 0, 'school_name' => (string) $this->input->post('school_name'), 'email_address' => '',
+                'phone_number' => '', 'owner_name' => ''))[1];
+        }
+        if ($this->form_validation->run() == false || $bill_error !== null) {
             $this->menu();
-            $data = array('school' => $id ? $this->Platform_school_model->get($id) : null);
+            $data = array('school' => $id ? $this->Platform_school_model->get($id) : null, 'bill_error' => $bill_error, 'bands' => $this->plan_pricing->bands());
             $this->load->view('layout/header');
             $this->load->view('admin/school/schoolform', $data);
             $this->load->view('layout/footer');
@@ -183,7 +191,14 @@ class Schools extends Admin_Controller
             $this->db->insert('school', $data);
             $id = (int) $this->db->insert_id();
             $this->platform_audit->record('school.create', 'Added ' . $data['school_name'], $id);
-            $this->session->set_flashdata('schools_msg', 'School added. Set its subdomain and approve it to set it up.');
+            $msg = 'School added. Set its subdomain and approve it to set it up.';
+            if ($bill) {
+                $school = $this->Platform_school_model->get($id);
+                list($sub, $error) = $this->billing_subscription($school);
+                $invoice = $error === null ? $this->create_invoice($sub) : null;
+                $msg .= $invoice ? ' ' . $this->invoice_message($invoice, $this->send_if_asked($invoice)) : ' The invoice could not be created: bill the school below.';
+            }
+            $this->session->set_flashdata('schools_msg', $msg);
         }
         redirect('admin/schools/view/' . $id);
     }
@@ -317,6 +332,243 @@ class Schools extends Admin_Controller
         $this->back($school['id'], "Subscription recorded: {$plan['title']}, $days days (no payment collected).");
     }
 
+    // ------------------------------------------------------------------ billing (invoices before payment)
+
+    /**
+     * Bills the school (POST from its page, "Bill this school"): an unpaid subscription and its
+     * invoice, emailed to the owner when asked. Paying it (online from the invoice page, by bank
+     * transfer, or marked paid here) starts the subscription.
+     */
+    public function bill($id = null)
+    {
+        $this->require_privilege('can_add', 'school_billing');
+        $school = $this->checked_post($id);
+        if (!empty($school['is_platform'])) {
+            $this->back($school['id'], null, 'The platform school isn\'t billed.');
+        }
+        list($sub, $error) = $this->billing_subscription($school);
+        if ($error !== null) {
+            $this->back($school['id'], null, $error);
+        }
+        $invoice = $this->create_invoice($sub);
+        if (!$invoice) {
+            $this->back($school['id'], null, 'The invoice could not be created.');
+        }
+        $this->back($school['id'], $this->invoice_message($invoice, $this->send_if_asked($invoice)));
+    }
+
+    /** Preview of the invoice the billing form would create (POST, new tab), nothing saved. $id 0: the Add school form. */
+    public function bill_preview($id = 0)
+    {
+        $this->require_privilege('can_add', 'school_billing');
+        if ($this->input->method() !== 'post') {
+            show_404();
+        }
+        if ((int) $id > 0) {
+            $school = $this->school_or_404($id);
+        } else {
+            $clip = function ($k, $n = 255) { return mb_substr(trim(strip_tags((string) $this->input->post($k))), 0, $n); };
+            $school = array('id' => 0, 'school_name' => $clip('school_name') ?: 'New school', 'owner_name' => $clip('owner_name'),
+                'email_address' => $clip('email_address'), 'phone_number' => $clip('phone_number', 60), 'school_address' => $clip('school_address', 500),
+                'paid_subscription' => null);
+        }
+        list($sub, $error) = $this->billing_subscription($school);
+        if ($error !== null) {
+            show_error(html_escape($error) . '<br><br><a href="javascript:window.close()">Close</a>', 400, 'The invoice can\'t be prepared');
+        }
+        $sub['plan_title'] = $this->plan_pricing->plan()['title'];
+        $invoice = $this->platform_invoices->draft($sub, $sub['_due'], $sub['_notes']);
+        if (empty($school['id'])) {
+            $invoice['bill_to_address'] = $school['school_address'] ?: null;
+        }
+        if ($this->input->get('pdf')) {
+            $pdf = $this->platform_invoices->pdf($invoice);
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="Pro-forma-invoice.pdf"');
+            header('Cache-Control: private, no-store');
+            echo $pdf;
+            exit;
+        }
+        $fields = array();
+        foreach ($_POST as $k => $v) {
+            if (is_string($v) && ($k === 'school_name' || $k === 'owner_name' || $k === 'email_address' || $k === 'phone_number' || $k === 'school_address' || strpos($k, 'bill_') === 0)) {
+                $fields[$k] = $v;
+            }
+        }
+        $this->output->set_output($this->platform_invoices->page($invoice, array(
+            'pdf_url' => site_url('admin/schools/bill_preview/' . (int) $id . '?pdf=1'),
+            'pdf_post' => $fields,
+        )));
+    }
+
+    /** Invoice actions from the school page: send, paid, cancel. */
+    public function invoice_action($id = null)
+    {
+        $school = $this->checked_post($id);
+        $invoice = $this->db->where(array('id' => (int) $this->input->post('invoice_id'), 'school_ref' => (int) $school['id']))->get('platform_invoices')->row_array();
+        if (!$invoice) {
+            $this->back($school['id'], null, 'Invoice not found.');
+        }
+        $what = (string) $this->input->post('do');
+        if ($what === 'send') {
+            $this->require_privilege('can_edit', 'school_billing');
+            $to = trim((string) $this->input->post('email')) ?: $invoice['bill_to_email'];
+            if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+                $this->back($school['id'], null, 'Enter a valid email address to send the invoice to.');
+            }
+            $ok = $this->platform_invoices->send_invoice($invoice, $to);
+            $this->platform_audit->record('invoice.send', 'Sent invoice ' . $invoice['invoice_no'] . ' to ' . $to, $school['id']);
+            $ok ? $this->back($school['id'], 'Invoice ' . $invoice['invoice_no'] . ' sent to ' . $to . '.')
+                : $this->back($school['id'], null, 'The email could not be sent: see Emails sent below and the email settings.');
+        }
+        if ($what === 'void') {
+            $this->require_privilege('can_delete', 'school_billing');
+            if (!$this->platform_invoices->void($invoice)) {
+                $this->back($school['id'], null, 'Only an unpaid invoice can be cancelled.');
+            }
+            $this->db->where(array('id' => (int) $invoice['subscription_id'], 'payment_status' => 0))->update('subscription', array('status' => 0));
+            $this->platform_audit->record('invoice.void', 'Cancelled invoice ' . $invoice['invoice_no'], $school['id']);
+            $this->back($school['id'], 'Invoice ' . $invoice['invoice_no'] . ' cancelled.');
+        }
+        if ($what === 'paid') {
+            $this->require_privilege('can_edit', 'school_billing');
+            if ($invoice['status'] !== 'unpaid') {
+                $this->back($school['id'], null, 'This invoice isn\'t waiting for payment.');
+            }
+            $method = (string) $this->input->post('method');
+            if (!in_array($method, array('bank_transfer', 'cash', 'cheque', 'paystack', 'manual'), true)) {
+                $this->back($school['id'], null, 'Choose how it was paid.');
+            }
+            $reference = mb_substr(trim(strip_tags((string) $this->input->post('reference'))), 0, 200);
+            $this->db->where('id', (int) $invoice['subscription_id'])->update('subscription', array('payment_method' => $method, 'reference' => $reference !== '' ? $reference : null));
+            $this->load->library('Subscription_activation');
+            $this->db->trans_begin();
+            $this->subscription_activation->activate((int) $invoice['subscription_id']);
+            if ($this->db->trans_status() === false) {
+                $this->db->trans_rollback();
+                $this->back($school['id'], null, 'Recording the payment failed; nothing was changed.');
+            }
+            $this->db->trans_commit();
+            if ($school['set_up']) {
+                $this->plan_limits->apply_modules($school['id'], true);
+            }
+            $this->platform_audit->record('invoice.paid', 'Recorded the payment of invoice ' . $invoice['invoice_no'] . ' (' . $method . ($reference !== '' ? ', ' . $reference : '') . ')', $school['id']);
+            $this->back($school['id'], 'Payment recorded: invoice ' . $invoice['invoice_no'] . ' is paid, the subscription has started and the receipt was emailed to ' . $invoice['bill_to_email'] . '.');
+        }
+        $this->back($school['id'], null, 'Unknown action.');
+    }
+
+    /**
+     * The unpaid subscription the billing fields (bill_*) describe, for $school (a registry row, or
+     * the Add school form's values). Returns [subscription row, null] or [null, error].
+     */
+    private function billing_subscription(array $school)
+    {
+        $this->load->library('Plan_pricing');
+        $plan = $this->plan_pricing->plan();
+        if (!$plan) {
+            return array(null, 'Pricing is not set up: add the price bands first (Plan > Pricing bands).');
+        }
+        $students = (int) $this->input->post('bill_students');
+        if ($students < 1 || $students > 1000000) {
+            return array(null, 'Enter the number of students to bill.');
+        }
+        $period = $this->input->post('bill_period') === 'term' ? 'term' : 'year';
+        $terms = $period === 'year' ? Plan_pricing::TERMS_PER_YEAR : 1;
+        $band = $this->plan_pricing->band_for($students);
+        $rate_in = trim((string) $this->input->post('bill_rate'));
+        if ($rate_in !== '' && (!is_numeric($rate_in) || (float) $rate_in < 0)) {
+            return array(null, 'The rate per student per term must be a number.');
+        }
+        $rate = $rate_in !== '' ? (float) $rate_in : ($band && $band['rate_per_term'] !== null ? (float) $band['rate_per_term'] : null);
+        if ($rate === null) {
+            return array(null, 'No rate is set for ' . number_format($students) . ' students: enter the agreed rate per student per term.');
+        }
+        $setup = 0.0;
+        if ($this->input->post('bill_setup')) {
+            $setup_in = trim((string) $this->input->post('bill_setup_fee'));
+            if ($setup_in !== '' && (!is_numeric($setup_in) || (float) $setup_in < 0)) {
+                return array(null, 'The setup fee must be a number.');
+            }
+            $setup = $setup_in !== '' ? (float) $setup_in : ($band ? (float) $band['setup_fee'] : 0.0);
+        }
+        $subtotal = round($students * $rate * $terms + $setup, 2);
+        $discount = round(max(0, (float) $this->input->post('bill_discount')), 2);
+        if ($discount > $subtotal) {
+            return array(null, 'The discount is more than the amount.');
+        }
+        if ($subtotal - $discount <= 0) {
+            return array(null, 'There is nothing to bill: the total is 0. Use Record subscription for a free period.');
+        }
+        $due = trim((string) $this->input->post('bill_due'));
+        if ($due !== '' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $due) || strtotime($due) === false)) {
+            return array(null, 'The due date is not a valid date.');
+        }
+        $days = $period === 'year' ? Plan_pricing::YEAR_DAYS : Plan_pricing::TERM_DAYS;
+        return array(array(
+            'plan_id' => (int) $plan['plan_id'],
+            'kind' => 'new',
+            'school_id' => !empty($school['id']) ? (int) $school['id'] : null,
+            'student_count' => $students,
+            'billing_period' => $period,
+            'rate_per_term' => $rate,
+            'terms' => $terms,
+            'setup_fee' => $setup,
+            'end_date' => date('Y-m-d H:i:s', strtotime('+' . $days . ' days')),
+            'price' => $subtotal,
+            'discount_amt' => $discount,
+            'payment_method' => '',
+            'payment_status' => 0,
+            'status' => 0,
+            'renewal_count' => 0,
+            'total' => round($subtotal - $discount, 2),
+            'school_name' => $school['school_name'],
+            'email_address' => $school['email_address'],
+            'phone_number' => $school['phone_number'],
+            'owner_name' => $school['owner_name'],
+            'cron_flag' => 0,
+            'days' => $days,
+            '_due' => $due !== '' ? $due : null,
+            '_notes' => mb_substr(trim(strip_tags((string) $this->input->post('bill_notes'))), 0, 2000),
+        ), null);
+    }
+
+    /** Saves the billing subscription and issues its unpaid invoice. */
+    private function create_invoice(array $sub)
+    {
+        $due = $sub['_due'];
+        $notes = $sub['_notes'];
+        unset($sub['_due'], $sub['_notes']);
+        $this->db->insert('subscription', $sub);
+        $sub_id = (int) $this->db->insert_id();
+        $invoice = $this->platform_invoices->issue_unpaid($sub_id, $due, $notes);
+        if ($invoice) {
+            $this->platform_audit->record('invoice.issue', 'Billed ' . $sub['school_name'] . ': invoice ' . $invoice['invoice_no'] . ', ' . $this->platform_invoices->money($invoice['total']), $sub['school_id']);
+        }
+        return $invoice;
+    }
+
+    /** Emails the invoice when "Send to the owner" was ticked: true sent, false failed, null not asked. */
+    private function send_if_asked(array $invoice)
+    {
+        if (!$this->input->post('bill_send')) {
+            return null;
+        }
+        $to = trim((string) $this->input->post('bill_email')) ?: $invoice['bill_to_email'];
+        $ok = filter_var($to, FILTER_VALIDATE_EMAIL) ? $this->platform_invoices->send_invoice($invoice, $to) : false;
+        if ($ok) {
+            $this->platform_audit->record('invoice.send', 'Sent invoice ' . $invoice['invoice_no'] . ' to ' . $to, $invoice['school_ref']);
+        }
+        return $ok;
+    }
+
+    private function invoice_message(array $invoice, $sent)
+    {
+        return 'Invoice ' . $invoice['invoice_no'] . ' created: ' . $this->platform_invoices->money($invoice['total']) . ', due ' . date('d M Y', strtotime($invoice['due_date'])) . '.'
+            . ($sent === true ? ' It was emailed to ' . (trim((string) $this->input->post('bill_email')) ?: $invoice['bill_to_email']) . '.'
+                : ($sent === false ? ' The email could not be sent: use Send on the invoice below.' : ' Use Send to email it to the owner.'));
+    }
+
     /** Gives the school a discount on what its owner pays next (or on every payment): School_discounts. */
     public function add_discount($id = null)
     {
@@ -358,9 +610,10 @@ class Schools extends Admin_Controller
             $this->back($school['id'], null, 'This school has been set up and has data. Disable it instead of deleting it.');
         }
         $sid = (int) $school['id'];
-        if ($this->db->where('school_ref', $sid)->count_all_results('platform_invoices') > 0) {
-            $this->back($sid, null, 'This school has invoices (a payment was recorded). Keep it for the accounts: set it up, or disable it, instead of deleting it.');
+        if ($this->db->where(array('school_ref' => $sid, 'status' => 'paid'))->count_all_results('platform_invoices') > 0) {
+            $this->back($sid, null, 'This school has paid invoices (a payment was recorded). Keep it for the accounts: set it up, or disable it, instead of deleting it.');
         }
+        $this->db->where('school_ref', $sid)->where_in('status', array('unpaid', 'void'))->delete('platform_invoices'); // never paid: nothing for the accounts
         // Rows a registration leaves behind (its login, payment attempts, captcha, logs...) would block the
         // delete (foreign keys to school): cleared like a purge, with the registration's subscriptions.
         $this->load->library('Data_dump');

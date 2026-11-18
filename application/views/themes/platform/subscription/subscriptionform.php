@@ -103,6 +103,8 @@ $locked = !empty($quote);
                     <tr class="total"><td>Total</td><td id="s_total"></td></tr>
                 </table>
                 <p id="s_next" class="hint" style="margin:0"></p>
+                <button class="btn btn-plain" type="submit" id="preview_invoice" style="margin-top:14px" formaction="<?php echo site_url('subscription/preview_invoice'); ?>" formtarget="_blank" formnovalidate>Preview invoice</button>
+                <p class="hint" style="margin:6px 0 0">A pro-forma invoice to print or download, for your bursar or board.</p>
             </aside>
         </form>
     </div>
