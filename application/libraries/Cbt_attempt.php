@@ -172,7 +172,6 @@ class Cbt_attempt
             ->get('onlineexam_student_results')->result_array() as $r) {
             $saved[(int) $r['onlineexam_question_id']] = $r;
         }
-        $word_limit = (int) $exam['answer_word_count'];
         $questions = array();
         foreach ($rows as $r) {
             $id = (int) $r['id'];
@@ -193,7 +192,7 @@ class Cbt_attempt
             if (isset($saved[$id])) {
                 $answer = $r['question_type'] === 'multichoice' ? (json_decode((string) $saved[$id]['select_option'], true) ?: array()) : $saved[$id]['select_option'];
             }
-            $limit = (int) $r['descriptive_word_limit'] > 0 ? (int) $r['descriptive_word_limit'] : ($word_limit > 0 ? $word_limit : 0);
+            $limit = self::word_limit($exam, $r);
             $questions[] = array(
                 'id' => $id,
                 'type' => $r['question_type'],
@@ -302,6 +301,23 @@ class Cbt_attempt
         }
     }
 
+    /** The word limit of a written answer: the question's own, else the exam's Answer Word Limit; 0 = none. */
+    public static function word_limit(array $exam, array $q)
+    {
+        $limit = (int) $q['descriptive_word_limit'] > 0 ? (int) $q['descriptive_word_limit'] : (int) $exam['answer_word_count'];
+        return $limit > 0 ? $limit : 0;
+    }
+
+    /** $text cut after its $limit-th word (words: runs of non-space characters); $limit 0 = whole. */
+    public static function limit_words($text, $limit)
+    {
+        if ($limit < 1 || !preg_match_all('/\S+/u', $text, $m, PREG_OFFSET_CAPTURE) || count($m[0]) <= $limit) {
+            return $text;
+        }
+        $last = $m[0][$limit - 1];
+        return substr($text, 0, $last[1] + strlen($last[0]));
+    }
+
     private function exam_question(array $exam, $question_id)
     {
         $q = $this->CI->db->select('oq.id, q.question_type, q.opt_a, q.opt_b, q.opt_c, q.opt_d, q.opt_e, q.descriptive_word_limit')
@@ -348,12 +364,10 @@ class Cbt_attempt
             sort($value);
             return $value ? json_encode($value) : null;
         }
-        // Written answer: plain text, within the word limit.
+        // Written answer: plain text, cut to the word limit (the exam screen stops typing at the
+        // limit; words are counted as there: anything between spaces, numbers included).
         $text = trim(mb_substr(strip_tags((string) $value), 0, 20000));
-        $limit = (int) $q['descriptive_word_limit'] > 0 ? (int) $q['descriptive_word_limit'] : (int) $exam['answer_word_count'];
-        if ($limit > 0 && str_word_count($text) > $limit) {
-            throw new RuntimeException('Your answer is longer than ' . $limit . ' words.');
-        }
+        $text = self::limit_words($text, self::word_limit($exam, $q));
         return $text === '' ? null : $text;
     }
 

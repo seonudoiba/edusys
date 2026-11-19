@@ -85,6 +85,11 @@ class Cron extends MY_Controller
             $this->stuattendence_model->batch_insert($attendance_data);
           }
 
+          // Every 5 minutes too (deploy/edusys.cron): online exam results due by their Auto Result
+          // Publish Date are published and the students told.
+          $this->load->library('Exam_auto_publish');
+          $this->exam_auto_publish->run();
+
     }
 
     public function autobackup($key = '')

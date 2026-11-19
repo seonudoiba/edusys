@@ -208,9 +208,9 @@ function findOption($questionOpt, $find)
                 </div>
                     <div class="col-sm-3">
                       <div class="form-group">
-                        <label for="attempt"><?php echo $this->lang->line('answer_word_limit'); ?></label><small class="req"> *</small>
-                        <input type="number" min="-1" class="form-control" id="word_limit" value="-1" name="word_limit">
-                        <span class="text text-danger"><?php echo $this->lang->line('set_minus_one_for_no_limit'); ?></span>
+                        <label for="word_limit"><?php echo $this->lang->line('answer_word_limit'); ?></label>
+                        <input type="number" min="-1" step="1" class="form-control" id="word_limit" value="-1" name="word_limit">
+                        <span class="text text-muted"><?php echo $this->lang->line('set_minus_one_for_no_limit'); ?> Applies to written (descriptive) answers.</span>
                     </div>
                 </div>
                     </div>
@@ -583,6 +583,12 @@ $(document).on('submit','#delete_question',function(e) {
                     .removeAttr('checked')
                     .removeAttr('selected')
                     .end();
+            // Back to the defaults of a new exam (an empty word limit was refused as required).
+            $('#word_limit').val('-1');
+            $('#attempt').val('1');
+            $('input[name=recordid]').val('0');
+            $(this).find('input:checkbox').prop('checked', false);
+            $('input.publish_result, input#auto_publish_date').prop('disabled', false);
         });
 
         $('#myGenerateRankModal').on('hidden.bs.modal', function () {

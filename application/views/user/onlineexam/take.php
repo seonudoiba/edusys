@@ -262,15 +262,29 @@ textarea:focus,.opt:focus-within{outline:2px solid var(--brand);outline-offset:1
             var ta = document.createElement('textarea');
             ta.value = q.answer || ''; ta.setAttribute('aria-label', 'Your answer');
             var count = document.createElement('p'); count.className = 'hint';
-            var words = function () { var n = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0; count.textContent = n + ' words' + (q.word_limit ? ' of ' + q.word_limit : ''); return n; };
+            // Words: anything between spaces (counted the same way on the server). At the limit,
+            // the text after the last allowed word is cut and the student is told.
+            var words = function (cut) {
+                var re = /\S+/g, m, n = 0, end = 0;
+                while ((m = re.exec(ta.value)) !== null) {
+                    n++;
+                    if (q.word_limit && n === q.word_limit) { end = m.index + m[0].length; }
+                }
+                var over = q.word_limit && n > q.word_limit;
+                if (over && cut) { ta.value = ta.value.slice(0, end); n = q.word_limit; }
+                count.textContent = n + (n === 1 ? ' word' : ' words') + (q.word_limit ? ' of ' + q.word_limit
+                    + (n >= q.word_limit ? ' (word limit reached' + (over ? ': the extra words were removed' : '') + ')' : '') : '');
+                count.style.color = q.word_limit && n >= q.word_limit ? '#b91c1c' : '';
+                return n;
+            };
             var t = null;
             ta.addEventListener('input', function () {
-                words();
+                words(true);
                 clearTimeout(t);
                 t = setTimeout(function () { setAnswer(q, ta.value); }, 800);
             });
             ta.addEventListener('blur', function () { clearTimeout(t); setAnswer(q, ta.value); });
-            box.appendChild(ta); box.appendChild(count); words();
+            box.appendChild(ta); box.appendChild(count); words(false);
             var fb = document.createElement('div'); fb.className = 'filebox';
             fb.innerHTML = '<label>Attach a file (optional): <input type="file"></label> <span></span>';
             var info = fb.querySelector('span');

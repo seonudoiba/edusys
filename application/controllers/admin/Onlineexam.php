@@ -51,6 +51,8 @@ class Onlineexam extends Admin_Controller
         $this->sch_setting_detail = $this->setting_model->getSetting();
         $this->load->library('mailsmsconf');
         $this->load->library('media_storage');
+        $this->load->library('Exam_auto_publish');
+        $this->exam_auto_publish->publish_due(); // results whose Auto Result Publish Date has passed
     }
 
     public function index()
@@ -927,7 +929,7 @@ class Onlineexam extends Admin_Controller
 
     public function add()
     {
-        $this->form_validation->set_rules('word_limit', $this->lang->line('answer_word_limit'), 'trim|required|xss_clean|callback_validate_word_limit');
+        $this->form_validation->set_rules('word_limit', $this->lang->line('answer_word_limit'), 'trim|xss_clean|callback_validate_word_limit');
         $this->form_validation->set_rules('exam', $this->lang->line('exam_title'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('attempt', $this->lang->line('attempt'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('exam_from', $this->lang->line('exam_from'), 'trim|required|xss_clean');
@@ -979,7 +981,7 @@ class Onlineexam extends Admin_Controller
             }
 
             $insert_data = array(
-                'answer_word_count'  => $this->input->post('word_limit'),
+                'answer_word_count'  => trim((string) $this->input->post('word_limit')) === '' ? -1 : (int) $this->input->post('word_limit'),
                 'exam'               => $this->input->post('exam'),
                 'attempt'            => $this->input->post('attempt'),
                 'exam_from'          => date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('exam_from'), false)),
@@ -1161,14 +1163,16 @@ class Onlineexam extends Admin_Controller
         return true;
     }
 
+    /** Empty or -1: no limit; otherwise a whole number of words, 1 or more. */
     public function validate_word_limit($str)
     {
-        if ($this->input->post('word_limit') != "") {
-            if ($this->input->post('word_limit') == "0") {
-                $this->form_validation->set_message('validate_word_limit', '%s '.$this->lang->line('can_not_be_zero'));
-                return false;
-            }
+        $str = trim((string) $str);
+        if ($str === '' || $str === '-1') {
             return true;
+        }
+        if (!preg_match('/^\d+$/', $str) || (int) $str < 1) {
+            $this->form_validation->set_message('validate_word_limit', '%s: enter a number of words (1 or more), or -1 for no limit.');
+            return false;
         }
         return true;
     }
