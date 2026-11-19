@@ -494,6 +494,7 @@ class Onlineexam extends Admin_Controller
         $data['sch_setting'] = $this->sch_setting_detail;
         $data['class_summary'] = $onlineexam ? $this->class_summary((int) $id, $class) : array();
         $data['class_msg']     = $this->session->flashdata('class_msg');
+        $data['assigned']      = $onlineexam ? $this->assigned_students((int) $id) : array();
 
         if ($this->input->server('REQUEST_METHOD') == "GET") {
             $this->load->view('layout/header', $data);
@@ -597,6 +598,21 @@ class Onlineexam extends Admin_Controller
         $names = array_column($this->class_model->get(), 'class', 'id');
         $session = (int) $this->setting_model->getCurrentSession();
 
+        if ($this->input->post('do') === 'remove_student') {
+            $os_id = (int) $this->input->post('onlineexam_student_id');
+            $row = $this->db->select('id, is_attempted')->where(array('id' => $os_id, 'onlineexam_id' => $exam_id))->get('onlineexam_students')->row_array();
+            $started = $row ? $this->db->where('onlineexam_student_id', $os_id)->count_all_results('onlineexam_attempts') : 0;
+            if (!$row) {
+                $msg = array('type' => 'danger', 'text' => 'That student is not on this exam.');
+            } elseif ((int) $row['is_attempted'] === 1 || $started) {
+                $msg = array('type' => 'danger', 'text' => 'This student has started or sat the exam, so they stay on it.');
+            } else {
+                $this->db->where(array('id' => $os_id, 'onlineexam_id' => $exam_id))->delete('onlineexam_students');
+                $msg = array('type' => 'success', 'text' => 'Student taken off this exam.');
+            }
+            $this->session->set_flashdata('class_msg', $msg);
+            redirect('admin/onlineexam/assign/' . $exam_id . '#assigned_box');
+        }
         if ($this->input->post('do') === 'remove') {
             $class_id = (int) $this->input->post('class_id');
             if (!in_array($class_id, $allowed, true)) {
@@ -649,6 +665,26 @@ class Onlineexam extends Admin_Controller
         $this->session->set_flashdata('class_msg', array('type' => 'success',
             'text' => count($rows) . ' student(s) assigned from ' . implode(', ', $labels) . ' (all sections).' . (count($rows) ? '' : ' They were already assigned.')));
         redirect('admin/onlineexam/assign/' . $exam_id);
+    }
+
+    /**
+     * Everyone assigned to the exam (the classes and sections this staff member may see), sorted by
+     * class, section and name, with where each one is: not started, in progress or submitted.
+     */
+    private function assigned_students($exam_id)
+    {
+        $rows = $this->onlineexam_model->searchAllOnlineExamStudents($exam_id);
+        $ids = array_map('intval', array_column($rows, 'onlineexam_student_id'));
+        $started = $ids ? array_map('intval', array_column($this->db->select('onlineexam_student_id')->distinct()
+            ->where_in('onlineexam_student_id', $ids)->get('onlineexam_attempts')->result_array(), 'onlineexam_student_id')) : array();
+        foreach ($rows as &$r) {
+            $r['status'] = (int) $r['is_attempted'] === 1 ? 'submitted' : (in_array((int) $r['onlineexam_student_id'], $started, true) ? 'started' : 'not_started');
+        }
+        unset($r);
+        usort($rows, function ($a, $b) {
+            return array((int) $a['class_id'], $a['section'], $a['firstname'], $a['lastname']) <=> array((int) $b['class_id'], $b['section'], $b['firstname'], $b['lastname']);
+        });
+        return $rows;
     }
 
     /** Per class of this session: active students and how many are assigned to the exam. */
