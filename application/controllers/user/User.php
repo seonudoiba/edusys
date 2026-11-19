@@ -37,6 +37,7 @@ class User extends Student_Controller
     {
         $to = isset($_SESSION['redirect_to_user']) ? (string) $_SESSION['redirect_to_user'] : '';
         unset($_SESSION['redirect_to_user']);
+        $this->session->unset_userdata('exam_link');
         $home = site_url();
         if ($to !== '' && strpos($to, $home) === 0 && preg_match('#^(pay|user/)#', substr($to, strlen(rtrim($home, '/')) + 1))) {
             redirect($to);
@@ -665,6 +666,12 @@ class User extends Student_Controller
                     $this->session->set_flashdata('msg', '<div class="alert alert-danger">Choose a password different from your current one.</div>');
                 } elseif ($this->user_model->checkOldPass($data_array) && $this->user_model->saveNewPass($newdata)) {
                     $this->session->set_flashdata('msg', '<div class="alert alert-success">Password changed successfully.</div>');
+                    // Came from an exam link (cbt/<id>) on a first sign-in: on to the exam.
+                    $to = isset($_SESSION['redirect_to_user']) ? (string) $_SESSION['redirect_to_user'] : '';
+                    unset($_SESSION['redirect_to_user']);
+                    if ($to !== '' && strpos($to, site_url('user/onlineexam/take/')) === 0) {
+                        redirect($to);
+                    }
                 } else {
                     $this->session->set_flashdata('msg', '<div class="alert alert-danger">Invalid current password.</div>');
                 }

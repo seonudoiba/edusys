@@ -429,6 +429,56 @@ foreach ($classList as $class_key => $class_value) {
   </div>
 </div>
 
+<!-- Share the exam link (cbt/<id>): students sign in and the exam opens. -->
+<div id="shareExamModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Share exam link</h4>
+      </div>
+      <div class="modal-body">
+        <p>Send this link to the students. They open it, sign in with their <b>student</b> username and password, and the exam starts straight away. Only students assigned to the exam can take it, and only while it is open.</p>
+        <div class="alert alert-warning js-share-inactive" style="display:none">This exam is not active yet: edit the exam and tick <b>Publish Exam</b> so students can see it.</div>
+        <label for="share_link">Exam link</label>
+        <div class="input-group">
+          <input type="text" id="share_link" class="form-control" readonly onclick="this.select()">
+          <span class="input-group-btn"><button type="button" class="btn btn-primary js-copy" data-target="#share_link"><i class="fa fa-copy"></i> Copy link</button></span>
+        </div>
+        <label for="share_message" style="margin-top:15px">Message to send <span class="text-muted" style="font-weight:normal">(WhatsApp, SMS, class group)</span></label>
+        <textarea id="share_message" class="form-control" rows="5" readonly onclick="this.select()"></textarea>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-success js-share-whatsapp" href="#" target="_blank" rel="noopener"><i class="fa fa-whatsapp"></i> Share on WhatsApp</a>
+        <button type="button" class="btn btn-default js-copy" data-target="#share_message"><i class="fa fa-copy"></i> Copy message</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    $(document).on('click', '.share_exam_link', function () {
+        var b = $(this), link = b.data('link');
+        var msg = 'Exam: ' + b.data('title') + '\n'
+            + 'Open the link, sign in with your student username and password, and the exam starts:\n' + link + '\n'
+            + 'Open from ' + b.data('from') + ' to ' + b.data('to') + '.';
+        $('#share_link').val(link);
+        $('#share_message').val(msg);
+        $('.js-share-inactive').toggle(String(b.data('active')) !== '1');
+        $('.js-share-whatsapp').attr('href', 'https://wa.me/?text=' + encodeURIComponent(msg));
+        $('#shareExamModal').modal('show');
+    });
+    $(document).on('click', '#shareExamModal .js-copy', function () {
+        var btn = $(this), field = $(btn.data('target'))[0], label = btn.html();
+        var done = function () { btn.html('<i class="fa fa-check"></i> Copied'); setTimeout(function () { btn.html(label); }, 1500); };
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(field.value).then(done, function () { field.select(); document.execCommand('copy'); done(); });
+        } else {
+            field.select(); document.execCommand('copy'); done();
+        }
+    });
+</script>
+
 <script>
     $(document).ready(function () {
 

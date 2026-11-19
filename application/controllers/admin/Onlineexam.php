@@ -171,6 +171,14 @@ class Onlineexam extends Admin_Controller
 
                 }
 
+                // The exam link to share with students (cbt/<id>): sign in, then the exam opens.
+                $share_btn = " <button type='button' class='btn btn-default btn-xs share_exam_link' data-toggle='tooltip' title='Share exam link'"
+                    . " data-link='" . html_escape(site_url('cbt/' . (int) $subject_value->id)) . "'"
+                    . " data-title='" . html_escape($subject_value->exam) . "'"
+                    . " data-from='" . html_escape($this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_from, false)) . "'"
+                    . " data-to='" . html_escape($this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_to, false)) . "'"
+                    . " data-active='" . (int) $subject_value->is_active . "'><i class='fa fa-link'></i></button>";
+
                 $row = array();
 
                 $row[]     = $title . $description;
@@ -183,7 +191,7 @@ class Onlineexam extends Admin_Controller
                 $row[]     = $is_active;
                 $row[]     = $publish_result;
                 $row[]     = $subject_value->description;
-                $row[]     = $download_btn . " " . $assign . " " . $addquestion_btn . " " . $editbtn . " " . $question_list . " " . $deletebtn;
+                $row[]     = $share_btn . " " . $download_btn . " " . $assign . " " . $addquestion_btn . " " . $editbtn . " " . $question_list . " " . $deletebtn;
                 $dt_data[] = $row;
             }
         }
