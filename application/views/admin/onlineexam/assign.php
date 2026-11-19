@@ -69,7 +69,7 @@
                         <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
                     </div>
                     <div class="box-body">
-                        <form role="form" action="<?php echo site_url('admin/onlineexam/assign/' . $id) ?>" method="post" class="row">
+                        <form role="form" action="<?php echo site_url('admin/onlineexam/assign/' . $id) ?>" method="post" class="row" data-autoload="off"><?php /* the page opens on everyone assigned, not the first class */ ?>
                             <?php echo $this->customlib->getCSRF(); ?>
                             <input type="hidden" name="onlineexam_id" value="<?php echo $onlineexam->id; ?>">
                                 <div class="col-md-6">
@@ -108,6 +108,65 @@ if (set_value('class_id') == $class['id']) {
                             </div>
                         </form>
                     </div>
+                <?php if (!isset($resultlist)) {
+                    // Everyone on the exam, shown when the page opens (Onlineexam::assigned_students).
+                    $status_label = array('not_started' => array('label-default', 'Not started'), 'started' => array('label-warning', 'In progress'), 'submitted' => array('label-success', 'Submitted'));
+                    $counts = array_count_values(array_column($assigned, 'status')); ?>
+                <div class="box box-primary" id="assigned_box">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-list"></i> Students assigned (<?php echo count($assigned); ?>)</h3>
+                        <?php if ($assigned) { ?>
+                            <span class="text-muted" style="margin-left:10px">
+                                <?php echo (isset($counts['submitted']) ? $counts['submitted'] : 0); ?> submitted,
+                                <?php echo (isset($counts['started']) ? $counts['started'] : 0); ?> in progress,
+                                <?php echo (isset($counts['not_started']) ? $counts['not_started'] : 0); ?> not started
+                            </span>
+                        <?php } ?>
+                    </div>
+                    <div class="box-body">
+                        <?php if (!$assigned) { ?>
+                            <p class="text-muted">No students are assigned yet. Tick classes above, or search a class below to pick students.</p>
+                        <?php } else { ?>
+                            <input type="search" id="assigned_filter" class="form-control" style="max-width:320px;margin-bottom:10px" placeholder="Filter by name, admission no or class" data-validate="off">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-condensed" id="assigned_table">
+                                    <thead><tr>
+                                        <th>#</th>
+                                        <th><?php echo $this->lang->line('admission_no'); ?></th>
+                                        <th><?php echo $this->lang->line('student_name'); ?></th>
+                                        <th><?php echo $this->lang->line('class'); ?></th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr></thead>
+                                    <tbody>
+                                    <?php foreach ($assigned as $n => $st) { ?>
+                                        <tr>
+                                            <td><?php echo $n + 1; ?></td>
+                                            <td><?php echo html_escape($st['admission_no']); ?></td>
+                                            <td><?php echo html_escape($this->customlib->getFullName($st['firstname'], $st['middlename'], $st['lastname'], $sch_setting->middlename, $sch_setting->lastname)); ?></td>
+                                            <td><?php echo html_escape($st['class'] . ' (' . $st['section'] . ')'); ?></td>
+                                            <td><span class="label <?php echo $status_label[$st['status']][0]; ?>"><?php echo $status_label[$st['status']][1]; ?></span></td>
+                                            <td class="text-right">
+                                                <?php if ($can_edit_assign && $st['status'] === 'not_started') { ?>
+                                                    <form method="post" action="<?php echo site_url('admin/onlineexam/assign_classes'); ?>" style="display:inline"
+                                                          onsubmit="return window.confirm('Take this student off the exam?')">
+                                                        <?php echo $this->customlib->getCSRF(); ?>
+                                                        <input type="hidden" name="onlineexam_id" value="<?php echo (int) $onlineexam->id; ?>">
+                                                        <input type="hidden" name="do" value="remove_student">
+                                                        <input type="hidden" name="onlineexam_student_id" value="<?php echo (int) $st['onlineexam_student_id']; ?>">
+                                                        <button type="submit" class="btn btn-default btn-xs" title="Take off this exam"><i class="fa fa-times"></i> Remove</button>
+                                                    </form>
+                                                <?php } ?>
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
                 <form method="post" action="<?php echo site_url('admin/onlineexam/addstudent') ?>" id="assign_form">
 
                     <?php
@@ -251,6 +310,10 @@ if ($student['onlineexam_student_session_id'] != 0) {
         }
     }
 
+    $('#assigned_filter').on('input', function () {
+        var q = this.value.toLowerCase();
+        $('#assigned_table tbody tr').each(function () { $(this).toggle(this.innerText.toLowerCase().indexOf(q) !== -1); });
+    });
     $('#classes_all').change(function () { $('.js-class-check:not(:disabled)').prop('checked', this.checked); });
     $('#assign_classes_form').submit(function (e) {
         if (!$('.js-class-check:checked').length) { e.preventDefault(); errorMsg('Tick at least one class.'); return; }
