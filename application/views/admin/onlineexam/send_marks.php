@@ -26,11 +26,16 @@ $sat = (int) $summary['sat'];
                 <?php if ($result) { ?>
                     <div class="alert alert-success">
                         <b><?php echo (int) $result['sent']; ?></b> student<?php echo $result['sent'] === 1 ? '\'s mark was' : 's\' marks were'; ?> entered.
+                        <?php if (!empty($result['added'])) { ?><?php echo (int) $result['added']; ?> of them were added to that exam's students (their class is part of it).<?php } ?>
                         <?php
                         $notes = array();
                         if ($result['kept']) { $notes[] = $result['kept'] . ' already had a mark, which was kept'; }
                         if ($result['pending']) { $notes[] = $result['pending'] . ' still have written answers to mark'; }
-                        if ($result['not_in_exam']) { $notes[] = $result['not_in_exam'] . ' are not in that exam (add them under Examinations first)'; }
+                        if ($result['not_in_exam']) {
+                            $notes[] = $result['not_in_exam'] . (isset($result['kind']) && $result['kind'] === 'cbse'
+                                ? ' are not in that exam and their class or section is not part of it (Report Cards > Exam: edit the exam to add the class and section, or add them under Assign / View Student)'
+                                : ' are not in that exam (add them under Examinations first)');
+                        }
                         if ($result['not_sat']) { $notes[] = $result['not_sat'] . ' did not sit the CBT'; }
                         if ($notes) { echo '<br>Not sent: ' . html_escape(implode('; ', $notes)) . '.'; }
                         ?>
@@ -88,7 +93,7 @@ $sat = (int) $summary['sat'];
             <div class="col-md-4">
                 <div class="box box-solid">
                     <div class="box-body">
-                        <p>Only students who are in the chosen exam (Assign / View Student on that exam) get a mark.</p>
+                        <p>Students get a mark when they are in the chosen exam. For a Report Cards exam, students of its classes and sections are added to it automatically.</p>
                         <p class="text-muted small">Sending again is safe: it updates the same marks. Teachers can still change any mark under Examinations afterwards.</p>
                     </div>
                 </div>
