@@ -13,6 +13,8 @@ class Onlineexam extends Student_Controller
         $this->sch_setting_detail = $this->setting_model->getSetting();
         $this->config->load("mailsms");
         $this->load->library("datatables");
+        $this->load->library('Exam_auto_publish');
+        $this->exam_auto_publish->publish_due(); // results whose Auto Result Publish Date has passed
     }
 
     public function index()
