@@ -3,6 +3,25 @@
 <div class="content-wrapper"> 
     <!-- Main content -->
     <section class="content">
+        <?php
+        // Result of Import marks (Exam::marks_import, Cbse_marks_sheet::import).
+        $mi = $this->session->flashdata('marks_import');
+        if (is_array($mi)) { ?>
+            <div class="alert <?php echo !empty($mi['error']) || (empty($mi['saved']) && !empty($mi['problems'])) ? 'alert-danger' : (!empty($mi['problems']) ? 'alert-warning' : 'alert-success'); ?>" id="marks_import_result">
+                <b>Import marks: <?php echo html_escape($mi['exam']); ?>.</b>
+                <?php if (!empty($mi['error'])) { ?>
+                    <?php echo html_escape($mi['error']); ?>
+                <?php } else { ?>
+                    <?php echo (int) $mi['saved']; ?> mark(s) saved for <?php echo (int) $mi['students']; ?> student(s).
+                    <?php if (!empty($mi['problems'])) { ?>
+                        <ul style="margin:6px 0 0 18px;padding:0">
+                            <?php foreach (array_slice($mi['problems'], 0, 30) as $pr) { ?><li><?php echo html_escape($pr); ?></li><?php } ?>
+                            <?php if (count($mi['problems']) > 30) { ?><li>... and <?php echo count($mi['problems']) - 30; ?> more.</li><?php } ?>
+                        </ul>
+                    <?php } ?>
+                <?php } ?>
+            </div>
+        <?php } ?>
         <div class="row">           
             <div class="col-md-12">             
                 <div class="box box-primary">
@@ -86,6 +105,10 @@
                                                 <?php } if ($this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) { ?>
                                                 
                                                 <button  class="btn btn-default btn-xs examMarksSubject" data-toggle="tooltip" data-recordid="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('exam_marks'); ?>" ><i class="fa fa-newspaper-o"></i></button>
+                                                <a href="<?php echo site_url('cbseexam/exam/marks_export/' . (int) $value['id']); ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="Export marks (Excel)"><i class="fa fa-download"></i></a>
+                                                <?php if ($this->rbac->hasPrivilege('cbse_exam_marks', 'can_edit')) { ?>
+                                                <button type="button" class="btn btn-default btn-xs js-marks-import" data-toggle="tooltip" data-exam-id="<?php echo (int) $value['id']; ?>" data-exam-name="<?php echo html_escape($value['name']); ?>" title="Import marks (Excel)"><i class="fa fa-upload"></i></button>
+                                                <?php } ?>
                                                 
                                                 <?php } if ($this->rbac->hasPrivilege('cbse_exam_attendance', 'can_view')) { ?>
                                                 
@@ -1301,4 +1324,49 @@ $(document).on('change','.check_absent',function(){
     $(this).closest('td').find("input.mark").val(0).attr('readonly', false);
   }
 });
+</script>
+
+<!-- Import marks: the sheet from Export marks, filled in (Exam::marks_import). -->
+<div class="modal fade" id="marksImportModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="<?php echo site_url('cbseexam/exam/marks_import'); ?>" enctype="multipart/form-data" id="marks_import_form">
+                <?php echo $this->customlib->getCSRF(); ?>
+                <input type="hidden" name="exam_id" id="marks_import_exam_id" value="">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Import marks: <span id="marks_import_exam_name"></span></h4>
+                </div>
+                <div class="modal-body">
+                    <ol style="padding-left:18px">
+                        <li><a href="#" id="marks_import_export_link"><i class="fa fa-download"></i> Export marks</a> to get this exam's sheet: a row per student, a column per subject and assessment.</li>
+                        <li>Type the marks in Excel: a number up to the column's maximum, or <b>ABS</b> for absent. Empty cells are left as they are.</li>
+                        <li>Keep the Admission no column and the column headings as they are, save, and upload the file here.</li>
+                    </ol>
+                    <div class="form-group">
+                        <label for="marks_import_file">Marks sheet (.xlsx or .csv)</label>
+                        <input type="file" name="file" id="marks_import_file" class="form-control" accept=".xlsx,.csv" required>
+                    </div>
+                    <p class="text-muted small">Marks in the file replace the ones already entered for those students and assessments.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-upload"></i> Import marks</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).on('click', '.js-marks-import', function () {
+        var id = $(this).data('exam-id');
+        $('#marks_import_exam_id').val(id);
+        $('#marks_import_exam_name').text($(this).data('exam-name'));
+        $('#marks_import_export_link').attr('href', '<?php echo site_url('cbseexam/exam/marks_export/'); ?>' + id);
+        $('#marks_import_file').val('');
+        $('#marksImportModal').modal('show');
+    });
+    $('#marks_import_form').on('submit', function () {
+        $(this).find('button[type=submit]').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Importing...');
+    });
 </script>
