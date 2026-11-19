@@ -3,6 +3,67 @@
     <section class="content">
         <div class="row">
             <div class="col-md-12">
+                <?php
+                // Whole classes at once (all their sections): Onlineexam::assign_classes.
+                $can_edit_assign = $this->rbac->hasPrivilege('online_assign_view_student', 'can_edit');
+                ?>
+                <div class="box box-primary" id="assign_classes_box">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-users"></i> Assign whole classes: <?php echo html_escape($onlineexam->exam); ?></h3>
+                    </div>
+                    <div class="box-body">
+                        <?php if (!empty($class_msg)) { ?>
+                            <div class="alert alert-<?php echo $class_msg['type'] === 'danger' ? 'danger' : 'success'; ?>"><?php echo html_escape($class_msg['text']); ?></div>
+                        <?php } ?>
+                        <p class="text-muted">Tick classes to assign every student in them, in all their sections. Students already assigned stay as they are. To pick individual students, use the search below.</p>
+                        <form method="post" action="<?php echo site_url('admin/onlineexam/assign_classes'); ?>" id="assign_classes_form">
+                            <?php echo $this->customlib->getCSRF(); ?>
+                            <input type="hidden" name="onlineexam_id" value="<?php echo (int) $onlineexam->id; ?>">
+                            <table class="table table-condensed" style="max-width:640px">
+                                <thead><tr>
+                                    <th style="width:30px"><?php if ($can_edit_assign) { ?><input type="checkbox" id="classes_all" title="All classes"><?php } ?></th>
+                                    <th><?php echo $this->lang->line('class'); ?></th>
+                                    <th>Assigned</th>
+                                    <th></th>
+                                </tr></thead>
+                                <tbody>
+                                <?php foreach ($classlist as $c) {
+                                    $sum = isset($class_summary[(int) $c['id']]) ? $class_summary[(int) $c['id']] : array('total' => 0, 'assigned' => 0);
+                                    $full = $sum['total'] > 0 && $sum['assigned'] >= $sum['total']; ?>
+                                    <tr class="js-class-row" data-class="<?php echo (int) $c['id']; ?>">
+                                        <td><?php if ($can_edit_assign) { ?><input type="checkbox" class="js-class-check" name="class_ids[]" value="<?php echo (int) $c['id']; ?>" <?php echo $sum['total'] && !$full ? '' : 'disabled'; ?>><?php } ?></td>
+                                        <td><?php echo html_escape($c['class']); ?></td>
+                                        <td>
+                                            <?php if (!$sum['total']) { ?>
+                                                <span class="text-muted">No students</span>
+                                            <?php } else { ?>
+                                                <span class="label <?php echo $full ? 'label-success' : ($sum['assigned'] ? 'label-warning' : 'label-default'); ?>"><?php echo $sum['assigned'] . ' of ' . $sum['total']; ?></span>
+                                            <?php } ?>
+                                        </td>
+                                        <td class="text-right">
+                                            <?php if ($can_edit_assign && $sum['assigned']) { ?>
+                                                <button type="submit" class="btn btn-default btn-xs js-class-remove" form="remove_class_<?php echo (int) $c['id']; ?>"><i class="fa fa-times"></i> Take class off</button>
+                                            <?php } ?>
+                                        </td>
+                                    </tr>
+                                <?php } ?>
+                                </tbody>
+                            </table>
+                            <?php if ($can_edit_assign) { ?>
+                                <button type="submit" class="btn btn-primary btn-sm" id="assign_classes_btn"><i class="fa fa-check"></i> Assign ticked classes</button>
+                            <?php } ?>
+                        </form>
+                        <?php if ($can_edit_assign) { foreach ($classlist as $c) { if (!empty($class_summary[(int) $c['id']]['assigned'])) { ?>
+                            <form method="post" action="<?php echo site_url('admin/onlineexam/assign_classes'); ?>" id="remove_class_<?php echo (int) $c['id']; ?>"
+                                  onsubmit="return window.confirm(<?php echo html_escape(json_encode('Take all ' . $c['class'] . ' students off this exam? Students who started or sat it are kept.')); ?>)">
+                                <?php echo $this->customlib->getCSRF(); ?>
+                                <input type="hidden" name="onlineexam_id" value="<?php echo (int) $onlineexam->id; ?>">
+                                <input type="hidden" name="do" value="remove">
+                                <input type="hidden" name="class_id" value="<?php echo (int) $c['id']; ?>">
+                            </form>
+                        <?php } } } ?>
+                    </div>
+                </div>
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
@@ -35,7 +96,7 @@ if (set_value('class_id') == $class['id']) {
                                     <div class="form-group">
                                         <label for="exampleInputEmail1"><?php echo $this->lang->line('section'); ?></label>
                                         <select  id="section_id" name="section_id" class="form-control" >
-                                            <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                            <option value="">All sections</option>
                                         </select>
                                         <span class="text-danger"><?php echo form_error('section_id'); ?></span>
                                     </div>
@@ -162,7 +223,7 @@ if ($student['onlineexam_student_session_id'] != 0) {
         if (class_id != "") {
             $('#section_id').html("");
             var base_url = '<?php echo base_url() ?>';
-            var div_data = '<option value=""><?php echo $this->lang->line('select'); ?></option>';
+            var div_data = '<option value="">All sections</option>';
 
             $.ajax({
                 type: "GET",
@@ -189,6 +250,12 @@ if ($student['onlineexam_student_session_id'] != 0) {
             });
         }
     }
+
+    $('#classes_all').change(function () { $('.js-class-check:not(:disabled)').prop('checked', this.checked); });
+    $('#assign_classes_form').submit(function (e) {
+        if (!$('.js-class-check:checked').length) { e.preventDefault(); errorMsg('Tick at least one class.'); return; }
+        $('#assign_classes_btn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Assigning...');
+    });
 
 //select all checkboxes
     $("#select_all").change(function () {  //"select all" change
