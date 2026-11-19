@@ -66,7 +66,33 @@ class Cbt_scoring
         $s['passed'] = $s['pending_count'] > 0 ? null : (int) ($s['percentage'] >= (float) $exam['passing_percentage']);
         $s['scored_at'] = date('Y-m-d H:i:s');
         $db->where('id', (int) $os['id'])->update('onlineexam_students', $s);
+        if (!empty($exam['marks_auto']) && !empty($os['is_attempted']) && $s['pending_count'] === 0) {
+            $this->auto_send($exam, (int) $os['id']);
+        }
         return $s;
+    }
+
+    /**
+     * The exam's automatic sending (marks_auto): its scores go to marks_target as set on Send
+     * scores to report card. $onlineexam_student_id: one student (their score just became final),
+     * or null for everyone. Never stops the caller (a student submitting): problems are logged.
+     */
+    public function auto_send(array $exam, $onlineexam_student_id = null)
+    {
+        $target = (string) $exam['marks_target'];
+        if (empty($exam['marks_auto']) || $target === '') {
+            return null;
+        }
+        $scale = !isset($exam['marks_scale']) || (int) $exam['marks_scale'] === 1;
+        $replace = !empty($exam['marks_replace']);
+        try {
+            return strpos($target, 'cbse:') === 0
+                ? $this->send_to_cbse((int) $exam['id'], $target, $scale, $replace, $onlineexam_student_id)
+                : $this->send_to_report_card((int) $exam['id'], (int) $target, $scale, $replace, $onlineexam_student_id);
+        } catch (Exception $e) {
+            log_message('error', 'CBT auto-send to report card, exam ' . (int) $exam['id'] . ': ' . $e->getMessage());
+            return null;
+        }
     }
 
     /** Scores every student in the exam who has submitted (after marking, or to fill in old scores). */
@@ -124,7 +150,7 @@ class Cbt_scoring
      * Puts the CBT scores into a CBSE Examination assessment (cbse_student_subject_marks), as the
      * teacher would type them under CBSE Examination > Exam > Marks. Same counts as send_to_report_card().
      */
-    public function send_to_cbse($onlineexam_id, $key, $scale = true, $replace = false)
+    public function send_to_cbse($onlineexam_id, $key, $scale = true, $replace = false, $only = null)
     {
         $db = $this->CI->db;
         if (!preg_match('/^cbse:(\d+):(\d+)$/', (string) $key, $m)) {
@@ -153,7 +179,7 @@ class Cbt_scoring
         }
         $count = array('sent' => 0, 'kept' => 0, 'pending' => 0, 'not_in_exam' => 0, 'not_sat' => 0);
         $db->trans_start();
-        foreach ($db->where('onlineexam_id', (int) $onlineexam_id)->get('onlineexam_students')->result_array() as $os) {
+        foreach ($this->sat_rows($onlineexam_id, $only) as $os) {
             if (empty($os['is_attempted']) || $os['scored_at'] === null) {
                 $count['not_sat']++;
                 continue;
@@ -194,7 +220,7 @@ class Cbt_scoring
      * Returns counts: sent, kept (marks already there), pending (written answers not marked),
      * not_in_exam (student not in that exam), not_sat.
      */
-    public function send_to_report_card($onlineexam_id, $target_id, $scale = true, $replace = false)
+    public function send_to_report_card($onlineexam_id, $target_id, $scale = true, $replace = false, $only = null)
     {
         $db = $this->CI->db;
         $target = $db->select('s.id, s.max_marks, s.exam_group_class_batch_exams_id')->where('s.id', (int) $target_id)
@@ -215,7 +241,7 @@ class Cbt_scoring
         }
         $count = array('sent' => 0, 'kept' => 0, 'pending' => 0, 'not_in_exam' => 0, 'not_sat' => 0);
         $rows = array();
-        foreach ($db->where('onlineexam_id', (int) $onlineexam_id)->get('onlineexam_students')->result_array() as $os) {
+        foreach ($this->sat_rows($onlineexam_id, $only) as $os) {
             if (empty($os['is_attempted']) || $os['scored_at'] === null) {
                 $count['not_sat']++;
                 continue;
@@ -244,6 +270,16 @@ class Cbt_scoring
         }
         $db->where('id', (int) $onlineexam_id)->update('onlineexam', array('marks_target' => (string) (int) $target['id']));
         return $count;
+    }
+
+    /** The exam's students, or just one ($only: onlineexam_students.id). */
+    private function sat_rows($onlineexam_id, $only)
+    {
+        $db = $this->CI->db->where('onlineexam_id', (int) $onlineexam_id);
+        if ($only !== null) {
+            $db->where('id', (int) $only);
+        }
+        return $db->get('onlineexam_students')->result_array();
     }
 
     /**

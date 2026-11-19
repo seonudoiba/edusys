@@ -429,6 +429,46 @@ class Cbseexam_exam_model extends MY_Model
         }
     }
 
+    /**
+     * Why Assign / View Student finds nobody: the exam's classes and sections, the session being
+     * looked at, and how many students those classes have in it, inactive, or in other sessions.
+     */
+    public function empty_reason($exam_class_section)
+    {
+        $db = $this->db;
+        $session = (int) $this->current_session;
+        $row = $db->select('session')->where('id', $session)->get('sessions')->row();
+        $out = array('classes' => array(), 'session' => $row ? $row->session : '', 'active' => 0, 'inactive' => 0, 'other_sessions' => array());
+        if (!$exam_class_section) {
+            return $out;
+        }
+        $ids = array_map('intval', $exam_class_section);
+        foreach ($db->select('classes.class, sections.section')->from('class_sections')
+            ->join('classes', 'classes.id = class_sections.class_id')->join('sections', 'sections.id = class_sections.section_id')
+            ->where_in('class_sections.id', $ids)->order_by('classes.id')->order_by('sections.section')->get()->result_array() as $r) {
+            $out['classes'][] = $r['class'] . ' (' . $r['section'] . ')';
+        }
+        foreach ($db->select('student_session.session_id, students.is_active, COUNT(*) AS n', false)->from('student_session')
+            ->join('students', 'students.id = student_session.student_id')
+            ->join('class_sections', 'class_sections.class_id = student_session.class_id AND class_sections.section_id = student_session.section_id')
+            ->where_in('class_sections.id', $ids)->group_by(array('student_session.session_id', 'students.is_active'))->get()->result_array() as $r) {
+            if ((int) $r['session_id'] === $session) {
+                $out[$r['is_active'] === 'yes' ? 'active' : 'inactive'] += (int) $r['n'];
+            } elseif ($r['is_active'] === 'yes') {
+                $out['other_sessions'][(int) $r['session_id']] = (isset($out['other_sessions'][(int) $r['session_id']]) ? $out['other_sessions'][(int) $r['session_id']] : 0) + (int) $r['n'];
+            }
+        }
+        if ($out['other_sessions']) {
+            $names = array_column($db->select('id, session')->where_in('id', array_keys($out['other_sessions']))->get('sessions')->result_array(), 'session', 'id');
+            $named = array();
+            foreach ($out['other_sessions'] as $sid => $n) {
+                $named[isset($names[$sid]) ? $names[$sid] : ('session ' . $sid)] = $n;
+            }
+            $out['other_sessions'] = $named;
+        }
+        return $out;
+    }
+
     public function searchExamStudents($exam_class_section, $exam_id)
     {
         $this->db->select('classes.id AS `class_id`,student_session.id as student_session_id,students.id,classes.class,sections.id AS `section_id`,sections.section,students.id,students.admission_no , students.roll_no,students.admission_date,students.firstname, students.middlename, students.lastname,students.image,    students.mobileno, students.email ,students.state ,   students.city , students.pincode ,     students.religion,     students.dob ,students.current_address,    students.permanent_address,IFNULL(students.category_id, 0) as `category_id`,IFNULL(categories.category, "") as `category`,students.adhar_no,students.samagra_id,students.bank_account_no,students.bank_name, students.ifsc_code , students.guardian_name , students.guardian_relation,students.guardian_phone,students.guardian_address,students.is_active ,students.created_at ,students.updated_at,students.father_name,students.rte,students.gender,IFNULL(cbse_exam_students.id, 0) as exam_student_id')->from('students');
@@ -440,7 +480,7 @@ class Cbseexam_exam_model extends MY_Model
         $this->db->join('cbse_exam_students', 'cbse_exam_students.cbse_exam_id="' . $exam_id . '" and cbse_exam_students.student_session_id=student_session.id', 'left');
         $this->db->where('student_session.session_id', $this->current_session);
         $this->db->where('students.is_active', 'yes');
-        $this->db->where_in('class_sections.id', $exam_class_section);
+        $this->db->where_in('class_sections.id', $exam_class_section ? $exam_class_section : array(0));
         $this->db->order_by('students.admission_no');
         $query = $this->db->get();
         return $query->result_array();
@@ -499,6 +539,7 @@ class Cbseexam_exam_model extends MY_Model
 
     public function get_class_sectionbyexamid($id)
     {
+        $class_section = array();
         $class_sections = $this->db->select('*')->from('cbse_exam_class_sections')->where('cbse_exam_id', $id)->get()->result_array();
         foreach ($class_sections as $key => $value) {
             $class_section[] = $value['class_section_id'];
