@@ -20,6 +20,8 @@ class Question extends Admin_Controller
         'exportformat' => array(array('import_question', 'can_view'), array('question_bank', 'can_add')),
         'uploadfile' => array(array('import_question', 'can_view')),
         'addform' => array(array('question_bank', 'can_add')),
+        'bulk' => array(array('question_bank', 'can_add')),
+        'bulk_save' => array(array('question_bank', 'can_add')),
         'editform' => array(array('question_bank', 'can_edit')),
         'add' => array(),
         'delete' => array(array('question_bank', 'can_delete')),
@@ -269,6 +271,147 @@ class Question extends Admin_Controller
         }
 
         echo json_encode($array);
+    }
+
+    /**
+     * Add questions: one class (and section) and subject, then as many questions as needed on one
+     * page, saved together. ?exam=<online exam id> also puts them in that CBT (with its marks).
+     */
+    public function bulk()
+    {
+        $this->session->set_userdata('top_menu', 'Online_Examinations');
+        $this->session->set_userdata('sub_menu', 'Online_Examinations/question');
+        $exam_id = (int) $this->input->get('exam');
+        $data = array(
+            'classList' => $this->class_model->get(),
+            'subjectlist' => $this->subject_model->get(),
+            'question_level' => $this->config->item('question_level'),
+            'exams' => $this->db->select('id, exam, subject_id')->where('exam_to >=', date('Y-m-d H:i:s'))->order_by('exam_from', 'desc')->get('onlineexam')->result_array(),
+            'exam_id' => $exam_id,
+            'subject_id' => (int) $this->input->get('subject'),
+        );
+        if ($exam_id && !in_array($exam_id, array_map('intval', array_column($data['exams'], 'id')), true)) {
+            $row = $this->db->select('id, exam, subject_id')->where('id', $exam_id)->get('onlineexam')->row_array();
+            if ($row) {
+                $data['exams'][] = $row;
+            }
+        }
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/question/bulk', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * POST class_id, section_id, subject_id, level, exam_id, marks, neg_marks, q[n][type|text|opt_a..opt_e|correct|ans[]].
+     * All or nothing: any question with a problem saves none, and each problem is returned by number.
+     */
+    public function bulk_save()
+    {
+        $class_id = (int) $this->input->post('class_id');
+        $subject_id = (int) $this->input->post('subject_id');
+        $section_id = (int) $this->input->post('section_id');
+        $level = (string) $this->input->post('level');
+        $levels = array_keys((array) $this->config->item('question_level'));
+        $errors = array();
+        if (!in_array($class_id, array_map('intval', array_column($this->class_model->get(), 'id')), true)) {
+            $errors['head'][] = 'Choose the class.';
+        }
+        if (!in_array($subject_id, array_map('intval', array_column($this->subject_model->get(), 'id')), true)) {
+            $errors['head'][] = 'Choose the subject.';
+        }
+        if (!in_array($level, $levels, true)) {
+            $level = 'medium';
+        }
+        $exam_id = (int) $this->input->post('exam_id');
+        $marks = (float) $this->input->post('marks');
+        $neg = max(0, (float) $this->input->post('neg_marks'));
+        if ($exam_id) {
+            if (!$this->db->where('id', $exam_id)->count_all_results('onlineexam')) {
+                $errors['head'][] = 'That online exam no longer exists.';
+            }
+            if ($marks <= 0) {
+                $errors['head'][] = 'Enter the marks for each question (more than 0).';
+            }
+        }
+        $opts = array('opt_a', 'opt_b', 'opt_c', 'opt_d', 'opt_e');
+        $rows = array();
+        foreach ((array) $this->input->post('q') as $n => $q) {
+            $no = count($rows) + count(isset($errors['q']) ? $errors['q'] : array()) + 1;
+            $type = isset($q['type']) ? (string) $q['type'] : '';
+            $text = isset($q['text']) ? trim((string) $q['text']) : '';
+            if ($text === '' && $type !== '' && trim(implode('', array_map(function ($k) use ($q) { return isset($q[$k]) ? (string) $q[$k] : ''; }, $opts))) === '') {
+                continue; // an empty card left at the end
+            }
+            $problems = array();
+            if ($text === '') {
+                $problems[] = 'type the question';
+            }
+            $row = array('question_type' => $type, 'question' => nl2br(html_escape($text), false), 'level' => $level, 'class_id' => $class_id,
+                'subject_id' => $subject_id, 'staff_id' => $this->customlib->getStaffID(), 'opt_a' => '', 'opt_b' => '', 'opt_c' => '', 'opt_d' => '', 'opt_e' => '', 'correct' => '');
+            if ($section_id) {
+                $row['section_id'] = $section_id;
+            }
+            if ($type === 'singlechoice' || $type === 'multichoice') {
+                $filled = array();
+                foreach ($opts as $k) {
+                    $v = isset($q[$k]) ? trim((string) $q[$k]) : '';
+                    $row[$k] = $v === '' ? '' : html_escape($v);
+                    if ($v !== '') {
+                        $filled[] = $k;
+                    }
+                }
+                if (count($filled) < 2 || $row['opt_a'] === '' || $row['opt_b'] === '') {
+                    $problems[] = 'fill in at least options A and B';
+                }
+                if ($type === 'singlechoice') {
+                    $c = isset($q['correct']) ? (string) $q['correct'] : '';
+                    if (!in_array($c, $filled, true)) {
+                        $problems[] = 'choose the right answer (an option that has text)';
+                    }
+                    $row['correct'] = $c;
+                } else {
+                    $ans = array_values(array_intersect((array) (isset($q['ans']) ? $q['ans'] : array()), $filled));
+                    if (!$ans) {
+                        $problems[] = 'tick the right answers';
+                    }
+                    $row['correct'] = json_encode($ans);
+                }
+            } elseif ($type === 'true_false') {
+                $c = isset($q['correct']) ? (string) $q['correct'] : '';
+                if (!in_array($c, array('true', 'false'), true)) {
+                    $problems[] = 'choose True or False';
+                }
+                $row['correct'] = $c;
+            } elseif ($type !== 'descriptive') {
+                $problems[] = 'choose the question type';
+            }
+            if ($problems) {
+                $errors['q'][$n] = 'Question ' . $no . ': ' . implode(', ', $problems) . '.';
+            } else {
+                $rows[$n] = $row;
+            }
+        }
+        if (!$rows && empty($errors['q'])) {
+            $errors['head'][] = 'Write at least one question.';
+        }
+        if ($errors) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => 0, 'errors' => $errors)));
+        }
+        $this->db->trans_start();
+        $added_to_exam = 0;
+        foreach ($rows as $row) {
+            $this->db->insert('questions', $row);
+            $qid = (int) $this->db->insert_id();
+            if ($exam_id) {
+                $this->db->insert('onlineexam_questions', array('onlineexam_id' => $exam_id, 'question_id' => $qid, 'marks' => $marks, 'neg_marks' => $neg));
+                $added_to_exam++;
+            }
+        }
+        $this->db->trans_complete();
+        $msg = count($rows) . ' question(s) saved to the question bank' . ($added_to_exam ? ' and added to the online exam' : '') . '.';
+        $this->session->set_flashdata('bulk_questions', $msg);
+        $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => 1, 'message' => $msg,
+            'redirect' => $exam_id ? site_url('admin/onlineexam') : site_url('admin/question'))));
     }
 
     public function getRecord($id)

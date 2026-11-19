@@ -15,6 +15,7 @@ $language_name = $language["short_code"];
 
 <div class="content-wrapper">
     <section class="content">
+        <?php if ($this->session->flashdata('bulk_questions')) { ?><div class="alert alert-success"><?php echo html_escape($this->session->flashdata('bulk_questions')); ?></div><?php } ?>
         <div class="row">
             <div class="col-md-12">
                 <div class="nav-tabs-custom theme-shadow">
@@ -138,11 +139,22 @@ function findOption($questionOpt, $find)
                      </div>
                     </div>
                     <div class="row">
-                    <div class="col-sm-12">
+                    <div class="col-sm-8">
                         <div class="form-group">
                             <label for="exam"><?php echo $this->lang->line('exam_title'); ?></label><small class="req"> *</small>
                             <input type="text" class="form-control" id="exam" name="exam">
                             <span class="text text-danger exam_error"></span>
+                        </div>
+                     </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label for="exam_subject_id"><?php echo $this->lang->line('subject'); ?></label>
+                            <select class="form-control" id="exam_subject_id" name="subject_id">
+                                <option value="">None (several subjects)</option>
+                                <?php foreach ($subjectlist as $sub) { ?>
+                                    <option value="<?php echo (int) $sub['id']; ?>"><?php echo html_escape($sub['name'] . ($sub['code'] ? ' (' . $sub['code'] . ')' : '')); ?></option>
+                                <?php } ?>
+                            </select>
                         </div>
                      </div>
                     </div>
@@ -274,7 +286,10 @@ function findOption($questionOpt, $find)
         <div class="modal-content">
             <div class="modal-header">
                 <a  data-backdrop="static" data-keyboard="false" class="close" data-dismiss="modal">&times;</a>
-                <h4 class="modal-title"><?php echo $this->lang->line('select_questions'); ?></h4>
+                <h4 class="modal-title"><?php echo $this->lang->line('select_questions'); ?>
+                    <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) { ?>
+                        <a href="#" id="write_questions_link" class="btn btn-primary btn-xs" style="margin-left:10px"><i class="fa fa-list-ol"></i> Write new questions for this exam</a>
+                    <?php } ?></h4>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="modal_exam_id" value="0" id="modal_exam_id">
@@ -613,6 +628,9 @@ $(document).on('submit','#delete_question',function(e) {
             }
             $('#modal_exam_id').val(exam_id);
             $('#modal_is_quiz').val(is_quiz);
+            // the exam's subject (if it has one) filters the question bank
+            $('#search_box').val(String($(e.relatedTarget).data('subject_id') || ''));
+            $('#write_questions_link').attr('href', '<?php echo site_url('admin/question/bulk'); ?>?exam=' + exam_id);
 
             //populate the textbox
             getQuestionByExam(1, exam_id,is_quiz);
@@ -696,6 +714,7 @@ $(document).on('submit','#delete_question',function(e) {
                         $('#exam_to').data("DateTimePicker").date(date_exam_to);
                         $('#exam_from').data("DateTimePicker").date(date_exam_from);
                         $('#exam').val(data.result.exam);
+                        $('#exam_subject_id').val(data.result.subject_id ? String(data.result.subject_id) : '');
                         $('#attempt').val(data.result.attempt);
                         CKEDITOR.instances['description'].setData(data.result.description);
 

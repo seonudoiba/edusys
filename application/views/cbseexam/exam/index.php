@@ -290,6 +290,21 @@
                     </div>
                     </div>                    
                                     
+                                    <?php // Subjects of the exam, added with it (Exam::add_exam_subjects). ?>
+                    <div class="form-group">
+                        <label>Subjects <span class="text-muted" style="font-weight:normal">(optional: you can also add them later with Exam Subjects)</span></label>
+                        <div style="margin-bottom:6px">
+                            <label class="checkbox-inline" style="font-weight:600"><input type="checkbox" id="exam_subjects_all"> All subjects</label>
+                            <input type="search" id="exam_subjects_filter" class="form-control input-sm" placeholder="Find a subject" data-validate="off" style="display:inline-block;width:200px;margin-left:12px">
+                        </div>
+                        <div id="exam_subjects_box" style="max-height:180px;overflow:auto;border:1px solid #ddd;border-radius:3px;padding:6px 10px;columns:3 180px">
+                            <?php foreach ($subject_list as $sub) { ?>
+                                <label style="display:block;font-weight:normal;margin:2px 0;break-inside:avoid"><input type="checkbox" name="subject_ids[]" value="<?php echo (int) $sub['id']; ?>" class="js-exam-subject">
+                                    <?php echo html_escape($sub['name'] . (!empty($sub['code']) ? ' (' . $sub['code'] . ')' : '')); ?></label>
+                            <?php } ?>
+                        </div>
+                        <p class="help-block">Each ticked subject gets every assessment of the chosen Assessment (e.g. First CA, Second CA, Exam), dated today at 9:00. Change dates, times and rooms later under Exam Subjects.</p>
+                    </div>
                 </div>
                 <div class="modal-footer">                    
                     <button type="submit" class="btn btn-primary pull-right" data-loading-text="<?php echo $this->lang->line('submitting') ?>" value=""><?php echo $this->lang->line('save'); ?></button>
@@ -1358,6 +1373,11 @@ $(document).on('change','.check_absent',function(){
     </div>
 </div>
 <script>
+    $('#exam_subjects_all').on('change', function () { $('.js-exam-subject:visible').prop('checked', this.checked); });
+    $('#exam_subjects_filter').on('input', function () {
+        var q = this.value.toLowerCase();
+        $('#exam_subjects_box label').each(function () { $(this).toggle(this.innerText.toLowerCase().indexOf(q) !== -1); });
+    });
     $(document).on('click', '.js-marks-import', function () {
         var id = $(this).data('exam-id');
         $('#marks_import_exam_id').val(id);

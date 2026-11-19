@@ -1,10 +1,18 @@
 <?php
 $groups = array(); // label => array of array(key, text)
+// Nothing chosen yet: the first Report Cards assessment of the exam's subject is suggested.
+$suggest = '';
+if ((string) $exam['marks_target'] === '' && !empty($exam['subject_id'])) {
+    foreach ($cbse_targets as $t) {
+        if ((int) $t['subject_id'] === (int) $exam['subject_id']) { $suggest = $t['key']; break; }
+    }
+}
+$chosen = (string) $exam['marks_target'] !== '' ? (string) $exam['marks_target'] : $suggest;
 foreach ($cbse_targets as $t) {
-    $groups['CBSE Examination · ' . $t['group']][] = array($t['key'], $t['label']);
+    $groups['Report Cards · ' . $t['group']][] = array($t['key'], $t['label']);
 }
 foreach ($targets as $t) {
-    $groups['Examinations · ' . $t['exam_group'] . ' · ' . $t['exam']][] = array((string) (int) $t['id'], $t['subject'] . ' (max ' . (float) $t['max_marks'] . ')');
+    $groups['Examinations (Exam Group) · ' . $t['exam_group'] . ' · ' . $t['exam']][] = array((string) (int) $t['id'], $t['subject'] . ' (max ' . (float) $t['max_marks'] . ')');
 }
 $has_targets = (bool) $groups;
 $sat = (int) $summary['sat'];
@@ -34,7 +42,7 @@ $sat = (int) $summary['sat'];
                         if ($result['not_in_exam']) {
                             $notes[] = $result['not_in_exam'] . (isset($result['kind']) && $result['kind'] === 'cbse'
                                 ? ' are not in that exam and their class or section is not part of it (Report Cards > Exam: edit the exam to add the class and section, or add them under Assign / View Student)'
-                                : ' are not in that exam (add them under Examinations first)');
+                                : ' are not in that exam (add them under Examinations &gt; Exam Group first)');
                         }
                         if ($result['not_sat']) { $notes[] = $result['not_sat'] . ' did not sit the CBT'; }
                         if ($notes) { echo '<br>Not sent: ' . html_escape(implode('; ', $notes)) . '.'; }
@@ -51,17 +59,18 @@ $sat = (int) $summary['sat'];
                             <p><?php echo $sat; ?> of <?php echo (int) $summary['assigned']; ?> students sat this CBT<?php echo $summary['max_score'] !== null ? ', out of ' . (float) $summary['max_score'] . ' marks' : ''; ?>.
                                 <?php if ((int) $summary['pending']) { ?><span class="text-warning"><?php echo (int) $summary['pending']; ?> still have written answers to mark (<a href="<?php echo site_url('admin/onlineexam/evalution/' . (int) $exam['id']); ?>">mark them</a>); they are skipped until then.</span><?php } ?></p>
                             <?php if (!$has_targets) { ?>
-                                <div class="alert alert-info">There are no exams for this session yet. Create one under CBSE Examination &gt; Exam (or Examinations &gt; Exam Group), add its subjects and students, then come back.</div>
+                                <div class="alert alert-info">There are no exams for this session yet. Create one under Report Cards &gt; Exam (or Examinations &gt; Exam Group), add its subjects and classes, then come back.</div>
                             <?php } else { ?>
                                 <div class="form-group">
                                     <label for="target_id">Put the scores into</label>
-                                    <p class="help-block" style="margin-top:0">A CBSE Examination assessment (e.g. First CA) or an Examinations subject.</p>
+                                    <p class="help-block" style="margin-top:0"><b>Report Cards</b>: an assessment of a term exam (e.g. Mathematics · First CA), used for the term report card.
+                                        <b>Examinations (Exam Group)</b>: a subject of the older Examinations module, which has its own marksheet. Most schools use Report Cards.</p>
                                     <select class="form-control" id="target_id" name="target_id" required>
-                                        <option value="">Choose an exam subject</option>
+                                        <option value="">Choose where the scores go</option>
                                         <?php foreach ($groups as $label => $items) { ?>
                                             <optgroup label="<?php echo html_escape($label); ?>">
                                                 <?php foreach ($items as $t) { ?>
-                                                    <option value="<?php echo html_escape($t[0]); ?>" <?php echo (string) $exam['marks_target'] === $t[0] ? 'selected' : ''; ?>><?php echo html_escape($t[1]); ?></option>
+                                                    <option value="<?php echo html_escape($t[0]); ?>" <?php echo $chosen === $t[0] ? 'selected' : ''; ?>><?php echo html_escape($t[1]); ?></option>
                                                 <?php } ?>
                                             </optgroup>
                                         <?php } ?>
@@ -94,7 +103,7 @@ $sat = (int) $summary['sat'];
                 <div class="box box-solid">
                     <div class="box-body">
                         <p>Students get a mark when they are in the chosen exam. For a Report Cards exam, students of its classes and sections are added to it automatically.</p>
-                        <p class="text-muted small">Sending again is safe: it updates the same marks. Teachers can still change any mark under Examinations afterwards.</p>
+                        <p class="text-muted small">Sending again is safe: it updates the same marks. Teachers can still change any mark afterwards, under Report Cards (or Examinations).</p>
                     </div>
                 </div>
             </div>

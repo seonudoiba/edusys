@@ -111,7 +111,7 @@ class Cbt_scoring
     /** The subjects of this session's exams (Examinations > Exam Group), where CBT scores can go. */
     public function report_card_targets($session_id)
     {
-        return $this->CI->db->select('s.id, s.max_marks, sub.name AS subject, e.exam, e.id AS exam_id, g.name AS exam_group')
+        return $this->CI->db->select('s.id, s.max_marks, s.subject_id, sub.name AS subject, e.exam, e.id AS exam_id, g.name AS exam_group')
             ->from('exam_group_class_batch_exam_subjects s')
             ->join('exam_group_class_batch_exams e', 'e.id = s.exam_group_class_batch_exams_id')
             ->join('exam_groups g', 'g.id = e.exam_group_id')
@@ -128,7 +128,7 @@ class Cbt_scoring
      */
     public function cbse_targets($session_id)
     {
-        $rows = $this->CI->db->select('tt.id AS timetable_id, t.id AS type_id, t.name AS type_name, t.code, t.maximum_marks, sub.name AS subject, e.name AS exam, term.name AS term')
+        $rows = $this->CI->db->select('tt.id AS timetable_id, tt.subject_id, t.id AS type_id, t.name AS type_name, t.code, t.maximum_marks, sub.name AS subject, e.name AS exam, term.name AS term')
             ->from('cbse_exam_timetable tt')
             ->join('cbse_exams e', 'e.id = tt.cbse_exam_id')
             ->join('cbse_exam_timetable_assessment_types link', 'link.cbse_exam_timetable_id = tt.id')
@@ -140,7 +140,7 @@ class Cbt_scoring
             ->get()->result_array();
         $out = array();
         foreach ($rows as $r) {
-            $out[] = array('key' => 'cbse:' . $r['timetable_id'] . ':' . $r['type_id'], 'group' => trim(($r['term'] ? $r['term'] . ' · ' : '') . $r['exam']),
+            $out[] = array('key' => 'cbse:' . $r['timetable_id'] . ':' . $r['type_id'], 'subject_id' => (int) $r['subject_id'], 'group' => trim(($r['term'] ? $r['term'] . ' · ' : '') . $r['exam']),
                 'label' => $r['subject'] . ' · ' . $r['type_name'] . ' (out of ' . (float) $r['maximum_marks'] . ')', 'max_marks' => (float) $r['maximum_marks']);
         }
         return $out;
