@@ -683,6 +683,13 @@ class Site extends Public_Controller
             $captcha = $this->captchalib->generate_captcha(); // one word in the session, shown on both sides
             $data['captcha_image'] = isset($captcha['image']) ? $captcha['image'] : '';
         }
+        // Opened from an exam link (cbt/<id>): the student side, with the exam's name.
+        $exam_link = $this->session->userdata('exam_link');
+        $data['exam_link'] = $data['student_on'] && is_array($exam_link) ? $exam_link : null;
+        if ($data['exam_link'] && !$forced) {
+            $active = 'student';
+            $forced = true;
+        }
         $data['active'] = $data['student_on'] && $active === 'student' ? 'student' : 'staff';
         $data['forced'] = $forced;
         $data['error_side'] = $data['active'];

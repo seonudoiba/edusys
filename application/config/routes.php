@@ -34,6 +34,7 @@ $route['page/(:any)'] = 'welcome/page/$1';
 $route['read/(:any)'] = 'welcome/read/$1';
 $route['online_admission'] = 'welcome/admission';
 $route['dashboard'] = 'admin/admin/dashboard'; // staff dashboard (school portal)
+$route['cbt/(:num)'] = 'cbt/index/$1'; // a CBT exam link shared by a teacher: sign in, then the exam opens
 $route['pay'] = 'user/user/getfees'; // parents: pay school fees online (link in fee reminder SMS); signs in first
 $route['product'] = 'plans/product';
 $route['features'] = 'plans/features';

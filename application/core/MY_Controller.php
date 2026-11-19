@@ -84,6 +84,9 @@ function require_own_password($CI)
     }
     $row = $CI->db->select('must_change_password')->where('id', (int) $user['id'])->get($guest ? 'guest' : 'users')->row();
     if ($row && (int) $row->must_change_password === 1) {
+        if (!$guest && $class === 'onlineexam' && $method === 'take') {
+            $_SESSION['redirect_to_user'] = current_url(); // an exam link: the exam opens after the new password
+        }
         $CI->session->set_flashdata('msg', '<div class="alert alert-info">Please choose your own password to continue.</div>');
         redirect($guest ? 'user/studentcourse/changeguestpass' : 'user/user/changepass');
     }

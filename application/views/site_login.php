@@ -87,7 +87,11 @@ $captcha_block = function ($error) use ($captcha_image) {
 
                                             <div class="login-side" id="side-student" role="tabpanel" aria-labelledby="tab-student" <?php echo $active === 'student' ? '' : 'hidden'; ?>>
                                                 <h3 class="font-white"><?php echo $this->lang->line('user_login'); ?></h3>
+                                                <?php if (!empty($exam_link)) { ?>
+                                                    <div class="alert alert-info js-exam-link">Sign in with your <b>student</b> username and password to start the exam <b><?php echo html_escape($exam_link['title']); ?></b>.</div>
+                                                <?php } else { ?>
                                                 <p class="login-hint">Use the username and password the school sent you, e.g. std105 or parent105.</p>
+                                                <?php } ?>
                                                 <?php if (isset($error_message) && $error_side === 'student') { ?>
                                                     <div class="alert alert-danger"><?php echo $error_message; ?></div>
                                                 <?php } ?>
