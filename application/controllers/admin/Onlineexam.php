@@ -164,7 +164,8 @@ class Onlineexam extends Admin_Controller
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
                     $question_list .= "<a href='" . site_url('admin/onlineexam/results/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Results'><i class='fa fa-bar-chart'></i></a> ";
                     if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
-                        $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Send scores to report card'><i class='fa fa-share-square-o'></i></a> ";
+                        $auto_on = !empty($subject_value->marks_auto) && (string) $subject_value->marks_target !== '';
+                        $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-xs " . ($auto_on ? 'btn-success' : 'btn-default') . "' data-toggle='tooltip' title='" . ($auto_on ? 'Scores go to the report card automatically' : 'Send scores to report card') . "'><i class='fa fa-share-square-o'></i></a> ";
                     }
 
                     if ($subject_value->publish_result || ($subject_value->auto_publish_date != "0000-00-00" && $subject_value->auto_publish_date != "" && $subject_value->auto_publish_date != null && (strtotime($subject_value->auto_publish_date) <= strtotime(date('Y-m-d H:i:s'))))) {
@@ -287,7 +288,8 @@ class Onlineexam extends Admin_Controller
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
                     $question_list .= "<a href='" . site_url('admin/onlineexam/results/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Results'><i class='fa fa-bar-chart'></i></a> ";
                     if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
-                        $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Send scores to report card'><i class='fa fa-share-square-o'></i></a> ";
+                        $auto_on = !empty($subject_value->marks_auto) && (string) $subject_value->marks_target !== '';
+                        $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-xs " . ($auto_on ? 'btn-success' : 'btn-default') . "' data-toggle='tooltip' title='" . ($auto_on ? 'Scores go to the report card automatically' : 'Send scores to report card') . "'><i class='fa fa-share-square-o'></i></a> ";
                     }
 
                     if ($subject_value->publish_result || ($subject_value->auto_publish_date != "0000-00-00" && $subject_value->auto_publish_date != "" && $subject_value->auto_publish_date != null && (strtotime($subject_value->auto_publish_date) <= strtotime(date('Y-m-d H:i:s'))))) {
@@ -1009,15 +1011,24 @@ class Onlineexam extends Admin_Controller
             $target = (string) $this->input->post('target_id');
             $scale = $this->input->post('mode') !== 'raw';
             $replace = (bool) $this->input->post('replace');
+            $auto = (bool) $this->input->post('auto');
             try {
                 $data['result'] = strpos($target, 'cbse:') === 0
                     ? $this->cbt_scoring->send_to_cbse($exam['id'], $target, $scale, $replace)
                     : $this->cbt_scoring->send_to_report_card($exam['id'], (int) $target, $scale, $replace);
-                $exam['marks_target'] = $target;
+                // Remembered for the automatic sending (Cbt_scoring::auto_send) as well.
+                $settings = array('marks_auto' => $auto ? 1 : 0, 'marks_scale' => $scale ? 1 : 0, 'marks_replace' => $replace ? 1 : 0);
+                $this->db->where('id', (int) $exam['id'])->update('onlineexam', $settings);
+                $exam = array_merge($exam, $settings, array('marks_target' => $target));
                 $data['exam'] = $exam;
             } catch (RuntimeException $e) {
                 $data['error'] = $e->getMessage();
             }
+        } elseif ($this->input->get('auto') === 'off') {
+            $this->db->where('id', (int) $exam['id'])->update('onlineexam', array('marks_auto' => 0));
+            $exam['marks_auto'] = 0;
+            $data['exam'] = $exam;
+            $data['auto_off'] = true;
         }
         $session = $this->setting_model->getCurrentSession();
         $data['cbse_targets'] = $this->cbt_scoring->cbse_targets($session);

@@ -16,6 +16,12 @@ $sat = (int) $summary['sat'];
     <section class="content">
         <div class="row">
             <div class="col-md-8">
+                <?php if (!empty($auto_off)) { ?><div class="alert alert-info">Automatic sending is off. Scores already sent stay on the report card.</div><?php } ?>
+                <?php if (!empty($exam['marks_auto']) && (string) $exam['marks_target'] !== '') { ?>
+                    <div class="alert alert-success"><i class="fa fa-refresh"></i> <b>Automatic:</b> each student's score goes into the report card as soon as it is final
+                        (submitted, written answers marked).
+                        <a href="<?php echo site_url('admin/onlineexam/send_marks/' . (int) $exam['id'] . '?auto=off'); ?>" class="alert-link" style="margin-left:6px">Turn off</a></div>
+                <?php } ?>
                 <?php if ($error) { ?><div class="alert alert-danger"><?php echo html_escape($error); ?></div><?php } ?>
                 <?php if ($result) { ?>
                     <div class="alert alert-success">
@@ -58,17 +64,22 @@ $sat = (int) $summary['sat'];
                                 </div>
                                 <div class="form-group">
                                     <label>How to enter the score</label>
-                                    <div class="radio"><label><input type="radio" name="mode" value="scale" checked> As a share of that subject's maximum marks (e.g. 75% of the CBT = 15 out of 20)</label></div>
-                                    <div class="radio"><label><input type="radio" name="mode" value="raw"> The CBT score as it is (never more than the maximum)</label></div>
+                                    <?php $raw = isset($exam['marks_scale']) && (int) $exam['marks_scale'] === 0; ?>
+                                    <div class="radio"><label><input type="radio" name="mode" value="scale" <?php echo $raw ? '' : 'checked'; ?>> As a share of that subject's maximum marks (e.g. 75% of the CBT = 15 out of 20)</label></div>
+                                    <div class="radio"><label><input type="radio" name="mode" value="raw" <?php echo $raw ? 'checked' : ''; ?>> The CBT score as it is (never more than the maximum)</label></div>
                                 </div>
                                 <div class="checkbox">
-                                    <label><input type="checkbox" name="replace" value="1"> Replace marks already entered for that subject</label>
+                                    <label><input type="checkbox" name="replace" value="1" <?php echo !empty($exam['marks_replace']) ? 'checked' : ''; ?>> Replace marks already entered for that subject</label>
                                     <p class="help-block">Left unticked, students who already have a mark keep it.</p>
+                                </div>
+                                <div class="checkbox">
+                                    <label><input type="checkbox" name="auto" value="1" <?php echo !empty($exam['marks_auto']) || (string) $exam['marks_target'] === '' ? 'checked' : ''; ?>> <b>Send automatically from now on</b></label>
+                                    <p class="help-block">Each student's score goes in as soon as it is final: when they submit, or when their written answers are marked. No need to come back here.</p>
                                 </div>
                             <?php } ?>
                         </div>
                         <div class="box-footer">
-                            <?php if ($has_targets) { ?><button type="submit" class="btn btn-primary">Send scores</button><?php } ?>
+                            <?php if ($has_targets) { ?><button type="submit" class="btn btn-primary">Send scores now</button><?php } ?>
                             <a href="<?php echo site_url('admin/onlineexam'); ?>" class="btn btn-default">Back to online exams</a>
                         </div>
                     </form>

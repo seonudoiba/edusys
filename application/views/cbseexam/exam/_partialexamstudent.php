@@ -63,7 +63,34 @@
         <?php
     } else {
         ?>        
-        <div class="alert alert-danger "><?php echo $this->lang->line('no_record_found'); ?></div>
+        <?php
+        // Why nobody was found (Cbseexam_exam_model::empty_reason), instead of a bare "No Record Found".
+        $why = isset($empty_reason) && is_array($empty_reason) ? $empty_reason : null;
+        ?>
+        <div class="alert alert-warning">
+            <b>No students to show.</b>
+            <?php if (!$why) { ?>
+                <?php echo $this->lang->line('no_record_found'); ?>
+            <?php } elseif (!$why['classes']) { ?>
+                This exam has no class or section. Edit the exam (pencil) and tick its class and sections.
+            <?php } else { ?>
+                The list shows active students of <b><?php echo html_escape(implode(', ', $why['classes'])); ?></b>
+                in the session <b><?php echo html_escape($why['session']); ?></b>.
+                <ul style="margin:6px 0 0 18px;padding:0">
+                    <?php if ($why['other_sessions']) { ?>
+                        <li>These classes have students in another session:
+                            <?php $p = array(); foreach ($why['other_sessions'] as $name => $n) { $p[] = html_escape($name) . ' (' . (int) $n . ')'; } echo implode(', ', $p); ?>.
+                            Switch the session at the top of the page, or promote the students into <?php echo html_escape($why['session']); ?> (Student Information &gt; Promote Students).</li>
+                    <?php } ?>
+                    <?php if ($why['inactive']) { ?>
+                        <li><?php echo (int) $why['inactive']; ?> student(s) in these classes are disabled.</li>
+                    <?php } ?>
+                    <?php if (!$why['other_sessions'] && !$why['inactive']) { ?>
+                        <li>No students are in these classes and sections. If the students are in other sections, edit the exam (pencil) and tick those sections too.</li>
+                    <?php } ?>
+                </ul>
+            <?php } ?>
+        </div>
         <?php
     }
     ?>

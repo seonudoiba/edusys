@@ -59,6 +59,7 @@ class Exam extends MY_Addon_CBSEController
         $resultlist = $this->cbseexam_exam_model->searchExamStudents($exam_class_section, $examid);
         $data['exam_id'] = $examid;
         $data['resultlist'] = $resultlist;
+        $data['empty_reason'] = $resultlist ? null : $this->cbseexam_exam_model->empty_reason($exam_class_section);
         $student_exam_page = $this->load->view('cbseexam/exam/_partialexamstudent', $data, true);
         $array = array('status' => '1', 'error' => '', 'page' => $student_exam_page);
         echo json_encode($array);
