@@ -324,9 +324,65 @@ class Exam extends MY_Addon_CBSEController
         $data['exam_id'] = $exam;
         $data['exam'] = $this->cbseexam_exam_model->get_exambyId($exam);
         $data['studentList'] = $this->cbseexam_exam_model->getExamStudents($exam);
+        $this->load->library('Cbse_marks_sheet');
+        $data['totals'] = $this->cbse_marks_sheet->totals((int) $exam); // the Score column
         $this->load->view('layout/header', $data);
         $this->load->view('cbseexam/exam/examwiserank', $data);
         $this->load->view('layout/footer', $data);
+    }
+
+    /** The exam's marks as an Excel sheet (a row per student, a column per subject assessment): Cbse_marks_sheet. */
+    public function marks_export($exam_id = 0)
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) {
+            access_denied();
+        }
+        $exam = $this->cbseexam_exam_model->get_exambyId((int) $exam_id);
+        if (!$exam) {
+            show_404();
+        }
+        $this->load->library(array('Cbse_marks_sheet', 'Import_sheet'));
+        list($headings, $rows) = $this->cbse_marks_sheet->export((int) $exam_id);
+        $name = trim(preg_replace('/[^A-Za-z0-9 _-]+/', '', $exam['name'])) . ' marks';
+        $this->load->helper('download');
+        if (!class_exists('ZipArchive')) {
+            // No zip extension on this server: a CSV (opens in Excel, imports the same way).
+            $f = fopen('php://temp', 'w+');
+            fwrite($f, "\xEF\xBB\xBF");
+            fputcsv($f, $headings, ',', '"', '');
+            foreach ($rows as $r) {
+                fputcsv($f, $r, ',', '"', '');
+            }
+            rewind($f);
+            force_download($name . '.csv', stream_get_contents($f));
+            return;
+        }
+        $first = $rows ? array_shift($rows) : array();
+        force_download($name . '.xlsx', Import_sheet::xlsx($headings, $first, $rows));
+    }
+
+    /** POST exam_id, file: the exported sheet filled in; saves its marks and says what happened. */
+    public function marks_import()
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_marks', 'can_edit')) {
+            access_denied();
+        }
+        $exam_id = (int) $this->input->post('exam_id');
+        $exam = $exam_id ? $this->cbseexam_exam_model->get_exambyId($exam_id) : null;
+        if (!$exam) {
+            show_404();
+        }
+        $this->load->library(array('Cbse_marks_sheet', 'Import_sheet'));
+        $problem = Import_sheet::upload_problem('file');
+        if ($problem !== '') {
+            $this->session->set_flashdata('marks_import', array('exam' => $exam['name'], 'error' => $problem));
+            redirect('cbseexam/exam');
+        }
+        list($rows, $error) = Import_sheet::rows($_FILES['file']['tmp_name'], $_FILES['file']['name']);
+        $result = $error ? array('saved' => 0, 'students' => 0, 'columns' => 0, 'problems' => array($error)) : $this->cbse_marks_sheet->import($exam_id, $rows);
+        $result['exam'] = $exam['name'];
+        $this->session->set_flashdata('marks_import', $result);
+        redirect('cbseexam/exam');
     }
 
     public function rank()

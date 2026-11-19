@@ -39,6 +39,8 @@ if($student_value->rank != ''){         ?>
                              <th><?php echo $this->lang->line('date_of_birth'); ?></th>
                              <th><?php echo $this->lang->line('gender'); ?></th>                                             
                              <th class=""><?php echo $this->lang->line('mobile_no'); ?></th>
+                             <th class="text-right">Score</th>
+                             <th class="text-right">%</th>
                              <th class="text-center"><?php echo $this->lang->line('rank'); ?></th>
                          </tr>
                      </thead>
@@ -69,6 +71,9 @@ if($student_value->rank != ''){         ?>
                                          echo $this->customlib->showDate($student_value->dob); }?></td>
                                      <td><?php echo $this->lang->line(strtolower($student_value->gender)); ?></td>                  
                                      <td><?php echo $student_value->mobileno; ?></td>
+                                     <?php $t = isset($totals[(int) $student_value->student_session_id]) ? $totals[(int) $student_value->student_session_id] : null; ?>
+                                     <td class="text-right"><?php echo $t ? (float) $t['score'] . ' / ' . (float) $t['max'] : '<span class="text-muted">No marks</span>'; ?></td>
+                                     <td class="text-right"><?php echo $t && $t['percentage'] !== null ? number_format($t['percentage'], 2) . '%' : ''; ?></td>
                                      <td class="text-center"><?php echo $student_value->rank;?></td>
                                     
                                  </tr>
