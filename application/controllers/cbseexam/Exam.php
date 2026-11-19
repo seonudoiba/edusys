@@ -28,6 +28,7 @@ class Exam extends MY_Addon_CBSEController
         $data['classlist'] = $class;
         $data['assessment_result'] = $this->cbseexam_assessment_model->get();
         $data['grade_result'] = $this->cbseexam_grade_model->getgradelist();
+        $data['subject_list'] = $this->subject_model->get(); // Add Exam: the subjects to put in it
         $this->load->view('layout/header', $data);
         $this->load->view('cbseexam/exam/index', $data);
         $this->load->view('layout/footer', $data);
@@ -1670,6 +1671,7 @@ class Exam extends MY_Addon_CBSEController
                     );
                     $this->cbseexam_exam_model->add_exam_class_section($exam_class_section);
                 }
+                $this->add_exam_subjects((int) $exam_id, (array) $this->input->post('subject_ids'), (int) $this->input->post('assessment_id'));
 
                 //================
                 if (isset($_POST['is_publish'])) {
@@ -1689,6 +1691,36 @@ class Exam extends MY_Addon_CBSEController
         }
 
         echo json_encode($array);
+    }
+
+    /**
+     * The subjects ticked on Add Exam: one Exam Subjects row each, with every assessment of the
+     * exam's assessment (e.g. First CA, Second CA, Exam), dated today at 09:00 for 60 minutes.
+     * Dates, times, rooms and assessments can be changed afterwards under Exam Subjects.
+     */
+    private function add_exam_subjects($exam_id, array $subject_ids, $assessment_id)
+    {
+        $subject_ids = array_values(array_unique(array_filter(array_map('intval', $subject_ids))));
+        if (!$exam_id || !$subject_ids) {
+            return 0;
+        }
+        $known = array_map('intval', array_column($this->subject_model->get(), 'id'));
+        $types = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($assessment_id);
+        $added = 0;
+        foreach ($subject_ids as $subject_id) {
+            if (!in_array($subject_id, $known, true)) {
+                continue;
+            }
+            $this->db->insert('cbse_exam_timetable', array('cbse_exam_id' => $exam_id, 'subject_id' => $subject_id, 'date' => date('Y-m-d'),
+                'time_from' => '09:00:00', 'time_to' => '10:00:00', 'duration' => 60, 'room_no' => '-', 'written_maximum_marks' => 0, 'is_practical' => 0,
+                'created_by' => $this->customlib->getStaffID()));
+            $tt = (int) $this->db->insert_id();
+            foreach ($types as $t) {
+                $this->db->insert('cbse_exam_timetable_assessment_types', array('cbse_exam_timetable_id' => $tt, 'cbse_exam_assessment_type_id' => (int) $t->id));
+            }
+            $added++;
+        }
+        return $added;
     }
 
     public function get_editdetails()

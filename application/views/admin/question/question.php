@@ -45,6 +45,7 @@
         <h1><i class="fa fa-bus"></i> <?php //echo $this->lang->line('question'); ?></h1>
     </section>
     <section class="content">
+        <?php if ($this->session->flashdata('bulk_questions')) { ?><div class="alert alert-success"><?php echo html_escape($this->session->flashdata('bulk_questions')); ?></div><?php } ?>
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary" id="route">
@@ -53,6 +54,9 @@
                         <div class="pull-right">
                             <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) {?>
                                 <button class="btn btn-primary btn-sm question-btn" data-recordid="0" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_question'); ?></button>
+                            <?php }?>
+                            <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) {?>
+                                <a class="btn btn-primary btn-sm" href="<?php echo site_url('admin/question/bulk'); ?>"><i class="fa fa-list-ol"></i> Add questions</a>
                             <?php }?>
                             <a class="btn btn-default btn-sm" href="<?php echo site_url('admin/question_passage'); ?>"><i class="fa fa-book"></i> Reading passages</a>
                             <?php if ($this->rbac->hasPrivilege('import_question', 'can_view')) {?>

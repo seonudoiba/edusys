@@ -92,6 +92,7 @@ class Onlineexam extends Admin_Controller
         $question_level = $this->config->item('question_level');
         $classList      = $this->class_model->get();
         $m              = json_decode($questionList);
+        $subject_names = array_column($this->subject_model->get(), 'name', 'id'); // the exam's subject under its title
 
         $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         $dt_data         = array();
@@ -107,6 +108,9 @@ class Onlineexam extends Admin_Controller
                     $set_enable = true;
                 }
                 $title = "<a href='#' data-toggle='popover' class='detail_popover'>" . $subject_value->exam . "</a>";
+                if (!empty($subject_value->subject_id) && isset($subject_names[(int) $subject_value->subject_id])) {
+                    $title .= "<br><small class='text-muted'>" . html_escape($subject_names[(int) $subject_value->subject_id]) . "</small>";
+                }
 
                 if ($subject_value->description == "") {
                     $description = "<div class='fee_detail_popover' style='display: none'><p class='text text-danger'>" . $this->lang->line('no_description') . "</div></p>";
@@ -138,7 +142,7 @@ class Onlineexam extends Admin_Controller
                     $assign = "<a href=" . base_url() . 'admin/onlineexam/assign/' . $subject_value->id . " data-toggle='tooltip' class='btn btn-default btn-xs' title='" . $this->lang->line('assign_view_student') . "'  ><i class='fa fa-tag'></i></a>";
                 }
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
-                    $addquestion_btn = " <button type='button' class='btn btn-default btn-xs' data-recordid=" . $subject_value->id . " data-is_quiz=" . $subject_value->is_quiz . " data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' ><i class='fa fa-question-circle'></i></button>";
+                    $addquestion_btn = " <button type='button' class='btn btn-default btn-xs' data-recordid=" . $subject_value->id . " data-is_quiz=" . $subject_value->is_quiz . " data-subject_id='" . (int) $subject_value->subject_id . "' data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' ><i class='fa fa-question-circle'></i></button>";
                 }
 
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
@@ -221,6 +225,7 @@ class Onlineexam extends Admin_Controller
         $question_level = $this->config->item('question_level');
         $classList      = $this->class_model->get();
         $m              = json_decode($questionList);
+        $subject_names = array_column($this->subject_model->get(), 'name', 'id'); // the exam's subject under its title
 
         $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         $dt_data         = array();
@@ -236,6 +241,9 @@ class Onlineexam extends Admin_Controller
                     $set_enable = true;
                 }
                 $title = "<a href='#' data-toggle='popover' class='detail_popover'>" . $subject_value->exam . "</a>";
+                if (!empty($subject_value->subject_id) && isset($subject_names[(int) $subject_value->subject_id])) {
+                    $title .= "<br><small class='text-muted'>" . html_escape($subject_names[(int) $subject_value->subject_id]) . "</small>";
+                }
 
                 if ($subject_value->description == "") {
                     $description = "<div class='fee_detail_popover' style='display: none'><p class='text text-danger'>" . $this->lang->line('no_description') . "</div></p>";
@@ -263,7 +271,7 @@ class Onlineexam extends Admin_Controller
                     $assign = "<a href=" . base_url() . 'admin/onlineexam/assign/' . $subject_value->id . " data-toggle='tooltip' class='btn btn-default btn-xs' title=" . $this->lang->line('assign_view') . "  ><i class='fa fa-tag'></i></a>";
                 }
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
-                    $addquestion_btn = " <button type='button' class='btn btn-default btn-xs' data-recordid=" . $subject_value->id . " data-is_quiz=" . $subject_value->is_quiz . " data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' ><i class='fa fa-question-circle'></i></button>";
+                    $addquestion_btn = " <button type='button' class='btn btn-default btn-xs' data-recordid=" . $subject_value->id . " data-is_quiz=" . $subject_value->is_quiz . " data-subject_id='" . (int) $subject_value->subject_id . "' data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' ><i class='fa fa-question-circle'></i></button>";
                 }
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
                     $download_btn = " <button type='button' data-toggle='tooltip' class='btn btn-default btn-xs download_exam' data-recordid=" . $subject_value->id . "  title=" . $this->lang->line('print') . " data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>'><i class='fa fa fa-print'></i></button>";
@@ -1124,6 +1132,7 @@ class Onlineexam extends Admin_Controller
             $insert_data = array(
                 'answer_word_count'  => trim((string) $this->input->post('word_limit')) === '' ? -1 : (int) $this->input->post('word_limit'),
                 'exam'               => $this->input->post('exam'),
+                'subject_id'         => (int) $this->input->post('subject_id') ?: null,
                 'attempt'            => $this->input->post('attempt'),
                 'exam_from'          => date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('exam_from'), false)),
                 'exam_to'            => date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('exam_to'), false)),
