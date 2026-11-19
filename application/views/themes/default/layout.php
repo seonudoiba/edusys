@@ -356,6 +356,6 @@ if (in_array('complain', json_decode($front_setting->sidebar_options))) {
             });
         </script>
     <script>window.date_format = window.date_format || <?php echo json_encode(strtr($this->customlib->getSchoolDateFormat(), array("d" => "dd", "m" => "mm", "Y" => "yyyy", "M" => "M"))); ?>;</script>
-<script src="<?php echo base_url(); ?>backend/custom/form_rules.js?v=1"></script>
+<script src="<?php echo base_url(); ?>backend/custom/form_rules.js?v=2"></script>
 </body>
 </html>

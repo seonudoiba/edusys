@@ -174,14 +174,15 @@ function findOption($questionOpt, $find)
                 </div>
                     <div class="col-sm-4">
                     <div class="form-group">
-                        <label for="exam_to"> <?php echo $this->lang->line('auto_result_publish_date') ?></label>
+                        <label for="auto_publish_date"><?php echo $this->lang->line('auto_result_publish_date') ?></label>
                           <div class="input-group">
-                            <input class="form-control tddm200 datetime_twelve_hour" name="auto_publish_date" type="text" id="auto_publish_date" name="auto_publish_date">
+                            <input class="form-control tddm200 datetime_twelve_hour" name="auto_publish_date" type="text" id="auto_publish_date" autocomplete="off">
                             <span class="input-group-addon" id="basic-addon2">
                                 <i class="fa fa-calendar">
                                 </i>
                             </span>
                         </div>
+                        <span class="help-block js-quiz-no-date" style="display:none;margin-bottom:0">Not used for a quiz: its result shows as soon as the student submits.</span>
                     </div>
                 </div>
                     </div>
@@ -576,13 +577,10 @@ $(document).on('submit','#delete_question',function(e) {
         $('#myModal').on('hidden.bs.modal', function () {
             $('.is_quiz').attr('checked', false);
 
-            $(this).find(":input, select, textarea")
-                    .not('input:checkbox,input:radio')
-                    .val('')
-                    .end()
-                    .removeAttr('checked')
-                    .removeAttr('selected')
-                    .end();
+            // Emptied for the next exam (not the security token; the description through CKEditor,
+            // whose jQuery adapter broke the old chained reset before the defaults below ran).
+            $(this).find('input, select').not('input:checkbox, input:radio, input[type=hidden]').val('');
+            if (window.CKEDITOR && CKEDITOR.instances['description']) { CKEDITOR.instances['description'].setData(''); }
             // Back to the defaults of a new exam (an empty word limit was refused as required).
             $('#word_limit').val('-1');
             $('#attempt').val('1');
@@ -705,11 +703,7 @@ $(document).on('submit','#delete_question',function(e) {
 
                         $('input[name=is_quiz]').prop('checked',is_quiz);
 
-                        if(is_quiz){
-                            $("input.publish_result").attr("disabled", true);
-
-                            document.getElementById('auto_publish_date').disabled = true;
-                        }
+                        quizDateState(is_quiz);
 
                         var chk_status=(data.result.is_active == 0)?false:true;
 
@@ -1018,14 +1012,22 @@ $(document).on('submit','#delete_question',function(e) {
 </script>
 
 <script type="text/javascript">
-    $(".is_quiz").change(function() {
-        if(this.checked) {
-            $("input.publish_result").attr("disabled", true);
-            $("input#auto_publish_date").val("").attr("disabled", true);
-        }else{
-            $("input.publish_result").removeAttr("disabled");
-            $("input#auto_publish_date").removeAttr("disabled");
-        }
+    // A quiz shows its result at once: no Publish Result, no Auto Result Publish Date (said under the field).
+    function quizDateState(quiz) {
+        $("input.publish_result").prop("disabled", quiz);
+        $("input#auto_publish_date").prop("disabled", quiz);
+        if (quiz) { $("input#auto_publish_date").val(""); }
+        $('.js-quiz-no-date').toggle(quiz);
+    }
+    $(".is_quiz").change(function() { quizDateState(this.checked); });
+    $('#myModal').on('hidden.bs.modal', function () { quizDateState(false); });
+    // The calendar icon next to a date field opens its picker too.
+    $(document).on('click', '#myModal .input-group-addon', function () {
+        var input = $(this).siblings('input.datetime_twelve_hour');
+        if (!input.length || input.prop('disabled')) { return; }
+        var picker = input.data('DateTimePicker');
+        input.focus();
+        if (picker) { picker.show(); }
     });
 </script>
 

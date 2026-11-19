@@ -4,7 +4,7 @@
  *           or another country's +<8 to 15 digits>; spaces and dashes are removed
  *   email   type=email or names with email: name@domain.com
  *   number  amounts, fees, fines, discounts, salary, cost, quantity, marks, percentages:
- *           a number, not negative, not above the field's max (percentages not above 100)
+ *           a number, not below the field's min (0 without one), not above its max (percentages not above 100)
  *   date    date fields (class date / datepicker, names with date or dob): a real date in the
  *           school's format; dates of birth not in the future; an end date not before its start date
  *   required  fields marked with the red * (or the required attribute) can't be left empty
@@ -91,7 +91,10 @@
                 var n = v.replace(/,/g, '');
                 if (!/^-?\d+(\.\d+)?$/.test(n)) { return 'Enter a number.'; }
                 n = parseFloat(n);
-                if (n < 0) { return 'This can\'t be negative.'; }
+                // a field's own min="..." is its lower limit (e.g. -1 for "no limit"); otherwise 0
+                var min = el.getAttribute('min');
+                var low = min !== null && min !== '' && !isNaN(parseFloat(min)) ? parseFloat(min) : 0;
+                if (n < low) { return low === 0 ? 'This can\'t be negative.' : 'This can\'t be less than ' + min + '.'; }
                 var max = el.getAttribute('max') || el.getAttribute('data-max');
                 if (max !== null && max !== '' && !isNaN(parseFloat(max)) && n > parseFloat(max)) { return 'This can\'t be more than ' + max + '.'; }
                 if (/percent/i.test(el.getAttribute('name') || '') && n > 100) { return 'A percentage can\'t be more than 100.'; }
