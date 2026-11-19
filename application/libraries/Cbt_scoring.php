@@ -177,7 +177,11 @@ class Cbt_scoring
             ->get('cbse_student_subject_marks')->result_array() as $r) {
             $existing[(int) $r['cbse_exam_student_id']] = $r;
         }
-        $count = array('sent' => 0, 'kept' => 0, 'pending' => 0, 'not_in_exam' => 0, 'not_sat' => 0);
+        $count = array('sent' => 0, 'kept' => 0, 'pending' => 0, 'not_in_exam' => 0, 'not_sat' => 0, 'added' => 0, 'kind' => 'cbse');
+        // A student whose class and section are part of that Report Cards exam but who was never
+        // added to it (Assign / View Student) is added now, as that screen would.
+        $exam_class_sections = array_map('intval', array_column($db->select('class_section_id')->where('cbse_exam_id', (int) $link['cbse_exam_id'])
+            ->get('cbse_exam_class_sections')->result_array(), 'class_section_id'));
         $db->trans_start();
         foreach ($this->sat_rows($onlineexam_id, $only) as $os) {
             if (empty($os['is_attempted']) || $os['scored_at'] === null) {
@@ -189,8 +193,16 @@ class Cbt_scoring
                 continue;
             }
             if (!isset($exam_students[(int) $os['student_session_id']])) {
-                $count['not_in_exam']++;
-                continue;
+                $cs = $exam_class_sections ? $db->select('cs.id')->from('student_session ss')
+                    ->join('class_sections cs', 'cs.class_id = ss.class_id AND cs.section_id = ss.section_id')
+                    ->where('ss.id', (int) $os['student_session_id'])->get()->row() : null;
+                if (!$cs || !in_array((int) $cs->id, $exam_class_sections, true)) {
+                    $count['not_in_exam']++;
+                    continue;
+                }
+                $db->insert('cbse_exam_students', array('cbse_exam_id' => (int) $link['cbse_exam_id'], 'student_session_id' => (int) $os['student_session_id'], 'delete_student_id' => 0));
+                $exam_students[(int) $os['student_session_id']] = (int) $db->insert_id();
+                $count['added']++;
             }
             $es = $exam_students[(int) $os['student_session_id']];
             $marks = $scale ? round((float) $os['percentage'] / 100 * $max, 2) : min($max, (float) $os['score']);
@@ -239,7 +251,7 @@ class Cbt_scoring
             ->get('exam_group_exam_results')->result_array() as $r) {
             $existing[(int) $r['exam_group_class_batch_exam_student_id']] = $r['get_marks'];
         }
-        $count = array('sent' => 0, 'kept' => 0, 'pending' => 0, 'not_in_exam' => 0, 'not_sat' => 0);
+        $count = array('sent' => 0, 'kept' => 0, 'pending' => 0, 'not_in_exam' => 0, 'not_sat' => 0, 'added' => 0, 'kind' => 'examgroup');
         $rows = array();
         foreach ($this->sat_rows($onlineexam_id, $only) as $os) {
             if (empty($os['is_attempted']) || $os['scored_at'] === null) {
