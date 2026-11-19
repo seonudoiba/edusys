@@ -23,6 +23,7 @@ class Onlineexam extends Admin_Controller
         'fillmarks' => array(array('online_examination', 'can_edit')),
         'assign' => array(array('online_assign_view_student', 'can_view')),
         'addstudent' => array(array('online_assign_view_student', 'can_edit')),
+        'assign_classes' => array(array('online_assign_view_student', 'can_edit')),
         'searchquestionbyexamid' => array(array('add_questions_in_exam', 'can_view')),
         'getexamquestions' => array(array('add_questions_in_exam', 'can_view')),
         'download_exam' => array(array('add_questions_in_exam', 'can_view')),
@@ -491,6 +492,8 @@ class Onlineexam extends Admin_Controller
         $onlineexam          = $this->onlineexam_model->get($id);
         $data['onlineexam']  = $onlineexam;
         $data['sch_setting'] = $this->sch_setting_detail;
+        $data['class_summary'] = $onlineexam ? $this->class_summary((int) $id, $class) : array();
+        $data['class_msg']     = $this->session->flashdata('class_msg');
 
         if ($this->input->server('REQUEST_METHOD') == "GET") {
             $this->load->view('layout/header', $data);
@@ -576,6 +579,97 @@ class Onlineexam extends Admin_Controller
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
             echo json_encode($array);
         }
+    }
+
+    /**
+     * Whole classes at once (every section): POST onlineexam_id, class_ids[] assigns all the
+     * classes' active students of this session not yet assigned; do=remove with class_id takes
+     * a class off again, except students who have started or sat the exam.
+     */
+    public function assign_classes()
+    {
+        $exam_id = (int) $this->input->post('onlineexam_id');
+        $exam = $exam_id ? $this->db->select('id')->where('id', $exam_id)->get('onlineexam')->row() : null;
+        if (!$exam) {
+            show_404();
+        }
+        $allowed = array_map('intval', array_column($this->class_model->get(), 'id'));
+        $names = array_column($this->class_model->get(), 'class', 'id');
+        $session = (int) $this->setting_model->getCurrentSession();
+
+        if ($this->input->post('do') === 'remove') {
+            $class_id = (int) $this->input->post('class_id');
+            if (!in_array($class_id, $allowed, true)) {
+                access_denied();
+            }
+            $rows = $this->db->select('oes.id, oes.is_attempted')->from('onlineexam_students oes')
+                ->join('student_session ss', 'ss.id = oes.student_session_id')
+                ->where(array('oes.onlineexam_id' => $exam_id, 'ss.class_id' => $class_id, 'ss.session_id' => $session))->get()->result_array();
+            $ids = array();
+            $kept = 0;
+            $started = $rows ? array_map('intval', array_column($this->db->select('onlineexam_student_id')
+                ->where_in('onlineexam_student_id', array_map('intval', array_column($rows, 'id')))->get('onlineexam_attempts')->result_array(), 'onlineexam_student_id')) : array();
+            foreach ($rows as $r) {
+                if ((int) $r['is_attempted'] === 1 || in_array((int) $r['id'], $started, true)) {
+                    $kept++;
+                } else {
+                    $ids[] = (int) $r['id'];
+                }
+            }
+            if ($ids) {
+                $this->db->where('onlineexam_id', $exam_id)->where_in('id', $ids)->delete('onlineexam_students');
+            }
+            $msg = count($ids) . ' student(s) of ' . (isset($names[$class_id]) ? $names[$class_id] : 'the class') . ' taken off this exam.'
+                . ($kept ? ' ' . $kept . ' who started or sat it were kept.' : '');
+            $this->session->set_flashdata('class_msg', array('type' => 'success', 'text' => $msg));
+            redirect('admin/onlineexam/assign/' . $exam_id);
+        }
+
+        $class_ids = array_values(array_intersect(array_map('intval', (array) $this->input->post('class_ids')), $allowed));
+        if (!$class_ids) {
+            $this->session->set_flashdata('class_msg', array('type' => 'danger', 'text' => 'Tick at least one class.'));
+            redirect('admin/onlineexam/assign/' . $exam_id);
+        }
+        $new = $this->db->select('ss.id')->from('student_session ss')
+            ->join('students s', 's.id = ss.student_id')
+            ->join('onlineexam_students oes', 'oes.student_session_id = ss.id AND oes.onlineexam_id = ' . $exam_id, 'left')
+            ->where('ss.session_id', $session)->where('s.is_active', 'yes')->where_in('ss.class_id', $class_ids)
+            ->where('oes.id IS NULL', null, false)->get()->result_array();
+        $rows = array();
+        foreach (array_unique(array_map('intval', array_column($new, 'id'))) as $ss_id) {
+            $rows[] = array('onlineexam_id' => $exam_id, 'student_session_id' => $ss_id);
+        }
+        if ($rows) {
+            $this->db->insert_batch('onlineexam_students', $rows);
+        }
+        $labels = array();
+        foreach ($class_ids as $c) {
+            $labels[] = isset($names[$c]) ? $names[$c] : $c;
+        }
+        $this->session->set_flashdata('class_msg', array('type' => 'success',
+            'text' => count($rows) . ' student(s) assigned from ' . implode(', ', $labels) . ' (all sections).' . (count($rows) ? '' : ' They were already assigned.')));
+        redirect('admin/onlineexam/assign/' . $exam_id);
+    }
+
+    /** Per class of this session: active students and how many are assigned to the exam. */
+    private function class_summary($exam_id, array $classlist)
+    {
+        $ids = array_map('intval', array_column($classlist, 'id'));
+        if (!$ids) {
+            return array();
+        }
+        $session = (int) $this->setting_model->getCurrentSession(); // before the query: it runs one of its own
+        $rows = $this->db->select('ss.class_id, COUNT(*) AS total, SUM(CASE WHEN oes.id IS NULL THEN 0 ELSE 1 END) AS assigned', false)
+            ->from('student_session ss')
+            ->join('students s', 's.id = ss.student_id')
+            ->join('onlineexam_students oes', 'oes.student_session_id = ss.id AND oes.onlineexam_id = ' . (int) $exam_id, 'left')
+            ->where('ss.session_id', $session)->where('s.is_active', 'yes')
+            ->where_in('ss.class_id', $ids)->group_by('ss.class_id')->get()->result_array();
+        $out = array();
+        foreach ($rows as $r) {
+            $out[(int) $r['class_id']] = array('total' => (int) $r['total'], 'assigned' => (int) $r['assigned']);
+        }
+        return $out;
     }
 
     public function getOnlineExamByID()
