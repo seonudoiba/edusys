@@ -25,7 +25,7 @@ class Seed_default_front_cms_settings extends Seeder
     public function rows()
     {
         return [
-            [1, 'material_pink', null, 1, null, null, null, null, '[]', '', '', '', '', '', '', '', '', null, null, '', null, '2026-07-11 07:41:11'],
+            [1, 'default', null, 1, null, null, null, null, '[]', '', '', '', '', '', '', '', '', null, null, '', null, '2026-07-11 07:41:11'],
         ];
     }
 }
