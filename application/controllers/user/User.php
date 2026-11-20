@@ -625,7 +625,22 @@ class User extends Student_Controller
         }
         
         $data['teacherlist']         = $teachers;        
-        
+
+        // the summary cards: fees owed, CBTs open now, homework to do, report cards
+        $ss = (int) $student_current_class->student_session_id;
+        $this->load->library('Fees_overview');
+        $fee_items = $this->fees_overview->items(null, $ss);
+        $data['kpi_fees'] = array('balance' => array_sum(array_column($fee_items, 'balance')), 'overdue' => array_sum(array_column($fee_items, 'overdue')), 'expected' => array_sum(array_column($fee_items, 'expected')));
+        $now = date('Y-m-d H:i:s');
+        $data['kpi_cbt'] = (int) $this->db->from('onlineexam_students os')->join('onlineexam o', 'o.id = os.onlineexam_id')
+            ->where(array('os.student_session_id' => $ss, 'o.is_active' => 1, 'os.is_attempted' => 0))->where('o.exam_from <=', $now)->where('o.exam_to >=', $now)->count_all_results();
+        $data['kpi_homework'] = count(array_filter($homeworklist, function ($h) { return $h['status'] !== 'submitted'; }));
+        $me = (int) $this->db->select('student_id')->where('id', $ss)->get('student_session')->row('student_id');
+        $data['kpi_reportcards'] = $this->db->field_exists('class_id', 'cbse_exams') ? (int) $this->db->from('cbse_exam_students es')->join('cbse_exams e', 'e.id = es.cbse_exam_id')
+            ->join('student_session x', 'x.id = es.student_session_id')->where(array('x.student_id' => $me, 'e.is_publish' => 1))->count_all_results() : 0;
+        $data['current_class'] = $student_current_class;
+        $data['currency_symbol'] = $this->customlib->getSchoolCurrencyFormat();
+
         $this->load->view('layout/student/header', $data);
         $this->load->view('user/dashboard', $data);
         $this->load->view('layout/student/footer', $data);
