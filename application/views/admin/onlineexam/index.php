@@ -16,6 +16,47 @@ $language_name = $language["short_code"];
 <div class="content-wrapper">
     <section class="content">
         <?php if ($this->session->flashdata('bulk_questions')) { ?><div class="alert alert-success"><?php echo html_escape($this->session->flashdata('bulk_questions')); ?></div><?php } ?>
+        <?php
+        // At a glance: live, upcoming and closed exams, questions in the bank, answers waiting to be marked.
+        $ox_now = time(); $ox = array('live' => 0, 'upcoming' => 0, 'closed' => 0);
+        foreach ((array) $questionList as $ox_e) {
+            $ox_e = (array) $ox_e;
+            if (empty($ox_e['exam_from']) || empty($ox_e['exam_to'])) { continue; }
+            $ox_f = strtotime($ox_e['exam_from']); $ox_t = strtotime($ox_e['exam_to']);
+            $ox[$ox_now > $ox_t ? 'closed' : ($ox_now >= $ox_f ? 'live' : 'upcoming')]++;
+        }
+        $ox_bank = (int) $this->db->count_all_results('questions');
+        $ox_pending = $this->db->field_exists('pending_count', 'onlineexam_students') ? (int) $this->db->where('pending_count >', 0)->count_all_results('onlineexam_students') : 0;
+        $ox_tiles = array(
+            array('fa-circle', 'Live now', $ox['live'], '#16a34a'),
+            array('fa-calendar', 'Upcoming', $ox['upcoming'], '#2563eb'),
+            array('fa-archive', 'Closed', $ox['closed'], '#64748b'),
+            array('fa-database', 'Questions in the bank', $ox_bank, '#7c3aed'),
+            array('fa-pencil-square-o', 'Answers to mark', $ox_pending, $ox_pending ? '#d97706' : '#64748b'),
+        );
+        ?>
+        <style>
+            .ox-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+            .ox-kpi{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e6eaf0;border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+            .ox-kpi .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:17px;flex:none}
+            .ox-kpi b{display:block;font-size:22px;line-height:1.1;color:#101828}
+            .ox-kpi span{font-size:12px;color:#667085;font-weight:600}
+            .ox-kpi.live .ic i{animation:oxp 1.6s infinite}
+            @keyframes oxp{50%{opacity:.35}}
+            .ox-actions{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 16px}
+        </style>
+        <div class="ox-kpis">
+            <?php foreach ($ox_tiles as $i => $t) { ?>
+                <div class="ox-kpi<?php echo $i === 0 && $t[2] ? ' live' : ''; ?>">
+                    <span class="ic" style="background:<?php echo $t[3]; ?>1a;color:<?php echo $t[3]; ?>"><i class="fa <?php echo $t[0]; ?>"></i></span>
+                    <div><b><?php echo number_format($t[2]); ?></b><span><?php echo $t[1]; ?></span></div>
+                </div>
+            <?php } ?>
+        </div>
+        <div class="ox-actions">
+            <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) { ?><a class="btn btn-default btn-sm" href="<?php echo site_url('admin/question/bulk'); ?>"><i class="fa fa-list-ol"></i> Add questions</a><?php } ?>
+            <?php if ($this->rbac->hasPrivilege('question_bank', 'can_view')) { ?><a class="btn btn-default btn-sm" href="<?php echo site_url('admin/question'); ?>"><i class="fa fa-database"></i> Question bank</a><?php } ?>
+        </div>
         <div class="row">
             <div class="col-md-12">
                 <div class="nav-tabs-custom theme-shadow">

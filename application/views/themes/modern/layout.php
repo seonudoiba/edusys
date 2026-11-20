@@ -53,6 +53,7 @@ $title_band = !$is_home && !$builder && !empty($st['page_titles']) && $title !==
     <?php echo $front_setting->google_analytics; ?>
 </head>
 <body class="st <?php echo $e($st_classes); ?><?php echo $is_home ? ' st-home' : ''; ?>">
+    <script>document.body.classList.add('st-js');</script>
     <a class="st-skip" href="#st-main">Skip to content</a>
     <?php echo $header; ?>
 
@@ -104,6 +105,8 @@ $title_band = !$is_home && !$builder && !empty($st['page_titles']) && $title !==
         </div>
     </main>
 
+    <?php if ($is_home && !$builder) { $this->load->view('themes/modern/_home_highlights', array('notices' => $notices)); } ?>
+
     <?php echo $footer; ?>
     <?php $this->load->view('themes/modern/_account'); ?>
 
@@ -125,6 +128,17 @@ $title_band = !$is_home && !$builder && !empty($st['page_titles']) && $title !==
             onScroll();
             if (top) { top.addEventListener('click', function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }); }
             $(function () { $('.languageselectpicker').selectpicker && $('.languageselectpicker').selectpicker(); });
+            // Sections rise in as they come into view (shown at once without IntersectionObserver).
+            [].forEach.call(document.querySelectorAll('.pw-section > .pw-inner > .pw-widget, .pw-columns > div, .pw-stat, .pw-grid > *'), function (el, i) { if (!el.closest('.st-reveal')) { el.classList.add('st-reveal'); } });
+            var items = document.querySelectorAll('.st-reveal');
+            if ('IntersectionObserver' in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('st-in'); io.unobserve(en.target); } });
+                }, { rootMargin: '0px 0px -8% 0px' });
+                [].forEach.call(items, function (el) { io.observe(el); });
+            } else {
+                [].forEach.call(items, function (el) { el.classList.add('st-in'); });
+            }
         })();
     </script>
 <script>window.date_format = window.date_format || <?php echo json_encode(strtr($this->customlib->getSchoolDateFormat(), array("d" => "dd", "m" => "mm", "Y" => "yyyy", "M" => "M"))); ?>;</script>

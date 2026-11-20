@@ -71,6 +71,10 @@ $this->load->view('layout/theme');
   <style type="text/css">
         span.flag-icon.flag-icon-us{text-orientation: mixed;}
   </style>
+        <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+        <link rel="stylesheet" href="<?php echo base_url(); ?>backend/custom/modern_ui.css?v=<?php echo (int) @filemtime(FCPATH . 'backend/custom/modern_ui.css'); ?>">
+        <style>:root{--ui-brand:<?php echo html_escape($this->customlib->brand()['color']); ?>;}</style>
     </head>
     <body class="hold-transition skin-blue fixed sidebar-mini">
 

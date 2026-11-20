@@ -940,6 +940,53 @@ class Customlib
         return $admin->name;
     }
 
+    /**
+     * The school's identity for printed and exported reports: name, address, phone, email,
+     * logo URL (the school logo, else the admin logo) and the brand colour.
+     */
+    public function brand()
+    {
+        static $brand = null;
+        if ($brand !== null) {
+            return $brand;
+        }
+        $row = $this->CI->db->select('name, address, phone, email, image, admin_logo, app_primary_color_code')->get('sch_settings')->row_array();
+        $row = $row ?: array();
+        $logo = '';
+        foreach (array('image' => 'logo', 'admin_logo' => 'admin_logo') as $field => $dir) {
+            if (!empty($row[$field]) && is_file(FCPATH . 'uploads/school_content/' . $dir . '/' . $row[$field])) {
+                $logo = base_url('uploads/school_content/' . $dir . '/' . $row[$field]);
+                break;
+            }
+        }
+        // The colour: the website's main colour (Front CMS > Website design), else the app colour
+        // when it was changed from the default grey, else a deep blue.
+        $color = '';
+        $front = $this->CI->db->select('theme, theme_options, logo')->get('front_cms_settings')->row();
+        if ($logo === '' && $front && !empty($front->logo) && is_file(FCPATH . ltrim($front->logo, '/'))) {
+            $logo = base_url(ltrim($front->logo, '/')); // the website logo
+        }
+        if ($front) {
+            $this->CI->load->library('Site_theme');
+            if ($this->CI->site_theme->is_theme($front->theme)) {
+                $o = $this->CI->site_theme->options($front);
+                $color = isset($o['primary']) ? (string) $o['primary'] : '';
+            }
+        }
+        if ($color === '' && isset($row['app_primary_color_code']) && strtolower(trim((string) $row['app_primary_color_code'])) !== '#424242') {
+            $color = trim((string) $row['app_primary_color_code']);
+        }
+        $brand = array(
+            'name' => isset($row['name']) ? (string) $row['name'] : '',
+            'address' => isset($row['address']) ? trim(preg_replace('/\s+/', ' ', strip_tags((string) $row['address']))) : '',
+            'phone' => isset($row['phone']) ? (string) $row['phone'] : '',
+            'email' => isset($row['email']) ? (string) $row['email'] : '',
+            'logo' => $logo,
+            'color' => preg_match('/^#[0-9a-fA-F]{3,8}$/', $color) ? $color : '#1f4e79',
+        );
+        return $brand;
+    }
+
     public function getAppVersion()
     {
         //Build: 240620

@@ -26,7 +26,7 @@ class Result extends MY_Addon_CBSEController
         $this->load->library('m_pdf');
         $mpdf = $this->m_pdf->load('P');
 
-        $stylesheet = file_get_contents(base_url() . 'backend/cbse_pdf_style.css'); // external css
+        $stylesheet = file_get_contents(FCPATH . 'backend/cbse_pdf_style.css'); // external css
         if ($data['template']['background_img'] != "") {
 
             $mpdf->SetDefaultBodyCSS('background', "url('" . base_url("/uploads/cbseexam/template/background_img/" . $data['template']['background_img']) . "')");
@@ -2310,13 +2310,14 @@ class Result extends MY_Addon_CBSEController
             $this->load->library('m_pdf');
 
             $mpdf = $this->m_pdf->load($data['template']['orientation']);
-            $stylesheet = file_get_contents(base_url() . 'backend/cbse_pdf_style.css'); // external css
+            $stylesheet = file_get_contents(FCPATH . 'backend/cbse_pdf_style.css'); // external css
             if ($data['template']['background_img'] != "") {
 
                 $mpdf->SetDefaultBodyCSS('background', "url('" . base_url("/uploads/cbseexam/template/background_img/" . $data['template']['background_img']) . "')");
                 $mpdf->SetDefaultBodyCSS('background-image-resize', 6);
             }
             $mpdf->WriteHTML($stylesheet, 1); // Writing style to pdf
+            $mpdf->WriteHTML($this->report_card_brand_css(), 1); // the school's colour on the tables
             $mpdf->SetWatermarkText("", .2); // add watermark text to be show in marksheet
             $mpdf->SetDisplayMode('fullpage');
             $mpdf->showWatermarkText = true;
@@ -2344,6 +2345,16 @@ class Result extends MY_Addon_CBSEController
                 return $content;
             }
         }
+    }
+
+    /** Report card tables in the school's colour: heading row, borders, alternate rows. */
+    private function report_card_brand_css()
+    {
+        $c = $this->customlib->brand()['color'];
+        return '.denifittable th, .denifittable td{border:1px solid #c5cdd8;}'
+            . '.denifittable thead td, .denifittable thead th{background-color:' . $c . ';color:#ffffff;font-weight:bold;}'
+            . '.denifittable tbody tr:nth-child(even) td{background-color:#f4f6f9;}'
+            . 'body{font-family:Arial, Helvetica, sans-serif;color:#1d2433;}';
     }
 
     public function demo()

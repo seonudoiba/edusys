@@ -101,6 +101,8 @@ foreach ($result as $student_key => $student_value) {
         <img width="100%" max-width="100%" src="<?php echo base_url("/uploads/cbseexam/template/header_image/" . $template['header_image']) ?>" />
 
       <?php
+      } else {
+        $this->load->view('cbseexam/result/_letterhead');
       }
       ?>
       <table cellpadding="0" cellspacing="0" width="100%">
@@ -287,7 +289,7 @@ foreach ($result as $student_key => $student_value) {
                   ?> <td valign="middle" class="text-center">
                       <?php
                       
-                      $subject_assesment_code = ($subject_assesment_value->code != "") ? " (" . "-" .$subject_assesment_value->code . ")" : "";
+                      $subject_assesment_code = ($subject_assesment_value->code != "") ? " (" . $subject_assesment_value->code . ")" : "";
                       
                       
                       echo $subject_assesment_value->name .  $subject_assesment_code;

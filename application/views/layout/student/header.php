@@ -89,6 +89,10 @@ $role = $this->customlib->getUserRole();
         <script src="<?php echo base_url(); ?>backend/js/studentcourse.js"></script>
     <?php } ?>
 
+        <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+        <link rel="stylesheet" href="<?php echo base_url(); ?>backend/custom/modern_ui.css?v=<?php echo (int) @filemtime(FCPATH . 'backend/custom/modern_ui.css'); ?>">
+        <style>:root{--ui-brand:<?php echo html_escape($this->customlib->brand()['color']); ?>;}</style>
 </head>
 <script>
     var baseurl = "<?php echo base_url(); ?>";
