@@ -379,6 +379,7 @@ $(document).on('submit','#add_form',function(e){
                 dataType: 'json',
                 success: function (res)
                 {
+                    if (res.status == '0') { errorMsg(res.message); return; }
                     successMsg(res.message);
                     window.location.reload(true);
                 }

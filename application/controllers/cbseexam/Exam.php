@@ -1832,6 +1832,8 @@ class Exam extends MY_Addon_CBSEController
             );
 
             $array = array('status' => '0', 'error' => $msg, 'message' => '');
+        } elseif (!$this->input->post('ignore_conflicts') && ($conflicts = $this->timetable_conflicts((int) $this->input->post('exam_id'), (array) $this->input->post('rows')))) {
+            $array = array('status' => 'conflict', 'conflicts' => $conflicts);
         } else {
             $insert_array = array();
             $update_array = array();
@@ -1888,6 +1890,63 @@ class Exam extends MY_Addon_CBSEController
         echo json_encode($array);
     }
 
+    /**
+     * Clashes in an exam timetable being saved: two of its subjects at overlapping times on the same
+     * day (the same classes sit both), or a subject overlapping another exam of this session that
+     * has one of the same classes / sections. Returns readable lines ([] = none).
+     */
+    private function timetable_conflicts($exam_id, array $rows)
+    {
+        $slots = array();
+        $names = array();
+        foreach ($this->db->select('id, name')->get('subjects')->result_array() as $sub) {
+            $names[(int) $sub['id']] = $sub['name'];
+        }
+        foreach ($rows as $r) {
+            $sid = (int) $this->input->post('subject_' . $r);
+            $date = $this->input->post('date_from_' . $r);
+            $time = $this->input->post('time_from' . $r);
+            $dur = (int) $this->input->post('duration' . $r);
+            if (!$sid || !$date || !$time) {
+                continue;
+            }
+            $day = date('Y-m-d', $this->customlib->datetostrtotime($date));
+            $start = strtotime($day . ' ' . $time);
+            if (!$start) {
+                continue;
+            }
+            $slots[] = array('subject' => isset($names[$sid]) ? $names[$sid] : 'Subject', 'day' => $day, 'start' => $start, 'end' => $start + max(1, $dur) * 60);
+        }
+        $out = array();
+        $when = function ($sl) { return date('D j M', $sl['start']) . ', ' . date('g:i A', $sl['start']) . '-' . date('g:i A', $sl['end']); };
+        for ($i = 0; $i < count($slots); $i++) {
+            for ($j = $i + 1; $j < count($slots); $j++) {
+                if ($slots[$i]['day'] === $slots[$j]['day'] && $slots[$i]['start'] < $slots[$j]['end'] && $slots[$j]['start'] < $slots[$i]['end']) {
+                    $out[] = $slots[$i]['subject'] . ' and ' . $slots[$j]['subject'] . ' overlap (' . $when($slots[$i]) . ').';
+                }
+            }
+        }
+        $days = array_unique(array_column($slots, 'day'));
+        $cs = array_column($this->db->select('class_section_id')->where('cbse_exam_id', $exam_id)->get('cbse_exam_class_sections')->result_array(), 'class_section_id');
+        if ($days && $cs) {
+            $others = $this->db->select('tt.date, tt.time_from, tt.duration, e.name AS exam_name, sub.name AS subject_name')
+                ->from('cbse_exam_timetable tt')->join('cbse_exams e', 'e.id = tt.cbse_exam_id')->join('subjects sub', 'sub.id = tt.subject_id', 'left')
+                ->where('e.id !=', $exam_id)->where('e.session_id', $this->current_session)->where_in('tt.date', $days)
+                ->where('e.id IN (SELECT cbse_exam_id FROM cbse_exam_class_sections WHERE class_section_id IN (' . implode(',', array_map('intval', $cs)) . '))', null, false) // tenancy-lint: ok ids are ints, cbse_exams filtered by school
+                ->get()->result_array();
+            foreach ($slots as $sl) {
+                foreach ($others as $o) {
+                    $os = strtotime($o['date'] . ' ' . $o['time_from']);
+                    $oe = $os + max(1, (int) $o['duration']) * 60;
+                    if ($sl['day'] === $o['date'] && $sl['start'] < $oe && $os < $sl['end']) {
+                        $out[] = $sl['subject'] . ' (' . $when($sl) . ') overlaps ' . $o['subject_name'] . ' of ' . $o['exam_name'] . ', which has some of the same classes.';
+                    }
+                }
+            }
+        }
+        return array_values(array_unique($out));
+    }
+
     public function getSubjectByExam()
     {
         $exam_id = $this->input->post('recordid');
@@ -1896,6 +1955,8 @@ class Exam extends MY_Addon_CBSEController
         $data['batch_subjects'] = $this->subject_model->get();
         $data['exam_id'] = $exam_id;
         $data['exam_subjects_count'] = count($data['exam_subjects']);
+        $this->load->library('cbse_marks_guard');
+        $data['can_approve'] = $this->cbse_marks_guard->can_approve();
         $data['subject_page'] = $this->load->view('cbseexam/exam/_getSubjectByExam', $data, true);
         echo json_encode($data);
     }
@@ -1913,6 +1974,10 @@ class Exam extends MY_Addon_CBSEController
         $subject_detail = $this->batchsubject_model->getExamSubject($data['subject_id']);
         $data['subject_detail'] = $subject_detail;
         $data['sch_setting'] = $this->sch_setting_detail;
+        $this->load->library('cbse_marks_guard');
+        $data['tt'] = $this->cbse_marks_guard->subject($data['timetable_id']);
+        $data['lock_reason'] = $this->cbse_marks_guard->lock_reason($data['tt']);
+        $data['can_approve'] = $this->cbse_marks_guard->can_approve();
         $student_exam_page = $this->load->view('cbseexam/exam/_partialstudentmarkEntry', $data, true);
         $array = array('status' => '1', 'error' => '', 'page' => $student_exam_page);
         echo json_encode($array);
@@ -1944,6 +2009,9 @@ class Exam extends MY_Addon_CBSEController
 
         $data['resultlist'] = $this->cbseexam_exam_model->get_teacher_remark($data['exam_id']);
         $data['sch_setting'] = $this->sch_setting_detail;
+        $this->load->library('cbse_comments');
+        $data['comment_bank'] = $this->cbse_comments->bank();
+        $data['subject_scores'] = $this->cbse_comments->subject_scores($data['exam_id']);
         $student_exam_page = $this->load->view('cbseexam/exam/_teacherRemark', $data, true);
         $array = array('status' => '1', 'error' => '', 'page' => $student_exam_page);
         echo json_encode($array);
@@ -1964,8 +2032,50 @@ class Exam extends MY_Addon_CBSEController
             echo json_encode($array);
         } else {           
 
-            $cbse_exam_timetable_id = $this->input->post('cbse_exam_timetable_id');
+            $cbse_exam_timetable_id = (int) $this->input->post('cbse_exam_timetable_id');
             $insert_array = [];
+            $this->load->library('cbse_marks_guard');
+            $tt = $this->cbse_marks_guard->subject($cbse_exam_timetable_id);
+            $locked = $this->cbse_marks_guard->lock_reason($tt);
+            if ($locked !== '') {
+                echo json_encode(array('status' => 'fail', 'error' => array($locked)));
+                return;
+            }
+            // every score within its maximum (the page checks too; this is the rule)
+            $type_max = array();
+            $type_name = array();
+            foreach ($this->db->select('id, name, code, maximum_marks')->get('cbse_exam_assessment_types')->result_array() as $t) {
+                $type_max[(int) $t['id']] = (float) $t['maximum_marks'];
+                $type_name[(int) $t['id']] = $t['code'] ?: $t['name'];
+            }
+            $bad = array();
+            foreach ((array) $this->input->post('exam_student_id') as $exam_student_id) {
+                foreach ((array) (isset($_POST['mark'][$exam_student_id]) ? $_POST['mark'][$exam_student_id] : array()) as $type_id => $v) {
+                    if (isset($_POST['absent'][$exam_student_id][$type_id])) {
+                        continue;
+                    }
+                    $m = isset($v['marks']) ? trim((string) $v['marks']) : '';
+                    $max = isset($type_max[(int) $type_id]) ? $type_max[(int) $type_id] : null;
+                    if ($m !== '' && (!is_numeric($m) || (float) $m < 0 || ($max !== null && (float) $m > $max + 0.0001))) {
+                        $bad[(int) $exam_student_id][] = (isset($type_name[(int) $type_id]) ? $type_name[(int) $type_id] : 'Score') . ' maximum ' . rtrim(rtrim(number_format((float) $max, 2, '.', ''), '0'), '.') . ', entered ' . $m;
+                    }
+                }
+            }
+            if ($bad) {
+                $names = array();
+                foreach ($this->db->select("es.id, CONCAT_WS(' ', st.firstname, st.lastname) AS name", false)->from('cbse_exam_students es')
+                    ->join('student_session ss', 'ss.id = es.student_session_id')->join('students st', 'st.id = ss.student_id')
+                    ->where_in('es.id', array_keys($bad))->get()->result_array() as $r) {
+                    $names[(int) $r['id']] = $r['name'];
+                }
+                $lines = array();
+                foreach ($bad as $es => $list) {
+                    $lines[] = (isset($names[$es]) ? $names[$es] : 'Student') . ': ' . implode('; ', $list);
+                }
+                echo json_encode(array('status' => 'fail', 'error' => array('Nothing was saved. Scores above the maximum:<br>' . implode('<br>', array_map('html_escape', array_slice($lines, 0, 15))) . (count($lines) > 15 ? '<br>and ' . (count($lines) - 15) . ' more' : ''))));
+                return;
+            }
+            $before = $this->cbse_marks_guard->snapshot($cbse_exam_timetable_id);
 
             foreach ($this->input->post('exam_student_id') as $key => $exam_student_id) {
                 $note = $this->input->post('exam_student_note');
@@ -1992,7 +2102,8 @@ class Exam extends MY_Addon_CBSEController
             }           
 
             $this->cbseexam_exam_model->addresultmark_data($insert_array, $cbse_exam_timetable_id);
-            $array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message'));
+            $changed = $this->cbse_marks_guard->log_changes((int) $tt['cbse_exam_id'], $cbse_exam_timetable_id, $before, $this->cbse_marks_guard->snapshot($cbse_exam_timetable_id), 'entry');
+            $array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message') . ($changed ? ' (' . $changed . ' score' . ($changed == 1 ? '' : 's') . ' changed)' : ''));
             echo json_encode($array);
         }
     }
@@ -2126,6 +2237,40 @@ class Exam extends MY_Addon_CBSEController
         echo json_encode($array);
     }
 
+    /** Comment bank: the comments "Fill comments" writes on report cards, by average score. */
+    public function comments()
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_teacher_remark', 'can_view')) {
+            access_denied();
+        }
+        $this->load->library('cbse_comments');
+        if ($this->input->method() === 'post') {
+            if (!$this->rbac->hasPrivilege('cbse_exam_teacher_remark', 'can_edit')) {
+                access_denied();
+            }
+            $do = $this->input->post('do');
+            if ($do === 'seed') {
+                $this->cbse_comments->seed_defaults();
+                $this->session->set_flashdata('cm_msg', 'The suggested comments were added. Edit or delete any of them.');
+            } elseif ($do === 'delete') {
+                $this->cbse_comments->delete((int) $this->input->post('id'));
+                $this->session->set_flashdata('cm_msg', 'Comment deleted.');
+            } elseif ($do === 'add') {
+                $ok = $this->cbse_comments->add((string) $this->input->post('type'), $this->input->post('min'), $this->input->post('max'), (string) $this->input->post('comment'));
+                $this->session->set_flashdata('cm_msg', $ok ? 'Comment added.' : 'Not added: give a comment and a range from 0 to 100 (lowest first).');
+            }
+            redirect('cbseexam/exam/comments');
+        }
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'cbse_exam/exam');
+        $data['rows'] = $this->cbse_comments->rows();
+        $data['defaults'] = Cbse_comments::DEFAULTS;
+        $data['types'] = Cbse_comments::TYPES;
+        $this->load->view('layout/header', $data);
+        $this->load->view('cbseexam/exam/comments', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
     public function get_exam()
     {
         $data['term_list'] = $this->cbseexam_term_model->get();
@@ -2250,6 +2395,42 @@ class Exam extends MY_Addon_CBSEController
         $this->load->view('layout/header');
         $this->load->view('cbseexam/exam/generate_rank');
         $this->load->view('layout/footer');
+    }
+
+    /**
+     * Review workflow of a subject's scores: submit (teacher) / approve / unlock / return (exam
+     * manager). POST timetable_id[] (or one), action, note. Cbse_marks_guard has the rules.
+     */
+    public function marks_status()
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) {
+            access_denied();
+        }
+        $this->load->library('cbse_marks_guard');
+        $ids = (array) $this->input->post('timetable_id');
+        $action = (string) $this->input->post('action');
+        if ($action === 'submit' && !$this->rbac->hasPrivilege('cbse_exam_marks', 'can_edit')) {
+            echo json_encode(array('status' => 'fail', 'message' => 'You cannot enter scores.'));
+            return;
+        }
+        list($done, $skipped) = $this->cbse_marks_guard->set_status($ids, $action, (string) $this->input->post('note'));
+        $words = array('submit' => 'submitted for review', 'approve' => 'approved and locked', 'unlock' => 'unlocked', 'return' => 'returned to the teacher');
+        $msg = $done ? $done . ' subject' . ($done == 1 ? '' : 's') . ' ' . (isset($words[$action]) ? $words[$action] : 'updated') . '.' : 'Nothing changed.';
+        echo json_encode(array('status' => $done ? 'success' : 'fail', 'message' => trim($msg . ' ' . implode(' ', $skipped))));
+    }
+
+    /** Change log of a subject's scores (POST timetable_id) or of a whole exam (POST exam_id). */
+    public function marks_history()
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) {
+            access_denied();
+        }
+        $this->load->library('cbse_marks_guard');
+        $tt_id = (int) $this->input->post('timetable_id');
+        $exam_id = (int) $this->input->post('exam_id');
+        $data['rows'] = $this->cbse_marks_guard->history($tt_id ?: null, $tt_id ? null : $exam_id);
+        $data['whole_exam'] = !$tt_id;
+        echo json_encode(array('status' => 'success', 'page' => $this->load->view('cbseexam/exam/_marks_history', $data, true)));
     }
 
     public function examtimetable()

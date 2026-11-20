@@ -511,19 +511,7 @@ if ($assessment_exists) {
 
         <tr>
           <td valign="top" class="text-left" colspan="<?php echo count($exam_assessments) + 4 ?>">
-            <?php echo $this->lang->line('grading_scale'); ?> : <?php
-
-                                                                echo implode(
-                                                                  ', ',
-                                                                  array_map(
-                                                                    function ($k) {
-                                                                      return $k->name . " (" . $k->maximum_percentage . "% - " . $k->minimum_percentage . "%)";
-                                                                    },
-                                                                    ($exam->grades)
-
-                                                                  )
-                                                                );
-                                                                ?>
+            <?php $this->load->view('cbseexam/result/_grading_key', array('grades' => isset($exam->grades) ? $exam->grades : array())); ?>
           </td>
         </tr>
         <tr>

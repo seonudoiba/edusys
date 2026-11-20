@@ -2449,3 +2449,6 @@ $lang['fees_create_fees'] = "Create fees";
 $lang['fees_discounts_balances'] = "Discounts & balances";
 $lang['assign_subject_teachers'] = "Assign Subject Teachers";
 $lang['access_denied'] = "Access denied";
+$lang['broadsheet'] = "Broadsheet";
+$lang['result_checker_pins'] = "Result Checker PINs";
+$lang['promotion_engine'] = "Promotion";

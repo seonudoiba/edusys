@@ -52,6 +52,7 @@ if (!function_exists('sidebar_submenu_icon')) {
             'bulk_delete' => 'fa-trash-o', 'login_credentials_send' => 'fa-key', 'student_admission' => 'fa-user-plus', 'disabled_students' => 'fa-user-times',
             'multi_class_student' => 'fa-users', 'student_profile_update' => 'fa-pencil-square-o', 'student_details' => 'fa-search', 'collect_fees' => 'fa-money',
             'search_due_fees' => 'fa-exclamation-circle', 'search_fees_payment' => 'fa-search-plus',
+            'broadsheet' => 'fa-table', 'result_checker_pins' => 'fa-key', 'promotion_engine' => 'fa-level-up',
         );
         static $by_word = array('report' => 'fa-bar-chart', 'setting' => 'fa-cog', 'attend' => 'fa-check-square-o', 'fee' => 'fa-money', 'exam' => 'fa-file-text-o',
             'student' => 'fa-user', 'staff' => 'fa-id-badge', 'mail' => 'fa-envelope-o', 'sms' => 'fa-mobile', 'book' => 'fa-book', 'search' => 'fa-search',

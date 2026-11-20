@@ -35,7 +35,7 @@ class Cbse_marks_sheet
         $out = array();
         foreach ($rows as $r) {
             $key = (int) $r['tt_id'] . ':' . (int) $r['type_id'];
-            $out[$key] = array('tt_id' => (int) $r['tt_id'], 'type_id' => (int) $r['type_id'], 'link_id' => (int) $r['link_id'], 'max' => (float) $r['maximum_marks'],
+            $out[$key] = array('tt_id' => (int) $r['tt_id'], 'type_id' => (int) $r['type_id'], 'link_id' => (int) $r['link_id'], 'max' => (float) $r['maximum_marks'], 'subject' => $r['subject'],
                 'label' => $r['subject'] . ' - ' . $r['type_name'] . ' (' . (float) $r['maximum_marks'] . ') [' . $key . ']');
         }
         return $out;
@@ -127,6 +127,23 @@ class Cbse_marks_sheet
             $students[strtolower(trim($st['admission_no']))] = (int) $st['exam_student_id'];
         }
         $existing = $this->marks(array_values($students));
+        // subjects whose scores are locked for this user (approved, under review, published)
+        $this->CI->load->library('cbse_marks_guard');
+        $guard = $this->CI->cbse_marks_guard;
+        $locked = array();
+        foreach (array_unique(array_column($cols, 'tt_id')) as $tt_id) {
+            $why = $guard->lock_reason($guard->subject($tt_id));
+            if ($why !== '') {
+                $locked[(int) $tt_id] = $why;
+            }
+        }
+        foreach ($map as $i => $key) {
+            if (isset($locked[(int) $cols[$key]['tt_id']])) {
+                $result['problems'][] = $cols[$key]['subject'] . ': not imported. ' . $locked[(int) $cols[$key]['tt_id']];
+                unset($map[$i]);
+            }
+        }
+        $result['problems'] = array_values(array_unique($result['problems']));
         $db = $this->CI->db;
         $db->trans_start();
         foreach ($rows as $n => $cells) {
@@ -162,10 +179,12 @@ class Cbse_marks_sheet
                         continue; // the same mark as already there (e.g. the exported value left as it was)
                     }
                     $db->where('id', (int) $was['id'])->update('cbse_student_subject_marks', $values);
+                    $guard->log_one($exam_id, $c['tt_id'], $es, $c['type_id'], $was, $values, 'import');
                 } else {
                     $db->insert('cbse_student_subject_marks', $values + array('cbse_exam_timetable_assessment_type_id' => $c['link_id'], 'cbse_exam_timetable_id' => $c['tt_id'],
                         'cbse_exam_student_id' => $es, 'cbse_exam_assessment_type_id' => $c['type_id'], 'note' => ''));
                     $existing[$es][$key] = array('id' => $db->insert_id());
+                    $guard->log_one($exam_id, $c['tt_id'], $es, $c['type_id'], null, $values, 'import');
                 }
                 $result['saved']++;
                 $touched = true;

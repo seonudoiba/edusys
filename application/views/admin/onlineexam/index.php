@@ -300,6 +300,16 @@ function findOption($questionOpt, $find)
                                          Shuffle answer options
                                         </label>
 
+                                      <label class="checkbox-inline" title="Students cannot copy, paste, right-click or select the questions">
+<input type="checkbox" class="block_copy" name="block_copy" value="1" checked>
+                                         Block copy, paste and right-click
+                                        </label>
+                                      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                                        <label for="max_tab_switches" style="margin:0;font-weight:500">Submit the exam when a student leaves the exam page</label>
+                                        <input type="number" id="max_tab_switches" name="max_tab_switches" class="form-control input-sm" style="width:80px" min="0" max="50" value="3">
+                                        <span class="text-muted small">times (0 = only record it). Every time is recorded and the student is warned.</span>
+                                      </div>
+
                 </div>
 
                 </div>
@@ -418,6 +428,15 @@ foreach ($classList as $class_key => $class_value) {
                     </div>
                  </form>
                 </div><!-- ./row -->
+                <div id="random_draw" style="background:#f8fafc;border:1px solid #e5e9f0;border-radius:12px;padding:10px 14px;margin:4px 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+                    <div style="flex-basis:100%;font-weight:700"><i class="fa fa-random"></i> Random draw <small class="text-muted" style="font-weight:400">from the subject (and class) chosen above, questions not yet in this exam</small></div>
+                    <?php foreach ($question_level as $lk => $lv) { ?>
+                        <label style="margin:0;font-weight:500;font-size:12px"><?php echo html_escape($lv); ?><input type="number" min="0" max="200" value="0" class="form-control input-sm rd-level" data-level="<?php echo html_escape($lk); ?>" style="width:80px"></label>
+                    <?php } ?>
+                    <label style="margin:0;font-weight:500;font-size:12px">Marks each<input type="number" min="0.25" step="0.25" value="1" id="rd_marks" class="form-control input-sm" style="width:80px"></label>
+                    <label style="margin:0;font-weight:500;font-size:12px">Negative<input type="number" min="0" step="0.25" value="0" id="rd_neg" class="form-control input-sm" style="width:80px"></label>
+                    <button type="button" class="btn btn-primary btn-sm" id="rd_go"><i class="fa fa-magic"></i> Draw questions</button>
+                </div>
                 <div class="search_box_result quescroll">
                 </div>
                 <div class="row">
@@ -642,6 +661,8 @@ $(document).on('submit','#delete_question',function(e) {
             $('#attempt').val('1');
             $('input[name=recordid]').val('0');
             $(this).find('input:checkbox').prop('checked', false);
+            $('input[name=block_copy]').prop('checked', true);
+            $('input[name=max_tab_switches]').val('3');
             $('input.publish_result, input#auto_publish_date').prop('disabled', false);
         });
 
@@ -654,6 +675,18 @@ $(document).on('submit','#delete_question',function(e) {
             var recordid = $(this).data('recordid');
             $('input[name=recordid]').val(recordid);
             $('#myModal').modal('show');
+        });
+
+        $('#rd_go').on('click', function () {
+            var levels = {}, total = 0, btn = $(this);
+            $('.rd-level').each(function () { var n = parseInt(this.value, 10) || 0; levels[$(this).data('level')] = n; total += n; });
+            if (!$('#search_box').val()) { errorMsg('Choose the subject above first.'); return; }
+            if (!total) { errorMsg('Enter how many questions of each level to draw.'); return; }
+            btn.prop('disabled', true);
+            $.post(baseurl + 'admin/onlineexam/random_draw', { exam_id: $('#modal_exam_id').val(), subject_id: $('#search_box').val(), class_id: $('#class_id').val(),
+                levels: levels, marks: $('#rd_marks').val(), neg_marks: $('#rd_neg').val() }, function (r) {
+                if (r.status === 'success') { successMsg(r.message); $('.post_search_submit').trigger('click'); } else { errorMsg(r.message); }
+            }, 'json').fail(function () { errorMsg('Could not draw questions. Please try again.'); }).always(function () { btn.prop('disabled', false); });
         });
 
         $('#myQuestionModal').on('show.bs.modal', function (e) {
@@ -784,6 +817,8 @@ $(document).on('submit','#delete_question',function(e) {
                         var chk_is_random_question=(data.result.is_random_question == 0)?false:true;
                         $('input[name=is_random_question]').prop('checked',chk_is_random_question);
                         $('input[name=is_random_option]').prop('checked', data.result.is_random_option == 1);
+                        $('input[name=block_copy]').prop('checked', data.result.block_copy === undefined || data.result.block_copy == 1);
+                        $('input[name=max_tab_switches]').val(data.result.max_tab_switches === undefined ? 3 : data.result.max_tab_switches);
                         $('#myModal').modal('show');
                     }
                     $this.button('reset');

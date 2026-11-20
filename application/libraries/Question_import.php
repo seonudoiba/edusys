@@ -135,6 +135,9 @@ class Question_import
         $errors = array();
         $insert = array();
         $passages = array(); // lower-case title => id
+        $this->CI->load->library('question_dedupe');
+        $dedupe = $this->CI->question_dedupe;
+        $similar = 0;
         array_shift($rows); // header
         foreach (array_slice($rows, 0, self::MAX_ROWS) as $i => $cells) {
             $n = $i + 2; // spreadsheet row number
@@ -217,6 +220,15 @@ class Question_import
             foreach ($options as $k => $v) {
                 $row[$k] = $v === '' ? '' : self::html($v);
             }
+            $dup = $dedupe->find($row['subject_id'], $row['question']);
+            if ($dup && $dup[0] === 'same') {
+                $errors[] = "Row $n: already in the question bank" . (is_int($dup[1]) ? ' (#' . $dup[1] . ')' : ' (repeated in this file)') . '. Skipped.';
+                continue;
+            }
+            if ($dup) {
+                $errors[] = "Row $n: imported, but it is " . $dup[2] . '% the same as question #' . $dup[1] . '. Check it is not a repeat.';
+            }
+            $dedupe->remember($row['subject_id'], 0, $row['question']);
             $insert[] = $row;
         }
         if (count($rows) > self::MAX_ROWS) {

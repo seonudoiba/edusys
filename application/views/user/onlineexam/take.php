@@ -190,7 +190,9 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
 (function () {
     var EXAM = <?php echo (int) $exam['id']; ?>;
     var URL = { start: '<?php echo site_url('user/onlineexam/start'); ?>', answer: '<?php echo site_url('user/onlineexam/answer'); ?>',
-        upload: '<?php echo site_url('user/onlineexam/upload'); ?>', submit: '<?php echo site_url('user/onlineexam/submit'); ?>' };
+        upload: '<?php echo site_url('user/onlineexam/upload'); ?>', submit: '<?php echo site_url('user/onlineexam/submit'); ?>',
+        presence: '<?php echo site_url('user/onlineexam/presence'); ?>' };
+    var MAX_AWAY = <?php echo (int) (isset($exam['max_tab_switches']) ? $exam['max_tab_switches'] : 0); ?>, BLOCK_COPY = <?php echo !isset($exam['block_copy']) || (int) $exam['block_copy'] ? 'true' : 'false'; ?>;
     var $ = function (id) { return document.getElementById(id); };
     var questions = [], passages = {}, attempt = 0, index = 0, endAt = 0, flags = {}, pending = {}, saving = false, retryTimer = null, finished = false;
     var LETTERS = 'ABCDE';
@@ -220,8 +222,41 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
         index = Math.min(load('index') || 0, questions.length - 1);
         $('loading').hidden = true; $('app').hidden = false;
         buildGrid(); show(index); tick(); setInterval(tick, 500);
+        watch();
         if (Object.keys(pending).length) { flush(); } else { saveState('All answers saved'); }
     }).catch(function () { $('loading_error').textContent = 'No connection. Check your internet and reload this page; your time and answers are kept.'; });
+
+    // ---- exam rules: leaving the page is counted (submitted at the limit); copying blocked
+    function watch() {
+        var awaySince = 0;
+        function presence(away) {
+            return post(URL.presence, { away: away ? 1 : 0 }).then(function (d) {
+                if (d.ended) {
+                    finished = true;
+                    if (d.forced) { banner('You left the exam page ' + d.count + ' times. Your exam has been submitted.'); }
+                    setTimeout(function () { window.location.href = d.redirect || '<?php echo site_url('user/onlineexam'); ?>'; }, d.forced ? 2500 : 0);
+                    return;
+                }
+                syncTime(d.seconds_left);
+                if (away && d.max) { banner('Warning: you left the exam page (' + d.count + ' of ' + d.max + '). At ' + d.max + ' your exam is submitted.'); }
+                else if (away) { banner('You left the exam page. This is recorded.'); }
+            }).catch(function () {});
+        }
+        document.addEventListener('visibilitychange', function () {
+            if (finished) { return; }
+            if (document.hidden) { awaySince = Date.now(); }
+            else if (awaySince) { awaySince = 0; presence(true); }
+        });
+        setInterval(function () { if (!finished && !document.hidden) { presence(false); } }, 60000); // extra time given by the invigilator shows
+        if (BLOCK_COPY) {
+            ['copy', 'cut', 'paste', 'contextmenu', 'dragstart'].forEach(function (ev) {
+                document.addEventListener(ev, function (e) { e.preventDefault(); if (ev !== 'contextmenu' && ev !== 'dragstart') { banner('Copying and pasting are turned off for this exam.'); } });
+            });
+            document.addEventListener('selectstart', function (e) { if (!/^(TEXTAREA|INPUT)$/.test(e.target.tagName) && !e.target.isContentEditable) { e.preventDefault(); } });
+            document.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && /^[acxvpsu]$/i.test(e.key) && !/^(TEXTAREA|INPUT)$/.test(e.target.tagName)) { e.preventDefault(); } });
+            document.body.style.userSelect = 'none';
+        }
+    }
 
     // ---- timer (the server's deadline; refreshed by every save)
     function tick() {

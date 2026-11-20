@@ -950,6 +950,7 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
         var form = $(this);
         var subsubmit_button = $(this).find(':submit');
         var formdata = form.serializeArray();
+        if (form.data('ignoreConflicts')) { formdata.push({ name: 'ignore_conflicts', value: 1 }); form.removeData('ignoreConflicts'); }
 
         $.ajax({
             type: "POST",
@@ -967,8 +968,14 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
                         message += value;
                     });
                     errorMsg(message);
- 
-                } else {                  
+
+                } else if (response.status === 'conflict') {
+                    // timetable clashes: listed; the user can still save (e.g. dates not planned yet)
+                    if (window.confirm('Timetable clashes:\n\n- ' + response.conflicts.join('\n- ') + '\n\nSave anyway?')) {
+                        form.data('ignoreConflicts', 1);
+                        setTimeout(function () { form.trigger('submit'); }, 0);
+                    }
+                } else {
                     successMsg(response.message);
                     $('#addSubject').modal('hide');
                 }
@@ -1389,4 +1396,55 @@ $(document).on('change','.check_absent',function(){
     $('#marks_import_form').on('submit', function () {
         $(this).find('button[type=submit]').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Importing...');
     });
+</script>
+<!-- Score review workflow and change history (_getSubjectByExam.php, _partialstudentmarkEntry.php) -->
+<div class="modal fade" id="marksHistoryModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-history"></i> Change history <small id="marks_history_name"></small></h4>
+            </div>
+            <div class="modal-body" id="marks_history_body"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function ($) {
+    var asking = { unlock: 'Why are you unlocking these scores? (kept in the change history)', 'return': 'What should the teacher change? (kept in the change history)' };
+    var confirmText = { approve: 'Approve and lock these scores? Nobody can change them until an exam manager unlocks them.', submit: 'Submit these scores for review? You will not be able to change them unless they are returned to you.' };
+    function reloadSubjects(examId) {
+        $.post(baseurl + 'cbseexam/exam/getSubjectByExam', { recordid: examId }, function (d) { $('#subjectmarkModal .modal-body').html(d.subject_page); }, 'json');
+    }
+    function act(ids, action, examId, btn, after) {
+        var note = '';
+        if (asking[action]) {
+            note = window.prompt(asking[action], '');
+            if (note === null) { return; }
+            if (!$.trim(note)) { errorMsg('Please give a reason.'); return; }
+        } else if (confirmText[action] && !window.confirm(confirmText[action])) {
+            return;
+        }
+        if (btn) { $(btn).prop('disabled', true); }
+        $.post(baseurl + 'cbseexam/exam/marks_status', { 'timetable_id[]': ids, action: action, note: note }, function (r) {
+            if (r.status === 'success') { successMsg(r.message); } else { errorMsg(r.message); }
+            if (examId) { reloadSubjects(examId); }
+            if (after) { after(r); }
+        }, 'json').fail(function () { errorMsg('Could not save. Please try again.'); if (btn) { $(btn).prop('disabled', false); } });
+    }
+    window.cbseMarksAct = act;
+    $(document).on('click', '.sx-act', function () { act([$(this).data('id')], $(this).data('action'), $(this).data('exam_id'), this); });
+    $(document).on('click', '.sx-approve-all', function () {
+        var ids = $(this).data('ids') || [];
+        if (!ids.length) { return; }
+        act(ids, 'approve', $(this).data('exam_id'), this);
+    });
+    $(document).on('click', '.sx-history', function () {
+        var tt = $(this).data('timetable_id'), exam = $(this).data('exam_id');
+        $('#marks_history_name').text($(this).data('name') || (exam ? 'whole exam' : ''));
+        $('#marks_history_body').html('<p class="text-center text-muted" style="padding:30px"><i class="fa fa-spinner fa-spin"></i></p>');
+        $('#marksHistoryModal').modal('show');
+        $.post(baseurl + 'cbseexam/exam/marks_history', tt ? { timetable_id: tt } : { exam_id: exam }, function (r) { $('#marks_history_body').html(r.page); }, 'json');
+    });
+})(jQuery);
 </script>

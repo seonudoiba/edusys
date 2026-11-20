@@ -2,7 +2,7 @@
 
        <h3 class="entered pb20"> <?php echo $this->lang->line('exam_result'); ?></h3>
        <div class="row">
-          <div class="col-lg-6 col-md-5 col-sm-6">
+          <div class="<?php echo !empty($pin_required) ? 'col-lg-4 col-md-4 col-sm-6' : 'col-lg-6 col-md-5 col-sm-6'; ?>">
              <div class="form-group">
                 <label for="email"><?php echo $this->lang->line('exam'); ?><small class="req"> *</small> </label>
 
@@ -30,7 +30,16 @@
                 </span>
              </div>
           </div>
-          <div class="col-lg-2 col-md-3 col-sm-3">
+          <?php if (!empty($pin_required)) { ?>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+             <div class="form-group">
+                <label for="rc_pin">Result checker PIN<small class="req"> *</small></label>
+                <input type="text" class="form-control" id="rc_pin" name="pin" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="12-digit PIN on your card" value="<?php echo html_escape(set_value('pin')); ?>" />
+                <span class="text-danger"><?php echo form_error('pin'); ?></span>
+             </div>
+          </div>
+          <?php } ?>
+          <div class="col-lg-2 col-md-2 col-sm-3">
 
              <button type="submit" class="onlineformbtn search-top-space"><?php echo $this->lang->line('search'); ?></button>
 
@@ -39,6 +48,9 @@
     </form>
 
     <div class="spaceb60 table-responsive">
+       <?php if (!empty($pin_error)) { ?>
+          <div class="alert alert-danger"><i class="fa fa-lock"></i> <?php echo html_escape($pin_error); ?></div>
+       <?php } ?>
        <?php
          if (isset($student_result)) {
             if (!empty($student_result)) {
@@ -50,6 +62,15 @@
              </div>
 
              <div class="" id="div_print">
+                <?php if (!empty($school_brand)) { ?>
+                <div style="display:flex;align-items:center;gap:14px;border-bottom:3px solid <?php echo html_escape($school_brand['color']); ?>;padding-bottom:10px;margin-bottom:12px">
+                   <?php if (!empty($school_brand['logo'])) { ?><img src="<?php echo html_escape($school_brand['logo']); ?>" alt="" style="height:60px;width:auto;max-width:110px;object-fit:contain"><?php } ?>
+                   <div>
+                      <div style="font-size:20px;font-weight:800;color:<?php echo html_escape($school_brand['color']); ?>"><?php echo html_escape($school_brand['name']); ?></div>
+                      <div style="font-size:12px;color:#555"><?php echo html_escape($school_brand['address']); ?></div>
+                   </div>
+                </div>
+                <?php } ?>
                 <h4 class="text text-center"><?php echo $exam->name; ?> </h4>
                 <div class="row mb10"></div>
 
@@ -187,11 +208,23 @@
                          </td>
                          <td class="fontbold">
                             <?php echo $this->lang->line('rank'); ?> :
-                            <?php echo $student_result['rank']; ?>
+                            <?php echo $student_result['rank']; ?><?php echo $student_result['rank'] && !empty($student_result['class_size']) ? ' out of ' . (int) $student_result['class_size'] : ''; ?>
                          </td>
                       </tr>
                    </tbody>
                 </table>
+                <?php if ((int) $student_result['total_working_days'] > 0) { ?>
+                <table class="table table-bordered">
+                   <tr>
+                      <td><b><?php echo $this->lang->line('total_working_days'); ?>:</b> <?php echo (int) $student_result['total_working_days']; ?></td>
+                      <td><b><?php echo $this->lang->line('days_present'); ?>:</b> <?php echo (int) $student_result['total_present_days']; ?></td>
+                      <td><b><?php echo $this->lang->line('attendance_percentage'); ?>:</b> <?php echo round((int) $student_result['total_present_days'] * 100 / (int) $student_result['total_working_days'], 1); ?>%</td>
+                   </tr>
+                </table>
+                <?php } ?>
+                <?php if (trim((string) $student_result['remark']) !== '') { ?><p><b><?php echo $this->lang->line('class_teacher_remark') ?: "Class teacher's remark"; ?>:</b> <?php echo html_escape($student_result['remark']); ?></p><?php } ?>
+                <?php if (!empty($student_result['principal_remark'])) { ?><p><b>Principal's remark:</b> <?php echo html_escape($student_result['principal_remark']); ?></p><?php } ?>
+                <?php $this->load->view('cbseexam/result/_grading_key', array('grades' => isset($exam->grades) ? $exam->grades : array())); ?>
 
              </div>
           <?php

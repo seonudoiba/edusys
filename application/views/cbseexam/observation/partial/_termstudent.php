@@ -3,6 +3,35 @@
     <?php
 if (isset($observationParamsList) && (!empty($observationParamsList) && !empty($studentlist))) {
     ?>
+        <div class="ob-fill" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e5e9f0;border-radius:12px;padding:10px 14px;margin-top:10px">
+            <b><i class="fa fa-magic"></i> Fill ratings</b>
+            <select class="form-control input-sm" id="ob_fill_col" style="width:auto">
+                <option value="">Every rating</option>
+                <?php foreach ($observationParamsList as $param_value) { ?><option value="<?php echo (int) $param_value->cbse_observation_subparameter_id; ?>"><?php echo html_escape($param_value->cbse_observation_parameter_name); ?></option><?php } ?>
+            </select>
+            <span>with</span>
+            <input type="number" class="form-control input-sm" id="ob_fill_val" style="width:80px" min="0" step="any" value="3">
+            <label style="margin:0;font-weight:500;font-size:13px"><input type="checkbox" id="ob_fill_all"> also replace ratings already entered</label>
+            <button type="button" class="btn btn-primary btn-sm" id="ob_fill_go">Fill</button>
+            <span class="text-muted small">Then change any student who differs, and Save.</span>
+        </div>
+        <script>
+        (function ($) {
+            $('#ob_fill_go').on('click', function () {
+                var col = $('#ob_fill_col').val(), v = parseFloat($('#ob_fill_val').val()), all = $('#ob_fill_all').prop('checked'), n = 0, over = 0;
+                if (isNaN(v) || v < 0) { errorMsg('Enter the rating to fill in.'); return; }
+                $('#allot_exam_student input.marksssss').each(function () {
+                    if (col && !new RegExp('_' + col + '$').test(this.name)) { return; }
+                    if (!all && this.value !== '') { return; }
+                    var max = parseFloat(this.getAttribute('data-marks'));
+                    if (!isNaN(max) && v > max) { over++; return; }
+                    this.value = v; n++;
+                });
+                if (over) { errorMsg(over + ' rating(s) not filled: ' + v + ' is above their maximum.'); }
+                if (n) { successMsg(n + ' rating(s) filled. Check them, then Save.'); }
+            });
+        })(jQuery);
+        </script>
         <div class="row">
             <div class="col-md-12">
                 <div class=" table-responsive ptt10">
