@@ -89,7 +89,63 @@ if (!empty($online_exam_validate)) {
         $exam_total_scored    = (float) $online_exam_validate->score + $exam_total_neg_marks; // shown below as scored minus negative
     }
 
+    // the scorecard at the top (result published)
+    $sc_brand = $this->customlib->brand();
+    $sc_got = $exam_total_scored - $exam_total_neg_marks;
+    $sc_pct = $exam_total_marks > 0 ? max(0, min(100, $sc_got * 100 / $exam_total_marks)) : 0;
+    $sc_pass = $sc_pct >= (float) $exam->passing_percentage;
+    $sc_cbt = !empty($cbt_state) ? $cbt_state : null;
     ?>
+            <style>
+                .sc-card{--brand:<?php echo html_escape($sc_brand['color']); ?>;display:flex;flex-wrap:wrap;gap:22px;align-items:center;background:linear-gradient(135deg,#fff,color-mix(in srgb,var(--brand) 6%,#fff));border:1px solid #e5e9f0;border-radius:18px;padding:22px 24px;margin:4px 0 20px;box-shadow:0 6px 24px rgba(16,24,40,.06)}
+                .sc-ring{position:relative;width:132px;height:132px;flex:none}
+                .sc-ring svg{width:132px;height:132px;transform:rotate(-90deg)}
+                .sc-ring .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+                .sc-ring .v b{font-size:30px;line-height:1;color:#0f172a}
+                .sc-ring .v span{font-size:12px;color:#64748b;margin-top:4px}
+                .sc-main{flex:1;min-width:240px}
+                .sc-main h2{margin:0 0 4px;font-size:21px;font-weight:700;color:#0f172a}
+                .sc-badge{display:inline-block;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+                .sc-badge.pass{background:#dcfce7;color:#15803d}.sc-badge.fail{background:#fee2e2;color:#b91c1c}
+                .sc-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:14px}
+                .sc-tile{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:10px 12px}
+                .sc-tile small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#64748b}
+                .sc-tile b{font-size:20px;color:#0f172a}
+                .sc-tile.ok b{color:#15803d}.sc-tile.bad b{color:#b91c1c}
+                .sc-start{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--brand),color-mix(in srgb,var(--brand) 60%,#0f172a));color:#fff;border-radius:18px;padding:20px 24px;margin:4px 0 20px}
+                .sc-start h2{margin:0;font-size:20px;color:#fff}.sc-start p{margin:4px 0 0;opacity:.85}
+                .section-box{border:1px solid #e5e9f0;border-radius:14px;padding:16px 18px!important;margin:0 15px 12px;background:#fff;width:auto!important;float:none!important}
+                .section-box .text-success{background:#ecfdf3;border-radius:8px;padding:4px 8px;margin:3px 0}
+                .section-box .text-danger:not(span){background:#fef2f2;border-radius:8px;padding:4px 8px;margin:3px 0}
+            </style>
+            <?php if ($role == 'student' && $sc_cbt && in_array($sc_cbt[0], array('ready', 'running'), true)) { ?>
+            <div class="sc-start no-print" style="--brand:<?php echo html_escape($sc_brand['color']); ?>">
+                <div>
+                    <h2><i class="fa fa-laptop"></i> <?php echo $sc_cbt[0] === 'running' ? 'Your exam is in progress' : 'Ready when you are'; ?></h2>
+                    <p><?php echo $sc_cbt[0] === 'running' ? html_escape($sc_cbt[1]) : 'Duration ' . html_escape($exam->duration) . '. Your answers save as you go.'; ?></p>
+                </div>
+                <a class="btn btn-lg" style="background:#fff;color:#0f172a;font-weight:700;border-radius:12px" href="<?php echo site_url('user/onlineexam/take/' . (int) $exam->id); ?>"><i class="fa fa-play"></i> <?php echo $sc_cbt[0] === 'running' ? 'Continue exam' : 'Start exam'; ?></a>
+            </div>
+            <?php } ?>
+            <?php if ($exam->publish_result && $online_exam_validate->is_attempted) { ?>
+            <div class="sc-card" style="--brand:<?php echo html_escape($sc_brand['color']); ?>">
+                <div class="sc-ring" role="img" aria-label="Score <?php echo round($sc_pct); ?> percent">
+                    <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#e8edf3" stroke-width="3.5"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="<?php echo $sc_pass ? '#16a34a' : '#dc2626'; ?>" stroke-width="3.5" stroke-linecap="round" pathLength="100" stroke-dasharray="<?php echo round($sc_pct, 1); ?> 100"/></svg>
+                    <div class="v"><b><?php echo round($sc_pct); ?>%</b><span><?php echo rtrim(rtrim(number_format($sc_got, 2, '.', ''), '0'), '.'); ?> / <?php echo rtrim(rtrim(number_format((float) $exam_total_marks, 2, '.', ''), '0'), '.'); ?></span></div>
+                </div>
+                <div class="sc-main">
+                    <h2><?php echo html_escape($exam->exam); ?></h2>
+                    <span class="sc-badge <?php echo $sc_pass ? 'pass' : 'fail'; ?>"><?php echo $sc_pass ? 'Passed' : 'Below pass mark'; ?></span>
+                    <span class="text-muted" style="margin-left:8px">Pass mark <?php echo (float) $exam->passing_percentage; ?>%</span>
+                    <div class="sc-tiles">
+                        <div class="sc-tile ok"><small>Correct</small><b><?php echo (int) $correct_ans; ?></b></div>
+                        <div class="sc-tile bad"><small>Wrong</small><b><?php echo (int) $wrong_ans; ?></b></div>
+                        <div class="sc-tile"><small>Not answered</small><b><?php echo (int) $not_attempted; ?></b></div>
+                        <?php if (!$exam->is_quiz) { ?><div class="sc-tile"><small>Rank</small><b><?php echo ($exam->is_rank_generated && $online_exam_validate->rank) ? (int) $online_exam_validate->rank : '&ndash;'; ?></b></div><?php } ?>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
             <button class="btn btn-primary print_div btn-xs" title="<?php echo $this->lang->line("print") ?>" data-record-id="<?php echo $exam->id; ?>" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-print"></i></button>
                   <div class="aa">
                   <h4 class="text-center font-weight-bold"><?php echo $exam->exam . ($exam->is_quiz ? " (" . $this->lang->line('quiz') . ")" : " (" . $this->lang->line('exam') . ")"); ?></h4>

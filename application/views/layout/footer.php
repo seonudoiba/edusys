@@ -97,6 +97,8 @@ if ($language_name != 'en') {
 <script type="text/javascript" src="<?php echo base_url(); ?>backend/dist/datatables/js/buttons.colVis.min.js"></script>
 <script type="text/javascript"
     src="<?php echo base_url(); ?>backend/dist/datatables/js/dataTables.responsive.min.js"></script>
+<script>window.EDUSYS_BRAND = <?php echo json_encode($this->customlib->brand()); ?>;</script>
+<script src="<?php echo base_url(); ?>backend/custom/report_brand.js?v=1"></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>backend/dist/datatables/js/ss.custom.js"></script>
 <script>
     window.EDUSYS_REQUEST_METHOD = <?php echo json_encode(strtoupper((string) $this->input->method())); ?>;
