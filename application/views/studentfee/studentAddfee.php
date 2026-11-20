@@ -164,6 +164,7 @@ foreach ($categorylist as $value) {
                                 
                                 <a class="btn btn-sm btn-default" href="<?php echo site_url('studentfee/bill/' . (int) $student['student_session_id']); ?>" target="_blank" rel="noopener"><i class="fa fa-file-text-o"></i> Fee bill</a>
                                 <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
+                                <button type="button" class="btn btn-sm btn-success collectAll" title="Every unpaid fee of this student (class fees, transport) in one payment; a part payment is spread over them" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-check-circle"></i> Collect all fees</button>
                                 <button type="button" class="btn btn-sm btn-warning collectSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('collect_selected'); ?></button><?php } ?>
                                 
                                 <?php
@@ -1477,6 +1478,13 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
                 }
                 });
             }
+        });
+
+        // every fee at once: tick them all and collect (paid ones are left out by the server)
+        $(document).on('click', '.collectAll', function () {
+            $("input[name='fee_checkbox']").prop('checked', true);
+            $('#select_all').prop('checked', true);
+            $('.collectSelected').first().trigger('click');
         });
 
         $(document).on('click', '.collectSelected', function () {

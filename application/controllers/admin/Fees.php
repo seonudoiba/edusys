@@ -101,14 +101,19 @@ class Fees extends Admin_Controller
     {
         $this->need('collect_fees', 'can_view');
         $q = trim((string) $this->input->get('q'));
+        $class_id = (int) $this->input->get('class_id');
+        $section_id = (int) $this->input->get('section_id');
         $found = array();
-        if (mb_strlen($q) >= 2) {
-            $found = $this->find_students($q);
+        if (mb_strlen($q) >= 2 || $class_id) {
+            $found = $this->find_students(mb_strlen($q) >= 2 ? $q : '', $class_id, $section_id);
         }
         $today = date('Y-m-d');
         $this->render('collections', array(
-            'title' => 'Collections',
+            'title' => 'Collect fees',
             'q' => $q,
+            'class_id' => $class_id,
+            'section_id' => $section_id,
+            'classes' => $this->class_sections(),
             'found' => $found,
             'pending_transfers' => $this->pending_transfers(),
             'collected_today' => $this->collected_since($today),
@@ -582,16 +587,25 @@ class Fees extends Admin_Controller
     }
 
     /** Students of the current session by name or admission number, with their balance. */
-    private function find_students($q)
+    /** Students of this session by name / admission no ($q) and/or class and section, with balances. */
+    private function find_students($q, $class_id = 0, $section_id = 0)
     {
         $session = (int) $this->setting_model->getCurrentSession();
-        $rows = $this->db->select('ss.id AS student_session_id, st.firstname, st.middlename, st.lastname, st.admission_no, st.guardian_name, st.guardian_phone, c.class, s.section')
+        $this->db->select('ss.id AS student_session_id, st.firstname, st.middlename, st.lastname, st.admission_no, st.guardian_name, st.guardian_phone, c.class, s.section')
             ->from('student_session ss')->join('students st', 'st.id = ss.student_id')
             ->join('classes c', 'c.id = ss.class_id')->join('sections s', 's.id = ss.section_id')
-            ->where('ss.session_id', $session)->where('st.is_active', 'yes')
-            ->group_start()->like('st.firstname', $q)->or_like('st.lastname', $q)->or_like('st.admission_no', $q)
-            ->or_like("CONCAT(st.firstname, ' ', st.lastname)", $q, 'both', false)->group_end()
-            ->order_by('st.firstname')->limit(25)->get()->result_array();
+            ->where('ss.session_id', $session)->where('st.is_active', 'yes');
+        if ($q !== '') {
+            $this->db->group_start()->like('st.firstname', $q)->or_like('st.lastname', $q)->or_like('st.admission_no', $q)
+                ->or_like("CONCAT(st.firstname, ' ', st.lastname)", $q, 'both', false)->group_end();
+        }
+        if ($class_id) {
+            $this->db->where('ss.class_id', (int) $class_id);
+        }
+        if ($section_id) {
+            $this->db->where('ss.section_id', (int) $section_id);
+        }
+        $rows = $this->db->order_by('s.section')->order_by('st.firstname')->limit($class_id ? 500 : 25)->get()->result_array();
         if (!$rows) {
             return array();
         }

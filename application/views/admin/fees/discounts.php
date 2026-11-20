@@ -1,7 +1,9 @@
 <?php
 $e = function ($v) { return html_escape((string) $v); };
 $picked = array_flip((array) $this->input->post('sections'));
-$chosen = (int) $this->input->post('discount_id');
+$chosen = (int) ($this->input->post('discount_id') ?: $this->input->get('discount'));
+$can_edit_dc = $this->rbac->hasPrivilege('fees_discount', 'can_edit');
+$can_del_dc = $this->rbac->hasPrivilege('fees_discount', 'can_delete');
 $new_type = $this->input->post('new_type') === 'percentage' ? 'percentage' : 'fix';
 ?>
 <div class="content-wrapper">
@@ -25,7 +27,7 @@ $new_type = $this->input->post('new_type') === 'percentage' ? 'percentage' : 'fi
                     <?php if ($discounts) { ?>
                         <div class="table-responsive">
                             <table class="table table-hover fw-table" style="margin-bottom:10px">
-                                <thead><tr><th style="width:30px"></th><th>Discount</th><th class="n">Value</th><th class="n">Students this session</th></tr></thead>
+                                <thead><tr><th style="width:30px"></th><th>Discount</th><th class="n">Value</th><th class="n">Students this session</th><th></th></tr></thead>
                                 <tbody>
                                 <?php foreach ($discounts as $d) { ?>
                                     <tr>
@@ -33,6 +35,10 @@ $new_type = $this->input->post('new_type') === 'percentage' ? 'percentage' : 'fi
                                         <td><label for="dc_<?php echo (int) $d['id']; ?>" style="margin:0"><?php echo $e($d['name']); ?></label></td>
                                         <td class="n"><?php echo $e($this->fee_adjustments->discount_label($d, $currency_symbol)); ?></td>
                                         <td class="n"><?php echo (int) $d['students']; ?><?php echo $d['used'] ? ' <span class="fw-muted">(' . (int) $d['used'] . ' used)</span>' : ''; ?></td>
+                                        <td class="n" style="white-space:nowrap">
+                                            <?php if ($can_edit_dc) { ?><a class="btn btn-default btn-xs" href="<?php echo site_url('admin/feediscount/edit/' . (int) $d['id']); ?>" title="Edit name, code or value"><i class="fa fa-pencil"></i></a><?php } ?>
+                                            <?php if ($can_del_dc && !(int) $d['students']) { ?><a class="btn btn-default btn-xs" href="<?php echo site_url('admin/feediscount/delete/' . (int) $d['id']); ?>" onclick="return confirm('Delete this discount?')" title="Delete (only when no student has it)"><i class="fa fa-trash"></i></a><?php } ?>
+                                        </td>
                                     </tr>
                                 <?php } ?>
                                 </tbody>

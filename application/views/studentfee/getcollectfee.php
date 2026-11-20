@@ -82,7 +82,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
             <div class="form-group row">
                 <label for="inputEmail3" class="col-sm-3 control-label"><?php echo $this->lang->line('date'); ?> <small class="req"> *</small></label>
                 <div class="col-sm-9">
-                    <input id="date" name="collected_date" placeholder="" type="text" class="form-control date_fee" value="" readonly="readonly" autocomplete="off">
+                    <input id="date" name="collected_date" placeholder="" type="text" class="form-control date_fee" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>" readonly="readonly" autocomplete="off">
                     <span id="form_collection_collected_date_error" class="text text-danger"></span>
                 </div>
             </div>    
@@ -289,6 +289,48 @@ if($fine_amount_status){
         </span>
     </div>
 </div>
+<?php /* One amount received for all the fees: spread over them from the top (fee, then its fine);
+         a fee it doesn't reach stays owing, a fee it reaches in part is paid in part. */ ?>
+<div class="row collect_grp_fees" style="align-items:center">
+    <div class="col-md-8"><span class="pull-right"><label for="cf_received" style="margin:6px 0 0">Amount received</label></span></div>
+    <div class="col-md-4"><input type="number" step="0.01" min="0.01" id="cf_received" class="form-control text-right" style="font-weight:700" value="<?php echo number_format((float) $total_amount, 2, '.', ''); ?>"></div>
+    <div class="col-md-12"><small class="pull-right" id="cf_received_note" style="margin-top:6px"></small></div>
+</div>
+<script>
+(function ($) {
+    var box = $('#cf_received').closest('.modal-body'), items = box.find('li.item'), SYM = <?php echo json_encode($currency_symbol); ?>, TOTAL = <?php echo json_encode(round((float) $total_amount, 2)); ?>;
+    var fmt = function (n) { return Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var r2 = function (n) { return Math.round(n * 100) / 100; };
+    items.each(function () {
+        var f = $(this).find('input[name^=fee_amount_]'), n = $(this).find('input[name^=fee_groups_feetype_fine_amount_]');
+        f.data('orig', parseFloat(f.val()) || 0); n.data('orig', parseFloat(n.val()) || 0);
+        $(this).find('.product-info').append('<small class="cf-pay" style="display:block;color:#b45309"></small>');
+    });
+    function spread() {
+        var got = r2(parseFloat($('#cf_received').val()) || 0), left = got, part = 0;
+        items.each(function () {
+            var li = $(this), f = li.find('input[name^=fee_amount_]'), n = li.find('input[name^=fee_groups_feetype_fine_amount_]');
+            var fee = f.data('orig'), fine = n.data('orig');
+            var pf = r2(Math.min(fee, left)); left = r2(left - pf);
+            var pn = r2(Math.min(fine, left)); left = r2(left - pn);
+            f.val(pf.toFixed(2)); n.val(pn.toFixed(2));
+            li.find('input[name="row_counter[]"]').prop('disabled', pf + pn <= 0);
+            li.css('opacity', pf + pn <= 0 ? 0.45 : 1);
+            var owe = r2(fee + fine - pf - pn);
+            if (owe > 0) { part++; }
+            li.find('.cf-pay').text(owe > 0 ? (pf + pn > 0 ? 'Paying ' + SYM + fmt(pf + pn) + ' now; ' + SYM + fmt(owe) + ' stays owing' : 'Not paid now') : '');
+        });
+        var bad = got <= 0 || got > TOTAL + 0.001;
+        box.find('.payment_collect').prop('disabled', bad);
+        $('#cf_received_note').css('color', bad ? '#b91c1c' : '#475569').text(
+            got <= 0 ? 'Enter the amount received.' :
+            got > TOTAL + 0.001 ? 'That is ' + SYM + fmt(got - TOTAL) + ' more than is owed (' + SYM + fmt(TOTAL) + ').' :
+            part ? 'Part payment: spread over the fees from the top. ' + SYM + fmt(r2(TOTAL - got)) + ' stays owing.' : 'Pays every fee in full.');
+    }
+    $('#cf_received').on('input change', spread);
+    spread();
+})(jQuery);
+</script>
 <div class="row fees-footer">
     <div class="col-md-12">
           <button type="submit" class="btn btn-primary pull-right payment_collect" data-loading-text="<i class='fa fa-spinner fa-spin '></i><?php echo $this->lang->line('processing')?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('pay'); ?></button>

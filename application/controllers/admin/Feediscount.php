@@ -15,14 +15,22 @@ class Feediscount extends Admin_Controller
 
     public function delete($id)
     {
+        if (!$this->rbac->hasPrivilege('fees_discount', 'can_delete')) {
+            access_denied();
+        }
         $this->feediscount_model->remove($id);
-        redirect('admin/feediscount/index');
+        $this->session->set_flashdata('fees_msg', 'Discount deleted.');
+        redirect('admin/fees/discounts');
     }
 
     public function index()
     {
         if (!$this->rbac->hasPrivilege('fees_discount', 'can_view')) {
             access_denied();
+        }
+        // One place for discounts: Fees > Discounts & balances > Discounts (create, give, edit, delete).
+        if ($this->input->method() !== 'post') {
+            redirect('admin/fees/discounts');
         }
         $this->session->set_userdata('top_menu', 'Fees Collection');
         $this->session->set_userdata('sub_menu', 'admin/feediscount');
@@ -59,8 +67,8 @@ class Feediscount extends Admin_Controller
             );
 
             $this->feediscount_model->add($data);
-            $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>');
-            redirect('admin/feediscount');
+            $this->session->set_flashdata('fees_msg', 'Discount "' . $data['name'] . '" added.');
+            redirect('admin/fees/discounts');
         }
     }
 
@@ -100,8 +108,8 @@ class Feediscount extends Admin_Controller
             );
 
             $this->feediscount_model->add($data);
-            $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('update_message') . '</div>');
-            redirect('admin/feediscount/index');
+            $this->session->set_flashdata('fees_msg', 'Discount "' . $data['name'] . '" saved.');
+            redirect('admin/fees/discounts');
         }
     }
 
