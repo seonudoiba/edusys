@@ -167,6 +167,10 @@ class Cbt_scoring
         if (!$link) {
             throw new RuntimeException('That assessment is no longer part of the exam. Reload the page.');
         }
+        if ($db->select('marks_status')->where('id', $timetable_id)->get('cbse_exam_timetable')->row('marks_status') === 'approved') {
+            throw new RuntimeException('The scores of that Report Cards subject are approved and locked. An exam manager can unlock them first.');
+        }
+        $this->CI->load->library('cbse_marks_guard');
         $max = (float) $link['maximum_marks'];
         $exam_students = array();
         foreach ($db->select('id, student_session_id')->where('cbse_exam_id', (int) $link['cbse_exam_id'])->get('cbse_exam_students')->result_array() as $r) {
@@ -212,9 +216,11 @@ class Cbt_scoring
                     continue;
                 }
                 $db->where('id', (int) $existing[$es]['id'])->update('cbse_student_subject_marks', array('marks' => $marks, 'is_absent' => 0));
+                $this->CI->cbse_marks_guard->log_one((int) $link['cbse_exam_id'], $timetable_id, $es, $type_id, $existing[$es], array('marks' => $marks, 'is_absent' => 0), 'cbt');
             } else {
                 $db->insert('cbse_student_subject_marks', array('cbse_exam_timetable_assessment_type_id' => (int) $link['id'], 'cbse_exam_timetable_id' => $timetable_id,
                     'cbse_exam_student_id' => $es, 'cbse_exam_assessment_type_id' => $type_id, 'marks' => $marks, 'is_absent' => 0, 'note' => ''));
+                $this->CI->cbse_marks_guard->log_one((int) $link['cbse_exam_id'], $timetable_id, $es, $type_id, null, array('marks' => $marks, 'is_absent' => 0), 'cbt');
             }
             $count['sent']++;
         }

@@ -4,8 +4,12 @@
  * are what Exam::entrymarks reads: exam_student_id[], mark[es][type][marks|cbse_exam_timetable_assessment_type],
  * absent[es][type], exam_student_note[es]. The page (cbseexam/exam/index.php) validates and posts it.
  * Here: search, a filled-in counter, a live total per student, out-of-range warnings, Enter = next
- * student, sticky headings and names.
+ * student, sticky headings and names; scores typed as a percentage of each maximum (converted);
+ * the review status (Cbse_marks_guard): locked subjects are read-only with the reason shown.
  */
+$me_status = isset($tt['marks_status']) ? $tt['marks_status'] : 'draft';
+$me_locked = !empty($lock_reason);
+$me_can_edit = $this->rbac->hasPrivilege('cbse_exam_marks', 'can_edit') && !$me_locked;
 $me_types = array();
 foreach ((array) $exam_assessment_types as $t) {
     if (!is_null($t->cbse_exam_timetable_assessment_type_id)) {
@@ -47,9 +51,34 @@ $me_fmt = function ($n) { return rtrim(rtrim(number_format((float) $n, 2, '.', '
     .me-total small{display:block;font-weight:500;color:#64748b}
     .me-table input.note{min-width:160px;border-radius:8px}
     .me-table td.text-danger{font-size:11px}
+    .me-status{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px}
+    .me-status.draft{background:#f8fafc;border:1px solid #e2e8f0;color:#334155}
+    .me-status.submitted{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+    .me-status.approved{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+    .me-status b{font-weight:700}
+    .me-status .me-gap{flex:1}
+    .me-pct-toggle{display:inline-flex;align-items:center;gap:6px;margin:0;font-size:12px;font-weight:600;color:#334155;cursor:pointer}
+    .me-pct-toggle input{margin:0}
+    form.me-pct-mode input.mark{background:#eef6ff}
+    .me-locked input.mark,.me-locked input.note{pointer-events:none;background:#f8fafc}
+    .me-locked .me-abs{pointer-events:none;opacity:.7}
+    @media (max-width:640px){.me-help{display:none}.me-table .me-name{min-width:150px}.me-cell input.mark{width:64px!important}}
 </style>
-<form method="post" action="<?php echo site_url('cbseexam/exam/entrymarks') ?>" id="assign_form1111">
+<form method="post" action="<?php echo site_url('cbseexam/exam/entrymarks') ?>" id="assign_form1111" class="<?php echo $me_locked ? 'me-locked' : ''; ?>">
     <input type="hidden" name="cbse_exam_timetable_id" value="<?php echo $timetable_id; ?>">
+    <?php $me_labels = array('draft' => array('fa-pencil', 'Draft', 'Scores can be changed. Submit them for review when they are complete.'),
+        'submitted' => array('fa-hourglass-half', 'Submitted for review', 'Waiting for an exam manager to approve them.'),
+        'approved' => array('fa-lock', 'Approved & locked', 'These are the final scores.'));
+    $me_l = isset($me_labels[$me_status]) ? $me_labels[$me_status] : $me_labels['draft']; ?>
+    <div class="me-status <?php echo html_escape($me_status); ?>">
+        <i class="fa <?php echo $me_l[0]; ?> fa-lg"></i>
+        <span><b><?php echo $me_l[1]; ?></b> &nbsp;<?php echo html_escape($me_locked ? $lock_reason : $me_l[2]); ?></span>
+        <span class="me-gap"></span>
+        <?php if ($me_can_edit) { ?>
+            <label class="me-pct-toggle" title="Type each score as a percentage (0-100); it is converted to the assessment's maximum"><input type="checkbox" id="me_pct"> Enter as %</label>
+        <?php } ?>
+        <button type="button" class="btn btn-default btn-xs sx-history" data-timetable_id="<?php echo (int) $timetable_id; ?>" data-name="<?php echo html_escape(isset($tt['subject_name']) ? $tt['subject_name'] : ''); ?>"><i class="fa fa-history"></i> History</button>
+    </div>
     <?php if (isset($resultlist) && !empty($resultlist)) { ?>
         <div class="me-bar">
             <input type="search" class="form-control input-sm me-search" id="me_search" placeholder="Find a student..." aria-label="Find a student">
@@ -91,7 +120,7 @@ $me_fmt = function ($n) { return rtrim(rtrim(number_format((float) $n, 2, '.', '
                             <?php foreach ($me_types as $value) {
                                 $es = $student['exam_student_id'];
                                 $absent = !empty($student['marks'][$value['id']]) && $student['marks'][$value['id']]['is_absent'] ? 1 : 0;
-                                $val = !empty($student['marks'][$value['id']]['marks']) ? $student['marks'][$value['id']]['marks'] : '';
+                                $val = isset($student['marks'][$value['id']]['marks']) && $student['marks'][$value['id']]['marks'] !== '' && !$absent ? $me_fmt($student['marks'][$value['id']]['marks']) : '';
                                 ?>
                                 <td>
                                     <input type="hidden" value="<?php echo $value['cbse_exam_timetable_assessment_type_id']; ?>" name="mark[<?php echo $es; ?>][<?php echo $value['id'] ?>][cbse_exam_timetable_assessment_type]">
@@ -110,10 +139,26 @@ $me_fmt = function ($n) { return rtrim(rtrim(number_format((float) $n, 2, '.', '
                 </tbody>
             </table>
         </div>
-        <?php if ($this->rbac->hasPrivilege('cbse_exam_marks', 'can_edit')) { ?>
-            <div class="modal-footer clearboth mx-nt-lr-15 pb0" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <?php if ($me_can_edit || (!empty($can_approve) && $me_status !== 'draft')) { ?>
+            <div class="modal-footer clearboth mx-nt-lr-15 pb0" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
                 <span class="me-help" id="me_unsaved"></span>
-                <button type="submit" class="allot-fees btn btn-primary" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Please Wait.."><i class="fa fa-save"></i> <?php echo $this->lang->line('save'); ?></button>
+                <span style="display:flex;gap:8px;flex-wrap:wrap">
+                    <?php if (!empty($can_approve) && $me_status === 'submitted') { ?>
+                        <button type="button" class="btn btn-warning me-flow" data-action="return"><i class="fa fa-reply"></i> Return to teacher</button>
+                    <?php } ?>
+                    <?php if (!empty($can_approve) && $me_status === 'approved') { ?>
+                        <button type="button" class="btn btn-warning me-flow" data-action="unlock"><i class="fa fa-unlock"></i> Unlock</button>
+                    <?php } ?>
+                    <?php if ($me_can_edit && $me_status === 'draft') { ?>
+                        <button type="button" class="btn btn-info me-flow" data-action="submit" title="Save first, then send for review"><i class="fa fa-paper-plane"></i> Submit for review</button>
+                    <?php } ?>
+                    <?php if (!empty($can_approve) && $me_status !== 'approved') { ?>
+                        <button type="button" class="btn btn-success me-flow" data-action="approve"><i class="fa fa-lock"></i> Approve &amp; lock</button>
+                    <?php } ?>
+                    <?php if ($me_can_edit) { ?>
+                        <button type="submit" class="allot-fees btn btn-primary" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Please Wait.."><i class="fa fa-save"></i> <?php echo $this->lang->line('save'); ?></button>
+                    <?php } ?>
+                </span>
             </div>
         <?php } ?>
         <script>
@@ -147,6 +192,23 @@ $me_fmt = function ($n) { return rtrim(rtrim(number_format((float) $n, 2, '.', '
                 if (!dirty) { dirty = true; $('#me_unsaved').html('<i class="fa fa-circle text-warning"></i> Unsaved changes'); }
             });
             form.on('change', '.check_absent', function () { $(this).closest('.me-abs').toggleClass('on', this.checked); });
+            <?php if ($me_locked) { ?>form.find('input.mark, input.note').prop('readonly', true); form.find('.check_absent').prop('disabled', true);<?php } ?>
+            // "Enter as %": a typed percentage becomes that share of the assessment's maximum
+            $('#me_pct').on('change', function () { var on = this.checked; form.toggleClass('me-pct-mode', on); form.find('input.mark').each(function () { this.placeholder = on ? '%' : '/' + fmt(parseFloat(this.getAttribute('data-marks'))); }); });
+            form.on('change', 'input.mark', function () {
+                if (!$('#me_pct').prop('checked') || this.value === '') { return; }
+                var p = parseFloat(this.value), max = parseFloat(this.getAttribute('data-marks'));
+                if (isNaN(p) || p < 0 || p > 100) { $(this).addClass('me-bad').attr('title', 'A percentage is 0 to 100'); return; }
+                this.value = fmt(p / 100 * max);
+                rowState($(this).closest('tr')); counter();
+            });
+            // review steps from here; Submit saves first
+            form.on('click', '.me-flow', function () {
+                var action = $(this).data('action'), tt = <?php echo (int) $timetable_id; ?>, examId = <?php echo isset($tt['cbse_exam_id']) ? (int) $tt['cbse_exam_id'] : 0; ?>;
+                if ((action === 'submit' || action === 'approve') && dirty) { errorMsg('Save the scores first.'); return; }
+                if (action === 'submit' && form.find('tr.me-row').not('.me-done').length && !window.confirm(form.find('tr.me-row').not('.me-done').length + ' student(s) have missing scores. Submit anyway?')) { return; }
+                window.cbseMarksAct([tt], action, examId, this, function (r) { if (r.status === 'success') { dirty = false; $('#subjectModal').modal('hide'); } });
+            });
             // Enter / arrows: same column, next or previous student
             form.on('keydown', 'input.mark', function (e) {
                 var down = e.key === 'Enter' || e.key === 'ArrowDown', up = e.key === 'ArrowUp';

@@ -9,8 +9,18 @@
                         <h3 class="box-title titlefix"><?php echo $this->lang->line('exam_grade_list'); ?></h3>  
                         <div class="box-tools pull-right">
                             <?php if ($this->rbac->hasPrivilege('cbse_exam_grade', 'can_add')) { ?>
-                            <button type="button" class="btn btn-sm btn-primary" data-record_id="0" data-action="add" data-toggle="modal" data-originaltitle="<?php echo $this->lang->line('add_grade')?>" data-target="#myModal"   autocomplete="off"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add')?></button> 
-                            <?php } ?>              
+                            <button type="button" class="btn btn-sm btn-primary" data-record_id="0" data-action="add" data-toggle="modal" data-originaltitle="<?php echo $this->lang->line('add_grade')?>" data-target="#myModal"   autocomplete="off"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add')?></button>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-magic"></i> Standard scale <span class="caret"></span></button>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <?php foreach (Grade::PRESETS as $pk => $pv) { ?>
+                                        <li><a href="#" class="js-grade-preset" data-preset="<?php echo $pk; ?>"><b><?php echo html_escape($pv[0]); ?></b><br><small class="text-muted"><?php echo html_escape(implode(', ', array_map(function ($r) { return $r[0] . ' ' . $r[1] . '+'; }, array_slice($pv[2], 0, 4)))); ?> ...</small></a></li>
+                                    <?php } ?>
+                                </ul>
+                            </div>
+                            <?php echo form_open('cbseexam/grade/preset', array('id' => 'grade_preset_form', 'style' => 'display:none')); ?><input type="hidden" name="preset" value=""><?php echo form_close(); ?>
+                            <script>document.addEventListener('click', function (e) { var a = e.target.closest('.js-grade-preset'); if (!a) { return; } e.preventDefault(); var f = document.getElementById('grade_preset_form'); f.preset.value = a.getAttribute('data-preset'); f.submit(); });</script>
+                            <?php } ?>
                         </div>               
                     </div>
                     <div class="box-body">

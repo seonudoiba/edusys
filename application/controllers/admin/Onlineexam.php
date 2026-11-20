@@ -35,6 +35,9 @@ class Onlineexam extends Admin_Controller
         'ajax_delete' => array(array('online_examination', 'can_delete')),
         'send_marks' => array(array('online_examination', 'can_edit')),
         'results' => array(array('online_examination', 'can_view')),
+        'invigilate' => array(array('online_examination', 'can_view')),
+        'random_draw' => array(array('add_questions_in_exam', 'can_edit')),
+        'extra_time' => array(array('online_examination', 'can_edit')),
         'results_export' => array(array('online_examination', 'can_view')),
         'report' => array(array('online_exam_wise_report', 'can_view')),
         'dtreportlist' => array(array('online_exam_wise_report', 'can_view')),
@@ -167,6 +170,7 @@ class Onlineexam extends Admin_Controller
 
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
                     $question_list .= "<a href='" . site_url('admin/onlineexam/results/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Results'><i class='fa fa-bar-chart'></i></a> ";
+                    $question_list .= "<a href='" . site_url('admin/onlineexam/invigilate/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Invigilate: live status, extra time'><i class='fa fa-eye'></i></a> ";
                     if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
                         $auto_on = !empty($subject_value->marks_auto) && (string) $subject_value->marks_target !== '';
                         $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-xs " . ($auto_on ? 'btn-success' : 'btn-default') . "' data-toggle='tooltip' title='" . ($auto_on ? 'Scores go to the report card automatically' : 'Send scores to report card') . "'><i class='fa fa-share-square-o'></i></a> ";
@@ -295,6 +299,7 @@ class Onlineexam extends Admin_Controller
 
                     $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
                     $question_list .= "<a href='" . site_url('admin/onlineexam/results/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Results'><i class='fa fa-bar-chart'></i></a> ";
+                    $question_list .= "<a href='" . site_url('admin/onlineexam/invigilate/' . (int) $subject_value->id) . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='Invigilate: live status, extra time'><i class='fa fa-eye'></i></a> ";
                     if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
                         $auto_on = !empty($subject_value->marks_auto) && (string) $subject_value->marks_target !== '';
                         $question_list .= "<a href='" . site_url('admin/onlineexam/send_marks/' . (int) $subject_value->id) . "' class='btn btn-xs " . ($auto_on ? 'btn-success' : 'btn-default') . "' data-toggle='tooltip' title='" . ($auto_on ? 'Scores go to the report card automatically' : 'Send scores to report card') . "'><i class='fa fa-share-square-o'></i></a> ";
@@ -971,6 +976,117 @@ class Onlineexam extends Admin_Controller
         $this->load->view('layout/footer', $data);
     }
 
+    /**
+     * POST exam_id, subject_id, class_id (optional), levels[level] = how many, marks, neg_marks:
+     * adds that many random questions of each level from the bank (not already in the exam).
+     */
+    public function random_draw()
+    {
+        $exam = $this->db->where('id', (int) $this->input->post('exam_id'))->get('onlineexam')->row_array();
+        $subject_id = (int) $this->input->post('subject_id');
+        $marks = (float) $this->input->post('marks');
+        $neg = max(0, (float) $this->input->post('neg_marks'));
+        $out = function ($status, $message) { $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => $status, 'message' => $message))); };
+        if (!$exam || !$subject_id || $marks <= 0) {
+            return $out('fail', !$exam ? 'That exam no longer exists.' : ($subject_id ? 'Marks for each question must be more than 0.' : 'Choose the subject.'));
+        }
+        $levels = array_keys((array) $this->config->item('question_level'));
+        $in_exam = array_map('intval', array_column($this->db->select('question_id')->where('onlineexam_id', (int) $exam['id'])->get('onlineexam_questions')->result_array(), 'question_id'));
+        $added = 0;
+        $short = array();
+        $this->db->trans_start();
+        foreach ((array) $this->input->post('levels') as $level => $n) {
+            $n = max(0, min(200, (int) $n));
+            if (!$n || !in_array($level, $levels, true)) {
+                continue;
+            }
+            $this->db->select('id')->from('questions')->where(array('subject_id' => $subject_id, 'level' => $level));
+            if ((int) $this->input->post('class_id')) {
+                $this->db->where('class_id', (int) $this->input->post('class_id'));
+            }
+            if ($in_exam) {
+                $this->db->where_not_in('id', $in_exam);
+            }
+            if (!empty($exam['is_quiz'])) {
+                $this->db->where('question_type !=', 'descriptive');
+            }
+            $ids = array_map('intval', array_column($this->db->order_by('RAND()', '', false)->limit($n)->get()->result_array(), 'id'));
+            foreach ($ids as $qid) {
+                $this->db->insert('onlineexam_questions', array('onlineexam_id' => (int) $exam['id'], 'question_id' => $qid, 'marks' => $marks, 'neg_marks' => $neg,
+                    'session_id' => $exam['session_id'], 'is_active' => 1));
+                $in_exam[] = $qid;
+                $added++;
+            }
+            if (count($ids) < $n) {
+                $short[] = ucfirst($level) . ': only ' . count($ids) . ' of ' . $n . ' available';
+            }
+        }
+        $this->db->trans_complete();
+        $msg = $added . ' question(s) added to the exam.' . ($short ? ' ' . implode('; ', $short) . '.' : '');
+        return $out($added ? 'success' : 'fail', $added ? $msg : 'No questions found. ' . implode('; ', $short));
+    }
+
+    /**
+     * Invigilation: every student of the exam with the state of their attempt (not started, in
+     * progress with time left, submitted), how often they left the exam page, and extra time given.
+     */
+    public function invigilate($id = null)
+    {
+        $this->cbt_refresh((int) $id);
+        $exam = $this->db->where('id', (int) $id)->get('onlineexam')->row_array();
+        if (!$exam) {
+            show_404();
+        }
+        $rows = $this->db->select("os.id AS os_id, st.admission_no, CONCAT_WS(' ', st.firstname, st.middlename, st.lastname) AS name, c.class, s.section,
+                a.id AS attempt_id, a.started_at, a.ends_at, a.submitted_at, a.tab_switches, a.extra_minutes, a.extra_reason, a.forced_submit, os.percentage", false)
+            ->from('onlineexam_students os')
+            ->join('student_session ss', 'ss.id = os.student_session_id')
+            ->join('students st', 'st.id = ss.student_id')
+            ->join('classes c', 'c.id = ss.class_id', 'left')->join('sections s', 's.id = ss.section_id', 'left')
+            ->join('onlineexam_attempts a', 'a.id = (SELECT MAX(a2.id) FROM onlineexam_attempts a2 WHERE a2.onlineexam_student_id = os.id)', 'left', false) // tenancy-lint: ok correlated to os
+            ->where('os.onlineexam_id', (int) $id)->order_by('c.class')->order_by('s.section')->order_by('st.firstname')->get()->result_array();
+        $this->session->set_userdata('top_menu', 'Online_Examinations');
+        $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
+        $data = array('exam' => $exam, 'rows' => $rows, 'can_edit' => $this->rbac->hasPrivilege('online_examination', 'can_edit'));
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/onlineexam/invigilate', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * POST os_id, minutes, reason: more time for one student (technical problem, power cut...). A
+     * running attempt gets later deadline; a submitted one is opened again for that many minutes
+     * (answers kept). The reason and who gave it are kept on the attempt.
+     */
+    public function extra_time()
+    {
+        $os_id = (int) $this->input->post('os_id');
+        $minutes = (int) $this->input->post('minutes');
+        $reason = trim((string) $this->input->post('reason'));
+        $os = $this->db->where('id', $os_id)->get('onlineexam_students')->row_array();
+        $back = 'admin/onlineexam/invigilate/' . ($os ? (int) $os['onlineexam_id'] : 0);
+        $attempt = $os ? $this->db->where('onlineexam_student_id', $os_id)->order_by('id', 'desc')->limit(1)->get('onlineexam_attempts')->row_array() : null;
+        if (!$attempt || $minutes < 1 || $minutes > 300 || $reason === '') {
+            $this->session->set_flashdata('inv_msg', array('danger', !$attempt ? 'That student has not started the exam: no extra time is needed.' : 'Give 1 to 300 minutes and a reason.'));
+            redirect($back);
+        }
+        $now = time();
+        $set = array('extra_minutes' => (int) $attempt['extra_minutes'] + $minutes, 'extra_by' => (int) $this->customlib->getStaffID() ?: null,
+            'extra_reason' => mb_substr(trim(($attempt['extra_reason'] ? $attempt['extra_reason'] . ' | ' : '') . $minutes . ' min: ' . $reason), 0, 255));
+        if ($attempt['submitted_at']) {
+            $set['submitted_at'] = null;
+            $set['forced_submit'] = null;
+            $set['ends_at'] = date('Y-m-d H:i:s', $now + $minutes * 60);
+            $msg = 'The exam is open again for this student for ' . $minutes . ' minutes. Their answers are kept; they continue from the exam page.';
+        } else {
+            $set['ends_at'] = date('Y-m-d H:i:s', max($now, strtotime($attempt['ends_at'])) + $minutes * 60);
+            $msg = $minutes . " minutes added. The student's timer updates within a minute.";
+        }
+        $this->db->where('id', (int) $attempt['id'])->update('onlineexam_attempts', $set);
+        $this->session->set_flashdata('inv_msg', array('success', $msg));
+        redirect($back);
+    }
+
     /** The Results page as an Excel file: a Students sheet's rows (one per student) and the questions below them. */
     public function results_export($id = null)
     {
@@ -1146,6 +1262,8 @@ class Onlineexam extends Admin_Controller
                 'is_neg_marking'     => $is_neg_marking,
                 'is_random_question' => $is_random_question,
                 'is_random_option'   => isset($_POST['is_random_option']) ? 1 : 0,
+                'block_copy'         => isset($_POST['block_copy']) ? 1 : 0,
+                'max_tab_switches'   => max(0, min(50, (int) $this->input->post('max_tab_switches'))),
                 'passing_percentage' => $this->input->post('passing_percentage'),
             );
             if (isset($_POST['is_quiz']) && $_POST['is_quiz'] != "") {

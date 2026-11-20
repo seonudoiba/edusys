@@ -199,6 +199,32 @@ class Onlineexam extends Student_Controller
         $this->cbt_json(array('ok' => true, 'redirect' => site_url('user/onlineexam/view/' . (int) $exam['id'])));
     }
 
+    /**
+     * POST exam_id, away (1 = the student left the exam page): counts tab switches; at the exam's
+     * limit the attempt is submitted. Also a heartbeat: returns the seconds left (extra time shows).
+     */
+    public function presence()
+    {
+        list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
+        $attempt = $this->cbt_attempt->running($exam, $os);
+        if (!$attempt) {
+            return $this->cbt_json(array('ok' => false, 'ended' => true));
+        }
+        $max = (int) (isset($exam['max_tab_switches']) ? $exam['max_tab_switches'] : 0);
+        $count = (int) (isset($attempt['tab_switches']) ? $attempt['tab_switches'] : 0);
+        if ($this->input->post('away')) {
+            $count++;
+            $this->db->where('id', (int) $attempt['id'])->update('onlineexam_attempts', array('tab_switches' => $count));
+            if ($max > 0 && $count >= $max) {
+                $this->db->where('id', (int) $attempt['id'])->update('onlineexam_attempts', array('forced_submit' => 'tab_switches'));
+                $this->cbt_attempt->submit($exam, $os, $attempt);
+                $this->session->set_flashdata('msg', '<div class="alert alert-warning">Your exam was submitted because you left the exam page ' . $count . ' times.</div>');
+                return $this->cbt_json(array('ok' => true, 'ended' => true, 'forced' => true, 'count' => $count, 'max' => $max, 'redirect' => site_url('user/onlineexam/view/' . (int) $exam['id'])));
+            }
+        }
+        $this->cbt_json(array('ok' => true, 'count' => $count, 'max' => $max, 'seconds_left' => $this->cbt_attempt->seconds_left($attempt)));
+    }
+
     /** The exam and this student's place in it; only the student (not a parent) and only their own. */
     private function cbt_enrolment($exam_id, $json = false)
     {

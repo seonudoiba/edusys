@@ -266,8 +266,16 @@ class Question extends Admin_Controller
                 $insert_data['id'] = $id;
             }
 
+            // the same question already in the bank is refused; a very similar one is pointed out
+            $this->load->library('question_dedupe');
+            $dup = $this->question_dedupe->find($insert_data['subject_id'], $insert_data['question'], (int) $id);
+            if ($dup && $dup[0] === 'same') {
+                echo json_encode(array('status' => 0, 'error' => array('question' => 'This question is already in the question bank for this subject (question #' . $dup[1] . ').'), 'message' => ''));
+                return;
+            }
             $this->question_model->add($insert_data);
-            $array = array('status' => 1, 'error' => '', 'message' => $this->lang->line('success_message'));
+            $array = array('status' => 1, 'error' => '', 'message' => $this->lang->line('success_message')
+                . ($dup ? ' Note: question #' . $dup[1] . ' in the bank is ' . $dup[2] . '% the same. Check it is not a repeat.' : ''));
         }
 
         echo json_encode($array);
@@ -390,6 +398,17 @@ class Question extends Admin_Controller
             } else {
                 $rows[$n] = $row;
             }
+        }
+        // the same question twice (in the bank or on this page) is refused
+        $this->load->library('question_dedupe');
+        foreach ($rows as $n => $row) {
+            $dup = $this->question_dedupe->find($subject_id, $row['question']);
+            if ($dup && $dup[0] === 'same') {
+                $errors['q'][$n] = 'Question ' . (array_search($n, array_keys((array) $this->input->post('q')), true) + 1) . ': this question is already in the question bank' . (is_int($dup[1]) ? ' (#' . $dup[1] . ')' : ' (twice on this page)') . '.';
+                unset($rows[$n]);
+                continue;
+            }
+            $this->question_dedupe->remember($subject_id, 0, $row['question']);
         }
         if (!$rows && empty($errors['q'])) {
             $errors['head'][] = 'Write at least one question.';

@@ -246,15 +246,16 @@ function getGrade($grade_array, $Percentage)
 
 function unique_array($my_array, $key)
 {
+    // Ranks for a list sorted best first, standard competition ranking: equal scores share a rank
+    // and the next rank is skipped (1, 1, 3). Returns rank => score, looked up with array_search().
     $result = array();
-    $i = 1;
-    $key_array = array();
-
+    $seen = array();
+    $pos = 0;
     foreach ($my_array as $val) {
-        if (!in_array($val[$key], $key_array)) {
-            $key_array[$i] = $val[$key];
-            $result[$i] = $val['rank_percentage'];
-            $i++;
+        $pos++;
+        if (!in_array($val[$key], $seen)) {
+            $seen[] = $val[$key];
+            $result[$pos] = $val['rank_percentage'];
         }
     }
     return $result;

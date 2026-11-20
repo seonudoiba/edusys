@@ -26,6 +26,44 @@ class Grade extends MY_Addon_CBSEController
         $this->load->view('layout/footer', $data);
     }
 
+    /** Standard Nigerian grading scales: key => [title, description, [[grade, min %, max %, remark]]]. */
+    const PRESETS = array(
+        'waec' => array('WAEC / NECO (A1-F9)', 'Senior secondary scale used by WAEC and NECO', array(
+            array('A1', 75, 100, 'Excellent'), array('B2', 70, 74.99, 'Very good'), array('B3', 65, 69.99, 'Good'),
+            array('C4', 60, 64.99, 'Credit'), array('C5', 55, 59.99, 'Credit'), array('C6', 50, 54.99, 'Credit'),
+            array('D7', 45, 49.99, 'Pass'), array('E8', 40, 44.99, 'Pass'), array('F9', 0, 39.99, 'Fail'))),
+        'af' => array('Secondary (A-F)', 'Junior / senior secondary letter grades', array(
+            array('A', 70, 100, 'Excellent'), array('B', 60, 69.99, 'Very good'), array('C', 50, 59.99, 'Good'),
+            array('D', 45, 49.99, 'Fair'), array('E', 40, 44.99, 'Pass'), array('F', 0, 39.99, 'Fail'))),
+        'primary' => array('Primary (descriptive)', 'Nursery and primary: descriptive ratings', array(
+            array('Excellent', 80, 100, 'Excellent'), array('Very Good', 70, 79.99, 'Very good'), array('Good', 60, 69.99, 'Good'),
+            array('Fair', 50, 59.99, 'Fair'), array('Needs Improvement', 0, 49.99, 'Needs improvement'))),
+    );
+
+    /** Adds one of the standard scales as a new grade (POST preset). */
+    public function preset()
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_grade', 'can_add')) {
+            access_denied();
+        }
+        $key = (string) $this->input->post('preset');
+        if (!isset(self::PRESETS[$key])) {
+            redirect('cbseexam/grade/gradelist');
+        }
+        list($title, $desc, $ranges) = self::PRESETS[$key];
+        $this->db->trans_start();
+        $this->db->insert('cbse_exam_grades', array('name' => $title, 'description' => $desc));
+        $gid = $this->db->insert_id();
+        $staff = (int) $this->customlib->getStaffID();
+        foreach ($ranges as $r) {
+            $this->db->insert('cbse_exam_grades_range', array('cbse_exam_grade_id' => $gid, 'name' => $r[0], 'minimum_percentage' => $r[1],
+                'maximum_percentage' => $r[2], 'description' => $r[3], 'created_by' => $staff ?: null));
+        }
+        $this->db->trans_complete();
+        $this->session->set_flashdata('msgdelete', '<div class="alert alert-success">' . html_escape($title) . ' grade scale added. Choose it as the grade of your exams.</div>');
+        redirect('cbseexam/grade/gradelist');
+    }
+
     public function add()
     {
         if (!$this->rbac->hasPrivilege('cbse_exam_grade', 'can_add')) {

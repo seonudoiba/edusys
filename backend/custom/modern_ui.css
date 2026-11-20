@@ -245,3 +245,10 @@ a { transition: color .15s; }
 .main-sidebar .sidebar-menu .treeview-menu > li.active > a::before { left: -6px; background: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, .7); }
 .main-sidebar .sidebar-menu .treeview-menu > li.active > a::after, .main-sidebar .sidebar-menu .treeview-menu > li.active > a::before { content: none !important; animation: none !important; }
 .main-sidebar .sidebar-menu .treeview-menu > li.active > a { box-shadow: inset 4px 0 0 #fff, 0 6px 16px -6px color-mix(in srgb, var(--ui-brand) 80%, #000) !important; }
+
+/* ---- Fixed top bar: one row of 56px, and the page starts below it (it covered the first section) */
+.main-header .sidebar-session { display: block; height: 56px; line-height: 56px !important; padding-top: 0 !important; padding-bottom: 0 !important; margin: 0 !important; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.main-header .navbar > [class*="col-"] { max-height: 56px; }
+.fixed .content-wrapper, .fixed .right-side { padding-top: 62px !important; }
+@media (max-width: 767px) { .fixed .content-wrapper, .fixed .right-side { padding-top: 104px !important; } }
+@media print { .fixed .content-wrapper, .fixed .right-side { padding-top: 0 !important; } }

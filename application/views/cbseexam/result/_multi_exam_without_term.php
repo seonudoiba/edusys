@@ -573,20 +573,7 @@ foreach ($result as $student_key => $student_value) {
           }
           ?>
           <td valign="top" colspan="<?php echo $total_colspan ?>">
-            <?php echo $this->lang->line('grading_scale'); ?> : <?php
-
-                                                                echo implode(
-                                                                  ', ',
-                                                                  array_map(
-                                                                    function ($k) {
-                                                                      return $k->name . " (" . $k->maximum_percentage . "% - " . $k->minimum_percentage . "%)";
-                                                                    },
-                                                                    ($exam_grades)
-
-                                                                  )
-                                                                );
-
-                                                                ?>
+            <?php $this->load->view('cbseexam/result/_grading_key', array('grades' => isset($exam_grades) ? $exam_grades : array())); ?>
           </td>
         </tr>
         <tr>

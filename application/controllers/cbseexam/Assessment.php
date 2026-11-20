@@ -91,6 +91,29 @@ class Assessment extends MY_Addon_CBSEController
 
             $update_ids = $this->input->post('update_id');
 
+            // The structure is locked once scores were entered with it: a component with scores can
+            // be renamed, but its maximum cannot change and it cannot be removed (the scores of the
+            // term would no longer compare).
+            if ($this->input->post('action') == "update") {
+                $used = $this->used_types(array_merge((array) $prev_ids, (array) $update_ids));
+                $problems = array();
+                foreach ($delete_assessment_type as $gone) {
+                    if (isset($used[(int) $gone])) {
+                        $problems[] = $used[(int) $gone]['name'] . ' cannot be removed: scores were entered for it.';
+                    }
+                }
+                foreach ($_POST['row'] as $row_key => $row_value) {
+                    $tid = (int) $update_ids[$row_key];
+                    if ($tid > 0 && isset($used[$tid]) && abs((float) $this->input->post('maximum_marks_' . $row_value) - (float) $used[$tid]['maximum_marks']) > 0.0001) {
+                        $problems[] = $used[$tid]['name'] . ': the maximum stays ' . (float) $used[$tid]['maximum_marks'] . ' because scores were entered with it.';
+                    }
+                }
+                if ($problems) {
+                    echo json_encode(array('status' => 0, 'error' => array('locked' => implode('<br>', array_map('html_escape', $problems)) . '<br>Create a new assessment for a different structure.')));
+                    return;
+                }
+            }
+
             foreach ($_POST['row'] as $row_key => $row_value) {
                 if ($update_ids[$row_key] > 0) {
                     $update_grade_range = array(
@@ -144,6 +167,23 @@ function percentage_greater($str, $str2)
     }
 }
 
+    /** Assessment types that have scores: [id] => [name, maximum_marks]. */
+    private function used_types(array $ids)
+    {
+        $ids = array_filter(array_map('intval', $ids));
+        if (!$ids) {
+            return array();
+        }
+        $out = array();
+        foreach ($this->db->select('t.id, t.name, t.maximum_marks')->from('cbse_exam_assessment_types t')
+            ->where_in('t.id', $ids)
+            ->where('EXISTS (SELECT 1 FROM cbse_student_subject_marks m WHERE m.cbse_exam_assessment_type_id = t.id)', null, false) // tenancy-lint: ok t is filtered by school
+            ->get()->result_array() as $r) {
+            $out[(int) $r['id']] = $r;
+        }
+        return $out;
+    }
+
     public function get_editdetails(){
         $id=$this->input->post('id');
         $result=$this->cbseexam_assessment_model->get_editdetails($id);
@@ -183,6 +223,11 @@ function percentage_greater($str, $str2)
         }
         
         $id = $this->input->post('id');
+        $type_ids = array_column($this->db->select('id')->where('cbse_exam_assessment_id', (int) $id)->get('cbse_exam_assessment_types')->result_array(), 'id');
+        if ($this->used_types($type_ids)) {
+            echo json_encode(array('status' => '0', 'error' => '', 'message' => 'Scores were entered with this assessment, so it cannot be deleted.'));
+            return;
+        }
         $this->cbseexam_assessment_model->remove($id);
         $array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('delete_message'));
         echo json_encode($array);

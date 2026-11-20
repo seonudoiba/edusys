@@ -2446,3 +2446,6 @@ $lang['website_enquiries'] = "Website Enquiries";
 $lang['platform_backups'] = "Backups";
 $lang['pricing_bands'] = "Pricing Bands";
 $lang['website_design'] = "Website Design";
+$lang['broadsheet'] = "Broadsheet";
+$lang['result_checker_pins'] = "Result Checker PINs";
+$lang['promotion_engine'] = "Promotion";

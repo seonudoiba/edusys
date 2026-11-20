@@ -1559,7 +1559,13 @@ class Welcome extends Front_Controller
         $this->load->model(array('cbseexam/cbseexam_exam_model', "cbseexam/cbseexam_assessment_model"));
         $this->form_validation->set_rules('exam_id', $this->lang->line('exam'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('roll_no', $this->lang->line('admission_no'), 'trim|required|xss_clean');
-        $page = array('title' => 'CBSE Examination', 'meta_title' => 'CBSE Examination', 'meta_keyword' => 'CBSE Examination', 'meta_description' => 'CBSE Examination');
+        // Result checker PINs (scratch cards): asked for once the school has generated any
+        $this->load->library('result_pins');
+        $this->data['pin_required'] = $this->result_pins->required();
+        if ($this->data['pin_required']) {
+            $this->form_validation->set_rules('pin', 'PIN', 'trim|required|xss_clean');
+        }
+        $page = array('title' => 'Check Result', 'meta_title' => 'Check Result', 'meta_keyword' => 'exam result, result checker', 'meta_description' => 'Check exam results with the admission number and result checker PIN');
         $this->data['exams'] = $this->cbseexam_exam_model->getPublishexams();
         $this->data['page_side_bar'] = false;
         $this->data['featured_image'] = false;
@@ -1693,6 +1699,19 @@ class Welcome extends Front_Controller
                 $this->data['student'] = $this->student_model->getByStudentSession($student_session_id);
             }
 
+            if (!empty($student_result) && $this->data['pin_required']) {
+                $why = $this->result_pins->use_pin($this->input->post('pin'), $student_session_id, $exam->session_id);
+                if ($why !== '') {
+                    $this->data['pin_error'] = $why;
+                    $student_result = null;
+                }
+            }
+            if (!empty($student_result)) {
+                $es = $this->db->select('remark, principal_remark, total_present_days')->where(array('cbse_exam_id' => (int) $exam_id, 'student_session_id' => (int) $student_session_id))->get('cbse_exam_students')->row_array();
+                $student_result['principal_remark'] = $es ? $es['principal_remark'] : '';
+                $student_result['class_size'] = (int) $this->db->where('cbse_exam_id', (int) $exam_id)->count_all_results('cbse_exam_students');
+                $this->data['school_brand'] = $this->customlib->brand();
+            }
             $this->data['student_result'] = $student_result;
 
         }
