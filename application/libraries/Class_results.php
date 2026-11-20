@@ -638,6 +638,12 @@ class Class_results
             ->join('cbse_exam_assessment_types t', 't.id = l.cbse_exam_assessment_type_id')->where('l.cbse_exam_timetable_id', (int) $tt_id)->get()->result_array() as $l) {
             $links[(int) $l['t']] = $l;
         }
+        // an exam taken as a CBT gets its scores from the CBT only
+        foreach ($this->db->select('marks_target')->like('marks_target', 'cbse:' . (int) $tt_id . ':', 'after')->get('onlineexam')->result_array() as $o) {
+            if (preg_match('/^cbse:\d+:(\d+)$/', $o['marks_target'], $mm)) {
+                unset($links[(int) $mm[1]]);
+            }
+        }
         $existing = array();
         foreach ($this->db->where('cbse_exam_timetable_id', (int) $tt_id)->get('cbse_student_subject_marks')->result_array() as $m) {
             $existing[(int) $m['cbse_exam_student_id']][(int) $m['cbse_exam_assessment_type_id']] = $m;

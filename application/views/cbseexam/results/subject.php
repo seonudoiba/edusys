@@ -16,6 +16,7 @@ $locked = $lock_reason !== '';
 $can_type = $this->rbac->hasPrivilege('cbse_exam_marks', 'can_edit') && !$locked;
 $status = $tt_row && isset($tt_row['marks_status']) ? $tt_row['marks_status'] : 'draft';
 $labels = array('draft' => array('Entering scores', '#475569', '#f1f5f9', 'fa-pencil'), 'submitted' => array('Submitted for review', '#92400e', '#fef3c7', 'fa-hourglass-half'), 'approved' => array('Approved & locked', '#15803d', '#dcfce7', 'fa-lock'));
+$this->load->view('admin/cbtexams/_style');
 $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base . '/' . $action . '/' . (int) $exam['id'] . '/' . $cid); } : null;
 ?>
 <style>
@@ -68,6 +69,7 @@ $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base
     .sc-table input[readonly]{background:#f8fafc;color:#64748b}
     .sc-table tr.done td.nm{box-shadow:inset 3px 0 0 #22c55e}
     .sc-tot{font-weight:800}
+    .sc-cbtv{display:inline-block;min-width:60px;padding:6px 8px;border-radius:8px;background:#f5f3ff;color:#5b21b6;font-weight:800}
     .sc-cbt{display:inline-block;margin-top:3px;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:800;background:#ede9fe;color:#6d28d9}
     @media (max-width:640px){.sc-table input.sc{width:60px}.sc-table td.nm,.sc-table th.nm{min-width:140px}}
 </style>
@@ -145,19 +147,20 @@ $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base
                             <details class="sj-pop"><summary class="sj-chip"><?php echo html_escape($t['name']); ?> <small><?php echo $n($t['maximum_marks']); ?> marks</small><span class="k <?php echo $t['cbt'] ? 'c' : 'w'; ?>"><?php echo $t['cbt'] ? 'CBT' : 'WRITTEN'; ?></span><i class="fa fa-caret-down sj-muted"></i></summary><div>
                                 <b><?php echo html_escape($t['name']); ?>: how is it taken?</b>
                                 <?php if ($t['cbt']) { ?>
-                                    <p class="sj-muted" style="margin:6px 0">On computer: the CBT "<?php echo html_escape($t['cbt']['exam']); ?>". Each student's score comes here when they submit, scaled to <?php echo $n($t['maximum_marks']); ?>. You can still type a score (e.g. a student who wrote it on paper).</p>
-                                    <a class="btn btn-default btn-xs" href="<?php echo site_url('admin/onlineexam'); ?>"><i class="fa fa-laptop"></i> Questions and dates (CBT Exams)</a>
-                                    <?php echo form_open($u('cbt'), array('style' => 'display:inline')); ?><input type="hidden" name="return" value="<?php echo html_escape($here); ?>"><input type="hidden" name="tt_id" value="<?php echo (int) $tt['id']; ?>"><input type="hidden" name="type_id" value="<?php echo (int) $tid; ?>"><input type="hidden" name="unlink" value="1"><button class="btn btn-default btn-xs">Make it written</button><?php echo form_close(); ?>
+                                    <p class="sj-muted" style="margin:6px 0">Taken on computer: the CBT "<?php echo html_escape($t['cbt']['exam']); ?>" (below). Scores come from it, scaled to <?php echo $n($t['maximum_marks']); ?>; they are not typed in.</p>
+                                    <?php echo form_open($u('cbt'), array('style' => 'display:inline')); ?><input type="hidden" name="return" value="<?php echo html_escape($here); ?>"><input type="hidden" name="tt_id" value="<?php echo (int) $tt['id']; ?>"><input type="hidden" name="type_id" value="<?php echo (int) $tid; ?>"><input type="hidden" name="unlink" value="1"><button class="btn btn-default btn-xs" onclick="return confirm('Make it a written exam? Scores will be typed in; the CBT stays as practice.')">Make it written instead</button><?php echo form_close(); ?>
                                 <?php } else { ?>
-                                    <p class="sj-muted" style="margin:6px 0">Written: teachers type the scores in the table below. To take it on computer instead:</p>
-                                    <?php echo form_open($u('cbt')); ?>
-                                    <input type="hidden" name="return" value="<?php echo html_escape($here); ?>"><input type="hidden" name="tt_id" value="<?php echo (int) $tt['id']; ?>"><input type="hidden" name="type_id" value="<?php echo (int) $tid; ?>">
-                                    <select name="onlineexam_id" class="form-control input-sm">
-                                        <option value="0">A new CBT (the class's students)</option>
-                                        <?php foreach ($cbts as $o) { if ($o['marks_target'] || ((int) $o['subject_id'] && (int) $o['subject_id'] !== $sid)) { continue; } ?><option value="<?php echo (int) $o['id']; ?>"><?php echo html_escape($o['exam']); ?></option><?php } ?>
-                                    </select>
-                                    <button class="btn btn-primary btn-xs btn-block" style="margin-top:6px"><i class="fa fa-laptop"></i> Make it a CBT</button>
-                                    <?php echo form_close(); ?>
+                                    <p class="sj-muted" style="margin:6px 0">Written: scores are typed in the table below. To take it on computer instead, make a CBT for it:</p>
+                                    <?php $this->load->view('admin/cbtexams/_new', array('class' => $class, 'subject' => $subject, 'targets' => isset($targets) ? $targets : array(), 'return' => $here, 'preset' => 'cbse:' . (int) $tt['id'] . ':' . (int) $tid, 'label' => '<i class="fa fa-laptop"></i> Make it a CBT')); ?>
+                                    <?php $free = array_filter($cbts, function ($o) use ($sid) { return !$o['marks_target'] && (int) $o['subject_id'] === $sid; });
+                                    if ($free) { ?>
+                                        <?php echo form_open($u('cbt'), array('style' => 'margin-top:8px')); ?>
+                                        <input type="hidden" name="return" value="<?php echo html_escape($here); ?>"><input type="hidden" name="tt_id" value="<?php echo (int) $tt['id']; ?>"><input type="hidden" name="type_id" value="<?php echo (int) $tid; ?>">
+                                        <small class="sj-muted">or use a CBT already made:</small>
+                                        <select name="onlineexam_id" class="form-control input-sm"><?php foreach ($free as $o) { ?><option value="<?php echo (int) $o['id']; ?>"><?php echo html_escape($o['exam']); ?></option><?php } ?></select>
+                                        <button class="btn btn-default btn-xs btn-block" style="margin-top:4px">Use it</button>
+                                        <?php echo form_close(); ?>
+                                    <?php } ?>
                                 <?php } ?>
                             </div></details>
                         <?php } else { ?>
@@ -168,6 +171,14 @@ $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base
                 </div>
             </div>
 
+            <?php if (!empty($cbt_rows)) { ?>
+                <div class="sj-box">
+                    <h4><i class="fa fa-laptop"></i> CBT <small class="sj-muted">scores come from here when students submit</small></h4>
+                    <div class="cbt-cards" style="margin-top:10px">
+                        <?php foreach ($cbt_rows as $o) { $this->load->view('admin/cbtexams/_card', array('o' => $o, 'return' => $here, 'class_id' => $cid, 'subject_id' => $sid, 'targets' => array())); } ?>
+                    </div>
+                </div>
+            <?php } ?>
             <div class="sj-box">
                 <div class="sj-bar">
                     <h4 style="margin:0"><i class="fa fa-users"></i> Students' scores</h4>
@@ -196,7 +207,11 @@ $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base
                                 <tr class="sc-row">
                                     <td class="nm"><b><?php echo html_escape($st['name']); ?></b><br><small class="sj-muted"><?php echo html_escape($st['admission_no']); ?></small></td>
                                     <?php foreach ($tt['types'] as $tid => $t) { $v = isset($marks[$es][$tid]) ? $marks[$es][$tid] : ''; ?>
+                                        <?php if ($t['cbt']) { ?>
+                                            <td><span class="sc-cbtv" data-v="<?php echo html_escape($v); ?>" title="From the CBT"><?php echo $v === '' ? '<span class="sj-muted">not taken</span>' : html_escape($v); ?></span></td>
+                                        <?php } else { ?>
                                         <td><input class="sc" name="m[<?php echo (int) $es; ?>][<?php echo (int) $tid; ?>]" value="<?php echo html_escape($v); ?>" data-max="<?php echo (float) $t['maximum_marks']; ?>" inputmode="decimal" autocomplete="off" aria-label="<?php echo html_escape($st['name'] . ' ' . $t['name']); ?>" <?php echo $can_type ? '' : 'readonly'; ?>></td>
+                                        <?php } ?>
                                     <?php } ?>
                                     <td class="sc-tot">0</td>
                                 </tr>
@@ -227,6 +242,7 @@ $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base
     function fmt(x) { return String(Math.round(x * 100) / 100); }
     function row(tr) {
         var s = 0, filled = 0, all = 0;
+        tr.find('.sc-cbtv').each(function () { all++; var v = this.getAttribute('data-v'); if (v !== '') { filled++; if (v !== 'ABS') { s += parseFloat(v) || 0; } } });
         tr.find('input.sc').each(function () {
             all++;
             var v = $.trim(this.value).toUpperCase(), max = parseFloat(this.getAttribute('data-max'));
