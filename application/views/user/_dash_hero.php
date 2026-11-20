@@ -7,7 +7,17 @@ $h = (int) date('G');
 $greet = $h < 12 ? 'Good morning' : ($h < 17 ? 'Good afternoon' : 'Good evening');
 $cls = $this->db->select('c.class, s.section')->from('classes c')->join('sections s', 's.id = ' . (int) $current_class->section_id, 'inner', false)->where('c.id', (int) $current_class->class_id)->get()->row_array(); // tenancy-lint: ok int
 $money = function ($v) use ($currency_symbol) { return html_escape($currency_symbol) . number_format((float) $v, 2); };
-$first = trim(explode(' ', trim((string) $studentsession_username))[0]);
+// a parent sees their own name, the child they are viewing, and their other children to switch to
+$is_parent = $this->customlib->getUserRole() === 'parent';
+$children = $is_parent ? $this->student_model->getParentChilds($this->customlib->getUsersID()) : array();
+$viewing = null;
+foreach ($children as $ch) {
+    if ((int) $ch->student_session_id === (int) $current_class->student_session_id) {
+        $viewing = $ch;
+    }
+}
+$who = $is_parent ? (string) ($viewing ? $viewing->guardian_name : '') : (string) $studentsession_username;
+$first = trim(explode(' ', trim($who))[0]);
 $att = $attendence_percentage === '-1' || $attendence_percentage === -1 ? null : (float) $attendence_percentage;
 $low = $att !== null && (float) $low_attendance_limit > 0 && $att < (float) $low_attendance_limit;
 if (!empty($student_data['image'])) {
@@ -33,6 +43,11 @@ if (!empty($student_data['image'])) {
     .sd-qa a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:92px;height:78px;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:12px;font-weight:700;text-align:center;transition:transform .2s,background .2s}
     .sd-qa a:hover{transform:translateY(-3px);background:rgba(255,255,255,.24);color:#fff;text-decoration:none}
     .sd-qa a i{font-size:19px}
+    .sd-kids{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .sd-kid{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;border-radius:99px;padding:5px 12px;font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s}
+    .sd-kid:hover{background:rgba(255,255,255,.24)}
+    .sd-kid.on{background:#fff;color:var(--b);border-color:#fff}
+    .sd-kid small{opacity:.75;font-weight:600;margin-left:3px}
     .sd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
     .sd-kpi{display:block;position:relative;overflow:hidden;background:#fff;border:1px solid #e8ecf2;border-radius:18px;padding:16px 18px;color:#0f172a;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.12);transition:transform .2s,box-shadow .2s;animation:sdRise .5s both}
     .sd-kpi:hover{transform:translateY(-3px);box-shadow:0 22px 40px -20px rgba(15,23,42,.3);color:#0f172a;text-decoration:none}
@@ -50,8 +65,21 @@ if (!empty($student_data['image'])) {
             <div class="sd-me">
                 <img src="<?php echo html_escape($photo); ?>" alt="">
                 <div>
-                    <h2><?php echo $greet . ', ' . html_escape($first ?: $studentsession_username); ?></h2>
-                    <p><i class="fa fa-graduation-cap"></i> <?php echo html_escape($cls ? $cls['class'] . ' ' . $cls['section'] : ''); ?> &nbsp;·&nbsp; <i class="fa fa-calendar"></i> <?php echo date('l, j F Y'); ?></p>
+                    <h2><?php echo $greet . ($first !== '' ? ', ' . html_escape($first) : ''); ?></h2>
+                    <?php if ($is_parent && $viewing) { ?>
+                        <p><i class="fa fa-child"></i> Viewing <b><?php echo html_escape(trim($viewing->firstname . ' ' . $viewing->lastname)); ?></b> &nbsp;·&nbsp; <?php echo html_escape($viewing->class . ' ' . $viewing->section); ?> &nbsp;·&nbsp; <i class="fa fa-calendar"></i> <?php echo date('l, j F Y'); ?></p>
+                    <?php } else { ?>
+                        <p><i class="fa fa-graduation-cap"></i> <?php echo html_escape($cls ? $cls['class'] . ' ' . $cls['section'] : ''); ?> &nbsp;·&nbsp; <i class="fa fa-calendar"></i> <?php echo date('l, j F Y'); ?></p>
+                    <?php } ?>
+                    <?php if ($is_parent && count($children) > 1) { ?>
+                        <div class="sd-kids">
+                            <?php foreach ($children as $ch) { $on = (int) $ch->student_session_id === (int) $current_class->student_session_id; ?>
+                                <button type="button" class="sd-kid<?php echo $on ? ' on' : ''; ?>" data-ss="<?php echo (int) $ch->student_session_id; ?>" <?php echo $on ? 'aria-current="true"' : ''; ?>>
+                                    <i class="fa <?php echo $on ? 'fa-check-circle' : 'fa-user'; ?>"></i> <?php echo html_escape($ch->firstname); ?> <small><?php echo html_escape($ch->class); ?></small>
+                                </button>
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
                 </div>
             </div>
             <div class="sd-qa">
@@ -91,3 +119,16 @@ if (!empty($student_data['image'])) {
         </a>
     </div>
 </div>
+<?php if ($is_parent && count($children) > 1) { ?>
+<script>
+document.querySelectorAll('.sd-kid:not(.on)').forEach(function (b) {
+    b.addEventListener('click', function () {
+        b.disabled = true;
+        var f = new FormData(); f.append('clschg', b.getAttribute('data-ss'));
+        fetch(<?php echo json_encode(site_url('common/getStudentClass')); ?>, { method: 'POST', body: f, credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); }).then(function (d) { if (String(d.status) === '1') { location.reload(); } else { b.disabled = false; } })
+            .catch(function () { b.disabled = false; });
+    });
+});
+</script>
+<?php } ?>

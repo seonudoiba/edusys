@@ -448,8 +448,19 @@ class Results extends MY_Addon_CBSEController
         if ($section_id) {
             $r['students'] = array_filter($r['students'], function ($s) use ($section_id) { return (int) $s['section_id'] === (int) $section_id; });
         }
+        $teachers = array();
+        foreach ($this->db->select("ct.section_id, CONCAT_WS(' ', sf.name, sf.surname) AS name", false)->from('class_teacher ct')->join('staff sf', 'sf.id = ct.staff_id')
+            ->where(array('ct.class_id' => (int) $class['id'], 'ct.session_id' => (int) $exam['session_id']))->get()->result_array() as $t) {
+            $teachers[(int) $t['section_id']][] = trim($t['name']);
+        }
+        $decisions = array();
+        if ($this->db->table_exists('cbse_promotion_decisions') && $r['students']) {
+            foreach ($this->db->where('cbse_template_id', 0)->where_in('student_session_id', array_map('intval', array_column($r['students'], 'student_session_id')))->get('cbse_promotion_decisions')->result_array() as $d) {
+                $decisions[(int) $d['student_session_id']] = $d;
+            }
+        }
         return array(
-            'exam' => $exam, 'class' => $class, 'r' => $r, 'brand' => $this->customlib->brand(),
+            'exam' => $exam, 'class' => $class, 'r' => $r, 'brand' => $this->customlib->brand(), 'teachers' => $teachers, 'decisions' => $decisions,
             'term_name' => $this->db->select('name')->where('id', (int) $exam['cbse_term_id'])->get('cbse_terms')->row('name'),
             'session_name' => $this->db->select('session')->where('id', (int) $exam['session_id'])->get('sessions')->row('session'),
         );

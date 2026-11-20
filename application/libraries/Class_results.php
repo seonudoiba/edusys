@@ -402,7 +402,7 @@ class Class_results
     public function exam_students(array $exam, $class_id, $section_id = 0)
     {
         $this->db->select("es.id AS es, es.student_session_id, es.remark, es.principal_remark, es.total_present_days, st.id AS student_id, st.admission_no, st.firstname, st.middlename, st.lastname,
-                st.gender, st.dob, st.image, st.guardian_name, st.guardian_email, st.email, st.roll_no, ss.section_id, s.section, c.class", false)
+                st.gender, st.dob, st.image, st.guardian_name, st.guardian_email, st.email, st.roll_no, st.current_address, ss.section_id, s.section, c.class", false)
             ->from('cbse_exam_students es')->join('student_session ss', 'ss.id = es.student_session_id')->join('students st', 'st.id = ss.student_id')
             ->join('classes c', 'c.id = ss.class_id')->join('sections s', 's.id = ss.section_id')
             ->where(array('es.cbse_exam_id' => (int) $exam['id'], 'ss.class_id' => (int) $class_id, 'st.is_active' => 'yes'));
@@ -601,7 +601,35 @@ class Class_results
         if ($only_es) {
             $students = isset($students[$only_es]) ? array($only_es => $students[$only_es]) : array();
         }
-        return array('subjects' => $subjects, 'students' => $students, 'grades' => $grades, 'stats' => $stats, 'cumulative' => $cumulative, 'terms' => $terms);
+        // attendance of every term (days school opened, days present) and each earlier term's average
+        $all_terms = array();
+        $ss_ids = array_map('intval', array_column($students, 'student_session_id'));
+        foreach ($this->terms() as $t) {
+            $tid = (int) $t['id'];
+            $all_terms[$tid] = $t['name'];
+            $other = $tid === (int) $exam['cbse_term_id'] ? $exam : $this->exam_for($class_id, $tid, (int) $exam['session_id']);
+            if (!$other || !$ss_ids) {
+                continue;
+            }
+            $present = array();
+            foreach ($this->db->select('student_session_id, total_present_days')->where('cbse_exam_id', (int) $other['id'])->where_in('student_session_id', $ss_ids)->get('cbse_exam_students')->result_array() as $a) {
+                $present[(int) $a['student_session_id']] = $a['total_present_days'];
+            }
+            foreach ($students as $es => &$st) {
+                $st['attendance'][$tid] = array((int) $other['total_working_days'], isset($present[(int) $st['student_session_id']]) ? $present[(int) $st['student_session_id']] : null);
+                if ($cumulative && $tid !== (int) $exam['cbse_term_id']) {
+                    $list = array();
+                    foreach ($st['subjects'] as $sub) {
+                        if (isset($sub['terms'][$tid])) {
+                            $list[] = $sub['terms'][$tid];
+                        }
+                    }
+                    $st['term_average'][$tid] = $list ? round(array_sum($list) / count($list), 2) : null;
+                }
+            }
+            unset($st);
+        }
+        return array('subjects' => $subjects, 'students' => $students, 'grades' => $grades, 'stats' => $stats, 'cumulative' => $cumulative, 'terms' => $terms, 'all_terms' => $all_terms);
     }
 
     /** Another term's subject percentages: [student_session_id][subject_id] => %. */

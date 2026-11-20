@@ -477,6 +477,7 @@ class Gauthenticate extends Public_Controller
             $language = array('lang_id' => $result[0]->lang_id, 'language' => $result[0]->language);
         }
 
+        $image = '';
         if ($result[0]->role == "parent") {
             $username = $result[0]->guardian_name;
             if ($result[0]->guardian_relation == "Father") {

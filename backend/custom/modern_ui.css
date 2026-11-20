@@ -281,3 +281,7 @@ a { transition: color .15s; }
 .main-sidebar ul.sessionul.fixedmenu { width: auto !important; left: 0; right: 0; background: transparent !important; box-shadow: none !important; }
 .main-sidebar ul.sessionul.fixedmenu li.accurrent a span { display: inline !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-collapse .main-sidebar ul.sessionul.fixedmenu { display: none; }
+
+/* ---- Breathing room above the sidebar menu (the base theme forces padding-top:0 on .verttop) */
+.main-sidebar ul.sidebar-menu.verttop, .main-sidebar ul.sidebar-menu.verttop38 { padding-top: 14px !important; }
+.sidebar-collapse .main-sidebar ul.sidebar-menu.verttop, .sidebar-collapse .main-sidebar ul.sidebar-menu.verttop38 { padding-top: 8px !important; }
