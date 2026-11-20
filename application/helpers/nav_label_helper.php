@@ -127,7 +127,7 @@ if (!function_exists('nav_entry_label')) {
             'cbseexam/observation/assign' => 'Enter Skills & Conduct',
             'cbseexam/setting/index' => 'Exam Settings',
             // Report Cards
-            'cbseexam/results' => 'Classes & Results',
+            'cbseexam/results' => 'Results',
             'cbseexam/exam/comments' => 'Comment Bank',
             'cbseexam/template' => 'Report Card Designs',
             'cbseexam/result/marksheet' => 'Print Report Cards',

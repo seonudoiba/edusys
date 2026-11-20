@@ -16,7 +16,7 @@ class Exam_menus
 {
     /** Report Cards entries, in order: url => [key, access, controller, methods] */
     const REPORT_CARDS = array(
-        'cbseexam/results' => array('class_results', "('cbse_exam', 'can_view') || ('cbse_exam_marks', 'can_view')", 'results', 'index,klass,scores,comments,review,card'),
+        'cbseexam/results' => array('class_results', "('cbse_exam', 'can_view') || ('cbse_exam_marks', 'can_view')", 'results', 'index,klass,subject,scores,comments,card'),
         'cbseexam/broadsheet' => null,
         'cbseexam/pins' => null,
         'cbseexam/promotion' => null,
