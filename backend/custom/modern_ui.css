@@ -252,3 +252,19 @@ a { transition: color .15s; }
 .fixed .content-wrapper, .fixed .right-side { padding-top: 62px !important; }
 @media (max-width: 767px) { .fixed .content-wrapper, .fixed .right-side { padding-top: 104px !important; } }
 @media print { .fixed .content-wrapper, .fixed .right-side { padding-top: 0 !important; } }
+
+/* ---- Wider sidebar: 250px (was 200), so menu names fit; collapsed (icons only) and phone menus follow */
+.main-sidebar, .left-side { width: 250px; }
+.main-header .logo { width: 250px; }
+@media (min-width: 768px) {
+    .main-header > .navbar { margin-left: 250px; }
+    .content-wrapper, .right-side, .main-footer { margin-left: 250px; }
+    .sidebar-collapse .main-sidebar, .sidebar-collapse .left-side { -webkit-transform: translate(-250px, 0); transform: translate(-250px, 0); }
+    .sidebar-mini.sidebar-collapse .main-sidebar { -webkit-transform: translate(0, 0); transform: translate(0, 0); }
+}
+@media (max-width: 767px) {
+    .main-header .logo { width: 100%; }
+    .main-sidebar, .left-side { -webkit-transform: translate(-250px, 0); transform: translate(-250px, 0); }
+    .sidebar-open .main-sidebar, .sidebar-open .left-side { -webkit-transform: translate(0, 0); transform: translate(0, 0); }
+    .sidebar-open .content-wrapper, .sidebar-open .right-side, .sidebar-open .main-footer { -webkit-transform: translate(250px, 0); transform: translate(250px, 0); }
+}
