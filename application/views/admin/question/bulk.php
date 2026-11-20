@@ -30,6 +30,7 @@ if (!$preset_subject && $exam_id) {
     </section>
     <section class="content">
         <form id="bulk_form" action="<?php echo site_url('admin/question/bulk_save'); ?>" method="post" data-validate="off" data-autoload="off">
+            <input type="hidden" name="return" value="<?php echo html_escape(isset($return) ? $return : ''); ?>">
             <?php echo $this->customlib->getCSRF(); ?>
             <div class="box box-primary">
                 <div class="box-header with-border"><h3 class="box-title">For all the questions below</h3></div>

@@ -58,8 +58,15 @@ class Exam_menus
             $level++;
         }
         $db->where('school_id', $sid)->where_in('url', self::HIDDEN)->update('sidebar_sub_menus', array('is_active' => 0));
-        // CBT Exams: the menu is Online Examinations, named for what it is
+        // CBT Exams: the menu is Online Examinations, named for what it is; CBTs by class first
         $db->where(array('school_id' => $sid, 'lang_key' => 'online_examinations'))->update('sidebar_menus', array('menu' => 'CBT Exams', 'icon' => 'fa fa-laptop'));
+        $cbt = $db->where(array('school_id' => $sid, 'lang_key' => 'online_examinations'))->get('sidebar_menus')->row_array();
+        if ($cbt && !$db->where(array('school_id' => $sid, 'url' => 'admin/cbtexams'))->count_all_results('sidebar_sub_menus')) {
+            $db->set('level', 'level + 1', false)->where(array('school_id' => $sid, 'sidebar_menu_id' => (int) $cbt['id']))->update('sidebar_sub_menus');
+            $db->insert('sidebar_sub_menus', array('school_id' => $sid, 'sidebar_menu_id' => (int) $cbt['id'], 'menu' => 'cbt_by_class', 'key' => 'cbt_by_class', 'lang_key' => 'cbt_by_class',
+                'url' => 'admin/cbtexams', 'level' => 1, 'access_permissions' => "('online_examination', 'can_view')", 'permission_group_id' => $cbt['permission_group_id'],
+                'activate_controller' => 'cbtexams', 'activate_methods' => 'index,klass,subject', 'addon_permission' => '', 'is_active' => 1));
+        }
         return true;
     }
 }

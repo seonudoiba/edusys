@@ -297,6 +297,7 @@ class Question extends Admin_Controller
             'exams' => $this->db->select('id, exam, subject_id')->where('exam_to >=', date('Y-m-d H:i:s'))->order_by('exam_from', 'desc')->get('onlineexam')->result_array(),
             'exam_id' => $exam_id,
             'subject_id' => (int) $this->input->get('subject'),
+            'return' => preg_match('#^(cbseexam/results/|admin/cbtexams)[A-Za-z0-9/_?=&%.-]*$#', (string) $this->input->get('return')) ? (string) $this->input->get('return') : '',
         );
         if ($exam_id && !in_array($exam_id, array_map('intval', array_column($data['exams'], 'id')), true)) {
             $row = $this->db->select('id, exam, subject_id')->where('id', $exam_id)->get('onlineexam')->row_array();
@@ -430,7 +431,7 @@ class Question extends Admin_Controller
         $msg = count($rows) . ' question(s) saved to the question bank' . ($added_to_exam ? ' and added to the online exam' : '') . '.';
         $this->session->set_flashdata('bulk_questions', $msg);
         $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => 1, 'message' => $msg,
-            'redirect' => $exam_id ? site_url('admin/onlineexam') : site_url('admin/question'))));
+            'redirect' => preg_match('#^(cbseexam/results/|admin/cbtexams)[A-Za-z0-9/_?=&%.-]*$#', (string) $this->input->post('return')) ? site_url($this->input->post('return')) : ($exam_id ? site_url('admin/onlineexam') : site_url('admin/question')))));
     }
 
     public function getRecord($id)

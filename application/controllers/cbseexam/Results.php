@@ -201,6 +201,16 @@ class Results extends MY_Addon_CBSEController
             }
             $data['tt_row'] = $this->cbse_marks_guard->subject((int) $cur['tt']['id']);
             $data['lock_reason'] = $this->cbse_marks_guard->lock_reason($data['tt_row']);
+            // the CBTs of this term's exams (their scores come from the CBT, not typed in)
+            $this->load->library('cbt_admin');
+            $ids = array();
+            foreach ($cur['tt']['types'] as $t) {
+                if ($t['cbt']) {
+                    $ids[] = (int) $t['cbt']['id'];
+                }
+            }
+            $data['cbt_rows'] = $this->cbt_admin->rows($ids);
+            $data['targets'] = $this->cbt_admin->targets((int) $class_id, (int) $subject_id, $this->current_session);
         }
         $this->page('subject', $data);
     }
@@ -316,7 +326,7 @@ class Results extends MY_Addon_CBSEController
             $this->back($exam, $class_id);
         }
         if (!$oid) {
-            $this->db->insert('onlineexam', array('session_id' => $this->current_session, 'exam' => $class['class'] . ' ' . $link['subject'] . ' — ' . $link['name'],
+            $this->db->insert('onlineexam', array('session_id' => $this->current_session, 'exam' => $class['class'] . ' ' . $link['subject'] . ' - ' . $link['name'],
                 'subject_id' => (int) $link['subject_id'], 'attempt' => 1, 'exam_from' => date('Y-m-d 08:00:00'), 'exam_to' => date('Y-m-d 17:00:00', strtotime('+7 days')),
                 'duration' => '00:40:00', 'passing_percentage' => 40, 'description' => $link['name'] . ' of ' . $link['subject'] . ' (' . (float) $link['maximum_marks'] . ' marks) for ' . $class['class'] . '.',
                 'publish_result' => 0, 'is_active' => 0, 'is_marks_display' => 1, 'is_neg_marking' => 0, 'is_random_question' => 1, 'is_random_option' => 1, 'is_quiz' => 0,
