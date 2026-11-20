@@ -56,6 +56,12 @@ $captcha_block = function ($error) use ($captcha_image) {
             .login-side[hidden] { display: none; }
             .login-side .gauthenticate-form { display: none; }
             .login-hint { color: #6b7280; font-size: 13px; margin: -4px 0 14px; }
+            <?php $lg_brand = $this->customlib->brand()['color']; ?>
+            /* the school's colour (Classic Blue by default) on the sign-in buttons and links */
+            .form-bottom button.btn[type=submit], .login-side button.btn[type=submit] { background: <?php echo html_escape($lg_brand); ?> !important; border-radius: 10px; font-weight: 600; transition: filter .15s, transform .15s; }
+            .form-bottom button.btn[type=submit]:hover { filter: brightness(1.08); transform: translateY(-1px); }
+            .login-switch button:focus-visible { outline-color: <?php echo html_escape($lg_brand); ?>; }
+            .forgot a, .form-bottom a { color: <?php echo html_escape($lg_brand); ?>; }
         </style>
     </head>
     <body>

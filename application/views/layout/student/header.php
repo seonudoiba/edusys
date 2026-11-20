@@ -393,7 +393,7 @@ $role = $this->customlib->getUserRole();
 
                         <?php if ($this->module_lib->hasActive('online_examination') && $this->studentmodule_lib->hasActive('online_examination')) { ?>
                             <li class="treeview <?php echo set_Topmenu('Onlineexam'); ?>"><a
-                                    href="<?php echo site_url('user/onlineexam'); ?>"><i class="fa fa-rss ftlayer"></i>
+                                    href="<?php echo site_url('user/onlineexam'); ?>"><i class="fa fa-laptop ftlayer"></i>
                                     <span>CBT Exams</span></a></li>
                         <?php } ?>
 
@@ -450,7 +450,7 @@ $role = $this->customlib->getUserRole();
 
                         <?php } ?>
 
-                        <?php if ($this->module_lib->hasActive('examination') && $this->studentmodule_lib->hasActive('examinations')) { ?>
+                        <?php if ($this->module_lib->hasActive('examination') && $this->studentmodule_lib->hasActive('examinations') && $this->db->where(array('lang_key' => 'examinations', 'sidebar_display' => 1))->count_all_results('sidebar_menus')) { /* classic Exam Groups: only while staff use them */ ?>
                             <li class="treeview <?php echo set_Topmenu('Examinations'); ?>">
                                 <a href="#">
                                     <i class="fa fa-map-o ftlayer"></i>

@@ -35,11 +35,15 @@ class Fees_overview
      *  term, item, due_date, expected, paid, discount, balance, overdue]
      * $session_id: another session than the current one (carry forward reads the last session).
      */
-    public function items($session_id = null)
+    public function items($session_id = null, $only_student_session = 0)
     {
         $session_id = $session_id ? (int) $session_id : $this->session_id;
-        if (isset($this->rows[$session_id])) {
-            return $this->rows[$session_id];
+        $cache = $session_id . ($only_student_session ? '-' . (int) $only_student_session : '');
+        if (isset($this->rows[$cache])) {
+            return $this->rows[$cache];
+        }
+        if ($only_student_session) {
+            $this->CI->db->where('m.student_session_id', (int) $only_student_session);
         }
         $db = $this->CI->db;
         $masters = $db->select('m.id, m.student_session_id, m.fee_session_group_id, m.is_system, m.amount, ss.student_id, ss.class_id, ss.section_id, c.class, s.section, g.name AS group_name, fsg.term')
@@ -55,7 +59,7 @@ class Fees_overview
             ->get()->result_array();
         $rows = array();
         if (!$masters) {
-            return $this->rows[$session_id] = $rows;
+            return $this->rows[$cache] = $rows;
         }
         $fsg_ids = array_values(array_unique(array_map('intval', array_column($masters, 'fee_session_group_id'))));
         $items_by_group = array();
@@ -94,7 +98,7 @@ class Fees_overview
                 );
             }
         }
-        return $this->rows[$session_id] = $rows;
+        return $this->rows[$cache] = $rows;
     }
 
     /** Totals over the given items. */
