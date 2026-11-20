@@ -1,0 +1,292 @@
+<?php
+
+defined('BASEPATH') or exit('No direct script access allowed');
+
+/*
+ * Sidebar names that say what each page does. Menus by their lang_key, entries by their address
+ * (the lang_key of a row stays as it is: code finds menus by it). A page not listed keeps its
+ * language line. Used by views/layout/sidebar.php (admin) and views/admin/sidemenu.
+ */
+
+if (!function_exists('nav_menu_label')) {
+    function nav_menu_label($lang_key)
+    {
+        static $menus = array(
+            'front_office' => 'Front Office',
+            'student_information' => 'Students',
+            'fees_collection' => 'Fees',
+            'online_course' => 'Online Courses',
+            'two_factor_authentication' => 'Login Security (2FA)',
+            'behaviour_records' => 'Behaviour',
+            'gmeet_live_classes' => 'Google Meet Classes',
+            'zoom_live_classes' => 'Zoom Classes',
+            'income' => 'Income',
+            'expenses' => 'Expenses',
+            'school_exams' => 'Exams',
+            'cbse_exam' => 'Report Cards',
+            'examinations' => 'Exam Groups (classic)',
+            'attendance' => 'Attendance',
+            'qr_code_attendance' => 'QR Code Attendance',
+            'online_examinations' => 'CBT Exams',
+            'academics' => 'Classes & Timetable',
+            'lesson_plan' => 'Lesson Plans',
+            'human_resource' => 'Staff',
+            'communicate' => 'Messages',
+            'download_center' => 'Downloads',
+            'homework' => 'Homework',
+            'library' => 'Library',
+            'inventory' => 'Inventory',
+            'transport' => 'Transport',
+            'hostel' => 'Hostel',
+            'certificate' => 'Certificates & ID Cards',
+            'front_cms' => 'School Website',
+            'alumni' => 'Alumni',
+            'reports' => 'Reports',
+            'system_setting' => 'Settings',
+            'help_support' => 'Help & Support',
+        );
+        return isset($menus[$lang_key]) ? $menus[$lang_key] : null;
+    }
+}
+
+if (!function_exists('nav_entry_label')) {
+    function nav_entry_label($url)
+    {
+        static $entries = array(
+            // Front Office
+            'admin/enquiry' => 'Admission Enquiries',
+            'admin/visitors' => 'Visitor Book',
+            'admin/generalcall' => 'Phone Call Log',
+            'admin/dispatch' => 'Outgoing Post',
+            'admin/receive' => 'Incoming Post',
+            'admin/complaint' => 'Complaints',
+            'admin/visitorspurpose' => 'Front Office Setup',
+            // Students
+            'student/search' => 'Student List',
+            'student/create' => 'New Admission',
+            'admin/onlinestudent' => 'Online Admissions',
+            'student/disablestudentslist' => 'Disabled Students',
+            'student/multiclass' => 'Students in Several Classes',
+            'student/bulkdelete' => 'Delete Students in Bulk',
+            'category' => 'Student Categories',
+            'admin/schoolhouse' => 'School Houses',
+            'admin/disable_reason' => 'Reasons for Disabling',
+            // Fees
+            'admin/fees' => 'Fees Overview',
+            'admin/fees/collections' => 'Collect Fees',
+            'admin/fees/create' => 'Create Fees',
+            'admin/fees/adjust' => 'Discounts & Balances',
+            'admin/offlinepayment' => 'Bank Transfers to Approve',
+            'studentfee/searchpayment' => 'Find a Receipt',
+            'studentfee/feesearch' => 'Unpaid Fees by Fee Type',
+            'admin/feemaster' => 'Fee Amounts (Fees Master)',
+            'admin/feegroup' => 'Fee Groups',
+            'admin/feetype' => 'Fee Items',
+            'admin/feesforward' => 'Carry Forward Balances',
+            'admin/feereminder/setting' => 'Fee Reminder Settings',
+            // Online Courses
+            'onlinecourse/course/index' => 'Courses',
+            'onlinecourse/offlinepayment/payment' => 'Course Bank Payments',
+            'onlinecourse/coursecategory/categoryadd' => 'Course Categories',
+            'onlinecourse/coursereport/report' => 'Course Reports',
+            'onlinecourse/course/setting' => 'Course Settings',
+            // Login Security
+            'admin/gauthenticate/admin/setup' => 'Set Up 2FA',
+            'admin/gauthenticate/admin' => '2FA Settings',
+            // Behaviour
+            'behaviour/studentincidents' => 'Student Incidents',
+            'behaviour/incidents' => 'Incident Types',
+            'behaviour/report' => 'Behaviour Reports',
+            'behaviour/setting' => 'Behaviour Settings',
+            // Google Meet / Zoom
+            'admin/gmeet/timetable' => 'Live Classes',
+            'admin/gmeet/meeting' => 'Staff Meetings',
+            'admin/gmeet/class_report' => 'Live Class Report',
+            'admin/gmeet/meeting_report' => 'Staff Meeting Report',
+            'admin/gmeet/index' => 'Google Meet Settings',
+            'admin/conference/timetable' => 'Live Classes',
+            'admin/conference/meeting' => 'Staff Meetings',
+            'admin/conference/class_report' => 'Live Class Report',
+            'admin/conference/meeting_report' => 'Staff Meeting Report',
+            'admin/conference' => 'Zoom Settings',
+            // Income / Expenses
+            'admin/income' => 'Record Income',
+            'admin/income/incomesearch' => 'Income List',
+            'admin/incomehead' => 'Income Categories',
+            'admin/expense' => 'Record Expense',
+            'admin/expense/expensesearch' => 'Expense List',
+            'admin/expensehead' => 'Expense Categories',
+            // Exams (Report Cards module: setting up exams and entering scores)
+            'cbseexam/exam' => 'Exams & Scores',
+            'cbseexam/exam/examtimetable' => 'Exam Timetable',
+            'cbseexam/assessment' => 'Score Breakdown (CA & Exam)',
+            'cbseexam/term' => 'Terms',
+            'cbseexam/grade/gradelist' => 'Grading Scales',
+            'cbseexam/observationparameter' => 'Skills & Conduct Areas',
+            'cbseexam/observation' => 'Skills & Conduct Groups',
+            'cbseexam/observation/assign' => 'Enter Skills & Conduct',
+            'cbseexam/setting/index' => 'Exam Settings',
+            // Report Cards
+            'cbseexam/results' => 'Classes & Results',
+            'cbseexam/exam/comments' => 'Comment Bank',
+            'cbseexam/template' => 'Report Card Designs',
+            'cbseexam/result/marksheet' => 'Print Report Cards',
+            'cbseexam/broadsheet' => 'Broadsheet & Transcripts',
+            'cbseexam/report/index' => 'Result Reports',
+            'cbseexam/pins' => 'Result Checker PINs',
+            'cbseexam/promotion' => 'Promotion',
+            // Exam Groups (classic module, hidden by default)
+            'admin/examgroup' => 'Exam Groups',
+            'admin/exam_schedule' => 'Exam Schedule',
+            'admin/examresult' => 'Exam Results',
+            'admin/admitcard' => 'Admit Card Designs',
+            'admin/examresult/admitcard' => 'Print Admit Cards',
+            'admin/marksheet' => 'Marksheet Designs',
+            'admin/examresult/marksheet' => 'Print Marksheets',
+            'admin/grade' => 'Marks Grades',
+            'admin/marksdivision' => 'Marks Divisions',
+            // Attendance
+            'admin/stuattendence' => 'Take Attendance',
+            'admin/approve_leave' => 'Student Leave Requests',
+            'admin/stuattendence/attendencereport' => 'Attendance by Date',
+            'admin/subjectattendence/index' => 'Period Attendance',
+            'admin/subjectattendence/reportbydate' => 'Period Attendance by Date',
+            'admin/qrattendance/attendance/index' => 'Scan QR Attendance',
+            'admin/qrattendance/setting/index' => 'QR Attendance Settings',
+            // CBT Exams
+            'admin/onlineexam' => 'CBT Exams',
+            'admin/question' => 'Question Bank',
+            // Classes & Timetable
+            'admin/timetable/classreport' => 'Class Timetable',
+            'admin/timetable/mytimetable' => 'Teacher Timetable',
+            'admin/teacher/assign_class_teacher' => 'Class Teachers',
+            'admin/teacher/subject_teachers' => 'Subject Teachers',
+            'admin/stdtransfer' => 'Promote Students',
+            'admin/subjectgroup' => 'Subject Groups',
+            'admin/subject' => 'Subjects',
+            'classes' => 'Classes',
+            'sections' => 'Sections',
+            // Lesson Plans
+            'admin/lessonplan/copylesson' => 'Copy Lessons',
+            'admin/syllabus' => 'Lesson Plans',
+            'admin/syllabus/status' => 'Syllabus Progress',
+            'admin/lessonplan/lesson' => 'Lessons',
+            'admin/lessonplan/topic' => 'Topics',
+            // Staff
+            'admin/staff' => 'Staff Directory',
+            'admin/staffattendance' => 'Staff Attendance',
+            'admin/payroll' => 'Payroll',
+            'admin/leaverequest/leaverequest' => 'Staff Leave Requests',
+            'admin/staff/leaverequest' => 'Apply for Leave',
+            'admin/leavetypes' => 'Leave Types',
+            'admin/staff/rating' => 'Teacher Ratings',
+            'admin/department/department' => 'Departments',
+            'admin/designation/designation' => 'Job Titles',
+            'admin/staff/disablestafflist' => 'Disabled Staff',
+            // Messages
+            'admin/notification' => 'Notice Board',
+            'admin/mailsms/compose' => 'Send Email',
+            'admin/mailsms/compose_sms' => 'Send SMS',
+            'admin/mailsms/index' => 'Sent Messages',
+            'admin/mailsms/schedule' => 'Scheduled Messages',
+            'student/bulkmail' => 'Send Login Details',
+            'admin/mailsms/email_template' => 'Email Templates',
+            'admin/mailsms/sms_template' => 'SMS Templates',
+            // Downloads
+            'admin/contenttype' => 'Content Types',
+            'admin/content/list' => 'Shared Content',
+            'admin/content/upload' => 'Upload & Share Content',
+            'admin/video_tutorial' => 'Video Tutorials',
+            // Homework
+            'homework' => 'Homework',
+            'homework/dailyassignment' => 'Daily Assignments',
+            // Library
+            'admin/book/getall' => 'Books',
+            'admin/member' => 'Issue & Return Books',
+            'admin/member/student' => 'Student Members',
+            'admin/member/teacher' => 'Staff Members',
+            // Inventory
+            'admin/issueitem' => 'Issue Items',
+            'admin/itemstock' => 'Add Stock',
+            'admin/item' => 'Items',
+            'admin/itemcategory' => 'Item Categories',
+            'admin/itemstore' => 'Stores',
+            'admin/itemsupplier' => 'Suppliers',
+            // Transport
+            'admin/transport/feemaster' => 'Transport Fee Schedule',
+            'admin/pickuppoint' => 'Pickup Points',
+            'admin/route' => 'Routes',
+            'admin/vehicle' => 'Vehicles',
+            'admin/vehroute' => 'Vehicles on Routes',
+            'admin/pickuppoint/assign' => 'Route Pickup Points',
+            'admin/pickuppoint/student_fees' => 'Student Transport Fees',
+            // Hostel
+            'admin/hostelroom' => 'Hostel Rooms',
+            'admin/roomtype' => 'Room Types',
+            'admin/hostel' => 'Hostels',
+            // Certificates & ID Cards
+            'admin/certificate' => 'Certificate Designs',
+            'admin/generatecertificate' => 'Print Certificates',
+            'admin/studentidcard' => 'Student ID Card Designs',
+            'admin/generateidcard/search' => 'Print Student ID Cards',
+            'admin/staffidcard' => 'Staff ID Card Designs',
+            'admin/generatestaffidcard' => 'Print Staff ID Cards',
+            // School Website
+            'admin/front/design' => 'Website Design',
+            'admin/front/events' => 'Events',
+            'admin/front/gallery' => 'Gallery',
+            'admin/front/notice' => 'News',
+            'admin/front/media' => 'Media Library',
+            'admin/front/page' => 'Pages',
+            'admin/front/menus' => 'Website Menus',
+            'admin/front/banner' => 'Banner Images',
+            // Alumni
+            'admin/alumni/alumnilist' => 'Alumni List',
+            'admin/alumni/events' => 'Alumni Events',
+            // Reports
+            'report/studentinformation' => 'Student Reports',
+            'financereports/finance' => 'Finance Reports',
+            'attendencereports/attendance' => 'Attendance Reports',
+            'admin/examresult/examinations' => 'Exam Group Reports',
+            'admin/onlineexam/report' => 'CBT Exam Reports',
+            'report/lesson_plan' => 'Lesson Plan Reports',
+            'report/human_resource' => 'Staff Reports',
+            'homework/homeworkordailyassignmentreport' => 'Homework Reports',
+            'report/library' => 'Library Reports',
+            'report/inventory' => 'Inventory Reports',
+            'admin/route/studenttransportdetails' => 'Transport Reports',
+            'admin/hostelroom/studenthosteldetails' => 'Hostel Reports',
+            'report/alumnireport' => 'Alumni Reports',
+            'admin/userlog' => 'Login History',
+            'admin/audit' => 'Audit Trail',
+            // Settings
+            'schsettings' => 'School Settings',
+            'schsettings/fees' => 'Fee Settings',
+            'sessions' => 'Sessions',
+            'admin/notification/setting' => 'Notification Settings',
+            'smsconfig' => 'SMS Gateway',
+            'emailconfig' => 'Email Settings',
+            'admin/paymentsettings' => 'Online Payment Gateways',
+            'admin/print_headerfooter' => 'Receipt & Payslip Headers',
+            'admin/frontcms' => 'Website Settings',
+            'admin/roles' => 'Roles & Permissions',
+            'admin/admin/backup' => 'Backup & Restore',
+            'admin/language' => 'Languages',
+            'admin/currency' => 'Currencies',
+            'admin/users' => 'User Accounts',
+            'admin/module' => 'Modules On/Off',
+            'admin/customfield' => 'Custom Fields',
+            'admin/captcha' => 'Captcha',
+            'admin/systemfield' => 'Form Fields',
+            'student/profilesetting' => 'Student Profile Editing',
+            'admin/onlineadmission/admissionsetting' => 'Online Admission Settings',
+            'admin/admin/filetype' => 'Allowed File Types',
+            'admin/sidemenu' => 'Sidebar Menu',
+            'admin/updater' => 'System Update',
+            // Help & Support
+            'admin/support' => 'Support Requests',
+        );
+        $url = trim((string) $url, '/');
+        return isset($entries[$url]) ? $entries[$url] : null;
+    }
+}

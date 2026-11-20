@@ -51,6 +51,11 @@
        <?php if (!empty($pin_error)) { ?>
           <div class="alert alert-danger"><i class="fa fa-lock"></i> <?php echo html_escape($pin_error); ?></div>
        <?php } ?>
+       <?php if (!empty($card_html)) { ?>
+          <button type="button" class="btn btn-default btn-xs mb10 pull-right" onclick="printDiv('div_card')"><i class="fa fa-print"></i> Print</button>
+          <div class="clearfix"></div>
+          <div id="div_card" style="overflow:auto"><?php echo $card_html; ?></div>
+       <?php } else { ?>
        <?php
          if (isset($student_result)) {
             if (!empty($student_result)) {
@@ -238,6 +243,7 @@
             }
             }
          ?>
+       <?php } ?>
     </div>
 
     <?php

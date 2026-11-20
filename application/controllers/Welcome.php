@@ -1711,6 +1711,18 @@ class Welcome extends Front_Controller
                 $student_result['principal_remark'] = $es ? $es['principal_remark'] : '';
                 $student_result['class_size'] = (int) $this->db->where('cbse_exam_id', (int) $exam_id)->count_all_results('cbse_exam_students');
                 $this->data['school_brand'] = $this->customlib->brand();
+                // the report card itself (Report Cards > Classes & Results layout)
+                $ss_class = $this->db->select('class_id')->where('id', (int) $student_session_id)->get('student_session')->row('class_id');
+                $es_id = $this->db->select('id')->where(array('cbse_exam_id' => (int) $exam_id, 'student_session_id' => (int) $student_session_id))->get('cbse_exam_students')->row('id');
+                if ($ss_class && $es_id && $this->db->field_exists('class_id', 'cbse_exams')) {
+                    $this->load->library('class_results');
+                    $exam_row = $this->db->where('id', (int) $exam_id)->get('cbse_exams')->row_array();
+                    $this->data['card_html'] = $this->load->view('cbseexam/results/cards', array('exam' => $exam_row,
+                        'class' => $this->db->where('id', (int) $ss_class)->get('classes')->row_array(),
+                        'r' => $this->class_results->results($exam_row, (int) $ss_class, (int) $es_id), 'brand' => $this->data['school_brand'],
+                        'term_name' => (string) $this->db->select('name')->where('id', (int) $exam_row['cbse_term_id'])->get('cbse_terms')->row('name'),
+                        'session_name' => (string) $this->db->select('session')->where('id', (int) $exam_row['session_id'])->get('sessions')->row('session'), 'embed' => true), true);
+                }
             }
             $this->data['student_result'] = $student_result;
 

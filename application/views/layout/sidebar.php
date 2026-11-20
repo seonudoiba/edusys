@@ -1,4 +1,5 @@
 <?php
+$this->load->helper('nav_label');
 if (!function_exists('sidebar_submenu_icon')) {
     /** An icon for a sidebar sub-menu entry: by its language key, else by words in its URL. */
     function sidebar_submenu_icon($key, $url)
@@ -52,6 +53,7 @@ if (!function_exists('sidebar_submenu_icon')) {
             'bulk_delete' => 'fa-trash-o', 'login_credentials_send' => 'fa-key', 'student_admission' => 'fa-user-plus', 'disabled_students' => 'fa-user-times',
             'multi_class_student' => 'fa-users', 'student_profile_update' => 'fa-pencil-square-o', 'student_details' => 'fa-search', 'collect_fees' => 'fa-money',
             'search_due_fees' => 'fa-exclamation-circle', 'search_fees_payment' => 'fa-search-plus',
+            'class_results' => 'fa-th-list', 'comment_bank' => 'fa-commenting-o',
             'broadsheet' => 'fa-table', 'result_checker_pins' => 'fa-key', 'promotion_engine' => 'fa-level-up',
         );
         static $by_word = array('report' => 'fa-bar-chart', 'setting' => 'fa-cog', 'attend' => 'fa-check-square-o', 'fee' => 'fa-money', 'exam' => 'fa-file-text-o',
@@ -160,7 +162,7 @@ if (!function_exists('sidebar_submenu_icon')) {
 
                                 <a href="#">
                                     <i class="<?php echo $side_list_value->icon; ?>"></i>
-                                    <span><?php echo $this->lang->line($side_list_value->lang_key) ?: html_escape($side_list_value->menu); ?></span> <i
+                                    <span><?php echo html_escape(nav_menu_label($side_list_value->lang_key) ?: ($this->lang->line($side_list_value->lang_key) ?: $side_list_value->menu)); ?></span> <i
                                         class="fa fa-angle-left pull-right"></i>
                                 </a>
 
@@ -206,7 +208,7 @@ if (!function_exists('sidebar_submenu_icon')) {
 
                                                 <li class="<?php echo $submenu_value->id == $active_sub ? 'active' : ''; ?>">
                                                     <a href="<?php echo site_url($submenu_value->url); ?>"<?php echo $submenu_value->id == $active_sub ? ' aria-current="page"' : ''; ?>><i
-                                                            class="fa <?php echo sidebar_submenu_icon($submenu_value->lang_key, $submenu_value->url); ?>" aria-hidden="true"></i><?php echo $this->lang->line($submenu_value->lang_key) ?: html_escape($submenu_value->menu); ?></a>
+                                                            class="fa <?php echo sidebar_submenu_icon($submenu_value->lang_key, $submenu_value->url); ?>" aria-hidden="true"></i><?php echo html_escape(nav_entry_label($submenu_value->url) ?: ($this->lang->line($submenu_value->lang_key) ?: $submenu_value->menu)); ?></a>
                                                 </li>
 
 
