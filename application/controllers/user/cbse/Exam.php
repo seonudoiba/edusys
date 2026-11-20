@@ -26,8 +26,61 @@ class Exam extends Student_Controller
         $this->load->view('layout/student/footer', $data);
     }
 
+    /** The student's report cards (published), every term and session: view or download each. */
+    public function reportcards()
+    {
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'user/cbse/cbse_exam_result');
+        $data = array('cards' => array());
+        $current = $this->customlib->getStudentCurrentClsSection();
+        $student_id = !empty($current->student_session_id) ? (int) $this->db->select('student_id')->where('id', (int) $current->student_session_id)->get('student_session')->row('student_id') : 0;
+        if ($student_id) {
+            $data['cards'] = $this->db->select('es.id AS es, e.id AS exam_id, e.name, t.name AS term_name, se.session, c.class, c.id AS class_id, s.section')
+                ->from('cbse_exam_students es')->join('cbse_exams e', 'e.id = es.cbse_exam_id')->join('student_session ss', 'ss.id = es.student_session_id')
+                ->join('classes c', 'c.id = ss.class_id')->join('sections s', 's.id = ss.section_id')->join('cbse_terms t', 't.id = e.cbse_term_id', 'left')
+                ->join('sessions se', 'se.id = e.session_id', 'left')->where(array('ss.student_id' => $student_id, 'e.is_publish' => 1))
+                ->order_by('e.session_id', 'desc')->order_by('e.cbse_term_id', 'desc')->get()->result_array();
+        }
+        $this->load->view('layout/student/header', $data);
+        $this->load->view('user/cbse/reportcards', $data);
+        $this->load->view('layout/student/footer', $data);
+    }
+
+    /** One report card of the student (published only): HTML, or PDF with ?pdf=1. */
+    public function reportcard($es = 0)
+    {
+        $current = $this->customlib->getStudentCurrentClsSection();
+        $student_id = !empty($current->student_session_id) ? (int) $this->db->select('student_id')->where('id', (int) $current->student_session_id)->get('student_session')->row('student_id') : 0;
+        $row = $this->db->select('es.id, es.cbse_exam_id, ss.class_id')->from('cbse_exam_students es')->join('student_session ss', 'ss.id = es.student_session_id')
+            ->join('cbse_exams e', 'e.id = es.cbse_exam_id')->where(array('es.id' => (int) $es, 'ss.student_id' => $student_id, 'e.is_publish' => 1))->get()->row_array();
+        if (!$row) {
+            show_404();
+        }
+        $this->load->library('class_results');
+        $exam = $this->db->where('id', (int) $row['cbse_exam_id'])->get('cbse_exams')->row_array();
+        $class = $this->db->where('id', (int) $row['class_id'])->get('classes')->row_array();
+        $data = array('exam' => $exam, 'class' => $class, 'r' => $this->class_results->results($exam, (int) $class['id'], (int) $es), 'brand' => $this->customlib->brand(),
+            'term_name' => $this->db->select('name')->where('id', (int) $exam['cbse_term_id'])->get('cbse_terms')->row('name'),
+            'session_name' => $this->db->select('session')->where('id', (int) $exam['session_id'])->get('sessions')->row('session'), 'print' => true);
+        if ($this->input->get('pdf')) {
+            $data['print'] = false;
+            $data['pdf'] = true;
+            $this->load->library('m_pdf');
+            $mpdf = $this->m_pdf->load('P');
+            $mpdf->SetMargins(8, 8, 8);
+            $mpdf->WriteHTML($this->load->view('cbseexam/results/cards', $data, true));
+            $mpdf->Output(preg_replace('/[^A-Za-z0-9]+/', '-', $class['class'] . ' ' . $data['term_name'] . ' report card') . '.pdf', 'D');
+            return;
+        }
+        $this->load->view('cbseexam/results/cards', $data);
+    }
+
     public function result()
     {
+        // Report cards by class (Report Cards > Classes & Results) are shown on their own page.
+        if ($this->db->field_exists('class_id', 'cbse_exams')) {
+            redirect('user/cbse/exam/reportcards');
+        }
         $this->session->set_userdata('top_menu', 'cbse_exam');
 		$this->session->set_userdata('sub_menu', 'user/cbse/cbse_exam_result');		
 		

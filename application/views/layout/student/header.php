@@ -394,7 +394,7 @@ $role = $this->customlib->getUserRole();
                         <?php if ($this->module_lib->hasActive('online_examination') && $this->studentmodule_lib->hasActive('online_examination')) { ?>
                             <li class="treeview <?php echo set_Topmenu('Onlineexam'); ?>"><a
                                     href="<?php echo site_url('user/onlineexam'); ?>"><i class="fa fa-rss ftlayer"></i>
-                                    <span><?php echo $this->lang->line('online_exam'); ?></span></a></li>
+                                    <span>CBT Exams</span></a></li>
                         <?php } ?>
 
                         <?php if ($this->studentmodule_lib->hasActive('apply_leave')) { ?>
@@ -441,23 +441,10 @@ $role = $this->customlib->getUserRole();
                         if ($this->module_lib->hasModule('cbseexam') && $this->module_lib->hasActive('cbseexam') && $this->studentmodule_lib->hasActive('cbseexam')) { ?>
 
 
-                            <li class="treeview <?php echo set_Topmenu('cbse_exam'); ?>">
-                                <a href="#">
-                                    <i class="fa fa-wpforms"></i> <span><?php echo $this->lang->line('cbse_exam'); ?></span> <i
-                                        class="fa fa-angle-left pull-right"></i>
+                            <li class="<?php echo set_Topmenu('cbse_exam'); ?>">
+                                <a href="<?php echo site_url('user/cbse/exam/reportcards'); ?>">
+                                    <i class="fa fa-file-text-o"></i> <span>My Report Cards</span>
                                 </a>
-                                <ul class="treeview-menu">
-                                    <li class="<?php echo set_Submenu('user/cbse/cbse_exam_result'); ?>"><a
-                                            href="<?php echo site_url('user/cbse/exam/result'); ?>"><i
-                                                class="fa fa-trophy"></i>
-                                            <?php echo $this->lang->line('exam_result'); ?></a></li>
-
-                                    <li class="<?php echo set_Submenu('user/cbse/cbse_exam_timetable'); ?>"><a
-                                            href="<?php echo site_url('user/cbse/exam/timetable'); ?>"><i
-                                                class="fa fa-calendar-check-o"></i>
-                                            <?php echo $this->lang->line('exam_schedule'); ?></a></li>
-
-                                </ul>
                             </li>
 
 
