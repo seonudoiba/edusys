@@ -2,7 +2,7 @@
 /* The fees workspace: tabs and shared styles. $tab: overview | collections | create | adjust | followup */
 $tabs = array(
     'overview' => array('admin/fees', 'fa-pie-chart', 'Overview'),
-    'collections' => array('admin/fees/collections', 'fa-money', 'Collections'),
+    'collections' => array('admin/fees/collections', 'fa-money', 'Collect fees'),
     'create' => array('admin/fees/create', 'fa-plus-circle', 'Create fees'),
     'adjust' => array('admin/fees/adjust', 'fa-sliders', 'Discounts & balances'),
     'followup' => array('admin/fees/followup', 'fa-bell-o', 'Reminders and reports'),

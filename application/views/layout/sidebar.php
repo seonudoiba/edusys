@@ -117,6 +117,16 @@ if (!function_exists('sidebar_submenu_icon')) {
                         $active_menu = $m->id;
                         break 2;
                     }
+                    // methods may also name other pages by address ("studentfee/addfee"): an entry that
+                    // took over another one (Collect fees, Discounts) stays lit on those pages
+                    foreach (explode(',', (string) $s->activate_methods) as $page) {
+                        $page = trim($page);
+                        if (strpos($page, '/') !== false && ($here === $page || strpos($here, $page . '/') === 0)) {
+                            $active_sub = $s->id;
+                            $active_menu = $m->id;
+                            break 3;
+                        }
+                    }
                     $u = trim((string) $s->url, '/');
                     if ($u !== '' && ($here === $u || strpos($here, $u . '/') === 0) && strlen($u) > $best) {
                         $best = strlen($u);

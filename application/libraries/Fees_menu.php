@@ -10,20 +10,28 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Fees_menu
 {
     const ENTRIES = array(
-        // url => [label, permission, activate_methods]
+        // url => [label, permission, activate_methods (also pages by address: "studentfee/addfee"), lang_key]
         'admin/fees' => array('Overview', "('collect_fees', 'can_view')", 'index,charge,edit,remove,remind'),
-        'admin/fees/collections' => array('Collections', "('collect_fees', 'can_view')", 'collections,followup,takings'),
+        'admin/fees/collections' => array('Collect Fees', "('collect_fees', 'can_view')", 'collections,followup,takings,studentfee/index,studentfee/addfee,studentfee/getProcessingfees', 'collect_fees'),
         'admin/fees/create' => array('Create fees', "('fees_master', 'can_add')", 'create,repeat'),
-        'admin/fees/adjust' => array('Discounts & balances', "('fees_discount', 'can_view')", 'adjust,discounts,carryforward,catchup'),
+        'admin/fees/adjust' => array('Discounts & balances', "('fees_discount', 'can_view')", 'adjust,discounts,carryforward,catchup,admin/feediscount', 'fees_discounts_balances'),
     );
 
-    /** Brings existing entries' activate_methods up to date (pages added since they were installed). */
+    /** Classic entries the workspace took over (Collect Fees, Fees Discount): hidden from the sidebar. */
+    const RETIRED = array('studentfee', 'admin/feediscount');
+
+    /** Brings existing entries up to date (pages added since they were installed) and hides retired ones. */
     public function refresh()
     {
         $db = get_instance()->db;
         foreach (self::ENTRIES as $url => $e) {
-            $db->where('url', $url)->where('activate_controller', 'fees')->update('sidebar_sub_menus', array('activate_methods' => $e[2]));
+            $set = array('activate_methods' => $e[2]);
+            if (isset($e[3])) {
+                $set += array('lang_key' => $e[3], 'menu' => $e[0]);
+            }
+            $db->where('url', $url)->where('activate_controller', 'fees')->update('sidebar_sub_menus', $set);
         }
+        $db->where_in('url', self::RETIRED)->update('sidebar_sub_menus', array('is_active' => 0));
     }
 
     /** Call inside without_tenant (or with the school as tenant). */
@@ -52,7 +60,7 @@ class Fees_menu
         $level = 1;
         foreach (self::ENTRIES as $url => $e) {
             if (isset($missing[$url])) {
-                $key = 'fees_' . preg_replace('/[^a-z]+/', '_', strtolower($e[0]));
+                $key = isset($e[3]) ? $e[3] : 'fees_' . preg_replace('/[^a-z]+/', '_', strtolower($e[0]));
                 $db->insert('sidebar_sub_menus', array(
                     'school_id' => (int) $school_id,
                     'sidebar_menu_id' => (int) $menu->id,
@@ -72,6 +80,7 @@ class Fees_menu
             }
             $level++;
         }
+        $db->where('school_id', (int) $school_id)->where_in('url', self::RETIRED)->update('sidebar_sub_menus', array('is_active' => 0));
         return $added;
     }
 }

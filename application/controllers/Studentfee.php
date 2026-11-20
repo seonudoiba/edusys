@@ -27,6 +27,8 @@ class Studentfee extends Admin_Controller
             access_denied();
         }
 
+        // One place to collect: Fees > Collect fees (find by name, admission no, or class and section).
+        redirect('admin/fees/collections');
         $this->session->set_userdata('top_menu', $this->lang->line('fees_collection'));
         $this->session->set_userdata('sub_menu', 'studentfee/index');
         $data['sch_setting'] = $this->sch_setting_detail;
