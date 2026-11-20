@@ -2450,5 +2450,5 @@ $lang['broadsheet'] = "Broadsheet";
 $lang['result_checker_pins'] = "Result Checker PINs";
 $lang['promotion_engine'] = "Promotion";
 $lang['school_exams'] = "Exams";
-$lang['class_results'] = "Classes & Results";
+$lang['class_results'] = "Results";
 $lang['comment_bank'] = "Comment Bank";

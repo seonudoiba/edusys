@@ -68,6 +68,36 @@ class Class_results
         return $out;
     }
 
+    /**
+     * Subjects a class offers this session: its subject groups (of one section, or every section) and
+     * any subject already in one of its terms. [subject_id => [id, name, code]], by name.
+     */
+    public function class_subjects($class_id, $session_id, $section_id = 0)
+    {
+        $cs = $this->class_section_ids($class_id);
+        if ($section_id) {
+            $cs = array_map('intval', array_column($this->db->select('id')->where(array('class_id' => (int) $class_id, 'section_id' => (int) $section_id))->get('class_sections')->result_array(), 'id'));
+        }
+        $ids = array();
+        if ($cs) {
+            $ids = array_map('intval', array_column($this->db->select('DISTINCT sgs.subject_id', false)->from('subject_group_class_sections sgc')
+                ->join('subject_group_subjects sgs', 'sgs.subject_group_id = sgc.subject_group_id')
+                ->where('sgc.session_id', (int) $session_id)->where_in('sgc.class_section_id', $cs)->get()->result_array(), 'subject_id'));
+        }
+        foreach ($this->terms() as $t) {
+            $exam = $this->exam_for($class_id, (int) $t['id'], $session_id);
+            if ($exam) {
+                $ids = array_merge($ids, array_map('intval', array_column($this->db->select('subject_id')->where('cbse_exam_id', (int) $exam['id'])->get('cbse_exam_timetable')->result_array(), 'subject_id')));
+            }
+        }
+        $ids = array_values(array_unique($ids));
+        $out = array();
+        foreach ($ids ? $this->db->select('id, name, code')->where_in('id', $ids)->order_by('name')->get('subjects')->result_array() : array() as $s) {
+            $out[(int) $s['id']] = $s;
+        }
+        return $out;
+    }
+
     public function class_section_ids($class_id)
     {
         return array_map('intval', array_column($this->db->select('id')->where('class_id', (int) $class_id)->get('class_sections')->result_array(), 'id'));

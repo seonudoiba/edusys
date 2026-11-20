@@ -73,33 +73,33 @@ class Results extends MY_Addon_CBSEController
 
     private function back($exam, $class_id, $tab = '')
     {
-        redirect('cbseexam/results/klass/' . (int) $class_id . '?term=' . (int) $exam['cbse_term_id'] . ($tab ? '&tab=' . $tab : ''));
+        $ret = (string) $this->input->post('return');
+        if ($ret !== '' && strpos($ret, 'cbseexam/results/') === 0 && !preg_match('#[^A-Za-z0-9/_?=&%.-]#', $ret)) {
+            redirect($ret);
+        }
+        redirect('cbseexam/results/klass/' . (int) $class_id . '?tab=reportcards&term=' . (int) $exam['cbse_term_id'] . ($tab ? '&step=' . $tab : ''));
     }
 
-    // ------------------------------------------------------------------ classes
+    // ------------------------------------------------------------------ Results: classes → subjects → terms → exams → scores
 
+    /** Every class as a card, with each term's state. */
     public function index()
     {
         $this->can_view();
-        $term = $this->term_id();
+        $terms = $this->class_results->terms();
         $classes = $this->class_results->classes($this->current_session);
         foreach ($classes as &$c) {
-            $c['exam'] = $term ? $this->class_results->exam_for($c['id'], $term, $this->current_session) : null;
-            $c['progress'] = null;
-            if ($c['exam']) {
-                $subjects = $this->class_results->subjects($c['exam'], $c['id']);
-                $done = array_sum(array_column($subjects, 'done'));
-                $all = array_sum(array_column($subjects, 'total'));
-                $c['progress'] = array('subjects' => count($subjects), 'pct' => $all ? round($done * 100 / $all) : 0,
-                    'approved' => count(array_filter($subjects, function ($s) { return $s['marks_status'] === 'approved'; })));
+            $c['terms'] = array();
+            foreach ($terms as $t) {
+                $exam = $this->class_results->exam_for($c['id'], (int) $t['id'], $this->current_session);
+                $c['terms'][(int) $t['id']] = $exam ? ((int) $exam['is_publish'] ? 'published' : 'started') : 'none';
             }
         }
         unset($c);
-        $this->page('index', array('title' => 'Classes & Results', 'terms' => $this->class_results->terms(), 'term' => $term, 'classes' => $classes,
-            'session_name' => $this->setting_model->getCurrentSessionName()));
+        $this->page('index', array('title' => 'Results', 'terms' => $terms, 'classes' => $classes, 'session_name' => $this->setting_model->getCurrentSessionName()));
     }
 
-    /** A class in a term: its subjects and assessments (tab subjects), comments (tab comments), results (tab results). */
+    /** A class: the subjects it offers (filter by section); tab reportcards: attendance, comments, results and publishing per term. */
     public function klass($class_id = 0)
     {
         $this->can_view();
@@ -107,38 +107,116 @@ class Results extends MY_Addon_CBSEController
         if (!$class) {
             show_404();
         }
-        $term = $this->term_id();
-        if ($this->input->method() === 'post' && $this->input->post('setup')) {
-            $this->need('cbse_exam', 'can_edit');
-            try {
-                $this->class_results->create((int) $class_id, $term, $this->current_session);
-                $this->session->set_flashdata('cr_msg', array('success', 'Ready. Check the score breakdown, then enter scores subject by subject.'));
-            } catch (RuntimeException $e) {
-                $this->session->set_flashdata('cr_msg', array('danger', $e->getMessage()));
-            }
-            redirect('cbseexam/results/klass/' . (int) $class_id . '?term=' . $term);
+        $terms = $this->class_results->terms();
+        $section = (int) $this->input->get('section');
+        $tab = $this->input->get('tab') === 'reportcards' ? 'reportcards' : 'subjects';
+        $data = array('title' => $class['class'], 'class' => $class, 'terms' => $terms, 'tab' => $tab, 'section' => $section,
+            'sections' => $this->db->select('s.id, s.section')->from('class_sections cs')->join('sections s', 's.id = cs.section_id')->where('cs.class_id', (int) $class_id)->order_by('s.section')->get()->result_array());
+        $exams = array();
+        foreach ($terms as $t) {
+            $exams[(int) $t['id']] = $this->class_results->exam_for((int) $class_id, (int) $t['id'], $this->current_session);
         }
-        $exam = $this->class_results->exam_for((int) $class_id, $term, $this->current_session);
-        $data = array('title' => $class['class'], 'class' => $class, 'terms' => $this->class_results->terms(), 'term' => $term, 'exam' => $exam,
-            'tab' => in_array($this->input->get('tab'), array('subjects', 'comments', 'results'), true) ? $this->input->get('tab') : 'subjects');
-        if ($exam) {
-            $this->class_results->sync($exam, (int) $class_id, $this->current_session);
-            $exam = $this->class_results->exam_for((int) $class_id, $term, $this->current_session);
+        $data['exams'] = $exams;
+        if ($tab === 'subjects') {
+            $data['subjects'] = $this->class_results->class_subjects((int) $class_id, $this->current_session, $section);
+            $data['progress'] = array();
+            foreach ($exams as $tid => $exam) {
+                if ($exam) {
+                    foreach ($this->class_results->subjects($exam, (int) $class_id) as $tt => $s) {
+                        $data['progress'][(int) $s['subject_id']][$tid] = $s;
+                    }
+                }
+            }
+        } else {
+            $term = $this->term_id();
+            $data['term'] = $term;
+            $data['step'] = $this->input->get('step') === 'comments' ? 'comments' : 'results';
+            $exam = isset($exams[$term]) ? $exams[$term] : null;
             $data['exam'] = $exam;
-            $data['subjects'] = $this->class_results->subjects($exam, (int) $class_id);
-            $data['breakdown'] = $this->class_results->default_breakdown($exam);
-            $data['all_subjects'] = $this->db->select('id, name, code')->order_by('name')->get('subjects')->result_array();
-            $data['grade_scales'] = $this->db->select('id, name')->order_by('name')->get('cbse_exam_grades')->result_array();
-            $data['cbts'] = $this->db->select('id, exam, subject_id, marks_target')->where('session_id', $this->current_session)->order_by('id', 'desc')->get('onlineexam')->result_array();
-            if ($data['tab'] === 'comments') {
-                $this->load->library('cbse_comments');
+            if ($exam) {
+                $this->class_results->sync($exam, (int) $class_id, $this->current_session);
+                $data['subjects_t'] = $this->class_results->subjects($exam, (int) $class_id);
+                $data['grade_scales'] = $this->db->select('id, name')->order_by('name')->get('cbse_exam_grades')->result_array();
                 $data['results'] = $this->class_results->results($exam, (int) $class_id);
-                $data['bank'] = $this->cbse_comments->bank();
-            } elseif ($data['tab'] === 'results') {
-                $data['results'] = $this->class_results->results($exam, (int) $class_id);
+                if ($data['step'] === 'comments') {
+                    $this->load->library('cbse_comments');
+                    $data['bank'] = $this->cbse_comments->bank();
+                }
             }
         }
         $this->page('klass', $data);
+    }
+
+    /**
+     * A subject of a class: every term with its exams (CAs, tests, exam; written or CBT) and, for the
+     * chosen term, every student's score in each exam (typed in here). ?term, ?section.
+     */
+    public function subject($class_id = 0, $subject_id = 0)
+    {
+        $this->can_view();
+        $class = $this->db->where('id', (int) $class_id)->get('classes')->row_array();
+        $subject = $this->db->where('id', (int) $subject_id)->get('subjects')->row_array();
+        if (!$class || !$subject) {
+            show_404();
+        }
+        $terms = $this->class_results->terms();
+        $section = (int) $this->input->get('section');
+        $per = array();
+        foreach ($terms as $t) {
+            $tid = (int) $t['id'];
+            $exam = $this->class_results->exam_for((int) $class_id, $tid, $this->current_session);
+            $row = array('term' => $t, 'exam' => $exam, 'tt' => null);
+            if ($exam) {
+                $this->class_results->sync($exam, (int) $class_id, $this->current_session);
+                foreach ($this->class_results->subjects($exam, (int) $class_id) as $tt => $s) {
+                    if ((int) $s['subject_id'] === (int) $subject_id) {
+                        $row['tt'] = $s;
+                    }
+                }
+            }
+            $per[$tid] = $row;
+        }
+        $term = (int) $this->input->get('term');
+        if (!isset($per[$term])) {
+            // the latest term that has this subject, else the first term
+            $term = 0;
+            foreach ($per as $tid => $row) {
+                if ($row['tt']) {
+                    $term = $tid;
+                }
+            }
+            $term = $term ?: ($terms ? (int) $terms[0]['id'] : 0);
+        }
+        $data = array('title' => $subject['name'] . ' · ' . $class['class'], 'class' => $class, 'subject' => $subject, 'terms' => $terms, 'per' => $per, 'term' => $term,
+            'section' => $section, 'sections' => $this->db->select('s.id, s.section')->from('class_sections cs')->join('sections s', 's.id = cs.section_id')->where('cs.class_id', (int) $class_id)->order_by('s.section')->get()->result_array(),
+            'cbts' => $this->db->select('id, exam, subject_id, marks_target')->where('session_id', $this->current_session)->order_by('id', 'desc')->get('onlineexam')->result_array(),
+            'students' => array(), 'marks' => array(), 'lock_reason' => '', 'tt_row' => null, 'can_approve' => $this->cbse_marks_guard->can_approve());
+        $cur = isset($per[$term]) ? $per[$term] : null;
+        if ($cur && $cur['tt']) {
+            $data['students'] = $this->class_results->exam_students($cur['exam'], (int) $class_id, $section);
+            if ($data['students']) {
+                foreach ($this->db->where('cbse_exam_timetable_id', (int) $cur['tt']['id'])->where_in('cbse_exam_student_id', array_keys($data['students']))->get('cbse_student_subject_marks')->result_array() as $m) {
+                    $data['marks'][(int) $m['cbse_exam_student_id']][(int) $m['cbse_exam_assessment_type_id']] = (int) $m['is_absent'] ? 'ABS' : ($m['marks'] === null ? '' : rtrim(rtrim(number_format((float) $m['marks'], 2, '.', ''), '0'), '.'));
+                }
+            }
+            $data['tt_row'] = $this->cbse_marks_guard->subject((int) $cur['tt']['id']);
+            $data['lock_reason'] = $this->cbse_marks_guard->lock_reason($data['tt_row']);
+        }
+        $this->page('subject', $data);
+    }
+
+    /** POST class_id, term, return: sets up a class's term (all its subjects and students). */
+    public function setup_term()
+    {
+        $this->need('cbse_exam', 'can_edit');
+        try {
+            $this->class_results->create((int) $this->input->post('class_id'), (int) $this->input->post('term'), $this->current_session);
+            $this->session->set_flashdata('cr_msg', array('success', "Term set up: every subject of the class has its exams. Change any subject's exams on its page."));
+        } catch (RuntimeException $e) {
+            $this->session->set_flashdata('cr_msg', array('danger', $e->getMessage()));
+        }
+        $ret = (string) $this->input->post('return');
+        redirect(strpos($ret, 'cbseexam/results/') === 0 ? $ret : 'cbseexam/results');
     }
 
     // ------------------------------------------------------------------ setting up
@@ -154,7 +232,17 @@ class Results extends MY_Addon_CBSEController
         }
         try {
             $tt = (int) $this->input->post('tt_id');
-            if ($tt) {
+            if ($tt && $this->input->post('all')) {
+                // these exams for every subject of the class in this term
+                $this->class_results->set_default($exam, $rows);
+                foreach ($this->db->select('id')->where(array('cbse_exam_id' => (int) $exam['id'], 'custom_breakdown' => 1))->get('cbse_exam_timetable')->result_array() as $other) {
+                    try {
+                        $this->class_results->set_subject($exam, (int) $other['id'], null);
+                    } catch (RuntimeException $e) {
+                        // a subject with scores in an exam that goes keeps its own
+                    }
+                }
+            } elseif ($tt) {
                 $this->class_results->set_subject($exam, $tt, $this->input->post('reset') ? null : $rows);
             } else {
                 $this->class_results->set_default($exam, $rows);
@@ -259,6 +347,9 @@ class Results extends MY_Addon_CBSEController
             show_404();
         }
         $students = $this->class_results->exam_students($exam, (int) $class_id);
+        if ($this->input->method() !== 'post') {
+            redirect('cbseexam/results/subject/' . (int) $class_id . '/' . (int) $subjects[(int) $tt_id]['subject_id'] . '?term=' . (int) $exam['cbse_term_id']);
+        }
         if ($this->input->method() === 'post') {
             $this->need('cbse_exam_marks', 'can_edit');
             try {
