@@ -1,3 +1,75 @@
+<?php
+if (!function_exists('sidebar_submenu_icon')) {
+    /** An icon for a sidebar sub-menu entry: by its language key, else by words in its URL. */
+    function sidebar_submenu_icon($key, $url)
+    {
+        static $by_key = array(
+            'backup_restore' => 'fa-database', 'file_types' => 'fa-file-o', 'design_admit_card' => 'fa-id-card-o', 'manage_alumini' => 'fa-graduation-cap',
+            'events' => 'fa-calendar', 'approve_leave' => 'fa-check-square-o', 'audit_trail_report' => 'fa-history', 'platform_backups' => 'fa-database',
+            'plan' => 'fa-tags', 'coupons' => 'fa-ticket', 'invoices' => 'fa-file-text-o', 'reports' => 'fa-bar-chart', 'book_list' => 'fa-book',
+            'captcha_setting' => 'fa-shield', 'student_certificate' => 'fa-certificate', 'complain' => 'fa-commenting-o', 'setting' => 'fa-cog',
+            'live_class_report' => 'fa-line-chart', 'live_meeting' => 'fa-video-camera', 'live_meeting_report' => 'fa-bar-chart', 'live_class' => 'fa-desktop',
+            'content_share_list' => 'fa-share-alt', 'upload_content' => 'fa-cloud-upload', 'content_type' => 'fa-folder-open-o', 'currency' => 'fa-money',
+            'custom_fields' => 'fa-sliders', 'department' => 'fa-sitemap', 'designation' => 'fa-id-badge', 'disable_reason' => 'fa-ban',
+            'postal_dispatch' => 'fa-paper-plane-o', 'website_enquiries' => 'fa-globe', 'admission_enquiry' => 'fa-question-circle-o',
+            'exam_group' => 'fa-object-group', 'exam_result' => 'fa-trophy', 'print_admit_card' => 'fa-print', 'examinations' => 'fa-pencil-square-o',
+            'print_marksheet' => 'fa-print', 'exam_schedule' => 'fa-calendar-check-o', 'add_expense' => 'fa-minus-circle', 'search_expense' => 'fa-search',
+            'expense_head' => 'fa-list-alt', 'fees_discount' => 'fa-percent', 'fees_group' => 'fa-object-group', 'fees_master' => 'fa-sitemap',
+            'fees_reminder' => 'fa-bell-o', 'fees_overview' => 'fa-pie-chart', 'fees_discounts_balances' => 'fa-balance-scale', 'fees_collections' => 'fa-inbox',
+            'fees_create_fees' => 'fa-plus-square-o', 'fees_carry_forward' => 'fa-share', 'fees_type' => 'fa-tag', 'banner_images' => 'fa-picture-o',
+            'website_design' => 'fa-paint-brush', 'event' => 'fa-calendar', 'gallery' => 'fa-camera-retro', 'media_manager' => 'fa-folder-open',
+            'menus' => 'fa-bars', 'news' => 'fa-newspaper-o', 'pages' => 'fa-file-text-o', 'front_cms_setting' => 'fa-cog', 'setup_two_fa' => 'fa-lock',
+            'phone_call_log' => 'fa-phone', 'generate_certificate' => 'fa-certificate', 'generate_id_card' => 'fa-id-card', 'generate_staff_id_card' => 'fa-id-card-o',
+            'marks_grade' => 'fa-star-half-o', 'hostel' => 'fa-building', 'hostel_rooms' => 'fa-bed', 'add_income' => 'fa-plus-circle', 'search_income' => 'fa-search',
+            'income_head' => 'fa-list-alt', 'issue_item' => 'fa-sign-out', 'add_item' => 'fa-cube', 'item_category' => 'fa-th-large', 'add_item_stock' => 'fa-cubes',
+            'item_store' => 'fa-archive', 'item_supplier' => 'fa-truck', 'languages' => 'fa-language', 'approve_leave_request' => 'fa-check-square-o',
+            'leave_type' => 'fa-list-ul', 'copy_old_lesson' => 'fa-copy', 'lesson' => 'fa-book', 'topic' => 'fa-list-ol', 'send_email' => 'fa-envelope-o',
+            'send_sms' => 'fa-mobile', 'email_template' => 'fa-envelope-square', 'email_sms_log' => 'fa-history', 'schedule_email_sms_log' => 'fa-clock-o',
+            'sms_template' => 'fa-comment-o', 'marks_division' => 'fa-columns', 'design_marksheet' => 'fa-paint-brush', 'issue_return' => 'fa-exchange',
+            'add_student' => 'fa-user-plus', 'add_staff_member' => 'fa-user-plus', 'modules' => 'fa-puzzle-piece', 'notice_board' => 'fa-bullhorn',
+            'notification_setting' => 'fa-bell', 'offline_bank_payments' => 'fa-university', 'online_admission' => 'fa-wpforms', 'online_exam' => 'fa-laptop',
+            'online_examinations' => 'fa-bar-chart', 'payment_methods' => 'fa-credit-card', 'payroll' => 'fa-money', 'pickup_point' => 'fa-map-marker',
+            'route_pickup_point' => 'fa-map-signs', 'student_transport_fees' => 'fa-bus', 'plan_type' => 'fa-tags', 'email_templates' => 'fa-envelope-square',
+            'email_log' => 'fa-history', 'platform_settings_health' => 'fa-heartbeat', 'print_headerfooter' => 'fa-print', 'attendance' => 'fa-check-square-o',
+            'question_bank' => 'fa-database', 'postal_receive' => 'fa-inbox', 'roles_permissions' => 'fa-key', 'room_type' => 'fa-bed', 'routes' => 'fa-road',
+            'transport' => 'fa-bus', 'student_house' => 'fa-home', 'schools' => 'fa-university', 'school_create' => 'fa-plus', 'waiting_for_approval' => 'fa-hourglass-half',
+            'sidebar_menu' => 'fa-bars', 'platform_staff' => 'fa-users', 'staff_directory' => 'fa-address-book-o', 'disabled_staff' => 'fa-user-times',
+            'apply_leave' => 'fa-plane', 'teachers_rating' => 'fa-star', 'staff_attendance' => 'fa-calendar-check-o', 'staff_id_card' => 'fa-id-badge',
+            'promote_students' => 'fa-level-up', 'student_attendance' => 'fa-check-square-o', 'attendance_by_date' => 'fa-calendar', 'student_id_card' => 'fa-id-card',
+            'subjects' => 'fa-book', 'period_attendance' => 'fa-clock-o', 'period_attendance_by_date' => 'fa-calendar', 'subject_group' => 'fa-object-group',
+            'bank_transfer_payments' => 'fa-university', 'subscription' => 'fa-refresh', 'support_tickets' => 'fa-life-ring', 'support_desk' => 'fa-headphones',
+            'manage_lesson_plan' => 'fa-tasks', 'manage_syllabus_status' => 'fa-check-circle-o', 'system_fields' => 'fa-th-list',
+            'assign_class_teacher' => 'fa-user-circle-o', 'assign_subject_teachers' => 'fa-users', 'class_timetable' => 'fa-table', 'teachers_timetable' => 'fa-calendar-o',
+            'system_update' => 'fa-cloud-download', 'login_history' => 'fa-sign-in', 'user_log' => 'fa-history', 'users' => 'fa-users', 'vehicles' => 'fa-car',
+            'assign_vehicle' => 'fa-random', 'video_tutorial' => 'fa-youtube-play', 'visitor_book' => 'fa-address-book', 'setup_front_office' => 'fa-cogs',
+            'incidents' => 'fa-exclamation-triangle', 'assign_incident' => 'fa-flag', 'student_categories' => 'fa-tags', 'assessment' => 'fa-check-square',
+            'exam' => 'fa-file-text-o', 'exam_grade' => 'fa-star-half-o', 'observation' => 'fa-eye', 'assign_observation' => 'fa-binoculars',
+            'observation_parameter' => 'fa-sliders', 'template' => 'fa-clone', 'term' => 'fa-calendar-o', 'class' => 'fa-th-large', 'email_setting' => 'fa-envelope',
+            'finance' => 'fa-money', 'add_homework' => 'fa-pencil', 'daily_assignment' => 'fa-pencil-square', 'homework' => 'fa-book', 'online_course' => 'fa-play-circle',
+            'course_category' => 'fa-folder', 'online_course_report' => 'fa-bar-chart', 'offline_payment' => 'fa-university', 'alumni' => 'fa-graduation-cap',
+            'human_resource' => 'fa-users', 'inventory' => 'fa-cubes', 'lesson_plan' => 'fa-tasks', 'library' => 'fa-book', 'student_information' => 'fa-user',
+            'general_setting' => 'fa-cogs', 'fees_setting' => 'fa-money', 'sections' => 'fa-th', 'session_setting' => 'fa-calendar-o', 'sms_setting' => 'fa-mobile',
+            'bulk_delete' => 'fa-trash-o', 'login_credentials_send' => 'fa-key', 'student_admission' => 'fa-user-plus', 'disabled_students' => 'fa-user-times',
+            'multi_class_student' => 'fa-users', 'student_profile_update' => 'fa-pencil-square-o', 'student_details' => 'fa-search', 'collect_fees' => 'fa-money',
+            'search_due_fees' => 'fa-exclamation-circle', 'search_fees_payment' => 'fa-search-plus',
+        );
+        static $by_word = array('report' => 'fa-bar-chart', 'setting' => 'fa-cog', 'attend' => 'fa-check-square-o', 'fee' => 'fa-money', 'exam' => 'fa-file-text-o',
+            'student' => 'fa-user', 'staff' => 'fa-id-badge', 'mail' => 'fa-envelope-o', 'sms' => 'fa-mobile', 'book' => 'fa-book', 'search' => 'fa-search',
+            'add' => 'fa-plus-circle', 'list' => 'fa-list', 'print' => 'fa-print', 'class' => 'fa-th-large', 'time' => 'fa-clock-o');
+        $key = (string) $key;
+        if (isset($by_key[$key])) {
+            return $by_key[$key];
+        }
+        $hay = strtolower($key . ' ' . $url);
+        foreach ($by_word as $w => $icon) {
+            if (strpos($hay, $w) !== false) {
+                return $icon;
+            }
+        }
+        return 'fa-circle-o';
+    }
+}
+?>
 <aside class="main-sidebar" id="alert2">
     <?php if ($this->rbac->hasPrivilege('student', 'can_view')) { ?>
         <form class="navbar-form navbar-left search-form2" role="search"
@@ -123,7 +195,7 @@
 
                                                 <li class="<?php echo $submenu_value->id == $active_sub ? 'active' : ''; ?>">
                                                     <a href="<?php echo site_url($submenu_value->url); ?>"<?php echo $submenu_value->id == $active_sub ? ' aria-current="page"' : ''; ?>><i
-                                                            class="fa fa-angle-double-right"></i><?php echo $this->lang->line($submenu_value->lang_key) ?: html_escape($submenu_value->menu); ?></a>
+                                                            class="fa <?php echo sidebar_submenu_icon($submenu_value->lang_key, $submenu_value->url); ?>" aria-hidden="true"></i><?php echo $this->lang->line($submenu_value->lang_key) ?: html_escape($submenu_value->menu); ?></a>
                                                 </li>
 
 

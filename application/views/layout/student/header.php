@@ -419,12 +419,12 @@ $role = $this->customlib->getUserRole();
                                 <ul class="treeview-menu">
                                     <li class="<?php echo set_Submenu('content/index'); ?>">
                                         <a href="<?php echo base_url(); ?>user/content/list"><i
-                                                class="fa fa-angle-double-right"></i><?php echo $this->lang->line('contents'); ?></a>
+                                                class="fa fa-folder-open-o"></i><?php echo $this->lang->line('contents'); ?></a>
                                     </li>
 
                                     <li class="<?php echo set_Submenu('video_tutorial/index'); ?>"><a
                                             href="<?php echo base_url(); ?>user/video_tutorial"><i
-                                                class="fa fa-angle-double-right"></i>
+                                                class="fa fa-youtube-play"></i>
                                             <?php echo $this->lang->line('video_tutorial'); ?></a></li>
                                 </ul>
                             </li>
@@ -449,12 +449,12 @@ $role = $this->customlib->getUserRole();
                                 <ul class="treeview-menu">
                                     <li class="<?php echo set_Submenu('user/cbse/cbse_exam_result'); ?>"><a
                                             href="<?php echo site_url('user/cbse/exam/result'); ?>"><i
-                                                class="fa fa-angle-double-right"></i>
+                                                class="fa fa-trophy"></i>
                                             <?php echo $this->lang->line('exam_result'); ?></a></li>
 
                                     <li class="<?php echo set_Submenu('user/cbse/cbse_exam_timetable'); ?>"><a
                                             href="<?php echo site_url('user/cbse/exam/timetable'); ?>"><i
-                                                class="fa fa-angle-double-right"></i>
+                                                class="fa fa-calendar-check-o"></i>
                                             <?php echo $this->lang->line('exam_schedule'); ?></a></li>
 
                                 </ul>
@@ -473,11 +473,11 @@ $role = $this->customlib->getUserRole();
                                 <ul class="treeview-menu">
                                     <li class="<?php echo set_Submenu('examSchedule/index'); ?>"><a
                                             href="<?php echo base_url(); ?>user/examschedule"><i
-                                                class="fa fa-angle-double-right"></i>
+                                                class="fa fa-calendar-check-o"></i>
                                             <?php echo $this->lang->line('exam_schedule'); ?></a></li>
                                     <li class="<?php echo set_Submenu('examresult/index'); ?>"><a
                                             href="<?php echo base_url(); ?>user/exam/examresult"><i
-                                                class="fa fa-angle-double-right"></i>
+                                                class="fa fa-trophy"></i>
                                             <?php echo $this->lang->line('exam_result'); ?></a></li>
                                 </ul>
                             </li>
@@ -519,12 +519,12 @@ $role = $this->customlib->getUserRole();
                                 <ul class="treeview-menu">
                                     <li class="<?php echo set_Submenu('book/index'); ?>">
                                         <a href="<?php echo base_url(); ?>user/book">
-                                            <i class="fa fa-angle-double-right"></i>
+                                            <i class="fa fa-book"></i>
                                             <?php echo $this->lang->line('books'); ?></a>
                                     </li>
                                     <li class="<?php echo set_Submenu('book/issue'); ?>">
                                         <a href="<?php echo base_url(); ?>user/book/issue">
-                                            <i class="fa fa-angle-double-right"></i>
+                                            <i class="fa fa-exchange"></i>
                                             <?php echo $this->lang->line('book_issued'); ?></a>
                                     </li>
                                 </ul>
