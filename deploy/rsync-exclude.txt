@@ -15,6 +15,7 @@
 /application/cache/
 /application/tmp/
 /application/backups/
+/application/cbt_snapshots/
 /application/seeds/school_*/
 /temp/
 # Default images ship with the code; schools' own files live in shared/uploads only.

@@ -174,6 +174,7 @@ $config['tenancy_tenant_tables'] = array(
     'onlineexam',
     'onlineexam_attempts',
     'onlineexam_questions',
+    'onlineexam_snapshots',
     'onlineexam_student_results',
     'onlineexam_students',
     'payment_settings',

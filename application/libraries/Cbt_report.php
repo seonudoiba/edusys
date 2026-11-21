@@ -82,7 +82,12 @@ class Cbt_report
             if ($st['percentage'] !== null && $st['status'] === 'done') {
                 $percentages[] = (float) $st['percentage'];
             }
+            $own = !empty($st['question_ids']) ? json_decode((string) $st['question_ids'], true) : null;
+            $own = is_array($own) && $own ? array_map('intval', $own) : null;
             foreach ($questions as $oq_id => &$q) {
+                if ($own && !in_array((int) $oq_id, $own, true)) {
+                    continue; // not in this student's set
+                }
                 $a = isset($answers[(int) $st['id']][$oq_id]) ? $answers[(int) $st['id']][$oq_id] : array();
                 $verdict = Cbt_scoring::verdict(array(
                     'question_type' => $q['question_type'], 'correct' => $q['correct'],

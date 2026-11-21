@@ -115,19 +115,23 @@ class Cbt_attempt
         $db = $this->CI->db;
         $now = time();
         $ends = min($now + max(60, (int) getSecondsFromHMS($exam['duration'])), strtotime($exam['exam_to']));
+        $this->CI->load->library('Cbt_integrity');
+        $seed = random_int(1, 2000000000);
+        $own = $this->CI->cbt_integrity->pick($exam, $seed);
         $db->trans_start();
-        // A new attempt: the latest one counts, so earlier answers and score go.
+        // A new attempt: the latest one counts, so earlier answers, photos and score go.
         $this->delete_files($os);
+        $this->CI->cbt_integrity->delete_snapshots((int) $os['id']);
         $db->where('onlineexam_student_id', (int) $os['id'])->delete('onlineexam_student_results');
         $db->where('id', (int) $os['id'])->update('onlineexam_students', array('is_attempted' => 0, 'score' => null, 'max_score' => null,
             'neg_score' => null, 'correct_count' => null, 'wrong_count' => null, 'unanswered_count' => null, 'pending_count' => null,
-            'percentage' => null, 'passed' => null, 'scored_at' => null));
+            'percentage' => null, 'passed' => null, 'scored_at' => null, 'question_ids' => $own ? json_encode($own) : null));
         $db->insert('onlineexam_attempts', array(
             'onlineexam_student_id' => (int) $os['id'],
             'started_at' => date('Y-m-d H:i:s', $now),
             'ends_at' => date('Y-m-d H:i:s', $ends),
-            'seed' => random_int(1, 2000000000),
-        ));
+            'seed' => $seed,
+        ) + $this->CI->cbt_integrity->stamp());
         $id = (int) $db->insert_id();
         $db->trans_complete();
         if (!$db->trans_status()) {
@@ -154,6 +158,11 @@ class Cbt_attempt
             ->join('subjects s', 's.id = q.subject_id', 'left')
             ->where('oq.onlineexam_id', (int) $exam['id'])
             ->order_by('oq.id', 'asc')->get()->result_array();
+        // the student's own set of questions, when each student gets a different set
+        $own = $this->own_ids($os);
+        if ($own) {
+            $rows = array_values(array_filter($rows, function ($r) use ($own) { return in_array((int) $r['id'], $own, true); }));
+        }
         $seed = (int) $attempt['seed'];
         if (!empty($exam['is_random_question'])) {
             $rows = self::shuffled($rows, $seed);
@@ -214,7 +223,7 @@ class Cbt_attempt
     public function save(array $exam, array $os, array $attempt, $question_id, $value)
     {
         $this->require_open($attempt);
-        $q = $this->exam_question($exam, $question_id);
+        $q = $this->exam_question($exam, $question_id, $os);
         $answer = $this->clean_answer($exam, $q, $value);
         $this->upsert($os, (int) $question_id, array('select_option' => $answer));
     }
@@ -223,7 +232,7 @@ class Cbt_attempt
     public function upload(array $exam, array $os, array $attempt, $question_id, array $file)
     {
         $this->require_open($attempt);
-        $q = $this->exam_question($exam, $question_id);
+        $q = $this->exam_question($exam, $question_id, $os);
         if ($q['question_type'] !== 'descriptive') {
             throw new RuntimeException('Files can only be added to written answers.');
         }
@@ -318,8 +327,22 @@ class Cbt_attempt
         return substr($text, 0, $last[1] + strlen($last[0]));
     }
 
-    private function exam_question(array $exam, $question_id)
+    /** The student's own question ids (stored on their onlineexam_students row), or null for all. */
+    private function own_ids(array $os)
     {
+        $this->CI->load->library('Cbt_integrity');
+        $row = $this->CI->db->select('question_ids')->where('id', (int) $os['id'])->get('onlineexam_students')->row_array();
+        return Cbt_integrity::own_ids($row ?: array());
+    }
+
+    private function exam_question(array $exam, $question_id, array $os = null)
+    {
+        if ($os) {
+            $own = $this->own_ids($os);
+            if ($own && !in_array((int) $question_id, $own, true)) {
+                throw new RuntimeException('That question is not part of your exam.');
+            }
+        }
         $q = $this->CI->db->select('oq.id, q.question_type, q.opt_a, q.opt_b, q.opt_c, q.opt_d, q.opt_e, q.descriptive_word_limit')
             ->from('onlineexam_questions oq')->join('questions q', 'q.id = oq.question_id')
             ->where(array('oq.id' => (int) $question_id, 'oq.onlineexam_id' => (int) $exam['id']))->get()->row_array();

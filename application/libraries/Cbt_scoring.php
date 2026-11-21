@@ -38,6 +38,14 @@ class Cbt_scoring
             ->join('onlineexam_student_results r', 'r.onlineexam_question_id = oq.id AND r.onlineexam_student_id = ' . (int) $os['id'], 'left')
             ->where('oq.onlineexam_id', (int) $os['onlineexam_id'])
             ->get()->result_array();
+        // each student their own set of questions: only those count (and make the maximum)
+        if (!empty($os['question_ids'])) {
+            $own = json_decode((string) $os['question_ids'], true);
+            if (is_array($own) && $own) {
+                $own = array_map('intval', $own);
+                $rows = array_values(array_filter($rows, function ($r) use ($own) { return in_array((int) $r['id'], $own, true); }));
+            }
+        }
 
         $neg_on = !empty($exam['is_neg_marking']);
         $s = array('score' => 0.0, 'max_score' => 0.0, 'neg_score' => 0.0, 'correct_count' => 0, 'wrong_count' => 0, 'unanswered_count' => 0, 'pending_count' => 0);

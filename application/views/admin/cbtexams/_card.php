@@ -31,6 +31,15 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
     <div class="cbt-link"><i class="fa fa-file-text-o"></i>
         <?php echo $o['link'] ? 'Scores go to the report card: <b>' . html_escape($o['link']['term_name'] . ' — ' . $o['link']['assessment']) . '</b> (scaled to ' . (float) $o['link']['maximum_marks'] . ')' : 'Practice: not on a report card'; ?>
     </div>
+    <?php
+    $sec = array();
+    if ((int) $o['lock_device']) { $sec[] = 'one device'; }
+    if ((int) $o['questions_per_student'] > 0 && (int) $o['questions_per_student'] < (int) $o['questions']) { $sec[] = (int) $o['questions_per_student'] . ' of ' . (int) $o['questions'] . ' questions each'; }
+    if ((int) $o['require_fullscreen']) { $sec[] = 'full screen'; }
+    if ((string) $o['allowed_ips'] !== '') { $sec[] = "school network only"; }
+    if ((int) $o['webcam']) { $sec[] = 'webcam'; }
+    if ((string) $o['exam_pin'] !== '') { $sec[] = 'PIN <b style="letter-spacing:.12em">' . html_escape($o['exam_pin']) . '</b>'; }
+    if ($sec) { ?><div class="cbt-link"><i class="fa fa-shield"></i> <?php echo implode(' · ', $sec); ?></div><?php } ?>
     <?php if ($o['link'] && isset($o['link']['marks_status']) && $o['link']['marks_status'] === 'approved') { ?>
         <div class="cbt-link" style="background:#fef2f2;color:#b91c1c;border-color:#fecaca"><i class="fa fa-lock"></i> This subject's report card scores are approved and locked, so new CBT scores are not going in. Unlock them on the subject's Results page, then Pull scores.</div>
     <?php } ?>
@@ -59,6 +68,12 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
                         </select>
                     </label>
                 <?php } ?>
+                <input type="hidden" name="security" value="1">
+                <b style="display:block;margin-top:8px"><i class="fa fa-shield"></i> Exam security</b>
+                <label class="cbt-l" style="font-weight:500"><input type="checkbox" name="lock_device" value="1" <?php echo (int) $o['lock_device'] ? 'checked' : ''; ?>> One device per student</label>
+                <label class="cbt-l" style="font-weight:500"><input type="checkbox" name="require_fullscreen" value="1" <?php echo (int) $o['require_fullscreen'] ? 'checked' : ''; ?>> Full screen</label>
+                <label class="cbt-l" style="font-weight:500"><input type="checkbox" name="webcam" value="1" <?php echo (int) $o['webcam'] ? 'checked' : ''; ?>> Webcam photos (parents' consent first)</label>
+                <div class="cbt-row"><label>Questions each<input type="number" name="questions_per_student" min="0" max="500" class="form-control input-sm" value="<?php echo (int) $o['questions_per_student']; ?>" title="0 = all; else each student's own random set"></label><label>Exam PIN<input name="exam_pin" maxlength="12" class="form-control input-sm" value="<?php echo html_escape((string) $o['exam_pin']); ?>" placeholder="none"></label></div>
                 <button class="btn btn-primary btn-xs btn-block">Save</button>
                 <?php echo form_close(); ?>
             </div></details>
