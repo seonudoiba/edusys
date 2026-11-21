@@ -86,6 +86,7 @@ class Cbt_admin
             $o['students'] = 0;
             $o['taken'] = 0;
             $o['average'] = null;
+            $o['to_mark'] = 0;
             $o['link'] = null;
             $out[(int) $o['id']] = $o;
         }
@@ -93,7 +94,8 @@ class Cbt_admin
             $out[(int) $r['id']]['questions'] = (int) $r['n'];
             $out[(int) $r['id']]['total_marks'] = (float) $r['m'];
         }
-        foreach ($this->db->select('onlineexam_id AS id, COUNT(*) AS n, SUM(is_attempted = 1) AS t, AVG(CASE WHEN is_attempted = 1 THEN percentage END) AS a', false)->where_in('onlineexam_id', $ids)->group_by('onlineexam_id')->get('onlineexam_students')->result_array() as $r) {
+        foreach ($this->db->select('onlineexam_id AS id, COUNT(*) AS n, SUM(is_attempted = 1) AS t, AVG(CASE WHEN is_attempted = 1 THEN percentage END) AS a, SUM(is_attempted = 1 AND pending_count > 0) AS w', false)->where_in('onlineexam_id', $ids)->group_by('onlineexam_id')->get('onlineexam_students')->result_array() as $r) {
+            $out[(int) $r['id']]['to_mark'] = (int) $r['w'];
             $out[(int) $r['id']]['students'] = (int) $r['n'];
             $out[(int) $r['id']]['taken'] = (int) $r['t'];
             $out[(int) $r['id']]['average'] = $r['a'] === null ? null : round((float) $r['a'], 1);

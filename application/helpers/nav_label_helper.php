@@ -154,8 +154,7 @@ if (!function_exists('nav_entry_label')) {
             'admin/qrattendance/attendance/index' => 'Scan QR Attendance',
             'admin/qrattendance/setting/index' => 'QR Attendance Settings',
             // CBT Exams
-            'admin/cbtexams' => 'CBT Exams by Class',
-            'admin/onlineexam' => 'All CBTs',
+            'admin/onlineexam' => 'CBT Exams',
             'admin/question' => 'Question Bank',
             // Classes & Timetable
             'admin/timetable/classreport' => 'Class Timetable',
