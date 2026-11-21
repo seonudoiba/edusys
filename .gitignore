@@ -72,3 +72,6 @@ application/tmp/
 
 # sample images kept locally only
 *.jfif
+
+# CBT webcam photos (kept in shared/ on the server)
+/application/cbt_snapshots/

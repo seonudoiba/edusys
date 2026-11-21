@@ -127,24 +127,39 @@ class Onlineexam extends Student_Controller
             $this->session->set_flashdata('msg', '<div class="alert alert-info">' . html_escape($message) . '</div>');
             redirect('user/onlineexam/view/' . (int) $exam['id']);
         }
+        $this->load->library('Cbt_integrity');
+        $this->cbt_integrity->device_key();
+        try {
+            $this->cbt_integrity->check($exam, null); // the school's network
+        } catch (RuntimeException $e) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-warning">' . html_escape($e->getMessage()) . '</div>');
+            redirect('user/onlineexam/view/' . (int) $exam['id']);
+        }
         $student = $this->student_model->getByStudentSession($os['student_session_id']);
         $this->load->view('user/onlineexam/take', array(
             'exam' => $exam,
             'state' => $state,
             'student' => $student,
             'sch_setting' => $this->sch_setting_detail,
-            'question_count' => $this->db->where('onlineexam_id', (int) $exam['id'])->count_all_results('onlineexam_questions'),
+            'question_count' => (int) $exam['questions_per_student'] > 0
+                ? min((int) $exam['questions_per_student'], $this->db->where('onlineexam_id', (int) $exam['id'])->count_all_results('onlineexam_questions'))
+                : $this->db->where('onlineexam_id', (int) $exam['id'])->count_all_results('onlineexam_questions'),
         ));
     }
 
-    /** POST exam_id: starts or resumes the attempt; the paper, saved answers and seconds left. */
+    /** POST exam_id, pin: starts or resumes the attempt; the paper, saved answers and seconds left. */
     public function start()
     {
         list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
         try {
+            $running = $this->cbt_attempt->running($exam, $os);
+            $this->cbt_integrity->check($exam, $running);
+            if (!$running && !Cbt_integrity::pin_ok($exam, $this->input->post('pin'))) {
+                return $this->cbt_json(array('ok' => false, 'pin' => true, 'error' => 'That is not the exam PIN. Ask your invigilator for it.'));
+            }
             $attempt = $this->cbt_attempt->start($exam, $os);
         } catch (RuntimeException $e) {
-            return $this->cbt_json(array('ok' => false, 'error' => $e->getMessage()));
+            return $this->cbt_json(array('ok' => false, 'error' => $e->getMessage(), 'blocked' => true));
         }
         $paper = $this->cbt_attempt->paper($exam, $os, $attempt);
         $this->cbt_json(array('ok' => true, 'attempt' => (int) $attempt['id'], 'seconds_left' => $this->cbt_attempt->seconds_left($attempt),
@@ -158,6 +173,9 @@ class Onlineexam extends Student_Controller
         $attempt = $this->cbt_attempt->running($exam, $os);
         if (!$attempt) {
             return $this->cbt_json(array('ok' => false, 'ended' => true, 'error' => 'This exam has ended. Your saved answers were submitted.'));
+        }
+        if (($blocked = $this->cbt_guard($exam, $attempt)) !== null) {
+            return $blocked;
         }
         $value = $this->input->post('answer');
         if ($value === null) {
@@ -179,6 +197,9 @@ class Onlineexam extends Student_Controller
         if (!$attempt) {
             return $this->cbt_json(array('ok' => false, 'ended' => true, 'error' => 'This exam has ended.'));
         }
+        if (($blocked = $this->cbt_guard($exam, $attempt)) !== null) {
+            return $blocked;
+        }
         try {
             $name = $this->cbt_attempt->upload($exam, $os, $attempt, (int) $this->input->post('question_id'), isset($_FILES['file']) ? $_FILES['file'] : array());
         } catch (RuntimeException $e) {
@@ -193,6 +214,9 @@ class Onlineexam extends Student_Controller
         list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
         $attempt = $this->cbt_attempt->running($exam, $os); // a passed deadline is closed (submitted) here already
         if ($attempt) {
+            if (($blocked = $this->cbt_guard($exam, $attempt)) !== null) {
+                return $blocked;
+            }
             $this->cbt_attempt->submit($exam, $os, $attempt);
         }
         $this->session->set_flashdata('msg', '<div class="alert alert-success">Your exam has been submitted.</div>');
@@ -210,6 +234,9 @@ class Onlineexam extends Student_Controller
         if (!$attempt) {
             return $this->cbt_json(array('ok' => false, 'ended' => true));
         }
+        if (($blocked = $this->cbt_guard($exam, $attempt)) !== null) {
+            return $blocked;
+        }
         $max = (int) (isset($exam['max_tab_switches']) ? $exam['max_tab_switches'] : 0);
         $count = (int) (isset($attempt['tab_switches']) ? $attempt['tab_switches'] : 0);
         if ($this->input->post('away')) {
@@ -225,10 +252,41 @@ class Onlineexam extends Student_Controller
         $this->cbt_json(array('ok' => true, 'count' => $count, 'max' => $max, 'seconds_left' => $this->cbt_attempt->seconds_left($attempt)));
     }
 
+    /** POST exam_id, photo (JPEG data URL), reason: a webcam photo of the running attempt. */
+    public function snap()
+    {
+        list($exam, $os) = $this->cbt_enrolment($this->input->post('exam_id'), true);
+        $attempt = $this->cbt_attempt->running($exam, $os);
+        if (!$attempt || empty($exam['webcam'])) {
+            return $this->cbt_json(array('ok' => false, 'ended' => !$attempt));
+        }
+        if (($blocked = $this->cbt_guard($exam, $attempt)) !== null) {
+            return $blocked;
+        }
+        try {
+            $this->cbt_integrity->snapshot($os, $attempt, (string) $this->input->post('photo', false), (string) $this->input->post('reason'));
+        } catch (RuntimeException $e) {
+            return $this->cbt_json(array('ok' => false, 'error' => $e->getMessage()));
+        }
+        $this->cbt_json(array('ok' => true));
+    }
+
+    /** null, or the JSON reply when this request isn't from the school's network or the attempt's device. */
+    private function cbt_guard(array $exam, array $attempt)
+    {
+        try {
+            $this->cbt_integrity->check($exam, $attempt);
+        } catch (RuntimeException $e) {
+            $this->cbt_json(array('ok' => false, 'blocked' => true, 'error' => $e->getMessage()));
+            return true;
+        }
+        return null;
+    }
+
     /** The exam and this student's place in it; only the student (not a parent) and only their own. */
     private function cbt_enrolment($exam_id, $json = false)
     {
-        $this->load->library('Cbt_attempt');
+        $this->load->library(array('Cbt_attempt', 'Cbt_integrity'));
         $fail = function ($message) use ($json) {
             if ($json) {
                 $this->cbt_json(array('ok' => false, 'error' => $message));

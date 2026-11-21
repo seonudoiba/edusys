@@ -46,10 +46,16 @@ $iv_max = (int) $exam['max_tab_switches'];
                     <div class="iv-kpi"><small>Submitted</small><b style="color:#15803d"><?php echo $iv_counts['done']; ?></b></div>
                     <div class="iv-kpi"><small>Not started</small><b style="color:#64748b"><?php echo $iv_counts['not']; ?></b></div>
                 </div>
-                <p class="text-muted small"><i class="fa fa-shield"></i> Leaving the exam page: <?php echo $iv_max ? 'submitted after ' . $iv_max . ' times' : 'recorded only'; ?> · copy and paste <?php echo (int) $exam['block_copy'] ? 'blocked' : 'allowed'; ?>. This page refreshes every 30 seconds (paused while you type).</p>
+                <p class="text-muted small"><i class="fa fa-shield"></i> Leaving the exam page: <?php echo $iv_max ? 'submitted after ' . $iv_max . ' times' : 'recorded only'; ?> · copy and paste <?php echo (int) $exam['block_copy'] ? 'blocked' : 'allowed'; ?><?php
+                    echo (int) $exam['lock_device'] ? ' · one device per student' : '';
+                    echo (int) $exam['require_fullscreen'] ? ' · full screen' : '';
+                    echo (int) $exam['questions_per_student'] > 0 ? ' · ' . (int) $exam['questions_per_student'] . ' questions each' : '';
+                    echo (string) $exam['allowed_ips'] !== '' ? ' · school network only' : '';
+                    echo (int) $exam['webcam'] ? ' · webcam photos' : ''; ?>.<?php
+                    if ((string) $exam['exam_pin'] !== '') { ?></p><p style="font-size:15px"><i class="fa fa-key"></i> Exam PIN to read out: <b style="font-size:20px;letter-spacing:.2em"><?php echo html_escape($exam['exam_pin']); ?></b><?php } ?> This page refreshes every 30 seconds (paused while you type).</p>
                 <div class="table-responsive">
                     <table class="table table-striped iv-table">
-                        <thead><tr><th>Student</th><th>Status</th><th>Time left / submitted</th><th class="text-center">Left the page</th><th>Extra time</th><?php if ($can_edit) { ?><th>Give extra time</th><?php } ?></tr></thead>
+                        <thead><tr><th>Student</th><th>Status</th><th>Time left / submitted</th><th class="text-center">Left the page</th><th>Device</th><?php if ((int) $exam['webcam']) { ?><th>Photos</th><?php } ?><th>Extra time</th><?php if ($can_edit) { ?><th>Give extra time</th><?php } ?></tr></thead>
                         <tbody>
                             <?php foreach ($rows as $r) { ?>
                                 <tr>
@@ -66,6 +72,23 @@ $iv_max = (int) $exam['max_tab_switches'];
                                         } else { echo '<span class="text-muted">–</span>'; } ?>
                                     </td>
                                     <td class="text-center <?php echo (int) $r['tab_switches'] > 0 ? 'iv-warn' : ''; ?>"><?php echo $r['attempt_id'] ? (int) $r['tab_switches'] . ($iv_max ? ' / ' . $iv_max : '') : '–'; ?></td>
+                                    <td>
+                                        <?php if ($r['attempt_id'] && $r['ip']) {
+                                            $ua = (string) $r['user_agent'];
+                                            $dev = preg_match('/iPhone|iPad/', $ua) ? 'iPhone/iPad' : (preg_match('/Android/', $ua) ? 'Android' : (preg_match('/Windows/', $ua) ? 'Windows' : (preg_match('/Mac OS/', $ua) ? 'Mac' : (preg_match('/CrOS/', $ua) ? 'Chromebook' : (preg_match('/Linux/', $ua) ? 'Linux' : 'Device')))));
+                                            $br = preg_match('/Edg\//', $ua) ? 'Edge' : (preg_match('/Chrome\//', $ua) ? 'Chrome' : (preg_match('/Firefox\//', $ua) ? 'Firefox' : (preg_match('/Safari\//', $ua) ? 'Safari' : '')));
+                                            echo '<small>' . html_escape(trim($dev . ' ' . $br)) . '<br><span class="text-muted">' . html_escape($r['ip']) . '</span></small>';
+                                            if ($can_edit && $r['state'] === 'running' && (int) $exam['lock_device']) { ?>
+                                                <?php echo form_open('admin/onlineexam/release_device', array('style' => 'margin-top:4px')); ?>
+                                                <input type="hidden" name="os_id" value="<?php echo (int) $r['os_id']; ?>">
+                                                <button class="btn btn-xs btn-default" title="Their device stopped working: the exam continues on the next device they open it on" <?php echo $r['device_key'] ? '' : 'disabled'; ?>><i class="fa fa-exchange"></i> <?php echo $r['device_key'] ? 'Move to another device' : 'Waiting for new device'; ?></button>
+                                                <?php echo form_close(); ?>
+                                            <?php }
+                                        } else { echo '<span class="text-muted">–</span>'; } ?>
+                                    </td>
+                                    <?php if ((int) $exam['webcam']) { ?>
+                                        <td><?php if (isset($photos[(int) $r['os_id']])) { ?><a href="<?php echo site_url('admin/onlineexam/photos/' . (int) $r['os_id']); ?>"><img src="<?php echo site_url('admin/onlineexam/photo/' . $photos[(int) $r['os_id']][1]); ?>" alt="" style="width:56px;height:42px;object-fit:cover;border-radius:6px;vertical-align:middle"> <?php echo $photos[(int) $r['os_id']][0]; ?></a><?php } else { echo '<span class="text-muted">–</span>'; } ?></td>
+                                    <?php } ?>
                                     <td><?php echo (int) $r['extra_minutes'] ? '<b>+' . (int) $r['extra_minutes'] . ' min</b><br><small class="text-muted">' . html_escape($r['extra_reason']) . '</small>' : '<span class="text-muted">–</span>'; ?></td>
                                     <?php if ($can_edit) { ?>
                                         <td>

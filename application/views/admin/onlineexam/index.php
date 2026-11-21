@@ -13,6 +13,13 @@ $language_name = $language["short_code"];
             }
 </style>
 
+<style>
+    .cbt-sec{margin-top:14px;border:1px solid #e5e9f0;border-radius:12px;padding:12px 14px;background:#f8fafc}
+    .cbt-sec > b{display:block;margin-bottom:6px}
+    .cbt-sec .checkbox-inline{display:block;margin:4px 0 0 0;padding-left:20px}
+    .cbt-sec-row{margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+    .cbt-sec-row label{margin:0;font-weight:500}
+</style>
 <div class="content-wrapper">
     <section class="content">
         <?php if (!empty($cbt_classes)) { $this->load->view('admin/cbtexams/_style'); ?>
@@ -327,6 +334,29 @@ function findOption($questionOpt, $find)
                                         <label for="max_tab_switches" style="margin:0;font-weight:500">Submit the exam when a student leaves the exam page</label>
                                         <input type="number" id="max_tab_switches" name="max_tab_switches" class="form-control input-sm" style="width:80px" min="0" max="50" value="3">
                                         <span class="text-muted small">times (0 = only record it). Every time is recorded and the student is warned.</span>
+                                      </div>
+                                      <div class="cbt-sec">
+                                        <b><i class="fa fa-shield"></i> Exam security</b>
+                                        <label class="checkbox-inline" title="Another device can't open the exam once it has started; the invigilator can move it"><input type="checkbox" name="lock_device" value="1"> Keep each student's exam on one device</label>
+                                        <label class="checkbox-inline" title="Phones (iPhone) can't go full screen: there only leaving the page is counted"><input type="checkbox" name="require_fullscreen" value="1"> Full screen (leaving it counts as leaving the page)</label>
+                                        <div class="cbt-sec-row">
+                                          <label>Each student answers <input type="number" name="questions_per_student" min="0" max="500" value="0" class="form-control input-sm" style="width:80px;display:inline-block"> of the questions</label>
+                                          <span class="text-muted small">0 = all. Each student gets their own random set, with the same mix of easy, medium and hard as the exam.</span>
+                                        </div>
+                                        <div class="cbt-sec-row">
+                                          <label>Exam PIN <input type="text" name="exam_pin" maxlength="12" class="form-control input-sm" style="width:120px;display:inline-block;letter-spacing:.15em" autocomplete="off"></label>
+                                          <button type="button" class="btn btn-default btn-xs" onclick="this.form.exam_pin.value=Math.random().toString().slice(2,8)">New PIN</button>
+                                          <span class="text-muted small">Read it out in the hall: the exam only starts with it. Empty = no PIN.</span>
+                                        </div>
+                                        <div class="cbt-sec-row">
+                                          <label style="display:block">Only on the school's network <span class="text-muted small">(IP addresses or prefixes, e.g. 102.89.34.12 or 102.89.; empty = anywhere)</span></label>
+                                          <input type="text" name="allowed_ips" maxlength="500" class="form-control input-sm" style="max-width:420px;display:inline-block">
+                                          <button type="button" class="btn btn-default btn-xs" onclick="var f=this.form.allowed_ips;f.value=(f.value?f.value+', ':'')+'<?php echo html_escape($this->cbt_integrity->client_ip()); ?>'">Add this network (<?php echo html_escape($this->cbt_integrity->client_ip()); ?>)</button>
+                                        </div>
+                                        <div class="cbt-sec-row">
+                                          <label class="checkbox-inline" style="margin:0"><input type="checkbox" name="webcam" value="1"> Webcam photos every <input type="number" name="webcam_minutes" min="1" max="30" value="3" class="form-control input-sm" style="width:60px;display:inline-block"> minutes</label>
+                                          <span class="text-muted small">Also when the student leaves the page. Only staff see them (Invigilate page). Get parents' consent before using this.</span>
+                                        </div>
                                       </div>
 
                 </div>
@@ -682,6 +712,9 @@ $(document).on('submit','#delete_question',function(e) {
             $(this).find('input:checkbox').prop('checked', false);
             $('input[name=block_copy]').prop('checked', true);
             $('input[name=max_tab_switches]').val('3');
+            $('input[name=lock_device]').prop('checked', true);
+            $('input[name=questions_per_student]').val('0');
+            $('input[name=webcam_minutes]').val('3');
             $('input.publish_result, input#auto_publish_date').prop('disabled', false);
         });
 
@@ -838,6 +871,13 @@ $(document).on('submit','#delete_question',function(e) {
                         $('input[name=is_random_option]').prop('checked', data.result.is_random_option == 1);
                         $('input[name=block_copy]').prop('checked', data.result.block_copy === undefined || data.result.block_copy == 1);
                         $('input[name=max_tab_switches]').val(data.result.max_tab_switches === undefined ? 3 : data.result.max_tab_switches);
+                        $('input[name=lock_device]').prop('checked', data.result.lock_device == 1);
+                        $('input[name=require_fullscreen]').prop('checked', data.result.require_fullscreen == 1);
+                        $('input[name=questions_per_student]').val(data.result.questions_per_student || 0);
+                        $('input[name=exam_pin]').val(data.result.exam_pin || '');
+                        $('input[name=allowed_ips]').val(data.result.allowed_ips || '');
+                        $('input[name=webcam]').prop('checked', data.result.webcam == 1);
+                        $('input[name=webcam_minutes]').val(data.result.webcam_minutes || 3);
                         $('#myModal').modal('show');
                     }
                     $this.button('reset');

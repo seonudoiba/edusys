@@ -38,6 +38,9 @@ class Onlineexam extends Admin_Controller
         'invigilate' => array(array('online_examination', 'can_view')),
         'random_draw' => array(array('add_questions_in_exam', 'can_edit')),
         'extra_time' => array(array('online_examination', 'can_edit')),
+        'release_device' => array(array('online_examination', 'can_edit')),
+        'photos' => array(array('online_examination', 'can_view')),
+        'photo' => array(array('online_examination', 'can_view')),
         'results_export' => array(array('online_examination', 'can_view')),
         'report' => array(array('online_exam_wise_report', 'can_view')),
         'dtreportlist' => array(array('online_exam_wise_report', 'can_view')),
@@ -56,6 +59,7 @@ class Onlineexam extends Admin_Controller
         $this->load->library('mailsmsconf');
         $this->load->library('media_storage');
         $this->load->library('Exam_auto_publish');
+        $this->load->library('Cbt_integrity');
         $this->exam_auto_publish->publish_due(); // results whose Auto Result Publish Date has passed
     }
 
@@ -1043,7 +1047,8 @@ class Onlineexam extends Admin_Controller
             show_404();
         }
         $rows = $this->db->select("os.id AS os_id, st.admission_no, CONCAT_WS(' ', st.firstname, st.middlename, st.lastname) AS name, c.class, s.section,
-                a.id AS attempt_id, a.started_at, a.ends_at, a.submitted_at, a.tab_switches, a.extra_minutes, a.extra_reason, a.forced_submit, os.percentage", false)
+                a.id AS attempt_id, a.started_at, a.ends_at, a.submitted_at, a.tab_switches, a.extra_minutes, a.extra_reason, a.forced_submit, os.percentage,
+                a.ip, a.user_agent, a.device_key", false)
             ->from('onlineexam_students os')
             ->join('student_session ss', 'ss.id = os.student_session_id')
             ->join('students st', 'st.id = ss.student_id')
@@ -1052,7 +1057,14 @@ class Onlineexam extends Admin_Controller
             ->where('os.onlineexam_id', (int) $id)->order_by('c.class')->order_by('s.section')->order_by('st.firstname')->get()->result_array();
         $this->session->set_userdata('top_menu', 'Online_Examinations');
         $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
-        $data = array('exam' => $exam, 'rows' => $rows, 'can_edit' => $this->rbac->hasPrivilege('online_examination', 'can_edit'));
+        $photos = array();
+        if ($rows) {
+            foreach ($this->db->select('onlineexam_student_id AS os, COUNT(*) AS n, MAX(id) AS last', false)->where_in('onlineexam_student_id', array_map('intval', array_column($rows, 'os_id')))
+                ->group_by('onlineexam_student_id')->get('onlineexam_snapshots')->result_array() as $p) {
+                $photos[(int) $p['os']] = array((int) $p['n'], (int) $p['last']);
+            }
+        }
+        $data = array('exam' => $exam, 'rows' => $rows, 'photos' => $photos, 'can_edit' => $this->rbac->hasPrivilege('online_examination', 'can_edit'));
         $this->load->view('layout/header', $data);
         $this->load->view('admin/onlineexam/invigilate', $data);
         $this->load->view('layout/footer', $data);
@@ -1090,6 +1102,46 @@ class Onlineexam extends Admin_Controller
         $this->db->where('id', (int) $attempt['id'])->update('onlineexam_attempts', $set);
         $this->session->set_flashdata('inv_msg', array('success', $msg));
         redirect($back);
+    }
+
+    /** POST os_id: the student's running exam moves to whichever device opens it next (theirs stopped working). */
+    public function release_device()
+    {
+        if (!$this->rbac->hasPrivilege('online_examination', 'can_edit')) {
+            access_denied();
+        }
+        $os = $this->db->where('id', (int) $this->input->post('os_id'))->get('onlineexam_students')->row_array();
+        $ok = $os && $this->cbt_integrity->release((int) $os['id']);
+        $this->session->set_flashdata('inv_msg', $ok ? array('success', 'Done: the student can now continue on another device, with the time they have left.') : array('danger', 'That student has not started the exam.'));
+        redirect('admin/onlineexam/invigilate/' . ($os ? (int) $os['onlineexam_id'] : 0));
+    }
+
+    /** One student's webcam photos during the exam. */
+    public function photos($os_id = null)
+    {
+        $os = $this->db->where('id', (int) $os_id)->get('onlineexam_students')->row_array();
+        $exam = $os ? $this->db->where('id', (int) $os['onlineexam_id'])->get('onlineexam')->row_array() : null;
+        if (!$exam) {
+            show_404();
+        }
+        $student = $this->db->select("CONCAT_WS(' ', st.firstname, st.middlename, st.lastname) AS name, st.admission_no", false)->from('student_session ss')
+            ->join('students st', 'st.id = ss.student_id')->where('ss.id', (int) $os['student_session_id'])->get()->row_array();
+        $this->session->set_userdata('top_menu', 'Online_Examinations');
+        $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
+        $data = array('exam' => $exam, 'student' => $student, 'shots' => $this->cbt_integrity->snapshots((int) $os['id']));
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/onlineexam/photos', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /** One webcam photo (staff only: this controller needs online_examination). */
+    public function photo($id = null)
+    {
+        $path = $this->cbt_integrity->snapshot_file((int) $id);
+        if (!$path) {
+            show_404();
+        }
+        $this->output->set_content_type('image/jpeg')->set_header('Cache-Control: private, max-age=86400')->set_output(file_get_contents($path));
     }
 
     /** The Results page as an Excel file: a Students sheet's rows (one per student) and the questions below them. */
@@ -1269,6 +1321,13 @@ class Onlineexam extends Admin_Controller
                 'is_random_option'   => isset($_POST['is_random_option']) ? 1 : 0,
                 'block_copy'         => isset($_POST['block_copy']) ? 1 : 0,
                 'max_tab_switches'   => max(0, min(50, (int) $this->input->post('max_tab_switches'))),
+                'lock_device'        => isset($_POST['lock_device']) ? 1 : 0,
+                'require_fullscreen' => isset($_POST['require_fullscreen']) ? 1 : 0,
+                'questions_per_student' => max(0, min(500, (int) $this->input->post('questions_per_student'))),
+                'exam_pin'           => mb_substr(preg_replace('/\s+/', '', (string) $this->input->post('exam_pin')), 0, 12) ?: null,
+                'allowed_ips'        => Cbt_integrity::clean_ips($this->input->post('allowed_ips')) ?: null,
+                'webcam'             => isset($_POST['webcam']) ? 1 : 0,
+                'webcam_minutes'     => max(1, min(30, (int) $this->input->post('webcam_minutes') ?: 3)),
                 'passing_percentage' => $this->input->post('passing_percentage'),
             );
             if (isset($_POST['is_quiz']) && $_POST['is_quiz'] != "") {

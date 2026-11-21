@@ -41,8 +41,8 @@ mkdir -p "$releases"
 rsync -a --delete --link-dest="$incoming/" "$incoming/" "$rel/"
 
 log "Linking the writable folders to shared/"
-for d in uploads application/logs application/cache application/tmp backend/captcha_images temp; do
-    mkdir -p "$shared/$d"
+for d in uploads application/logs application/cache application/tmp application/cbt_snapshots backend/captcha_images temp; do
+    if [ ! -d "$shared/$d" ]; then mkdir -p "$shared/$d"; chmod 2775 "$shared/$d"; fi  # group www-data (setgid shared/) can write
     if [ "$d" = uploads ] && [ -d "$rel/uploads/_shared" ]; then
         # Default images ship with the code; every school's own files live only in shared/.
         rsync -a "$rel/uploads/_shared/" "$shared/uploads/_shared/"

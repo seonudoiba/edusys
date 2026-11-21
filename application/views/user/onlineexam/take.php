@@ -103,6 +103,22 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
 .loading .spin{width:42px;height:42px;border-radius:50%;border:4px solid var(--rule);border-top-color:var(--brand);margin:0 auto 16px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .togglenav{display:none}
+.gate{max-width:520px;margin:60px auto;padding:26px 28px}
+.gate h1{margin:0 0 6px;font-size:22px}
+.gate ul{margin:12px 0 18px;padding-left:20px;color:var(--soft);font-size:14.5px}
+.gate li{margin:4px 0}
+.gate label{display:block;font-weight:700;margin:6px 0}
+.gate input{width:100%;font:inherit;font-size:20px;letter-spacing:.2em;text-align:center;padding:10px;border:2px solid var(--rule);border-radius:12px}
+.gate input:focus{outline:none;border-color:var(--brand)}
+.gate .err{color:var(--danger);min-height:22px;margin:8px 0 0;font-weight:600}
+.gate .btn{width:100%;margin-top:12px;padding:13px}
+.cover{position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.92);color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center}
+.cover[hidden]{display:none}
+.cover div{max-width:460px}
+.cover h2{margin:0 0 10px}
+.cover .btn{margin-top:14px}
+.cam{position:fixed;left:12px;bottom:12px;z-index:25;width:104px;height:78px;border-radius:12px;object-fit:cover;border:2px solid #fff;box-shadow:0 6px 18px rgba(15,23,42,.3);background:#000}
+.cam[hidden]{display:none}
 @media (max-width:860px){
   .wrap{grid-template-columns:1fr;padding:0 12px;margin:12px auto 90px}
   .side{position:fixed;left:0;right:0;bottom:0;top:auto;border-radius:18px 18px 0 0;z-index:30;transform:translateY(100%);transition:transform .25s;max-height:78vh;overflow:auto;box-shadow:0 -12px 40px rgba(15,23,42,.2)}
@@ -133,7 +149,33 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
 <div class="progress" aria-hidden="true"><span id="progress"></span></div>
 <div class="banner" id="banner" hidden><div id="banner_text"></div></div>
 
-<div class="loading" id="loading">
+<?php
+$needs_pin = trim((string) $exam['exam_pin']) !== '' && $state !== 'running';
+$gate = $needs_pin || (int) $exam['require_fullscreen'] || (int) $exam['webcam'];
+?>
+<?php if ($gate) { ?>
+<section class="card gate" id="gate">
+    <h1><?php echo $state === 'running' ? 'Continue your exam' : 'Ready to start?'; ?></h1>
+    <p style="margin:0;color:var(--soft)"><?php echo (int) $question_count; ?> questions · <?php echo html_escape($exam['exam']); ?></p>
+    <ul>
+        <?php if ((int) $exam['require_fullscreen']) { ?><li>The exam opens in <b>full screen</b>. Leaving full screen is recorded like leaving the page.</li><?php } ?>
+        <?php if ((int) $exam['webcam']) { ?><li>Your <b>camera</b> takes photos during the exam; only your school's staff see them. Allow the camera when your browser asks.</li><?php } ?>
+        <?php if ((int) $exam['lock_device']) { ?><li>The exam stays on <b>this device</b> until you submit.</li><?php } ?>
+    </ul>
+    <?php if ($needs_pin) { ?>
+        <label for="pin">Exam PIN (from your invigilator)</label>
+        <input id="pin" inputmode="text" autocomplete="off" maxlength="12" autofocus>
+    <?php } ?>
+    <p class="err" id="gate_error" role="alert"></p>
+    <button type="button" class="btn primary" id="gate_go"><?php echo $state === 'running' ? 'Continue' : 'Start exam'; ?></button>
+    <p style="text-align:center;margin:12px 0 0"><a href="<?php echo site_url('user/onlineexam/view/' . (int) $exam['id']); ?>">Back to the exam page</a></p>
+</section>
+<?php } ?>
+<div class="cover" id="blocked" hidden role="alertdialog" aria-labelledby="blocked_title"><div><h2 id="blocked_title">You can't continue here</h2><p id="blocked_text"></p><a class="btn" href="<?php echo site_url('user/onlineexam/view/' . (int) $exam['id']); ?>">Back to the exam page</a></div></div>
+<div class="cover" id="fs_cover" hidden role="alertdialog" aria-labelledby="fs_title"><div><h2 id="fs_title">Return to full screen</h2><p>You left full screen. This has been recorded. The questions are hidden until you go back.</p><button type="button" class="btn primary" id="fs_back">Back to full screen</button></div></div>
+<video class="cam" id="cam" autoplay muted playsinline hidden></video>
+
+<div class="loading" id="loading"<?php echo $gate ? ' hidden' : ''; ?>>
     <div class="spin" aria-hidden="true"></div>
     <p><?php echo $state === 'running' ? 'Loading your exam where you stopped...' : 'Starting your exam...'; ?></p>
     <p id="loading_error" style="color:var(--danger)"></p>
@@ -193,6 +235,9 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
         upload: '<?php echo site_url('user/onlineexam/upload'); ?>', submit: '<?php echo site_url('user/onlineexam/submit'); ?>',
         presence: '<?php echo site_url('user/onlineexam/presence'); ?>' };
     var MAX_AWAY = <?php echo (int) (isset($exam['max_tab_switches']) ? $exam['max_tab_switches'] : 0); ?>, BLOCK_COPY = <?php echo !isset($exam['block_copy']) || (int) $exam['block_copy'] ? 'true' : 'false'; ?>;
+    var GATE = <?php echo $gate ? 'true' : 'false'; ?>, FULLSCREEN = <?php echo (int) $exam['require_fullscreen'] ? 'true' : 'false'; ?>,
+        WEBCAM = <?php echo (int) $exam['webcam'] ? 'true' : 'false'; ?>, WEBCAM_MS = <?php echo max(1, (int) $exam['webcam_minutes']); ?> * 60000;
+    URL.snap = '<?php echo site_url('user/onlineexam/snap'); ?>';
     var $ = function (id) { return document.getElementById(id); };
     var questions = [], passages = {}, attempt = 0, index = 0, endAt = 0, flags = {}, pending = {}, saving = false, retryTimer = null, finished = false;
     var LETTERS = 'ABCDE';
@@ -202,7 +247,36 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
         if (!(data instanceof FormData)) { Object.keys(data).forEach(function (k) { [].concat(data[k]).forEach(function (v) { body.append(Array.isArray(data[k]) ? k + '[]' : k, v); }); }); }
         body.append('exam_id', EXAM);
         return fetch(url, { method: 'POST', body: body, credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); });
+            .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
+            .then(function (d) { if (d && d.blocked && attempt) { block(d.error); } return d; });
+    }
+    function block(text) {
+        finished = true; $('blocked_text').textContent = text; $('blocked').hidden = false; $('app').hidden = true; stopCam();
+    }
+
+    // ---- full screen and camera
+    var stream = null, camTimer = null;
+    function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement; }
+    function fsSupported() { var d = document.documentElement; return !!(d.requestFullscreen || d.webkitRequestFullscreen); }
+    function enterFs() {
+        var d = document.documentElement;
+        try { var r = d.requestFullscreen ? d.requestFullscreen() : (d.webkitRequestFullscreen ? d.webkitRequestFullscreen() : null); return r && r.catch ? r.catch(function () {}) : Promise.resolve(); } catch (e) { return Promise.resolve(); }
+    }
+    function startCam() {
+        if (!window.isSecureContext) { return Promise.reject(new Error('The camera only works on the secure (https://) address of the school site. Ask your teacher.')); }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { return Promise.reject(new Error('This browser cannot use a camera. Use Chrome, Edge or Firefox on a device with a camera.')); }
+        return navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240, facingMode: 'user' }, audio: false }).then(function (s) {
+            stream = s; $('cam').srcObject = s; $('cam').hidden = false;
+            s.getVideoTracks().forEach(function (t) { t.addEventListener('ended', function () { if (!finished) { banner('Your camera stopped. Reload the page and allow the camera to continue.'); } }); });
+        }, function () { throw new Error('Allow the camera to take this exam: click the camera icon in the address bar, choose Allow, then try again.'); });
+    }
+    function stopCam() { clearInterval(camTimer); if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); } $('cam').hidden = true; }
+    function snap(reason) {
+        if (!WEBCAM || !stream || finished || !attempt) { return; }
+        var v = $('cam'); if (!v.videoWidth) { return; }
+        var c = document.createElement('canvas'); c.width = 320; c.height = Math.round(320 * v.videoHeight / v.videoWidth);
+        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+        post(URL.snap, { photo: c.toDataURL('image/jpeg', 0.6), reason: reason }).catch(function () {});
     }
     function store(key, value) { try { localStorage.setItem('cbt_' + attempt + '_' + key, JSON.stringify(value)); } catch (e) {} }
     function load(key) { try { return JSON.parse(localStorage.getItem('cbt_' + attempt + '_' + key) || 'null'); } catch (e) { return null; } }
@@ -211,8 +285,14 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
     function syncTime(seconds) { if (typeof seconds === 'number') { endAt = Date.now() + seconds * 1000; } }
 
     // ---- start / resume
-    post(URL.start, {}).then(function (d) {
-        if (!d.ok) { $('loading_error').textContent = d.error || 'The exam could not be opened.'; return; }
+    function begin(pin) {
+        return post(URL.start, pin !== undefined ? { pin: pin } : {}).then(function (d) {
+        if (!d.ok) {
+            if (GATE) { $('gate').hidden = false; $('loading').hidden = true; $('gate_error').textContent = d.error || 'The exam could not be opened.'; $('gate_go').disabled = false; if (!d.pin) { stopCam(); } }
+            else { $('loading_error').textContent = d.error || 'The exam could not be opened.'; }
+            return;
+        }
+        if (GATE) { $('gate').hidden = true; }
         attempt = d.attempt; questions = d.questions; passages = d.passages || {};
         syncTime(d.seconds_left);
         flags = load('flags') || {};
@@ -224,13 +304,34 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
         buildGrid(); show(index); tick(); setInterval(tick, 500);
         watch();
         if (Object.keys(pending).length) { flush(); } else { saveState('All answers saved'); }
-    }).catch(function () { $('loading_error').textContent = 'No connection. Check your internet and reload this page; your time and answers are kept.'; });
+        if (WEBCAM) { snap('start'); camTimer = setInterval(function () { snap('interval'); }, WEBCAM_MS); }
+    }).catch(function () {
+        if (GATE) { $('gate').hidden = false; $('loading').hidden = true; $('gate_go').disabled = false; $('gate_error').textContent = 'No connection. Check your internet and try again.'; }
+        else { $('loading_error').textContent = 'No connection. Check your internet and reload this page; your time and answers are kept.'; }
+    });
+    }
+    if (!GATE) { begin(); }
+    else {
+        $('gate_go').addEventListener('click', function () {
+            var btn = this; btn.disabled = true; $('gate_error').textContent = '';
+            var pin = $('pin') ? $('pin').value.trim() : undefined;
+            if ($('pin') && !pin) { $('gate_error').textContent = 'Type the exam PIN your invigilator gives you.'; btn.disabled = false; $('pin').focus(); return; }
+            // full screen must be asked straight from the click
+            var fs = FULLSCREEN && fsSupported() ? enterFs() : Promise.resolve();
+            fs.then(function () { return WEBCAM && !stream ? startCam() : null; }).then(function () {
+                $('gate').hidden = true; $('loading').hidden = false;
+                return begin(pin);
+            }).catch(function (e) { btn.disabled = false; $('gate_error').textContent = e.message; });
+        });
+        if ($('pin')) { $('pin').addEventListener('keydown', function (e) { if (e.key === 'Enter') { $('gate_go').click(); } }); }
+    }
 
     // ---- exam rules: leaving the page is counted (submitted at the limit); copying blocked
     function watch() {
         var awaySince = 0;
         function presence(away) {
             return post(URL.presence, { away: away ? 1 : 0 }).then(function (d) {
+                if (d.blocked) { return; }
                 if (d.ended) {
                     finished = true;
                     if (d.forced) { banner('You left the exam page ' + d.count + ' times. Your exam has been submitted.'); }
@@ -245,8 +346,19 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
         document.addEventListener('visibilitychange', function () {
             if (finished) { return; }
             if (document.hidden) { awaySince = Date.now(); }
-            else if (awaySince) { awaySince = 0; presence(true); }
+            else if (awaySince) { awaySince = 0; presence(true); snap('left_page'); }
         });
+        if (FULLSCREEN && fsSupported()) {
+            var onFs = function () {
+                if (finished) { return; }
+                if (!fsElement()) { $('fs_cover').hidden = false; if (!document.hidden) { presence(true); } snap('fullscreen'); }
+                else { $('fs_cover').hidden = true; }
+            };
+            document.addEventListener('fullscreenchange', onFs);
+            document.addEventListener('webkitfullscreenchange', onFs);
+            $('fs_back').addEventListener('click', function () { enterFs(); });
+            if (!fsElement()) { $('fs_cover').hidden = false; }
+        }
         setInterval(function () { if (!finished && !document.hidden) { presence(false); } }, 60000); // extra time given by the invigilator shows
         if (BLOCK_COPY) {
             ['copy', 'cut', 'paste', 'contextmenu', 'dragstart'].forEach(function (ev) {
@@ -470,6 +582,8 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
     });
     function submit() {
         return post(URL.submit, {}).then(function (d) {
+            if (d.blocked) { return; }
+            stopCam();
             try { ['flags', 'pending', 'index'].forEach(function (k) { localStorage.removeItem('cbt_' + attempt + '_' + k); }); } catch (e) {}
             window.location.href = d.redirect || '<?php echo site_url('user/onlineexam'); ?>';
         }).catch(function () { banner('Could not reach the school to submit. Your saved answers are kept; reload this page when you are back online.'); });

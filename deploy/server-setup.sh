@@ -55,7 +55,7 @@ visudo -cf /etc/sudoers.d/edusys-deploy >/dev/null
 echo "== Folders"
 install -d -o "$DEPLOY_USER" -g www-data -m 2755 "$APP_ROOT" "$APP_ROOT/releases" "$APP_ROOT/incoming"
 install -d -o www-data -g www-data -m 2775 "$APP_ROOT/shared"
-for d in uploads application application/logs application/cache application/tmp backend backend/captcha_images temp; do
+for d in uploads application application/logs application/cache application/tmp application/cbt_snapshots backend backend/captcha_images temp; do
     install -d -o www-data -g www-data -m 2775 "$APP_ROOT/shared/$d"
 done
 install -d -o www-data -g www-data -m 2770 /var/backups/edusys /var/backups/edusys/app
