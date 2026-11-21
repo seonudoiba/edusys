@@ -28,7 +28,7 @@ class Cbtexams extends Admin_Controller
     private function page($view, array $data)
     {
         $this->session->set_userdata('top_menu', 'Online_Examinations');
-        $this->session->set_userdata('sub_menu', 'admin/cbtexams');
+        $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
         $this->load->view('layout/header', $data);
         $this->load->view('admin/cbtexams/' . $view, $data);
         $this->load->view('layout/footer', $data);
@@ -53,6 +53,7 @@ class Cbtexams extends Admin_Controller
     public function index()
     {
         $this->need('online_examination', 'can_view');
+        redirect('admin/onlineexam'); // the class cards are on top of the CBT list
         list($per, $none) = $this->cbt_admin->per_class($this->current_session);
         $this->page('index', array('title' => 'CBT Exams', 'classes' => $this->class_results->classes($this->current_session), 'per' => $per, 'none' => $none,
             'session_name' => $this->setting_model->getCurrentSessionName()));
@@ -178,7 +179,7 @@ class Cbtexams extends Admin_Controller
         $this->need('online_examination', 'can_edit');
         try {
             $c = $this->cbt_admin->pull_scores((int) $this->input->post('id'));
-            $this->msg('success', (int) $c['sent'] . ' score(s) sent to the report card.' . ($c['pending'] ? ' ' . (int) $c['pending'] . ' wait for written answers to be marked.' : '') . ($c['not_sat'] ? ' ' . (int) $c['not_sat'] . ' have not taken it.' : ''));
+            $this->msg('success', (int) $c['sent'] . ' score(s) sent to the report card.' . ($c['pending'] ? ' ' . (int) $c['pending'] . ' wait for written answers to be marked: use "Mark written answers" on the CBT card, then Pull scores again.' : '') . ($c['not_sat'] ? ' ' . (int) $c['not_sat'] . ' have not taken it.' : ''));
         } catch (RuntimeException $e) {
             $this->msg('danger', $e->getMessage());
         }

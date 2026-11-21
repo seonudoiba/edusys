@@ -1,7 +1,7 @@
 <?php /* CBT Exams > a class (Cbtexams::klass): its subjects with their CBTs. */ $cr_msg = $this->session->flashdata('cr_msg'); $this->load->view('admin/cbtexams/_style'); ?>
 <div class="content-wrapper">
     <section class="content">
-        <a href="<?php echo site_url('admin/cbtexams'); ?>" class="cbt-muted"><i class="fa fa-angle-left"></i> All classes</a>
+        <a href="<?php echo site_url('admin/onlineexam'); ?>" class="cbt-muted"><i class="fa fa-angle-left"></i> CBT Exams</a>
         <h3 style="margin:2px 0 16px;font-weight:800"><?php echo html_escape($class['class']); ?> <small class="cbt-muted">CBT exams</small></h3>
         <?php if ($cr_msg) { ?><div class="alert alert-<?php echo $cr_msg[0]; ?>"><?php echo html_escape($cr_msg[1]); ?></div><?php } ?>
         <?php if (!$subjects) { ?>

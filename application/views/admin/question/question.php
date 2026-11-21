@@ -106,7 +106,7 @@ foreach ($classlist as $class) {
                                         <select class="form-control" name="subject">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         <?php
-foreach ($subjectlist as $subject_key => $subject_value) {
+                                foreach ($subjectlist as $subject_key => $subject_value) {
     ?>
                                             <option value="<?php echo $subject_value['id']; ?>"><?php echo $subject_value['name']; ?> <?php if($subject_value['code']){ echo '('.$subject_value['code'].')'; } ?></option>
                                         <?php
@@ -116,6 +116,7 @@ foreach ($subjectlist as $subject_key => $subject_value) {
                                     </div>
                                 </div>
                                 <div class="col-sm-3 col-md-2">
+                                    
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('question_type'); ?></label>
                                         <select class="form-control" name="question_type">

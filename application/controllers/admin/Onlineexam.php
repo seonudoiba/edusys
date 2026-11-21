@@ -77,6 +77,11 @@ class Onlineexam extends Admin_Controller
         $data['question_type']  = $this->config->item('question_type');
         $data['question_level'] = $this->config->item('question_level');
         $data['classList']      = $this->class_model->get();
+        // CBTs by class: a card per class on top of the list (admin/cbtexams opens a class)
+        $this->load->library(array('cbt_admin', 'class_results'));
+        $cbt_session = (int) $this->setting_model->getCurrentSession();
+        list($data['cbt_per_class'], $data['cbt_no_class']) = $this->cbt_admin->per_class($cbt_session);
+        $data['cbt_classes'] = $this->class_results->classes($cbt_session);
         
         $this->load->view('layout/header', $data);
         $this->load->view('admin/onlineexam/index', $data);

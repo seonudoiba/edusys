@@ -15,6 +15,25 @@ $language_name = $language["short_code"];
 
 <div class="content-wrapper">
     <section class="content">
+        <?php if (!empty($cbt_classes)) { $this->load->view('admin/cbtexams/_style'); ?>
+            <div class="box box-primary" style="margin-bottom:16px">
+                <div class="box-header with-border"><h3 class="box-title"><i class="fa fa-th-large"></i> CBTs by class</h3><span class="text-muted" style="margin-left:8px;font-size:12.5px">open a class to see its subjects and each subject's CBTs by term</span></div>
+                <div class="box-body">
+                    <style>
+                        .cbt-chips{display:flex;flex-wrap:wrap;gap:8px}
+                        .cbt-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e9f0;border-radius:12px;padding:7px 12px;background:#fff;color:#0f172a;font-weight:700;transition:border-color .15s,transform .15s}
+                        .cbt-chip:hover{border-color:#6d28d9;transform:translateY(-1px);color:#0f172a;text-decoration:none}
+                        .cbt-chip span{border-radius:99px;padding:1px 8px;font-size:11.5px;background:#f1f5f9;color:#64748b}
+                        .cbt-chip span.has{background:#ede9fe;color:#6d28d9}
+                    </style>
+                    <div class="cbt-chips">
+                        <?php foreach ($cbt_classes as $c) { $nn = isset($cbt_per_class[$c['id']]) ? $cbt_per_class[$c['id']] : 0; ?>
+                            <a class="cbt-chip" href="<?php echo site_url('admin/cbtexams/klass/' . (int) $c['id']); ?>" title="<?php echo (int) $c['students']; ?> students"><?php echo html_escape($c['name']); ?> <span class="<?php echo $nn ? 'has' : ''; ?>"><?php echo $nn; ?> CBT<?php echo $nn === 1 ? '' : 's'; ?></span></a>
+                        <?php } ?>
+                    </div>
+                </div>
+            </div>
+        <?php } ?>
         <?php if ($this->session->flashdata('bulk_questions')) { ?><div class="alert alert-success"><?php echo html_escape($this->session->flashdata('bulk_questions')); ?></div><?php } ?>
         <?php
         // At a glance: live, upcoming and closed exams, questions in the bank, answers waiting to be marked.
