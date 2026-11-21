@@ -223,8 +223,8 @@ $grade_of = function ($pct) use ($r) { return Class_results::grade_of($r['grades
         <table class="rc-grid" style="border-top:0;margin-top:0">
             <tr><td style="width:14%;font-weight:bold;font-style:italic;text-align:left;border:0;padding-left:8px">Scale:</td>
                 <td style="border:0"><table class="rc-scale"><tr>
-                    <?php $i = 0; foreach ($r['grades'] as $g) { if ($i && $i % 5 === 0) { echo '</tr><tr>'; } $i++; ?>
-                        <td><?php echo $n($g['min']) . ' - ' . $n($g['max']) . ' = ' . $e($g['name']) . ($g['remark'] ? ' (' . $e($g['remark']) . ')' : ''); ?></td>
+                    <?php $i = 0; foreach ($r['grades'] as $g) { if ($i && $i % 3 === 0) { echo '</tr><tr>'; } $i++; ?>
+                        <td style="white-space:nowrap"><?php echo $n($g['min']) . ' - ' . $n($g['max']) . ' = ' . $e($g['name']) . ($g['remark'] ? ' (' . $e($g['remark']) . ')' : ''); ?></td>
                     <?php } ?>
                 </tr></table></td></tr>
         </table>
