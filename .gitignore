@@ -69,3 +69,6 @@ application/tmp/
 
 # Signed client documents: never commit
 /Plan Sample.pdf
+
+# sample images kept locally only
+*.jfif
