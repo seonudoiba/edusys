@@ -102,7 +102,7 @@ class Cbt_admin
         }
         foreach ($out as $id => &$o) {
             if ($o['marks_target'] && preg_match('/^cbse:(\d+):(\d+)$/', $o['marks_target'], $m)) {
-                $o['link'] = $this->db->select('tt.id AS tt_id, tt.cbse_exam_id, tt.subject_id, e.cbse_term_id, e.class_id, tr.name AS term_name, t.id AS type_id, t.name AS assessment, t.maximum_marks')
+                $o['link'] = $this->db->select('tt.id AS tt_id, tt.cbse_exam_id, tt.subject_id, e.cbse_term_id, e.class_id, tr.name AS term_name, t.id AS type_id, t.name AS assessment, t.maximum_marks, tt.marks_status')
                     ->from('cbse_exam_timetable tt')->join('cbse_exams e', 'e.id = tt.cbse_exam_id')->join('cbse_terms tr', 'tr.id = e.cbse_term_id', 'left')
                     ->join('cbse_exam_assessment_types t', 't.id = ' . (int) $m[2], 'inner', false)->where('tt.id', (int) $m[1])->get()->row_array() ?: null; // tenancy-lint: ok int
             }

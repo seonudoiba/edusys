@@ -31,6 +31,9 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
     <div class="cbt-link"><i class="fa fa-file-text-o"></i>
         <?php echo $o['link'] ? 'Scores go to the report card: <b>' . html_escape($o['link']['term_name'] . ' — ' . $o['link']['assessment']) . '</b> (scaled to ' . (float) $o['link']['maximum_marks'] . ')' : 'Practice: not on a report card'; ?>
     </div>
+    <?php if ($o['link'] && isset($o['link']['marks_status']) && $o['link']['marks_status'] === 'approved') { ?>
+        <div class="cbt-link" style="background:#fef2f2;color:#b91c1c;border-color:#fecaca"><i class="fa fa-lock"></i> This subject's report card scores are approved and locked, so new CBT scores are not going in. Unlock them on the subject's Results page, then Pull scores.</div>
+    <?php } ?>
     <div class="cbt-actions">
         <?php if ($can_q) { ?>
             <a class="btn btn-default btn-xs" href="<?php echo site_url('admin/question/bulk?exam=' . (int) $o['id'] . '&subject=' . (int) $o['subject_id'] . '&return=' . rawurlencode($return)); ?>"><i class="fa fa-pencil"></i> Write questions</a>
