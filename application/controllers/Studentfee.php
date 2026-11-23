@@ -167,14 +167,24 @@ class Studentfee extends Admin_Controller
             $data['select_all'] = $_POST['select_all'];
         }
 
-        $this->form_validation->set_rules('feegroup[]', $this->lang->line('fee_group'), 'trim|required|xss_clean');
+        // Fee types are optional: none ticked (or the page just opened) = every fee type, so every unpaid fee shows.
+        $feegroups = array_filter((array) $this->input->post('feegroup'));
+        if (!$feegroups) {
+            foreach ($feesessiongroup as $group) {
+                foreach ((array) $group->feetypes as $type) {
+                    if (!empty($type->type)) {
+                        $feegroups[] = $group->id . '-' . $type->id;
+                    }
+                }
+            }
+            $data['all_fee_types'] = true;
+        }
 
-        if ($this->form_validation->run() == false) {
+        if (!$feegroups) {
             $this->load->view('layout/header', $data);
             $this->load->view('studentfee/studentSearchFee', $data);
             $this->load->view('layout/footer', $data);
         } else {
-            $feegroups = $this->input->post('feegroup');
 
             $fee_group_array          = array();
             $fee_groups_feetype_array = array();
