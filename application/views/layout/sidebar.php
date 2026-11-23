@@ -43,7 +43,7 @@ if (!function_exists('sidebar_submenu_icon')) {
             'assign_class_teacher' => 'fa-user-circle-o', 'assign_subject_teachers' => 'fa-users', 'class_timetable' => 'fa-table', 'teachers_timetable' => 'fa-calendar-o',
             'system_update' => 'fa-cloud-download', 'login_history' => 'fa-sign-in', 'user_log' => 'fa-history', 'users' => 'fa-users', 'vehicles' => 'fa-car',
             'assign_vehicle' => 'fa-random', 'video_tutorial' => 'fa-youtube-play', 'visitor_book' => 'fa-address-book', 'setup_front_office' => 'fa-cogs',
-            'incidents' => 'fa-exclamation-triangle', 'assign_incident' => 'fa-flag', 'student_categories' => 'fa-tags', 'assessment' => 'fa-check-square',
+            'incidents' => 'fa-exclamation-triangle', 'assign_incident' => 'fa-flag', 'report_behaviour' => 'fa-bullhorn', 'student_categories' => 'fa-tags', 'assessment' => 'fa-check-square',
             'exam' => 'fa-file-text-o', 'exam_grade' => 'fa-star-half-o', 'observation' => 'fa-eye', 'assign_observation' => 'fa-binoculars',
             'observation_parameter' => 'fa-sliders', 'template' => 'fa-clone', 'term' => 'fa-calendar-o', 'class' => 'fa-th-large', 'email_setting' => 'fa-envelope',
             'finance' => 'fa-money', 'add_homework' => 'fa-pencil', 'daily_assignment' => 'fa-pencil-square', 'homework' => 'fa-book', 'online_course' => 'fa-play-circle',

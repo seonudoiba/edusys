@@ -12,7 +12,7 @@ class Fees_menu
     const ENTRIES = array(
         // url => [label, permission, activate_methods (also pages by address: "studentfee/addfee"), lang_key]
         'admin/fees' => array('Overview', "('collect_fees', 'can_view')", 'index,charge,edit,remove,remind'),
-        'admin/fees/collections' => array('Collect Fees', "('collect_fees', 'can_view')", 'collections,followup,takings,studentfee/index,studentfee/addfee,studentfee/getProcessingfees', 'collect_fees'),
+        'admin/fees/collections' => array('Record Payments', "('collect_fees', 'can_view')", 'collections,followup,takings,studentfee/index,studentfee/addfee,studentfee/getProcessingfees', 'collect_fees'),
         'admin/fees/create' => array('Create fees', "('fees_master', 'can_add')", 'create,repeat'),
         'admin/fees/adjust' => array('Discounts & balances', "('fees_discount', 'can_view')", 'adjust,discounts,carryforward,catchup,admin/feediscount', 'fees_discounts_balances'),
     );

@@ -196,6 +196,19 @@ $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base
                     <div class="alert alert-info" style="margin:0">No students<?php echo $section ? ' in this section' : ''; ?>.</div>
                 <?php } else { ?>
                     <p class="sj-muted" style="font-size:12.5px;margin:0 0 8px">Type each score (or ABS for absent). Enter moves to the next student. Ctrl+S saves.</p>
+                    <?php $typed = array_filter($tt['types'], function ($t) { return !$t['cbt']; });
+                    if ($can_type && $typed) { ?>
+                        <div class="sc-addall" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px;padding:8px 10px;background:#f8fafc;border:1px solid #e5e9f0;border-radius:8px;font-size:13px">
+                            <i class="fa fa-plus-circle" style="color:#017e7a"></i> <b>Add to all:</b>
+                            <input type="number" id="sc_add_n" class="form-control input-sm" step="0.5" style="width:80px" placeholder="e.g. 10" aria-label="Marks to add to every student">
+                            <span>marks to</span>
+                            <select id="sc_add_col" class="form-control input-sm" style="width:auto" aria-label="Which exam">
+                                <?php $i = 0; foreach ($tt['types'] as $tid => $t) { if (!$t['cbt']) { ?><option value="<?php echo (int) $tid; ?>"><?php echo html_escape($t['name']); ?> (out of <?php echo $n($t['maximum_marks']); ?>)</option><?php } } ?>
+                            </select>
+                            <button type="button" class="btn btn-default btn-sm" id="sc_add_go">Add</button>
+                            <span class="sj-muted" style="font-size:12px">Only students with a score get it; no score goes above the maximum. A minus number takes marks off. Then Save scores.</span>
+                        </div>
+                    <?php } ?>
                     <div class="sc-wrap">
                         <table class="sc-table" id="sc_table">
                             <thead><tr><th class="nm">Student</th>
@@ -280,6 +293,25 @@ $u = $exam ? function ($action) use ($base, $exam, $cid) { return site_url($base
         }).fail(function () { errorMsg('Could not save. Check your connection and try again.'); }).always(function () { $('#sc_save').prop('disabled', false); });
     }
     $('#sc_save').on('click', save);
+    // Add to all: N marks to one exam column, for every student who has a score there (capped at the maximum, not below 0).
+    $('#sc_add_go').on('click', function () {
+        var n = parseFloat($('#sc_add_n').val()), col = $('#sc_add_col').val();
+        if (isNaN(n) || n === 0) { errorMsg('Type the number of marks to add, for example 10.'); $('#sc_add_n').focus(); return; }
+        var changed = 0, capped = 0, skipped = 0;
+        table.find('input.sc').filter(function () { return this.name.slice(-(col.length + 2)) === '[' + col + ']'; }).each(function () {
+            var v = $.trim(this.value).toUpperCase(), max = parseFloat(this.getAttribute('data-max'));
+            if (v === '' || v === 'ABS' || v === 'A' || isNaN(parseFloat(v))) { skipped++; return; }
+            var x = parseFloat(v) + n;
+            if (x > max) { x = max; capped++; }
+            if (x < 0) { x = 0; capped++; }
+            this.value = fmt(x);
+            changed++;
+        });
+        table.find('tr.sc-row').each(function () { row($(this)); });
+        count();
+        if (changed) { dirty = true; $('#sc_state').text('Not saved yet'); }
+        successMsg((n > 0 ? 'Added ' + fmt(n) : 'Took off ' + fmt(-n)) + ' for ' + changed + ' student' + (changed === 1 ? '' : 's') + (capped ? ' (' + capped + ' kept within 0 to the maximum)' : '') + (skipped ? '; ' + skipped + ' without a score left as they are' : '') + '. Save scores to keep it.');
+    });
     $(document).on('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 's' && $('#sc_save').length) { e.preventDefault(); save(); } });
     window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
     $('.sc-flow').on('click', function () {

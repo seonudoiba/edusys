@@ -20,7 +20,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
             <div class="col-md-12">
                 <div class="box box-primary">
                     <div class="box-header with-border">
-                        <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
+                        <h3 class="box-title"><i class="fa fa-users"></i> Staff Directory</h3>
                         <div class="box-tools pull-right">
                             <small class="pull-right">
                                 <?php if ($this->rbac->hasPrivilege('staff', 'can_add')) {?> <a href="<?php echo base_url(); ?>admin/staff/create" class="btn btn-primary btn-sm"   >
@@ -34,58 +34,25 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
     echo $this->session->flashdata('msg');
     $this->session->unset_userdata('msg');
 }?>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="row">
-                                    <form role="form" action="<?php echo site_url('admin/staff') ?>" method="post" class="">
-                                        <?php echo $this->customlib->getCSRF(); ?>
-                                        <div class="col-sm-12">
-                                            <div class="form-group">
-                                                <label><?php echo $this->lang->line("role"); ?></label><small class="req"> *</small>
-                                                <select name="role" class="form-control">
-                                                    <option value=""><?php echo $this->lang->line("select"); ?></option>
-                                                    <?php foreach ($role as $key => $role_value) {
-    ?>
-                                                        <option <?php
-if ($role_id == $role_value["id"]) {
-        echo "selected";
-    }
-    ?> value="<?php echo $role_value['id'] ?>"><?php echo $role_value['type'] ?></option>
-<?php }
-?>
-                                                </select>
-                                                <span class="text-danger"><?php echo form_error('role'); ?></span>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-12">
-                                            <div class="form-group">
-                                                <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm pull-right checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                  </div>
-
+                        <form role="form" action="<?php echo site_url('admin/staff') ?>" method="post" class="row" style="display:flex;flex-wrap:wrap;align-items:flex-end">
+                            <?php echo $this->customlib->getCSRF(); ?>
+                            <div class="col-sm-6 form-group">
+                                <label for="staff_q">Find staff</label>
+                                <input type="text" id="staff_q" name="search_text" class="form-control" value="<?php echo html_escape(isset($search_text) ? $search_text : ''); ?>" placeholder="Name, staff ID, phone or email">
                             </div>
-                            <div class="col-md-6">
-                                <div class="row">
-                                    <form role="form" action="<?php echo site_url('admin/staff') ?>" method="post" class="">
-<?php echo $this->customlib->getCSRF(); ?>
-                                        <div class="col-sm-12">
-                                            <div class="form-group">
-                                                <label><?php echo $this->lang->line('search_by_keyword'); ?></label>
-                                                <input type="text" name="search_text" class="form-control" value="<?php echo set_value('search_text'); ?>"  placeholder="<?php echo $this->lang->line('search_by_staff'); ?>">
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="form-group">
-                                                <button type="submit" name="search" value="search_full" class="btn btn-primary pull-right btn-sm checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
+                            <div class="col-sm-4 form-group">
+                                <label for="staff_role"><?php echo $this->lang->line('role'); ?></label>
+                                <select id="staff_role" name="role" class="form-control">
+                                    <option value="">All roles</option>
+                                    <?php foreach ($role as $role_value) { ?>
+                                        <option value="<?php echo (int) $role_value['id']; ?>" <?php echo (string) $role_id === (string) $role_value['id'] ? 'selected' : ''; ?>><?php echo html_escape($role_value['type']); ?></option>
+                                    <?php } ?>
+                                </select>
                             </div>
-                        </div>
+                            <div class="col-sm-2 form-group">
+                                <button type="submit" name="search" value="search" class="btn btn-primary btn-block"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                            </div>
+                        </form>
                     </div>
 
                 <?php

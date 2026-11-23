@@ -111,7 +111,7 @@ if ($staff["department"] == $value["id"]) {
                                                     <span class="text-danger"><?php echo form_error('surname'); ?></span>
                                                 </div>
                                             </div>
-                                        <?php }if ($sch_setting->staff_father_name) {?>
+                                        <?php }if (false) { // father's name: not asked ?>
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('father_name'); ?></label>
@@ -158,7 +158,7 @@ foreach ($genderList as $key => $value) {
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_birth'); ?></label><small class="req"> *</small>
+                                                <label for="dob"><?php echo $this->lang->line('date_of_birth'); ?></label>
                                                 <input id="dob" name="dob" placeholder="" type="text" class="form-control date"  value="<?php
 if (!empty($staff["dob"])) {
     echo $this->customlib->showDate($staff["dob"]); // empty for 0000-00-00

@@ -110,6 +110,11 @@ class Income extends Admin_Controller
         }
 
         $this->income_model->remove($id);
+        if ($this->input->get('back') === 'list') {
+            $this->session->set_flashdata('ml_msg', 'The income record was deleted.');
+            $keep = array_intersect_key($this->input->get(), array_flip(array('period', 'from', 'to', 'head_id', 'q')));
+            redirect('admin/income/incomesearch' . ($keep ? '?' . http_build_query($keep) : ''));
+        }
         redirect('admin/income/index');
     }
 
@@ -229,12 +234,22 @@ class Income extends Admin_Controller
         if (!$this->rbac->hasPrivilege('search_income', 'can_view')) {
             access_denied();
         }
-        $data['searchlist'] = $this->customlib->get_searchtype();
+        $this->load->library('Money_list');
+        $period = (string) $this->input->get('period');
+        $f = array(
+            'period' => isset(Money_list::PERIODS[$period]) ? $period : 'all',
+            'from' => (string) $this->input->get('from'),
+            'to' => (string) $this->input->get('to'),
+            'head_id' => (int) $this->input->get('head_id'),
+            'q' => trim((string) $this->input->get('q')),
+        );
+        $rows = $this->money_list->rows('income', $f);
+        list($total, $by_head) = Money_list::totals($rows);
         $this->session->set_userdata('top_menu', 'Income');
         $this->session->set_userdata('sub_menu', 'income/incomesearch');
-        $data['search_type'] = '';
+        $data = array('title' => 'Income List', 'kind' => 'income', 'f' => $f, 'rows' => $rows, 'total' => $total, 'by_head' => $by_head, 'heads' => $this->money_list->heads('income'));
         $this->load->view('layout/header', $data);
-        $this->load->view('admin/income/incomeSearch', $data);
+        $this->load->view('admin/finance/money_list', $data);
         $this->load->view('layout/footer', $data);
     }
 

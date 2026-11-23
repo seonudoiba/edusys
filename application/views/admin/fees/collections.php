@@ -5,7 +5,7 @@ $can_collect = $this->rbac->hasPrivilege('collect_fees', 'can_add');
 ?>
 <div class="content-wrapper">
     <section class="content-header">
-        <h1><i class="fa fa-money"></i> Collect fees <small><?php echo $e($session_name); ?> session</small></h1>
+        <h1><i class="fa fa-money"></i> Record payments <small><?php echo $e($session_name); ?> session</small></h1>
     </section>
     <section class="content">
         <?php $this->load->view('admin/fees/_nav', array('tab' => $tab)); ?>
@@ -43,7 +43,7 @@ $can_collect = $this->rbac->hasPrivilege('collect_fees', 'can_add');
                                         <td><?php echo $e($s['guardian_name']); ?><br><span class="fw-muted"><?php echo $e($s['guardian_phone']); ?></span></td>
                                         <td class="n"><?php echo $s['balance'] > 0 ? '<b>' . $m($s['balance']) . '</b>' : '<span class="fw-tag paid">Paid up</span>'; ?></td>
                                         <td style="white-space:nowrap">
-                                            <?php if ($can_collect) { ?><a class="btn btn-primary btn-xs" href="<?php echo site_url('studentfee/addfee/' . (int) $s['student_session_id']); ?>"><i class="fa fa-money"></i> Collect</a><?php } ?>
+                                            <?php if ($can_collect) { ?><a class="btn btn-primary btn-xs" href="<?php echo site_url('studentfee/addfee/' . (int) $s['student_session_id']); ?>"><i class="fa fa-money"></i> Record payment</a><?php } ?>
                                             <a class="btn btn-default btn-xs" target="_blank" rel="noopener" href="<?php echo site_url('studentfee/bill/' . (int) $s['student_session_id']); ?>"><i class="fa fa-file-text-o"></i> Fee bill</a>
                                         </td>
                                     </tr>

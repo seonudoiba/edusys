@@ -45,28 +45,20 @@ class Staff extends Admin_Controller
         $staffRole          = $this->staff_model->getStaffRole();
         $data["role"]       = $staffRole;
         $data["role_id"]    = "";
-        $search_text        = $this->input->post('search_text');
-        if (isset($search)) {
-            if ($search == 'search_filter') {
-                $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean');
-                if ($this->form_validation->run() == false) {
-                    $data["resultlist"] = array();
-                } else {
-                    $data['searchby']    = "filter";
-                    $role                = $this->input->post('role');
-                    $data['employee_id'] = $this->input->post('empid');
-                    $data["role_id"]     = $role;
-                    $data['search_text'] = $this->input->post('search_text');
-                    $resultlist          = $this->staff_model->getEmployee($role, 1);
-                    $data['resultlist']  = $resultlist;
-                }
-            } else if ($search == 'search_full') {
-                $data['searchby']    = "text";
-                $data['search_text'] = trim($this->input->post('search_text'));
-                $resultlist          = $this->staff_model->searchFullText($search_text, 1);
-                $data['resultlist']  = $resultlist;
-                $data['title']       = $this->lang->line('search_details') . ': ' . $data['search_text'];
+        // One search: words (name, staff ID, phone, email) and, if chosen, a role. Nothing typed: everyone.
+        if ($search !== null) {
+            $search_text         = trim((string) $this->input->post('search_text'));
+            $role_id             = (int) $this->input->post('role');
+            $data['search_text'] = $search_text;
+            $data['role_id']     = $role_id ? $role_id : '';
+            $resultlist          = $this->staff_model->searchFullText($search_text, 1);
+            if ($role_id) {
+                $resultlist = array_values(array_filter($resultlist, function ($s) use ($role_id) {
+                    return (int) $s['role_id'] === $role_id;
+                }));
             }
+            $data['resultlist'] = $resultlist;
+            $data['searchby']   = 'text';
         }
 
         $this->load->view('layout/header');
@@ -402,7 +394,7 @@ class Staff extends Admin_Controller
         $this->form_validation->set_rules('name', $this->lang->line('name'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|xss_clean'); // optional
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
         $this->form_validation->set_rules('first_doc', $this->lang->line('image'), 'callback_handle_first_upload');
         $this->form_validation->set_rules('second_doc', $this->lang->line('image'), 'callback_handle_second_upload');
@@ -480,7 +472,7 @@ class Staff extends Admin_Controller
                 'employee_id'     => $employee_id,
                 'name'            => $name,
                 'email'           => $email,
-                'dob'             => date('Y-m-d', $this->customlib->datetostrtotime($dob)),
+                'dob'             => trim((string) $dob) !== '' ? date('Y-m-d', $this->customlib->datetostrtotime($dob)) : null,
                 'date_of_leaving' => '',
                 'gender'          => $gender,
                 'payscale'        => '',
@@ -953,7 +945,7 @@ class Staff extends Admin_Controller
         $this->form_validation->set_rules('name', $this->lang->line('name'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('gender', $this->lang->line('gender'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('dob', $this->lang->line('date_of_birth'), 'trim|xss_clean'); // optional
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
         $this->form_validation->set_rules('first_doc', $this->lang->line('image'), 'callback_handle_first_upload');
         $this->form_validation->set_rules('second_doc', $this->lang->line('image'), 'callback_handle_second_upload');
@@ -1037,7 +1029,7 @@ class Staff extends Admin_Controller
                 'contact_no'           => $contact_no,
                 'emergency_contact_no' => $emergency_no,
                 'email'                => $email,
-                'dob'                  => date('Y-m-d', $this->customlib->datetostrtotime($dob)),
+                'dob'                  => trim((string) $dob) !== '' ? date('Y-m-d', $this->customlib->datetostrtotime($dob)) : null,
                 'marital_status'       => $marital_status,
                 'local_address'        => $address,
                 'permanent_address'    => $permanent_address,
@@ -1063,9 +1055,27 @@ class Staff extends Admin_Controller
                 'instagram'            => $instagram,
             );
 
+            // A field the form leaves out (switched off in System Fields, or not asked) keeps its saved value.
+            $posted_as = array('department' => 'department', 'designation' => 'designation', 'qualification' => 'qualification', 'work_exp' => 'work_exp',
+                'contact_no' => 'contactno', 'emergency_contact_no' => 'emergency_no', 'dob' => 'dob', 'marital_status' => 'marital_status', 'local_address' => 'address',
+                'permanent_address' => 'permanent_address', 'note' => 'note', 'surname' => 'surname', 'mother_name' => 'mother_name', 'father_name' => 'father_name',
+                'account_title' => 'account_title', 'bank_account_no' => 'bank_account_no', 'bank_name' => 'bank_name', 'ifsc_code' => 'ifsc_code', 'bank_branch' => 'bank_branch',
+                'basic_salary' => 'basic_salary', 'epf_no' => 'epf_no', 'contract_type' => 'contract_type', 'shift' => 'shift', 'location' => 'location',
+                'facebook' => 'facebook', 'twitter' => 'twitter', 'linkedin' => 'linkedin', 'instagram' => 'instagram');
+            foreach ($posted_as as $column => $field) {
+                if ($this->input->post($field) === null) {
+                    unset($data1[$column]);
+                }
+            }
+
             $data1['date_of_joining'] = $this->customlib->dateFormatToYYYYMMDD($date_of_joining);
 
             $data1['date_of_leaving'] = $this->customlib->dateFormatToYYYYMMDD($date_of_leaving);
+            foreach (array('date_of_joining', 'date_of_leaving') as $field) {
+                if ($this->input->post($field) === null) {
+                    unset($data1[$field]);
+                }
+            }
 
 
             if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {

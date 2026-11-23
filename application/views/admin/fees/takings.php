@@ -27,7 +27,7 @@ $who = $by !== '' && isset($day['collectors'][$by]) ? $day['collectors'][$by]['n
     </section>
     <section class="content">
         <?php $this->load->view('admin/fees/_nav', array('tab' => $tab)); ?>
-        <p class="fw-no-print"><a href="<?php echo site_url('admin/fees/collections'); ?>"><i class="fa fa-angle-left"></i> Back to Collections</a></p>
+        <p class="fw-no-print"><a href="<?php echo site_url('admin/fees/collections'); ?>"><i class="fa fa-angle-left"></i> Back to Record payments</a></p>
 
         <form method="get" action="<?php echo site_url('admin/fees/takings'); ?>" class="fw-filters fw-no-print">
             <a class="btn btn-default" href="<?php echo $e($link($prev, $by)); ?>" aria-label="Previous day"><i class="fa fa-angle-left"></i></a>

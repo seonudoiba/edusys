@@ -95,7 +95,7 @@ foreach ($roles as $key => $role) {
                                                     <span class="text-danger"><?php echo form_error('surname'); ?></span>
                                                 </div>
                                             </div>
-                                        <?php }if ($sch_setting->staff_father_name) {?>
+                                        <?php }if (false) { // father's name: not asked ?>
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('father_name'); ?></label>
@@ -135,13 +135,6 @@ foreach ($genderList as $key => $value) {
 ?>
                                                 </select>
                                                 <span class="text-danger"><?php echo form_error('gender'); ?></span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label for="exampleInputEmail1"><?php echo $this->lang->line('date_of_birth'); ?></label><small class="req"> *</small>
-                                                <input id="dob" name="dob" placeholder="" type="text" class="form-control date"  value="<?php echo set_value('dob') ?>" />
-                                                <span class="text-danger"><?php echo form_error('dob'); ?></span>
                                             </div>
                                         </div>
                                         <?php if ($sch_setting->staff_date_of_joining) {?>
