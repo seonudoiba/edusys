@@ -114,6 +114,51 @@ foreach ($categorylist as $value) {
                                 <div style="background: #dadada; height: 1px; width: 100%; clear: both; margin-bottom: 10px;"></div>
                             </div>
                         </div>
+                        <?php $owed = round($dues[0] + $dues[1], 2);
+                        if ($owed > 0 && ($payment_method || $sch_setting->is_offline_fee_payment)) { ?>
+                        <div class="no-print pay-all" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 14px;padding:14px 16px;border:1px solid #f5c26b;border-radius:12px;background:linear-gradient(120deg,#fff8eb,#fff)">
+                            <div style="flex:1;min-width:200px">
+                                <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#8a5d00;font-weight:700">All dues</div>
+                                <div style="font-size:24px;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums"><?php echo $currency_symbol . amountFormat($owed); ?></div>
+                                <?php if ($dues[1] > 0) { ?><div class="text-muted small">including <?php echo $currency_symbol . amountFormat($dues[1]); ?> late fine</div><?php } ?>
+                            </div>
+                            <?php if ($payment_method) { ?>
+                            <form method="post" action="<?php echo site_url('user/gateway/payment/payall'); ?>" id="pay_all_form" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;margin:0">
+                                <?php echo $this->customlib->getCSRF(); ?>
+                                <input type="hidden" name="submit_mode" value="online_payment">
+                                <div>
+                                    <label for="pay_all_amount" style="display:block;font-size:12px;margin-bottom:3px">Amount to pay now</label>
+                                    <div class="input-group" style="width:190px">
+                                        <span class="input-group-addon"><?php echo $currency_symbol; ?></span>
+                                        <input type="number" id="pay_all_amount" name="amount" class="form-control" min="1" max="<?php echo $owed; ?>" step="0.01" value="<?php echo $owed; ?>" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success" style="font-weight:700"><i class="fa fa-credit-card"></i> <span id="pay_all_label">Pay all dues</span></button>
+                            </form>
+                            <?php } ?>
+                            <?php if ($sch_setting->is_offline_fee_payment) { ?>
+                            <form method="post" action="<?php echo site_url('user/gateway/payment/payall'); ?>" style="margin:0">
+                                <?php echo $this->customlib->getCSRF(); ?>
+                                <input type="hidden" name="submit_mode" value="offline_payment">
+                                <button type="submit" class="btn btn-default"><i class="fa fa-university"></i> Paid by bank transfer</button>
+                            </form>
+                            <?php } ?>
+                            <div class="text-muted small" style="flex-basis:100%">Pay everything at once, or type a smaller amount to pay part: it clears the oldest dues first.</div>
+                        </div>
+                        <script>
+                        (function () {
+                            var owed = <?php echo json_encode($owed); ?>, sym = <?php echo json_encode($currency_symbol); ?>;
+                            var input = document.getElementById('pay_all_amount'), label = document.getElementById('pay_all_label');
+                            if (!input) { return; }
+                            function show() {
+                                var v = parseFloat(input.value);
+                                label.textContent = (!v || v >= owed) ? 'Pay all dues' : 'Pay ' + sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' now';
+                            }
+                            input.addEventListener('input', show);
+                            show();
+                        })();
+                        </script>
+                        <?php } ?>
                         <div class="row no-print mb10">
                             <div class="col-md-12 mDMb10">
                                 <div class="float-rtl-right float-left">

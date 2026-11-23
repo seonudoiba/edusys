@@ -115,267 +115,310 @@ class Payment extends Studentgateway_Controller
 
                 }
 
-                if ($this->input->post('submit_mode') == 'offline_payment') {
-                    // one bank transfer for several fees: the transfer form lists them and splits the amount
-                    $owing = array();
-                    foreach ($fees_master_array as $fee_record) {
-                        if (($fee_record['amount_balance'] + max(0, $fee_record['fine_balance'])) > 0) {
-                            $owing[] = $fee_record;
-                        }
-                    }
-                    if (empty($owing)) {
-                        redirect('user/user/getfees');
-                    }
-                    $this->session->set_userdata('params', array('fees' => $owing));
-                    redirect('user/offlinepayment');
-                }
-
-                $student_id     = $this->customlib->getStudentSessionUserID();
-                $pay_method     = $this->paymentsetting_model->getActiveMethod();
-                $student_record = $this->student_model->get($student_id);
-
-                //=================
-                $page                = new stdClass();
-                $page->symbol        = $this->setting[0]['currency_symbol'];
-                $page->currency_name = $this->session->userdata('student')['currency_name'];
-
-                $params = array( //payment session
-                    'key'                       => $pay_method->api_secret_key,
-                    'api_publishable_key'       => $pay_method->api_publishable_key,
-                    'invoice'                   => $page,
-                    'total'                     => ($total_amount_balance),
-                    'fine_amount_balance'       => ($total_fine_amount_balance),
-                    'student_session_id'        => $student_record['student_session_id'],
-                    'name'                      => $this->customlib->getFullName($student_record['firstname'], $student_record['middlename'], $student_record['lastname'], $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname),
-                    'email'                     => $student_record['email'],
-                    'guardian_phone'            => $student_record['guardian_phone'],
-                    'mobileno'                  => $student_record['mobileno'],
-                    'guardian_email'            => $student_record['guardian_email'],
-                    'address'                   => $student_record['permanent_address'],
-                    'student_fees_master_array' => $fees_master_array,
-                    'student_id'                => $student_id,
-                );
-                //=================
-
-                if ($pay_method->payment_type == "payu") {
-                    if ($pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('payu_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/payu"));
-                    }
-                } else if ($pay_method->payment_type == "instamojo") {
-                    //==========Start Instamojo==========
-                    if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "" || $pay_method->salt == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('instamojo_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/instamojo"));
-                    }
-                    //==========End Instamojo==========
-                } else if ($pay_method->payment_type == "paypal") {
-                    //==========Start Paypal==========
-                    if ($pay_method->api_username == "" || $pay_method->api_password == "" || $pay_method->api_signature == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paypal_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/paypal"));
-                    }
-                    //==========End Paypal==========
-                } else if ($pay_method->payment_type == "stripe") {
-                    ///=====================
-                    if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('stripe_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/stripe"));
-                    }
-                    //=======================
-                } else if ($pay_method->payment_type == "paystack") {
-                    ///=====================
-                    if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("paystack", $pay_method)->missing()) { // own keys or a subaccount
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paystack_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/paystack"));
-                    }
-                    //=======================
-                } else if ($pay_method->payment_type == "razorpay") {
-                    if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('razorpay_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/razorpay"));
-                    }
-                } else if ($pay_method->payment_type == "paytm") {
-                    if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "" || $pay_method->paytm_website == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paytm_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/paytm"));
-                    }
-                } else if ($pay_method->payment_type == "midtrans") {
-                    if ($pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('midtrans_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/midtrans"));
-                    }
-                } else if ($pay_method->payment_type == "pesapal") {
-                    if ($pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('pesapal_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/pesapal"));
-                    }
-
-                } else if ($pay_method->payment_type == "flutterwave") {
-                    if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("flutterwave", $pay_method)->missing()) { // own keys or a subaccount
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('flutterwave_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/flutterwave"));
-                    }
-
-                } else if ($pay_method->payment_type == "ipayafrica") {
-                    if ($pay_method->api_publishable_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('ipay_africa_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/ipayafrica"));
-                    }
-
-                } else if ($pay_method->payment_type == "jazzcash") {
-                    if ($pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('jazzcash_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/jazzcash"));
-                    }
-                } else if ($pay_method->payment_type == "billplz") {
-                    if ($pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('billplz_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/billplz"));
-                    }
-                } else if ($pay_method->payment_type == "ccavenue") {
-                    if ($pay_method->api_secret_key == "" || $pay_method->salt == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('ccavenue_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/ccavenue"));
-                    }
-                } else if ($pay_method->payment_type == "sslcommerz") {
-                    if ($pay_method->api_publishable_key == "" || $pay_method->api_password == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('sslcommerz_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/sslcommerz"));
-                    }
-                } else if ($pay_method->payment_type == "walkingm") {
-                    if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('walkingm_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/walkingm"));
-                    }
-                } else if ($pay_method->payment_type == "mollie") {
-                    if ($pay_method->api_publishable_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('mollie_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/mollie"));
-                    }
-                } else if ($pay_method->payment_type == "cashfree") {
-                    if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('cashfree_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/cashfree"));
-                    }
-                } else if ($pay_method->payment_type == "payfast") {
-                    if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('payfast_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/payfast"));
-                    }
-                } else if ($pay_method->payment_type == "toyyibpay") {
-                    if ($pay_method->api_signature == "" || $pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('toyyibpay_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/toyyibpay"));
-                    }
-                } else if ($pay_method->payment_type == "twocheckout") {
-                    if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('twocheckout_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/twocheckout"));
-                    }
-                } else if ($pay_method->payment_type == "skrill") {
-                    if ($pay_method->api_email == "" || $pay_method->salt == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('skrill_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/skrill"));
-                    }
-                } else if ($pay_method->payment_type == "payhere") {
-                    if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('payhere_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/payhere"));
-                    }
-                } else if (in_array($pay_method->payment_type, array("monnify", "interswitch", "remita"), true)) {
-                    // Built on Online_fee_payment (the school's own keys, checked here before leaving).
-                    $this->load->library("Payment_gateways");
-                    if ($this->payment_gateways->for_school($pay_method->payment_type, $pay_method)->missing()) {
-                        $this->session->set_flashdata("error", "<div class=\"alert alert-danger\">" . Payment_gateways::name($pay_method->payment_type) . " is not fully set up yet. Please contact the school.</div>");
-                        redirect($_SERVER["HTTP_REFERER"]);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/" . $pay_method->payment_type));
-                    }
-                } else if ($pay_method->payment_type == "onepay") {
-                    if ($pay_method->api_publishable_key == "") {
-                        $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('onepay_settings_not_available') . '</div>');
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->session->set_userdata("params", $params);
-                        redirect(base_url("user/gateway/onepay"));
-                    }
-                } else {
-                    $this->session->set_flashdata('error', $this->lang->line('something_went_wrong'));
-                    redirect($_SERVER['HTTP_REFERER']);
-                }
+                $this->dispatch_group($fees_master_array, $total_amount_balance, $total_fine_amount_balance, (string) $this->input->post('submit_mode'));
 
             }
+        }
+    }
+
+    /**
+     * "Pay all dues" (user/user/getfees): POST amount (all or part of what is owed) and submit_mode.
+     * A part payment clears the oldest dues first (Portal_dues::allocate). By bank transfer, the
+     * transfer form lists every due and takes the amount sent.
+     */
+    public function payall()
+    {
+        $this->session->unset_userdata("params");
+        if ($this->input->server('REQUEST_METHOD') !== 'POST') {
+            redirect('user/user/getfees');
+        }
+        $this->load->library('Portal_dues');
+        $cs = $this->customlib->getStudentCurrentClsSection();
+        $ss = $this->db->select('id, route_pickup_point_id')->where('id', (int) $cs->student_session_id)->get('student_session')->row();
+        $rows = $ss ? $this->portal_dues->owing((int) $ss->id, $ss->route_pickup_point_id) : array();
+        list($amount, $fine) = Portal_dues::total($rows);
+        $owed = round($amount + $fine, 2);
+        if ($owed <= 0) {
+            $this->session->set_flashdata('error', '<div class="alert alert-info">There is nothing to pay.</div>');
+            redirect('user/user/getfees');
+        }
+        $mode = $this->input->post('submit_mode') === 'offline_payment' ? 'offline_payment' : 'online_payment';
+        if ($mode === 'online_payment') {
+            $pay = round((float) str_replace(',', '', (string) $this->input->post('amount')), 2);
+            if ($pay <= 0 || $pay > $owed + 0.004) {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">Enter an amount from 1 to ' . html_escape(amountFormat($owed)) . '.</div>');
+                redirect('user/user/getfees');
+            }
+            $rows = Portal_dues::allocate($rows, min($pay, $owed));
+            list($amount, $fine) = Portal_dues::total($rows);
+        }
+        $this->dispatch_group($rows, $amount, $fine, $mode);
+    }
+
+    /**
+     * Sends a list of fee records (grouppay, payall) to the school's payment method: the bank
+     * transfer form for submit_mode offline_payment, else the active online gateway.
+     */
+    private function dispatch_group(array $fees_master_array, $total_amount_balance, $total_fine_amount_balance, $submit_mode)
+    {
+        if ($submit_mode == 'offline_payment') {
+            // one bank transfer for several fees: the transfer form lists them and splits the amount
+            $owing = array();
+            foreach ($fees_master_array as $fee_record) {
+                if (($fee_record['amount_balance'] + max(0, $fee_record['fine_balance'])) > 0) {
+                    $owing[] = $fee_record;
+                }
+            }
+            if (empty($owing)) {
+                redirect('user/user/getfees');
+            }
+            $this->session->set_userdata('params', array('fees' => $owing));
+            redirect('user/offlinepayment');
+        }
+
+        $student_id     = $this->customlib->getStudentSessionUserID();
+        $pay_method     = $this->paymentsetting_model->getActiveMethod();
+        $student_record = $this->student_model->get($student_id);
+
+        //=================
+        $page                = new stdClass();
+        $page->symbol        = $this->setting[0]['currency_symbol'];
+        $page->currency_name = $this->session->userdata('student')['currency_name'];
+
+        $params = array( //payment session
+            'key'                       => $pay_method->api_secret_key,
+            'api_publishable_key'       => $pay_method->api_publishable_key,
+            'invoice'                   => $page,
+            'total'                     => ($total_amount_balance),
+            'fine_amount_balance'       => ($total_fine_amount_balance),
+            'student_session_id'        => $student_record['student_session_id'],
+            'name'                      => $this->customlib->getFullName($student_record['firstname'], $student_record['middlename'], $student_record['lastname'], $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname),
+            'email'                     => $student_record['email'],
+            'guardian_phone'            => $student_record['guardian_phone'],
+            'mobileno'                  => $student_record['mobileno'],
+            'guardian_email'            => $student_record['guardian_email'],
+            'address'                   => $student_record['permanent_address'],
+            'student_fees_master_array' => $fees_master_array,
+            'student_id'                => $student_id,
+        );
+        //=================
+
+        if ($pay_method->payment_type == "payu") {
+            if ($pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('payu_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/payu"));
+            }
+        } else if ($pay_method->payment_type == "instamojo") {
+            //==========Start Instamojo==========
+            if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "" || $pay_method->salt == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('instamojo_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/instamojo"));
+            }
+            //==========End Instamojo==========
+        } else if ($pay_method->payment_type == "paypal") {
+            //==========Start Paypal==========
+            if ($pay_method->api_username == "" || $pay_method->api_password == "" || $pay_method->api_signature == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paypal_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/paypal"));
+            }
+            //==========End Paypal==========
+        } else if ($pay_method->payment_type == "stripe") {
+            ///=====================
+            if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('stripe_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/stripe"));
+            }
+            //=======================
+        } else if ($pay_method->payment_type == "paystack") {
+            ///=====================
+            if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("paystack", $pay_method)->missing()) { // own keys or a subaccount
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paystack_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/paystack"));
+            }
+            //=======================
+        } else if ($pay_method->payment_type == "razorpay") {
+            if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('razorpay_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/razorpay"));
+            }
+        } else if ($pay_method->payment_type == "paytm") {
+            if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "" || $pay_method->paytm_website == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('paytm_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/paytm"));
+            }
+        } else if ($pay_method->payment_type == "midtrans") {
+            if ($pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('midtrans_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/midtrans"));
+            }
+        } else if ($pay_method->payment_type == "pesapal") {
+            if ($pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('pesapal_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/pesapal"));
+            }
+
+        } else if ($pay_method->payment_type == "flutterwave") {
+            if ($this->load->library("Payment_gateways") && $this->payment_gateways->for_school("flutterwave", $pay_method)->missing()) { // own keys or a subaccount
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('flutterwave_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/flutterwave"));
+            }
+
+        } else if ($pay_method->payment_type == "ipayafrica") {
+            if ($pay_method->api_publishable_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('ipay_africa_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/ipayafrica"));
+            }
+
+        } else if ($pay_method->payment_type == "jazzcash") {
+            if ($pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('jazzcash_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/jazzcash"));
+            }
+        } else if ($pay_method->payment_type == "billplz") {
+            if ($pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('billplz_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/billplz"));
+            }
+        } else if ($pay_method->payment_type == "ccavenue") {
+            if ($pay_method->api_secret_key == "" || $pay_method->salt == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('ccavenue_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/ccavenue"));
+            }
+        } else if ($pay_method->payment_type == "sslcommerz") {
+            if ($pay_method->api_publishable_key == "" || $pay_method->api_password == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('sslcommerz_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/sslcommerz"));
+            }
+        } else if ($pay_method->payment_type == "walkingm") {
+            if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('walkingm_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/walkingm"));
+            }
+        } else if ($pay_method->payment_type == "mollie") {
+            if ($pay_method->api_publishable_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('mollie_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/mollie"));
+            }
+        } else if ($pay_method->payment_type == "cashfree") {
+            if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('cashfree_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/cashfree"));
+            }
+        } else if ($pay_method->payment_type == "payfast") {
+            if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('payfast_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/payfast"));
+            }
+        } else if ($pay_method->payment_type == "toyyibpay") {
+            if ($pay_method->api_signature == "" || $pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('toyyibpay_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/toyyibpay"));
+            }
+        } else if ($pay_method->payment_type == "twocheckout") {
+            if ($pay_method->api_publishable_key == "" || $pay_method->api_secret_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('twocheckout_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/twocheckout"));
+            }
+        } else if ($pay_method->payment_type == "skrill") {
+            if ($pay_method->api_email == "" || $pay_method->salt == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('skrill_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/skrill"));
+            }
+        } else if ($pay_method->payment_type == "payhere") {
+            if ($pay_method->api_secret_key == "" || $pay_method->api_publishable_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('payhere_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/payhere"));
+            }
+        } else if (in_array($pay_method->payment_type, array("monnify", "interswitch", "remita"), true)) {
+            // Built on Online_fee_payment (the school's own keys, checked here before leaving).
+            $this->load->library("Payment_gateways");
+            if ($this->payment_gateways->for_school($pay_method->payment_type, $pay_method)->missing()) {
+                $this->session->set_flashdata("error", "<div class=\"alert alert-danger\">" . Payment_gateways::name($pay_method->payment_type) . " is not fully set up yet. Please contact the school.</div>");
+                redirect($_SERVER["HTTP_REFERER"]);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/" . $pay_method->payment_type));
+            }
+        } else if ($pay_method->payment_type == "onepay") {
+            if ($pay_method->api_publishable_key == "") {
+                $this->session->set_flashdata('error', '<div class="alert alert-danger">' . $this->lang->line('onepay_settings_not_available') . '</div>');
+                redirect($_SERVER['HTTP_REFERER']);
+            } else {
+                $this->session->set_userdata("params", $params);
+                redirect(base_url("user/gateway/onepay"));
+            }
+        } else {
+            $this->session->set_flashdata('error', $this->lang->line('something_went_wrong'));
+            redirect($_SERVER['HTTP_REFERER']);
         }
     }
 
