@@ -912,6 +912,9 @@ class User extends Student_Controller
                 $data['student_processing_fee'] = true;
             }
         }
+        // "Pay all dues": everything still owed (with late fines), all at once or part of it.
+        $this->load->library('Portal_dues');
+        $data['dues'] = Portal_dues::total($this->portal_dues->owing($student_current_class->student_session_id, $student['route_pickup_point_id']));
         $this->load->view('layout/student/header', $data);
         $this->load->view('user/student/getfees', $data);
         $this->load->view('layout/student/footer', $data);
