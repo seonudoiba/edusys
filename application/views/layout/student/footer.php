@@ -12,6 +12,7 @@
 <script src="<?php echo base_url(); ?>backend/toast-alert/toastr.js"></script>
 
 <script src="<?php echo base_url(); ?>backend/bootstrap/js/bootstrap.min.js"></script>
+<script src="<?php echo base_url('backend/custom/modal_cancel.js'); ?>?v=<?php echo (int) @filemtime(FCPATH . 'backend/custom/modal_cancel.js'); ?>"></script>
 <script src="<?php echo base_url(); ?>backend/dist/js/raphael-min.js"></script>
 <script src="<?php echo base_url(); ?>backend/plugins/morris/morris.min.js"></script>
 <script src="<?php echo base_url(); ?>backend/plugins/sparkline/jquery.sparkline.min.js"></script>

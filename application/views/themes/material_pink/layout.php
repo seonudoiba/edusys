@@ -198,6 +198,7 @@
         <?php echo $footer; ?>
 
         <script src="<?php echo $base_assets_url; ?>js/bootstrap.min.js"></script>
+        <script src="<?php echo base_url('backend/custom/modal_cancel.js'); ?>?v=<?php echo (int) @filemtime(FCPATH . 'backend/custom/modal_cancel.js'); ?>"></script>
         <script src="<?php echo $base_assets_url; ?>js/owl.carousel.min.js"></script>
         <script type="text/javascript" src="<?php echo $base_assets_url; ?>js/jquery.waypoints.min.js"></script>
         <script type="text/javascript" src="<?php echo $base_assets_url; ?>js/jquery.counterup.min.js"></script>

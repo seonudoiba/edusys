@@ -108,6 +108,7 @@ $title_band = !$is_home && !$builder && !empty($st['page_titles']) && $title !==
     <?php $this->load->view('themes/modern/_account'); ?>
 
     <script src="<?php echo $pink; ?>js/bootstrap.min.js"></script>
+    <script src="<?php echo base_url('backend/custom/modal_cancel.js'); ?>?v=<?php echo (int) @filemtime(FCPATH . 'backend/custom/modal_cancel.js'); ?>"></script>
     <script src="<?php echo $pink; ?>js/owl.carousel.min.js"></script>
     <script src="<?php echo $pink; ?>js/jquery.waypoints.min.js"></script>
     <script src="<?php echo $pink; ?>js/jquery.counterup.min.js"></script>
