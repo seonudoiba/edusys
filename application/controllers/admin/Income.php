@@ -242,6 +242,7 @@ class Income extends Admin_Controller
             'to' => (string) $this->input->get('to'),
             'head_id' => (int) $this->input->get('head_id'),
             'q' => trim((string) $this->input->get('q')),
+            'source' => isset(Money_list::SOURCES[(string) $this->input->get('source')]) ? (string) $this->input->get('source') : '',
         );
         $rows = $this->money_list->rows('income', $f);
         list($total, $by_head) = Money_list::totals($rows);

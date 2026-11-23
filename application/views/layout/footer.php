@@ -19,6 +19,7 @@ $feesinbackdate = $this->customlib->getfeesinbackdate();
 <script src="<?php echo base_url(); ?>backend/toast-alert/toastr.js"></script>
 <script src="<?php echo base_url(); ?>backend/bootstrap/js/bootstrap.min.js"></script>
 <script src="<?php echo base_url('backend/custom/modal_cancel.js'); ?>?v=<?php echo (int) @filemtime(FCPATH . 'backend/custom/modal_cancel.js'); ?>"></script>
+<script src="<?php echo base_url('backend/custom/popover_fit.js'); ?>?v=<?php echo (int) @filemtime(FCPATH . 'backend/custom/popover_fit.js'); ?>"></script>
 <link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/select2/select2.min.css">
 <script src="<?php echo base_url(); ?>backend/plugins/select2/select2.full.min.js"></script>
 <script src="<?php echo base_url(); ?>backend/plugins/input-mask/jquery.inputmask.js"></script>

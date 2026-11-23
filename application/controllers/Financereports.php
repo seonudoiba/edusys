@@ -851,40 +851,34 @@ class Financereports extends Admin_Controller
 
         $data['label'] = date($this->customlib->getSchoolDateFormat(), strtotime($start_date)) . " " . $this->lang->line('to') . " " . date($this->customlib->getSchoolDateFormat(), strtotime($end_date));
 
-        $incomeList = $this->income_model->search("", $start_date, $end_date);
-
-        $incomeList      = json_decode($incomeList);
-        $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
-        $dt_data         = array();
-        $grand_total     = 0;
-        if (!empty($incomeList->data)) {
-            foreach ($incomeList->data as $key => $value) {
-                $grand_total += $value->amount;
-
-                $row   = array();
-                $row[] = $value->name;
-                $row[] = $value->invoice_no;
-                $row[] = $value->income_category;
-                $row[] = $this->customlib->showDate($value->date);
-                $row[] = $currency_symbol . amountFormat($value->amount);
-                $dt_data[] = $row;
-            }
-            $footer_row   = array();
-            $footer_row[] = "";
-            $footer_row[] = "";
-            $footer_row[] = "";
-            $footer_row[] = "<b>" . $this->lang->line('grand_total') . "</b>";
-            $footer_row[] = $currency_symbol . amountFormat($grand_total);
-            $dt_data[]    = $footer_row;
+        // Recorded income plus what the school's payments add automatically (fees, admission forms,
+        // online courses): see Money_list. Paged and searched here for the table.
+        $this->load->library('Money_list');
+        $rows = $this->money_list->rows('income', array('period' => 'custom', 'from' => $start_date, 'to' => $end_date, 'head_id' => 0, 'q' => ''));
+        $search = trim((string) (isset($_POST['search']['value']) ? $_POST['search']['value'] : ''));
+        if ($search !== '') {
+            $rows = array_values(array_filter($rows, function ($r) use ($search) {
+                return stripos($r['name'] . ' ' . $r['invoice_no'] . ' ' . $r['head'] . ' ' . $r['note'], $search) !== false;
+            }));
         }
-
-        $json_data = array(
-            "draw"            => intval($incomeList->draw),
-            "recordsTotal"    => intval($incomeList->recordsTotal),
-            "recordsFiltered" => intval($incomeList->recordsFiltered),
-            "data"            => $dt_data,
-        );
-        echo json_encode($json_data);
+        $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
+        $grand_total     = array_sum(array_column($rows, 'amount'));
+        $start           = max(0, (int) $this->input->post('start'));
+        $length          = (int) $this->input->post('length');
+        $page            = $length > 0 ? array_slice($rows, $start, $length) : $rows;
+        $dt_data         = array();
+        foreach ($page as $value) {
+            $dt_data[] = array(html_escape($value['name']), html_escape($value['invoice_no']), html_escape($value['head']), $this->customlib->showDate($value['date']), $currency_symbol . amountFormat($value['amount']));
+        }
+        if ($rows) {
+            $dt_data[] = array('', '', '', '<b>' . $this->lang->line('grand_total') . '</b>', $currency_symbol . amountFormat($grand_total));
+        }
+        echo json_encode(array(
+            'draw'            => intval($this->input->post('draw')),
+            'recordsTotal'    => count($rows),
+            'recordsFiltered' => count($rows),
+            'data'            => $dt_data,
+        ));
     }
 
     public function expense()

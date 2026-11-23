@@ -10,7 +10,9 @@ $m = function ($v) use ($cur) {
 $e = function ($v) {
     return html_escape((string) $v);
 };
-$qs = http_build_query(array_filter(array('period' => $f['period'], 'from' => $f['from'], 'to' => $f['to'], 'head_id' => $f['head_id'] ?: '', 'q' => $f['q'])));
+$f += array('source' => '');
+$qs = http_build_query(array_filter(array('period' => $f['period'], 'from' => $f['from'], 'to' => $f['to'], 'head_id' => $f['head_id'] ?: '', 'q' => $f['q'], 'source' => $f['source'])));
+$src_tag = array('manual' => array('#eef2f7', '#334155'), 'fees' => array('#e2f3f1', '#015f5c'), 'admission' => array('#ede9fe', '#5b21b6'), 'course' => array('#fef3c7', '#92400e'));
 ?>
 <style>
     .ml-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
@@ -56,6 +58,15 @@ $qs = http_build_query(array_filter(array('period' => $f['period'], 'from' => $f
                             <?php foreach ($heads as $id => $name) { ?><option value="<?php echo (int) $id; ?>" <?php echo (int) $f['head_id'] === (int) $id ? 'selected' : ''; ?>><?php echo $e($name); ?></option><?php } ?>
                         </select>
                     </div>
+                    <?php if ($is_income) { ?>
+                    <div class="form-group">
+                        <label for="ml_source">Source</label>
+                        <select id="ml_source" name="source" class="form-control">
+                            <option value="">All income</option>
+                            <?php foreach (Money_list::SOURCES as $k => $label) { ?><option value="<?php echo $k; ?>" <?php echo $f['source'] === $k ? 'selected' : ''; ?>><?php echo $label; ?></option><?php } ?>
+                        </select>
+                    </div>
+                    <?php } ?>
                     <div class="form-group" style="flex:1;min-width:180px">
                         <label for="ml_q">Search</label>
                         <input id="ml_q" type="search" name="q" class="form-control" value="<?php echo $e($f['q']); ?>" placeholder="Name, invoice number or description">
@@ -77,6 +88,7 @@ $qs = http_build_query(array_filter(array('period' => $f['period'], 'from' => $f
                     </ul>
                 <?php } ?>
 
+                <?php if ($is_income) { ?><p class="text-muted small" style="margin:-4px 0 12px"><i class="fa fa-info-circle"></i> School fees, admission form fees and online course payments are added here automatically when they are paid. Change them on the payment itself (for example the student's fees page); only income recorded here can be edited.</p><?php } ?>
                 <?php if (!$rows) { ?>
                     <p class="text-muted" style="padding:20px 0;text-align:center">No <?php echo strtolower($word); ?> recorded<?php echo $qs !== '' ? ' for this search' : ' yet'; ?>.</p>
                 <?php } else { ?>
@@ -88,14 +100,18 @@ $qs = http_build_query(array_filter(array('period' => $f['period'], 'from' => $f
                                 <tr>
                                     <td data-order="<?php echo $e($r['date']); ?>"><?php echo $e(date('j M Y', strtotime($r['date']))); ?></td>
                                     <td><?php echo $e($r['name']); ?></td>
-                                    <td><?php echo $e($r['head']); ?></td>
+                                    <td><?php $st = $src_tag[isset($r['source']) ? $r['source'] : 'manual']; ?><?php echo $e($r['head']); ?><?php if ($is_income && $r['source'] !== 'manual') { ?><br><span style="display:inline-block;margin-top:2px;padding:0 7px;border-radius:99px;font-size:11px;font-weight:700;background:<?php echo $st[0]; ?>;color:<?php echo $st[1]; ?>">Automatic</span><?php } ?></td>
                                     <td><?php echo $e($r['invoice_no']); ?></td>
                                     <td><small><?php echo $e(mb_strimwidth((string) $r['note'], 0, 80, '…')); ?></small></td>
                                     <td class="n"><?php echo $m($r['amount']); ?></td>
                                     <td class="text-right" style="white-space:nowrap">
+                                        <?php if (isset($r['source']) && $r['source'] !== 'manual') { ?>
+                                            <?php if ($r['link'] !== '') { ?><a class="btn btn-xs btn-default" href="<?php echo site_url($r['link']); ?>" title="Open the payment"><i class="fa fa-external-link"></i> View</a><?php } ?>
+                                        <?php } else { ?>
                                         <?php if ((string) $r['documents'] !== '') { ?><a class="btn btn-xs btn-default" href="<?php echo site_url($base . '/download/' . (int) $r['id']); ?>" title="Download the attached document"><i class="fa fa-paperclip"></i></a><?php } ?>
                                         <?php if ($this->rbac->hasPrivilege($kind, 'can_edit')) { ?><a class="btn btn-xs btn-default" href="<?php echo site_url($base . '/edit/' . (int) $r['id']); ?>" title="Edit"><i class="fa fa-pencil"></i> Edit</a><?php } ?>
                                         <?php if ($this->rbac->hasPrivilege($kind, 'can_delete')) { ?><a class="btn btn-xs btn-default text-danger" href="<?php echo site_url($base . '/delete/' . (int) $r['id']) . '?back=list' . ($qs !== '' ? '&' . $e($qs) : ''); ?>" onclick="return confirm('Delete this <?php echo strtolower($word); ?> record (<?php echo $e(addslashes($r['name'])); ?>, <?php echo $e($m($r['amount'])); ?>)? This cannot be undone.')" title="Delete"><i class="fa fa-trash"></i></a><?php } ?>
+                                        <?php } ?>
                                     </td>
                                 </tr>
                             <?php } ?>

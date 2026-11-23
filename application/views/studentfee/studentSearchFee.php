@@ -22,7 +22,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
                                 <div class="col-md-4">
                                     <div class="form-group relative">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('fees_group'); ?></label><small class="req"> *</small>
+                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('fees_group'); ?></label> <small class="text-muted">(none ticked = all fees)</small>
                                             <div id="checkbox-dropdown-container">
             <div class="">
                <div class="custom-select" id="custom-select"><?php echo $this->lang->line('select'); ?></div>
