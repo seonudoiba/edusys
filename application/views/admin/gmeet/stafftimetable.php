@@ -231,7 +231,7 @@ if ($gmeet_value->status == 0) {
 if(empty($gmeet_setting) || !$gmeet_setting->use_api){
     ?>
 <div class="form-group col-sm-12 col-md-12 col-lg-12">
-                            <label for="url"> <?php echo $this->lang->line('gmeet')." ".$this->lang->line('url'); ?> (<?php echo $this->lang->line('how_to_get');  ?> <a class="labelurl" href="https://smart-school.in/article/how-to-get-gmeet-url" target="_blank"> <?php echo $this->lang->line('gmeet')." ".$this->lang->line('url'); ?></a>? )<small class="req"> *</small> </label>
+                            <label for="url"> <?php echo $this->lang->line('gmeet')." ".$this->lang->line('url'); ?> (<?php echo $this->lang->line('how_to_get');  ?> <a class="labelurl" href="https://edusys.ng/article/how-to-get-gmeet-url" target="_blank"> <?php echo $this->lang->line('gmeet')." ".$this->lang->line('url'); ?></a>? )<small class="req"> *</small> </label>
                             <input type="text" class="form-control" id="url" name="url">
                             <span class="text text-danger" id="url_error"></span>
                         </div>
