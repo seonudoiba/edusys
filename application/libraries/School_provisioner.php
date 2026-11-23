@@ -90,6 +90,9 @@ class School_provisioner
                     // Academics > Assign Subject Teachers, after Assign Class Teacher.
                     $this->CI->load->library('Subject_teachers');
                     $this->CI->subject_teachers->install_menu((int) $school['id']);
+                    // Shorter staff form, no Visitor Book / Apply Leave in the portal, Report Behaviour.
+                    $this->CI->load->library('School_tidy');
+                    $this->CI->school_tidy->install((int) $school['id']);
                 } else {
                     // The platform admin's finer permissions, Platform Manager role and Plan > Pricing bands.
                     $this->CI->load->library('Platform_admin_setup');

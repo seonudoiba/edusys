@@ -73,7 +73,7 @@ if (!function_exists('nav_entry_label')) {
             'admin/disable_reason' => 'Reasons for Disabling',
             // Fees
             'admin/fees' => 'Fees Overview',
-            'admin/fees/collections' => 'Collect Fees',
+            'admin/fees/collections' => 'Record Payments',
             'admin/fees/create' => 'Create Fees',
             'admin/fees/adjust' => 'Discounts & Balances',
             'admin/offlinepayment' => 'Bank Transfers to Approve',
@@ -94,6 +94,7 @@ if (!function_exists('nav_entry_label')) {
             'admin/gauthenticate/admin/setup' => 'Set Up 2FA',
             'admin/gauthenticate/admin' => '2FA Settings',
             // Behaviour
+            'behaviour/log' => 'Report Behaviour',
             'behaviour/studentincidents' => 'Student Incidents',
             'behaviour/incidents' => 'Incident Types',
             'behaviour/report' => 'Behaviour Reports',

@@ -39,20 +39,12 @@ echo $this->session->flashdata('msg');
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <label><?php echo $this->lang->line('admission_no'); ?></label>
-                                                <input type="text" class="form-control" value="<?php echo html_escape(isset($next_admission_no) ? $next_admission_no : ''); ?>" readonly aria-describedby="admNoHelp">
-                                                <span id="admNoHelp" class="help-block" style="margin:4px 0 0">Given automatically when you save. Change the format in System Settings &gt; ID Auto Generation.</span>
+                                                <label for="admission_no"><?php echo $this->lang->line('admission_no'); ?></label>
+                                                <input type="text" id="admission_no" name="admission_no" class="form-control" maxlength="50" value="<?php echo html_escape(set_value('admission_no', isset($next_admission_no) ? $next_admission_no : '')); ?>" placeholder="Given automatically" aria-describedby="admNoHelp">
+                                                <span class="text-danger"><?php echo form_error('admission_no'); ?></span>
+                                                <span id="admNoHelp" class="help-block" style="margin:4px 0 0">The next number is filled in. Type the student's own number to use it instead, or leave it blank.</span>
                                             </div>
                                         </div>
-                                        <?php if (!$adm_auto_insert) {?>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="exampleInputEmail1"><?php echo $this->lang->line('admission_no'); ?></label> <small class="req"> *</small>
-                                                    <input autofocus="" id="admission_no" name="admission_no" placeholder="" type="text" class="form-control"  value="<?php echo set_value('admission_no'); ?>" />
-                                                    <span class="text-danger"><?php echo form_error('admission_no'); ?></span>
-                                                </div>
-                                            </div>
-                                        <?php }?>
                                         <?php if ($sch_setting->roll_no) {?>
                                             <div class="col-md-3">
                                                 <div class="form-group">

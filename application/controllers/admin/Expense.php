@@ -148,6 +148,11 @@ class Expense extends Admin_Controller
         }
 
         $this->expense_model->remove($id);
+        if ($this->input->get('back') === 'list') {
+            $this->session->set_flashdata('ml_msg', 'The expense record was deleted.');
+            $keep = array_intersect_key($this->input->get(), array_flip(array('period', 'from', 'to', 'head_id', 'q')));
+            redirect('admin/expense/expensesearch' . ($keep ? '?' . http_build_query($keep) : ''));
+        }
         redirect('admin/expense/index');
     }
 
@@ -230,13 +235,22 @@ class Expense extends Admin_Controller
         if (!$this->rbac->hasPrivilege('search_expense', 'can_view')) {
             access_denied();
         }
-        $data['searchlist']  = $this->customlib->get_searchtype();
-        $data['search_type'] = '';
+        $this->load->library('Money_list');
+        $period = (string) $this->input->get('period');
+        $f = array(
+            'period' => isset(Money_list::PERIODS[$period]) ? $period : 'all',
+            'from' => (string) $this->input->get('from'),
+            'to' => (string) $this->input->get('to'),
+            'head_id' => (int) $this->input->get('head_id'),
+            'q' => trim((string) $this->input->get('q')),
+        );
+        $rows = $this->money_list->rows('expense', $f);
+        list($total, $by_head) = Money_list::totals($rows);
         $this->session->set_userdata('top_menu', 'Expenses');
         $this->session->set_userdata('sub_menu', 'expense/expensesearch');
-        $data['title'] = 'Search Expense';
+        $data = array('title' => 'Expense List', 'kind' => 'expense', 'f' => $f, 'rows' => $rows, 'total' => $total, 'by_head' => $by_head, 'heads' => $this->money_list->heads('expense'));
         $this->load->view('layout/header', $data);
-        $this->load->view('admin/expense/expenseSearch', $data);
+        $this->load->view('admin/finance/money_list', $data);
         $this->load->view('layout/footer', $data);
 
     }

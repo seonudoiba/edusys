@@ -164,7 +164,7 @@ foreach ($categorylist as $value) {
                                 
                                 <a class="btn btn-sm btn-default" href="<?php echo site_url('studentfee/bill/' . (int) $student['student_session_id']); ?>" target="_blank" rel="noopener"><i class="fa fa-file-text-o"></i> Fee bill</a>
                                 <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
-                                <button type="button" class="btn btn-sm btn-success collectAll" title="Every unpaid fee of this student (class fees, transport) in one payment; a part payment is spread over them" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-check-circle"></i> Collect all fees</button>
+                                <button type="button" class="btn btn-sm btn-success collectAll" title="Every unpaid fee of this student (class fees, transport) in one payment; a part payment is spread over them" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-check-circle"></i> Record payment for all fees</button>
                                 <button type="button" class="btn btn-sm btn-warning collectSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('collect_selected'); ?></button><?php } ?>
                                 
                                 <?php
@@ -339,15 +339,15 @@ $display_none = "ss-none";
         }
         ?>
                                                 </td>
-                                                <td width="100">
+                                                <td width="160" style="white-space:nowrap">
                                                     <div class="btn-group">
                                                       <div class="pull-right">
                                                       
                                                       <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
                                                         <button type="button" data-student_session_id="<?php echo $fee->student_session_id; ?>" data-student_fees_master_id="<?php echo $fee->id; ?>" data-fee_groups_feetype_id="<?php echo $fee_value->fee_groups_feetype_id; ?>" data-group="<?php echo ($fee_value->is_system) ? $this->lang->line($fee_value->name). " (" . $this->lang->line($fee_value->type) . ")" : $fee_value->name. " (" . $fee_value->type . ")"; ?>"  data-type="<?php echo ($fee_value->is_system) ? $this->lang->line($fee_value->type) : $fee_value->code; ?>"
                                                                 class="btn btn-xs btn-default myCollectFeeBtn <?php echo $display_none; ?>"
-                                                                title="<?php echo $this->lang->line('add_fees'); ?>" data-toggle="modal" data-target="#myFeesModal" data-fee-category="fees"  data-trans_fee_id="0"
-                                                      ><i class="fa fa-plus"></i></button><?php } ?>
+                                                                title="Record a payment made for this fee (cash, bank transfer, POS)" data-toggle="modal" data-target="#myFeesModal" data-fee-category="fees"  data-trans_fee_id="0"
+                                                      ><i class="fa fa-plus"></i> Payment</button><?php } ?>
 
 <button  class="btn btn-xs btn-default printInv" data-student_session_id="<?php echo $fee->student_session_id; ?>" data-fee_master_id="<?php echo $fee_value->id ?>" data-fee_session_group_id="<?php echo $fee_value->fee_session_group_id ?>" data-fee_groups_feetype_id="<?php echo $fee_value->fee_groups_feetype_id ?>" data-fee-category="fees"  data-trans_fee_id="0" title="<?php echo $this->lang->line('print'); ?>" data-loading-text="<i class='fa fa-spinner fa-spin '></i>"><i class="fa fa-print"></i> </button>
                                                     </div>
@@ -521,11 +521,11 @@ $display_none = "ss-none";
         }
         ?>
                                                 </td>
-                                                <td width="100">
+                                                <td width="160" style="white-space:nowrap">
                                                 
                                                 <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
             <button type="button" data-student_session_id="<?php echo $transport_fee_value->student_session_id; ?>" data-student_fees_master_id="0" data-fee_groups_feetype_id="0"
-                                                data-group="<?php echo $this->lang->line('transport_fees'); ?>"  data-type="<?php echo $transport_fee_value->month; ?>" class="btn btn-xs btn-default myCollectFeeBtn <?php echo $display_none; ?>"  title="<?php echo $this->lang->line('add_fees'); ?>" data-toggle="modal" data-target="#myFeesModal" data-fee-category="transport" data-trans_fee_id="<?php echo $transport_fee_value->id; ?>"><i class="fa fa-plus"></i></button><?php } ?>
+                                                data-group="<?php echo $this->lang->line('transport_fees'); ?>"  data-type="<?php echo $transport_fee_value->month; ?>" class="btn btn-xs btn-default myCollectFeeBtn <?php echo $display_none; ?>"  title="Record a payment made for this fee (cash, bank transfer, POS)" data-toggle="modal" data-target="#myFeesModal" data-fee-category="transport" data-trans_fee_id="<?php echo $transport_fee_value->id; ?>"><i class="fa fa-plus"></i> Payment</button><?php } ?>
 
                  <button  class="btn btn-xs btn-default printInv"  data-student_session_id="<?php echo $transport_fee_value->student_session_id; ?>" data-fee_master_id="0" data-fee_session_group_id="0" data-fee_groups_feetype_id="0" data-fee-category="transport"  data-trans_fee_id="<?php echo $transport_fee_value->id; ?>" title="<?php echo $this->lang->line('print'); ?>" data-loading-text="<i class='fa fa-spinner fa-spin '></i>"><i class="fa fa-print"></i> </button>
 

@@ -10,6 +10,8 @@ class Visitors extends Student_Controller
     public function __construct()
     {
         parent::__construct();
+        // Not part of the student and parent portal (taken out of its menu): back to the dashboard.
+        redirect('user/user/dashboard');
         $this->load->library('media_storage');
     }
 

@@ -109,7 +109,7 @@ class Fees extends Admin_Controller
         }
         $today = date('Y-m-d');
         $this->render('collections', array(
-            'title' => 'Collect fees',
+            'title' => 'Record payments',
             'q' => $q,
             'class_id' => $class_id,
             'section_id' => $section_id,

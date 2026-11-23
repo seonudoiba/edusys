@@ -28,10 +28,10 @@ echo $this->session->flashdata('msg');
                                     <input type="hidden" name="sibling_name" value="<?php echo set_value('sibling_name', 0); ?>" id="sibling_name_next">
                                     <input type="hidden" name="sibling_id" value="<?php echo set_value('sibling_id', 0); ?>" id="sibling_id">
                                     <div class="row">
-                                        <?php if (!$adm_auto_insert) {?>
+                                        <?php if (true) {?>
                                             <div class="col-md-3">
                                                 <div class="form-group">
-                                                    <label for="exampleInputEmail1"><?php echo $this->lang->line('admission_no'); ?></label><small class="req"> *</small>
+                                                    <label for="admission_no"><?php echo $this->lang->line('admission_no'); ?></label><small class="req"> *</small>
                                                     <input autofocus="" id="admission_no" name="admission_no" placeholder="" type="text" class="form-control"  value="<?php echo set_value('admission_no', $student['admission_no']); ?>" />
                                                     <span class="text-danger"><?php echo form_error('admission_no'); ?></span>
                                                 </div>

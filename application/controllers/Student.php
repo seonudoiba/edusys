@@ -471,9 +471,8 @@ class Student extends Admin_Controller
             );        
         }   
 
-        if (!$this->sch_setting_detail->adm_auto_insert) {
-            $this->form_validation->set_rules('admission_no', $this->lang->line('admission_no'), 'trim|required|xss_clean|is_unique[students.admission_no]');
-        }
+        // Admission number: the next one is filled in; a number typed instead is used if no one has it.
+        $this->form_validation->set_rules('admission_no', $this->lang->line('admission_no'), 'trim|xss_clean|max_length[50]|is_unique[students.admission_no]', array('is_unique' => 'Another student already has this admission number.'));
 
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload[file]');
 
@@ -644,8 +643,11 @@ class Student extends Admin_Controller
             $data_setting['id']                = $this->sch_setting_detail->id;
             $data_setting['adm_auto_insert']   = $this->sch_setting_detail->adm_auto_insert;
             $data_setting['adm_update_status'] = $this->sch_setting_detail->adm_update_status;
-            // Always generated: never typed, never clashing (Student_numbers).
-            $admission_no                = $this->student_numbers->next();
+            // The number typed (or the suggested one, checked free above), else the next free one.
+            $admission_no                = trim((string) $this->input->post('admission_no'));
+            if ($admission_no === '') {
+                $admission_no = $this->student_numbers->next();
+            }
             $data_insert['admission_no'] = $admission_no;
 
             if (empty($_FILES["file"])) {
@@ -1315,10 +1317,7 @@ class Student extends Admin_Controller
             )
         );
 
-        if (!$this->sch_setting_detail->adm_auto_insert) {
-
-            $this->form_validation->set_rules('admission_no', $this->lang->line('admission_no'), array('required', array('check_admission_no_exists', array($this->student_model, 'valid_student_admission_no'))));
-        }
+        $this->form_validation->set_rules('admission_no', $this->lang->line('admission_no'), array('trim', 'required', 'max_length[50]', array('check_admission_no_exists', array($this->student_model, 'valid_student_admission_no'))));
 
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload[file]');
 
@@ -1540,9 +1539,7 @@ class Student extends Admin_Controller
                 $data['guardian_pic'] = "uploads/student_images/" . $img_name;
             }
 
-            if (!$this->sch_setting_detail->adm_auto_insert) {
-                $data['admission_no'] = $this->input->post('admission_no');
-            }
+            $data['admission_no'] = trim((string) $this->input->post('admission_no'));
 
             $this->student_model->add($data);
             $data_new = array(

@@ -355,16 +355,10 @@ $role = $this->customlib->getUserRole();
                                     <span><?php echo $this->lang->line('online_course'); ?></span></a></li>
                         <?php } ?>
 
-                        <?php if ($this->module_lib->hasModule('zoom_live_classes') && $this->module_lib->hasActive('zoom_live_classes') && $this->studentmodule_lib->hasActive('live_classes') && $this->auth->addonchk('sszlc', false)) { ?>
-                            <li class="<?php echo set_topmenu('Conference'); ?>"><a
-                                    href="<?php echo base_url('user/conference'); ?>"><i class="fa fa-video-camera ftlayer"></i>
-                                    <?php echo $this->lang->line('zoom_live_classes'); ?></a></li>
-                        <?php } ?>
-
-                        <?php if ($this->module_lib->hasModule('gmeet_live_classes') && $this->module_lib->hasActive('gmeet_live_classes') && $this->studentmodule_lib->hasActive('gmeet_live_classes') && $this->auth->addonchk('ssglc', false)) { ?>
-                            <li class="<?php echo set_topmenu('Gmeet'); ?>"><a href="<?php echo base_url('user/gmeet'); ?>"><i
-                                        class="fa fa-video-camera ftlayer"></i>
-                                    <?php echo $this->lang->line('gmeet') . " " . $this->lang->line('live_class'); ?></a></li>
+                        <?php // Online Classes: the class's Google Meet and Zoom classes on one page (user/Onlineclasses).
+                        if (($this->module_lib->hasActive('gmeet_live_classes') && $this->studentmodule_lib->hasActive('gmeet_live_classes')) || ($this->module_lib->hasActive('zoom_live_classes') && $this->studentmodule_lib->hasActive('live_classes'))) { ?>
+                            <li class="<?php echo set_topmenu('onlineclasses'); ?>"><a href="<?php echo site_url('user/onlineclasses'); ?>"><i class="fa fa-video-camera ftlayer"></i>
+                                    <span>Online Classes</span></a></li>
                         <?php } ?>
 
                         <?php if ($this->studentmodule_lib->hasActive('class_timetable')) { ?>
@@ -397,17 +391,6 @@ $role = $this->customlib->getUserRole();
                                     <span>CBT Exams</span></a></li>
                         <?php } ?>
 
-                        <?php if ($this->studentmodule_lib->hasActive('apply_leave')) { ?>
-                            <li class="<?php echo set_Topmenu('apply_leave'); ?>"><a
-                                    href="<?php echo base_url(); ?>user/apply_leave"><i class="fa fa-check-square ftlayer"></i>
-                                    <span><?php echo $this->lang->line('apply_leave'); ?></span></a></li>
-                        <?php } ?>
-
-                        <?php if ($this->studentmodule_lib->hasActive('visitor_book')) { ?>
-                            <li class="<?php echo set_Topmenu('visitors'); ?>"><a
-                                    href="<?php echo base_url(); ?>user/visitors"><i class="fa fa-check-square ftlayer"></i>
-                                    <span><?php echo $this->lang->line('visitor_book'); ?></span></a></li>
-                        <?php } ?>
 
                         <?php if ($this->module_lib->hasActive('download_center') && $this->studentmodule_lib->hasActive('download_center')) { ?>
                             <li class="treeview <?php echo set_Topmenu('Downloads'); ?>">

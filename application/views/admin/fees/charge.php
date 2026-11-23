@@ -49,7 +49,7 @@ $title = $charge['is_system'] ? 'Balance brought forward' : $charge['group'];
             <div class="box-header with-border" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;justify-content:space-between">
                 <div>
                     <h3 class="box-title">Students</h3>
-                    <p class="fw-muted" style="margin:4px 0 0">Most owed first. Collect takes a full or part payment; Fee bill prints what is owed and how to pay.</p>
+                    <p class="fw-muted" style="margin:4px 0 0">Most owed first. Record payment takes a full or part payment made at the school; Fee bill prints what is owed and how to pay.</p>
                     <?php if ($last_reminder) { ?><p class="fw-muted" style="margin:4px 0 0"><i class="fa fa-commenting-o"></i> Last SMS reminder: <?php echo $e(date($this->customlib->getSchoolDateFormat(), strtotime($last_reminder[0]))); ?>, <?php echo (int) $last_reminder[1]; ?> sent<?php echo $last_reminder[2] ? ', ' . (int) $last_reminder[2] . ' failed' : ''; ?>.</p><?php } ?>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:6px">
@@ -76,7 +76,7 @@ $title = $charge['is_system'] ? 'Balance brought forward' : $charge['group'];
                             <td class="n"><b><?php echo $m($t['balance']); ?></b></td>
                             <td><span class="fw-tag <?php echo $status; ?>"><?php echo $status === 'paid' ? 'Paid' : ($status === 'overdue' ? 'Overdue' : 'Owing'); ?></span></td>
                             <td style="white-space:nowrap">
-                                <?php if ($can_collect && $t['balance'] > 0) { ?><a class="btn btn-primary btn-xs" href="<?php echo site_url('studentfee/addfee/' . (int) $s['student_session_id']); ?>"><i class="fa fa-money"></i> Collect</a><?php } ?>
+                                <?php if ($can_collect && $t['balance'] > 0) { ?><a class="btn btn-primary btn-xs" href="<?php echo site_url('studentfee/addfee/' . (int) $s['student_session_id']); ?>"><i class="fa fa-money"></i> Record payment</a><?php } ?>
                                 <a class="btn btn-default btn-xs" target="_blank" rel="noopener" href="<?php echo site_url('studentfee/bill/' . (int) $s['student_session_id']); ?>"><i class="fa fa-file-text-o"></i> Fee bill</a>
                                 <?php if ($t['balance'] > 0 && !empty($p['guardian_phone'])) {
                                     $text = 'Dear ' . ($p['guardian_name'] ?: 'parent') . ', this is a reminder that ' . $name . ' (' . $charge['class'] . ' ' . $charge['section'] . ') has an outstanding balance of ' . $currency_symbol . amountFormat($t['balance']) . ' for ' . $title . '. Kindly pay at your earliest convenience. Thank you. ' . $this->customlib->getSchoolName(); ?>
