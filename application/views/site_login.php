@@ -74,7 +74,10 @@ $captcha_block = function ($error) use ($captcha_image) {
                                 <div class="loginbg">
                                     <div class="form-top">
                                         <div class="form-top-left logowidth">
-                                            <img src="<?php echo base_url(); ?>uploads/school_content/admin_logo/<?php echo $this->setting_model->getAdminlogo(); ?>" alt="<?php echo html_escape($school['name']); ?>" />
+                                                            <a href="<?php echo base_url(); ?>">
+
+                                            <img href="/" src="<?php echo base_url(); ?>uploads/school_content/admin_logo/<?php echo $this->setting_model->getAdminlogo(); ?>" alt="<?php echo html_escape($school['name']); ?>" />
+                                       </a>
                                         </div>
                                     </div>
                                     <div class="form-bottom">
@@ -139,7 +142,21 @@ $captcha_block = function ($error) use ($captcha_image) {
                                                         <button type="submit" class="btn"><?php echo $this->lang->line('sign_in'); ?></button>
                                                     </form>
                                                 <?php } ?>
-                                                <p><a href="<?php echo site_url('site/ufpassword'); ?>" class="forgot"><i class="fa fa-key"></i> <?php echo $this->lang->line('forgot_password'); ?></a></p>
+                                                  <div class="login-links" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+    <a href="<?php echo site_url('/'); ?>" class="back-to-dashboard">
+        <i class="fa fa-arrow-left"></i> Back to Homepage
+    </a>
+
+    <a href="<?php echo site_url('site/forgotpassword'); ?>" class="forgot">
+        <i class="fa fa-key"></i> <?php echo $this->lang->line('forgot_password'); ?>?
+    </a>
+</div>
+                                                
+                                                
+                                                <!-- <p><a href="<?php echo site_url('site/ufpassword'); ?>"
+                                                 class="forgot"><i class="fa fa-key"></i> 
+                                                 <?php echo $this->lang->line('forgot_password'); 
+                                                 ?></a></p> -->
                                             </div>
                                         <?php } ?>
 
@@ -170,7 +187,17 @@ $captcha_block = function ($error) use ($captcha_image) {
                                                 <?php if ($staff_captcha) { $captcha_block($is_staff_post ? form_error('captcha') : ''); } ?>
                                                 <button type="submit" class="btn"><?php echo $this->lang->line('sign_in'); ?></button>
                                             </form>
-                                            <a href="<?php echo site_url('site/forgotpassword'); ?>" class="forgot"><i class="fa fa-key"></i> <?php echo $this->lang->line('forgot_password'); ?>?</a>
+                                            <div class="login-links" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+    <a href="<?php echo site_url('/'); ?>" class="back-to-dashboard">
+        <i class="fa fa-arrow-left"></i> Back to Homepage
+    </a>
+
+    <a href="<?php echo site_url('site/forgotpassword'); ?>" class="forgot">
+        <i class="fa fa-key"></i> <?php echo $this->lang->line('forgot_password'); ?>?
+    </a>
+</div>
+
+                                            <!-- <a href="<?php echo site_url('site/forgotpassword'); ?>" class="forgot"><i class="fa fa-key"></i> <?php echo $this->lang->line('forgot_password'); ?>?</a> -->
                                         </div>
                                     </div>
                                 </div>
