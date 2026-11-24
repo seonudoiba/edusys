@@ -74,7 +74,10 @@ $captcha_block = function ($error) use ($captcha_image) {
                                 <div class="loginbg">
                                     <div class="form-top">
                                         <div class="form-top-left logowidth">
-                                            <img src="<?php echo base_url(); ?>uploads/school_content/admin_logo/<?php echo $this->setting_model->getAdminlogo(); ?>" alt="<?php echo html_escape($school['name']); ?>" />
+                                                            <a href="<?php echo base_url(); ?>">
+
+                                            <img href="/" src="<?php echo base_url(); ?>uploads/school_content/admin_logo/<?php echo $this->setting_model->getAdminlogo(); ?>" alt="<?php echo html_escape($school['name']); ?>" />
+                                       </a>
                                         </div>
                                     </div>
                                     <div class="form-bottom">
