@@ -170,7 +170,7 @@ if (!function_exists('nav_entry_label')) {
             // Lesson Plans
             'admin/lessonplan/copylesson' => 'Copy Lessons',
             'admin/syllabus' => 'Lesson Plans',
-            'admin/syllabus/status' => 'Syllabus Progress',
+            // 'admin/syllabus/status' => 'Syllabus Progress',
             'admin/lessonplan/lesson' => 'Lessons',
             'admin/lessonplan/topic' => 'Topics',
             // Staff
