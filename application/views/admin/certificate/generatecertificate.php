@@ -258,38 +258,72 @@ $count++;
     });
 </script>
 <script type="text/javascript">
-
     var base_url = '<?php echo base_url() ?>';
-    function Popup(data, winload = false)
+    function Popup(data)
     {
-        var frameDoc=window.open('', 'Print-Window');
-        frameDoc.document.open();
-        //Create a new HTML document.
-        frameDoc.document.write('<html>');
-        frameDoc.document.write('<head>');
-        frameDoc.document.write('<title></title>');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/bootstrap/css/bootstrap.min.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/dist/css/font-awesome.min.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/dist/css/ionicons.min.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/dist/css/AdminLTE.min.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/dist/css/skins/_all-skins.min.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/plugins/iCheck/flat/blue.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/plugins/morris/morris.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/plugins/jvectormap/jquery-jvectormap-1.2.2.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/plugins/datepicker/datepicker3.css">');
-        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/plugins/daterangepicker/daterangepicker-bs3.css">');
-        frameDoc.document.write('</head>');
-        frameDoc.document.write('<body onload="window.print()">');
-        frameDoc.document.write(data);
-        frameDoc.document.write('</body>');
-        frameDoc.document.write('</html>');
-        frameDoc.document.close();
-        setTimeout(function () {
-            frameDoc.close();      
-            if (winload) {
-                window.location.reload(true);
+        var printWin = window.open('', '_blank');
+        if (!printWin) {
+            alert('Popup blocked! Please allow popups for this site to print certificates.');
+            return false;
+        }
+
+        printWin.document.open();
+        if (data.indexOf('<!DOCTYPE') !== -1 || data.indexOf('<html') !== -1) {
+            printWin.document.write(data);
+        } else {
+            printWin.document.write('<!DOCTYPE html><html><head><title>Print Certificate</title></head><body>' + data + '</body></html>');
+        }
+        printWin.document.close();
+
+        // Ensure all images are loaded before triggering print dialog
+        var checkImagesAndPrint = function () {
+            var images = printWin.document.images;
+            var total = images.length;
+            if (total === 0) {
+                setTimeout(function () {
+                    printWin.focus();
+                    printWin.print();
+                }, 300);
+                return;
             }
-        }, 5000);
+
+            var loaded = 0;
+            var done = false;
+            var onImgDone = function () {
+                loaded++;
+                if (!done && loaded >= total) {
+                    done = true;
+                    setTimeout(function () {
+                        printWin.focus();
+                        printWin.print();
+                    }, 350);
+                }
+            };
+
+            for (var i = 0; i < total; i++) {
+                if (images[i].complete) {
+                    onImgDone();
+                } else {
+                    images[i].addEventListener('load', onImgDone);
+                    images[i].addEventListener('error', onImgDone);
+                }
+            }
+
+            // Fallback timeout in case of hanging images
+            setTimeout(function () {
+                if (!done) {
+                    done = true;
+                    printWin.focus();
+                    printWin.print();
+                }
+            }, 3000);
+        };
+
+        if (printWin.document.readyState === 'complete') {
+            checkImagesAndPrint();
+        } else {
+            printWin.addEventListener('load', checkImagesAndPrint);
+        }
 
         return true;
     }

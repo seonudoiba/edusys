@@ -15,9 +15,10 @@ class Generatestaffidcard extends Admin_Controller
 
     public function index()
     {
-        if (!$this->rbac->hasPrivilege('generate_staff_id_card', 'can_view')) {
+        if (!$this->rbac->hasPrivilege('generate_staff_id_card', 'can_view') && !$this->rbac->hasPrivilege('staff_id_card', 'can_view')) {
             access_denied();
         }
+        
         $this->session->set_userdata('top_menu', 'Certificate');
         $this->session->set_userdata('sub_menu', 'admin/generatestaffidcard');
         $idcardlist            = $this->Generatestaffidcard_model->getstaffidcard();
@@ -31,6 +32,9 @@ class Generatestaffidcard extends Admin_Controller
 
     public function search()
     {
+        if (!$this->rbac->hasPrivilege('generate_staff_id_card', 'can_view') && !$this->rbac->hasPrivilege('staff_id_card', 'can_view')) {
+            access_denied();
+        }
         $this->session->set_userdata('top_menu', 'Certificate');
         $this->session->set_userdata('sub_menu', 'admin/generatestaffidcard');
         $staffRole               = $this->staff_model->getStaffRole();

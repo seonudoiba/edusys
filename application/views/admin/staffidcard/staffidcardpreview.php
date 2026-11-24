@@ -1,441 +1,683 @@
-  <style type="text/css">
-      {
-          margin: 0;
-          padding: 0;
-      }
+<?php
+$card = $idcard;
+$is_vertical = !empty($card->enable_vertical_card);
+$header_bg = !empty($card->header_color) ? $card->header_color : '#1e3a8a';
+$school_name = !empty($card->school_name) ? $card->school_name : 'ACADEMY OF EXCELLENCE';
+$school_addr = !empty($card->school_address) ? $card->school_address : '110 Kings Street, CA | Phone: (555) 019-2834';
+$logo_url = !empty($card->logo) ? $this->media_storage->getImageURL('uploads/staff_id_card/logo/' . $card->logo) : '';
+$bg_url   = !empty($card->background) ? $this->media_storage->getImageURL('uploads/staff_id_card/background/' . $card->background) : '';
+$sign_url = !empty($card->sign_image) ? $this->media_storage->getImageURL('uploads/staff_id_card/signature/' . $card->sign_image) : '';
 
-      /*body{ font-family: 'arial'; margin:0; padding: 0;font-size: 12px; color: #000;}*/
-      .tc-container {
-          width: 100%;
-          position: relative;
-          text-align: center;
-      }
+$s = isset($staff) && $staff ? $staff : null;
+$v_name        = $s ? trim($s['name'] . ' ' . $s['surname']) : 'Dr. Evelyn Vance';
+$v_designation = $s && !empty($s['designation']) ? $s['designation'] : 'Senior Lecturer';
+$v_department  = $s && !empty($s['department']) ? $s['department'] : 'Science & Mathematics';
+$v_employee_id = $s && !empty($s['employee_id']) ? $s['employee_id'] : 'EMP-2024-042';
+$v_father      = $s && !empty($s['father_name']) ? $s['father_name'] : 'Arthur Vance';
+$v_mother      = $s && !empty($s['mother_name']) ? $s['mother_name'] : 'Clara Vance';
+$v_address     = $s && !empty($s['local_address']) ? $s['local_address'] : ($s && !empty($s['current_address']) ? $s['current_address'] : '420 University Avenue, CA');
+$v_phone       = $s && !empty($s['contact_no']) ? $s['contact_no'] : '+1 (555) 847-2910';
+$v_dob         = $s && !empty($s['dob']) ? date('d-m-Y', strtotime($s['dob'])) : '12-08-1988';
+$v_doj         = $s && !empty($s['date_of_joining']) ? date('d-m-Y', strtotime($s['date_of_joining'])) : '01-09-2018';
 
-      .tcmybg {
-          background: top center;
-          background-size: contain;
-          position: absolute;
-          left: 0;
-          bottom: 10px;
-          width: 200px;
-          height: 200px;
-          margin-left: auto;
-          margin-right: auto;
-          right: 0;
-      }
+if ($s && !empty($s['image'])) {
+    $photo_url = $this->media_storage->getImageURL('uploads/staff_images/' . $s['image']);
+} else {
+    $photo_url = $this->media_storage->getImageURL('uploads/staff_images/default_female.jpg');
+}
+?>
 
-      /*begin students id card*/
-      .studenttop img {
-          width: 30px;
-          vertical-align: top;
-      }
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 
-      .studenttop {
-          background: <?php echo $idcard->header_color; ?>;
-          padding: 2px;
-          color: #fff;
-          overflow: hidden;
-          position: relative;
-          z-index: 1;
-      }
-
-      .sttext1 {
-          font-size: 24px;
-          font-weight: bold;
-          line-height: 30px;
-      }
-
-      .stgray {
-          background: #efefef;
-          padding-top: 5px;
-          padding-bottom: 10px;
-      }
-
-      .staddress {
-          margin-bottom: 0;
-          padding-top: 2px;
-      }
-
-      .stdivider {
-          border-bottom: 2px solid #000;
-          margin-top: 5px;
-          margin-bottom: 5px;
-      }
-
-      .stlist {
-          padding: 0;
-          margin: 0;
-          list-style: none;
-      }
-
-      .stlist li {
-          text-align: left;
-          display: inline-block;
-          width: 100%;
-          padding: 0px 5px;
-      }
-
-      .stlist li span {
-          width: 65%;
-          float: right;
-      }
-
-      .stimg {
-          width: 80px;
-          height: auto;
-      }
-
-      .stimg img {
-          width: 100%;
-          height: auto;
-          border-radius: 2px;
-          display: block;
-      }
-
-      .img-circle {
-          border-radius: 50% !important;
-      }
-
-      .staround {
-          padding: 3px 10px 3px 0;
-          position: relative;
-          overflow: hidden;
-      }
-
-      .staround2 {
-          position: relative;
-          z-index: 9;
-      }
-
-      .stbottom {
-          background: #453278;
-          height: 20px;
-          width: 100%;
-          clear: both;
-          margin-bottom: 5px;
-      }
-
-      .principal {
-          margin-top: -40px;
-          margin-right: 10px;
-          float: right;
-      }
-
-      .stred {
-          color: #000;
-      }
-
-      .spanlr {
-          padding-left: 5px;
-          padding-right: 5px;
-      }
-
-      .cardleft {
-          width: 20%;
-          float: left;
-      }
-
-      .cardright {
-          width: 77%;
-          float: right;
-      }
-
-      .signature {
-          border: 1px solid #ddd;
-          display: block;
-          text-align: center;
-          padding: 5px 20px;
-          margin-top: 10px;
-      }
-
-      .vertlist {
-          padding: 0;
-          margin: 0;
-          list-style: none;
-      }
-
-      .vertlist li {
-          text-align: left;
-          display: inline-block;
-          width: 100%;
-          padding-bottom: 5px;
-          color: #000;
-      }
-
-      .vertlist li span {
-          width: 65%;
-          float: right;
-      }
-  </style>
-  <?php $dummy_date = "2020-01-01"; ?>
-  <?php
-    if ($idcard->enable_vertical_card) {
-    ?>
-      <table cellpadding="0" cellspacing="0" width="100%" style="background: <?php echo $idcard->header_color; ?>;">
-          <tr>
-              <td valign="top">
-                  <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/' . $idcard->background); ?>" class="tcmybg" style="opacity: .1" />
-              </td>
-          </tr>
-          <tr>
-              <td valign="top" style="text-align: center;color: #fff;padding: 10px;min-height: 110px;display: block;">
-                  <table cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-                          <td valign="top">
-                              <div style="color: #fff;position: relative; z-index: 1;">
-                                  <div class="sttext1"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/logo/' . $idcard->logo); ?>" width="30" height="30"> <?php echo $idcard->school_name; ?>
-                                  </div>
-                              </div>
-                          </td>
-                      </tr>
-                      <tr>
-                          <td valign="top" style="color: #fff"><?php echo $idcard->school_address; ?></td>
-                      </tr>
-                  </table>
-              </td>
-          </tr>
-          <tr>
-              <td valign="top" style="background: #fff">
-                  <table cellpadding="0" cellspacing="0" width="100%" style="margin-top: -40px; position: relative;z-index: 1;">
-                      <tr>
-                          <td valign="top">
-                              <div class="stimg center-block">
-                                  <img src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/no_image.png"); ?>" class="img-responsive img-circle block-center" style="border:5px solid <?php echo $idcard->header_color; ?>">
-                              </div>
-                          </td>
-                      </tr>
-                      <tr>
-                          <td valign="top" style="text-align: center;">
-                              <h4 style="margin:0; text-transform: uppercase;font-weight: bold; margin-top: 10px;">Mohan Patil</h4>
-                              <p style="font-size: 15px;color: #9b1818;">Administator</p>
-                          </td>
-                      </tr>
-                  </table>
-              </td>
-          </tr>
-          <tr>
-              <td valign="top">
-                  <table cellpadding="0" cellpadding="0" width="80%" align="center" style="background: #fff;padding: 20px 20px;display: block;">
-                      <tr>
-                          <td valign="top">
-                              <ul class="vertlist">
-                                  <?php
-                                    if ($idcard->enable_staff_id == 1) {
-                                        echo "<li>" . $this->lang->line('staff_id') . "<span>9000</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_designation == 1) {
-                                        echo "<li>" . $this->lang->line('designation') . "<span>Administator</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_staff_department == 1) {
-                                        echo "<li>" . $this->lang->line('department') . "<span>Admin</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_fathers_name == 1) {
-                                        echo "<li>" . $this->lang->line('father_name') . "<span>Sohan Patil</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_mothers_name == 1) {
-                                        echo "<li>" . $this->lang->line('mother_name') . "<span>Kirti Patil</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_date_of_joining == 1) {
-                                        echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_permanent_address == 1) {
-                                        echo "<li>" . $this->lang->line('address') . "<span>D.No.1 Street Name Address Line 2 Address Line 3</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_staff_phone == 1) {
-                                        echo "<li>" . $this->lang->line('phone') . "<span>9845624781</span></li>";
-                                    }
-                                    ?>
-                                  <?php
-                                    if ($idcard->enable_staff_dob == 1) {
-                                        echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
-                                    }
-                                    ?>
-                              </ul>
-
-                              <div class="signature"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/signature/' . $idcard->sign_image); ?>" width="200" height="24" /></div>
-
-
-                              <?php
-                              
-                              if ($idcard->enable_staff_barcode) {
-                                if($scan_code_type == "qrcode"){
-                                    ?>
-                                    
-                                    <?php if (file_exists(upload_root() . "staff_id_card/qrcode/default.png")) {
-                                        ?>
-                                        <div class="signature">
-                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
-                                        </div>
-                                <?php
-                                 }
-                                 ?>
-                                           <?php
-
-                                }elseif ($scan_code_type == "barcode") {
-                                    ?>
-                                    
-                             <?php if (file_exists(upload_root() . "staff_id_card/barcodes/default.png")) {
-                                 ?>
-                                 <div class="signature">
-                                     <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
-                                 </div>
-                         <?php
-                          }
-                          ?>
-                                    <?php
-                                  
-                                }
-                                
-                               
-
-                            }
-                              ?>
-                            
-
-                          </td>
-                      </tr>
-                  </table>
-              </td>
-          </tr>
-      </table>
-  <?php
-    } else {
-    ?>
-      <table cellpadding="0" cellspacing="0" width="100%">
-          <tr>
-              <td valign="top" width="32%" style="padding: 3px;">
-                  <table cellpadding="0" cellspacing="0" width="100%" class="tc-container" style="background: #efefef;">
-                      <tr>
-                          <td valign="top">
-                              <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/') ?><?php echo $idcard->background; ?>" class="tcmybg" style="opacity: .1" />
-                             
-                          </td>
-                      </tr>
-                      <tr>
-                          <td valign="top">
-                              <div class="studenttop">
-                                  <div class="sttext1"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/logo/' . $idcard->logo); ?>" width="30" height="30" />
-                                      <?php echo $idcard->school_name; ?></div>
-                              </div>
-                          </td>
-                      </tr>
-                      <tr>
-                          <td valign="top" align="center" style="padding: 1px 0;">
-                              <p><?php echo $idcard->school_address; ?></p>
-
-                          </td>
-                      </tr>
-                      <tr>
-                          <td valign="top" style="color: #fff;font-size: 16px; padding: 2px 0 0; position: relative; z-index: 1;background: <?php echo $idcard->header_color; ?>;text-transform: uppercase;"><?php echo $idcard->title; ?></td>
-                      </tr>
-                      <tr>
-                          <td valign="top">
-                              <div class="staround">
-                                  <div class="cardleft">
-                                      <div class="stimg">
-                                          <img src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/no_image.png"); ?>" class="img-responsive" />
-                                      </div>
-                                      <?php
-                                        if ($idcard->enable_staff_barcode) {
-
-                                            if($scan_code_type == "qrcode"){
-                                                if (file_exists(upload_root() . "staff_id_card/qrcode/default.png")) { ?>
-                                                    <div class="barcodeimg" style="width: 80%;">
-                                                        <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
-                                                    </div>
-                                            <?php }
-
-                                            }elseif ($scan_code_type == "barcode") {
-                                                if (file_exists(upload_root() . "staff_id_card/barcodes/default.png")) { ?>
-                                                    <div class="barcodeimg" style="width: 80%;">
-                                                        <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/default.png'); ?>" style="max-width: 65px; margin: 0 auto; height:auto" />
-                                                    </div>
-                                            <?php }
-                                            }
-
-                                       
-                                        }
-                                        ?>
-                                  </div><!--./cardleft-->
-                                  <div class="cardright">
-                                      <ul class="stlist">
-                                          <?php
-                                            if ($idcard->enable_name == 1) {
-                                                echo "<li>" . $this->lang->line('staff_name') . "<span>Mohan Patil</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_staff_id == 1) {
-                                                echo "<li>" . $this->lang->line('staff_id') . "<span>9000</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_designation == 1) {
-                                                echo "<li>" . $this->lang->line('designation') . "<span>Administator</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_staff_department == 1) {
-                                                echo "<li>" . $this->lang->line('department') . "<span>Admin</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_fathers_name == 1) {
-                                                echo "<li>" . $this->lang->line('father_name') . "<span>Sohan Patil</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_mothers_name == 1) {
-                                                echo "<li>" . $this->lang->line('mother_name') . "<span>Kirti Patil</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_date_of_joining == 1) {
-                                                echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_permanent_address == 1) {
-                                                echo "<li>" . $this->lang->line('address') . "<span>D.No.1 Street Name Address Line 2 Address Line 3</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_staff_phone == 1) {
-                                                echo "<li>" . $this->lang->line('phone') . "<span>9845624781</span></li>";
-                                            }
-                                            ?>
-                                          <?php
-                                            if ($idcard->enable_staff_dob == 1) {
-                                                echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . $this->customlib->showDate($dummy_date) . "</span></li>";
-                                            }
-                                            ?>
-                                      </ul>
-                                  </div><!--./cardright-->
-                              </div><!--./staround-->
-                          </td>
-                      </tr>
-                      <tr>
-                          <td valign="top" align="right" class="principal"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/signature/' . $idcard->sign_image); ?>" width="66" height="40" /></td>
-                      </tr>
-                    
-                  </table>
-              </td>
-          </tr>
-      </table>
-  <?php
+<style type="text/css">
+    .idcard-preview-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        background: #f8fafc;
+        font-family: 'Montserrat', Arial, Helvetica, sans-serif;
     }
-    ?>
+
+    /* Vertical Preview Card */
+    .idcard-vert-prev {
+        width: 65mm;
+        min-height: 102mm;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .idcard-vert-prev-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.12;
+        z-index: 1;
+    }
+
+    .idcard-vert-prev-content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .idcard-vert-prev-header {
+        padding: 8px 6px 6px;
+        text-align: center;
+        color: #ffffff;
+    }
+
+    .idcard-vert-prev-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .idcard-vert-prev-logo img {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+    .idcard-vert-prev-schname {
+        font-size: 10pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        line-height: 1.1;
+    }
+
+    .idcard-vert-prev-schaddr {
+        font-size: 6.5pt;
+        opacity: 0.9;
+        margin-top: 3px;
+        line-height: 1.2;
+    }
+
+    .idcard-vert-prev-title-bar {
+        font-size: 7.5pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: center;
+        padding: 3px 0;
+        color: #ffffff;
+    }
+
+    .idcard-vert-prev-body {
+        padding: 8px 10px;
+        text-align: center;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .idcard-vert-prev-photo {
+        width: 65px;
+        height: 75px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        margin: 0 auto 4px;
+        background: #f1f5f9;
+    }
+
+    .idcard-vert-prev-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .idcard-vert-prev-name {
+        font-size: 9.5pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #0f172a;
+        margin-bottom: 2px;
+        line-height: 1.1;
+    }
+
+    .idcard-vert-prev-role {
+        font-size: 7pt;
+        font-weight: 600;
+        color: #b91c1c;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .idcard-vert-prev-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 7pt;
+    }
+
+    .idcard-vert-prev-table td {
+        padding: 2px 0;
+        vertical-align: top;
+        text-align: left;
+    }
+
+    .idcard-vert-prev-table td.lbl {
+        color: #64748b;
+        font-weight: 600;
+        width: 44%;
+        text-transform: uppercase;
+        font-size: 6.5pt;
+    }
+
+    .idcard-vert-prev-table td.val {
+        color: #0f172a;
+        font-weight: 700;
+        width: 56%;
+    }
+
+    .idcard-vert-prev-footer {
+        padding: 4px 10px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .idcard-vert-prev-barcode {
+        max-width: 80px;
+    }
+
+    .idcard-vert-prev-sign {
+        text-align: right;
+        max-width: 80px;
+    }
+
+    .idcard-vert-prev-sign img {
+        max-width: 65px;
+        height: 20px;
+        object-fit: contain;
+        display: block;
+        margin-left: auto;
+    }
+
+    .idcard-vert-prev-signtitle {
+        font-size: 5.5pt;
+        color: #475569;
+        text-transform: uppercase;
+        font-weight: 600;
+        border-top: 0.5px solid #94a3b8;
+        margin-top: 2px;
+        padding-top: 1px;
+    }
+
+    /* Horizontal Preview Card */
+    .idcard-horiz-prev {
+        width: 100mm;
+        min-height: 64mm;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .idcard-horiz-prev-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.12;
+        z-index: 1;
+    }
+
+    .idcard-horiz-prev-content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .idcard-horiz-prev-header {
+        padding: 6px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #ffffff;
+    }
+
+    .idcard-horiz-prev-hdr-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .idcard-horiz-prev-hdr-left img {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+    }
+
+    .idcard-horiz-prev-schname {
+        font-size: 9.5pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        line-height: 1.1;
+    }
+
+    .idcard-horiz-prev-schaddr {
+        font-size: 6pt;
+        opacity: 0.9;
+        margin-top: 1px;
+    }
+
+    .idcard-horiz-prev-title-badge {
+        font-size: 6.5pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 3px 8px;
+        border-radius: 3px;
+    }
+
+    .idcard-horiz-prev-body {
+        padding: 8px 12px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex: 1;
+    }
+
+    .idcard-horiz-prev-photo-col {
+        width: 65px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .idcard-horiz-prev-photo {
+        width: 62px;
+        height: 72px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.18);
+        background: #f1f5f9;
+    }
+
+    .idcard-horiz-prev-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .idcard-horiz-prev-info-col {
+        flex: 1;
+    }
+
+    .idcard-horiz-prev-name {
+        font-size: 9pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #0f172a;
+        margin-bottom: 2px;
+        line-height: 1.1;
+    }
+
+    .idcard-horiz-prev-role {
+        font-size: 6.8pt;
+        font-weight: 600;
+        color: #b91c1c;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+
+    .idcard-horiz-prev-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 7pt;
+    }
+
+    .idcard-horiz-prev-table td {
+        padding: 1.5px 0;
+        vertical-align: top;
+    }
+
+    .idcard-horiz-prev-table td.lbl {
+        color: #64748b;
+        font-weight: 600;
+        width: 40%;
+        text-transform: uppercase;
+        font-size: 6.2pt;
+    }
+
+    .idcard-horiz-prev-table td.val {
+        color: #0f172a;
+        font-weight: 700;
+        width: 60%;
+    }
+
+    .idcard-horiz-prev-footer {
+        padding: 4px 12px 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-top: 0.5px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+    .idcard-horiz-prev-sign {
+        text-align: right;
+    }
+
+    .idcard-horiz-prev-sign img {
+        max-width: 60px;
+        height: 18px;
+        object-fit: contain;
+        display: block;
+        margin-left: auto;
+    }
+
+    .idcard-horiz-prev-signtitle {
+        font-size: 5.5pt;
+        color: #475569;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-top: 1px;
+    }
+</style>
+
+<div class="idcard-preview-wrapper">
+    <?php if ($is_vertical) { ?>
+        <!-- Vertical Staff ID Card Preview -->
+        <div class="idcard-vert-prev">
+            <?php if (!empty($bg_url)) { ?>
+                <img class="idcard-vert-prev-bg" src="<?php echo $bg_url; ?>" alt="">
+            <?php } ?>
+
+            <div class="idcard-vert-prev-content">
+                <div class="idcard-vert-prev-header" style="background: <?php echo $header_bg; ?>;">
+                    <div class="idcard-vert-prev-logo">
+                        <?php if (!empty($logo_url)) { ?>
+                            <img src="<?php echo $logo_url; ?>" alt="Logo">
+                        <?php } ?>
+                        <div class="idcard-vert-prev-schname"><?php echo html_escape($school_name); ?></div>
+                    </div>
+                    <?php if (!empty($school_addr)) { ?>
+                        <div class="idcard-vert-prev-schaddr"><?php echo html_escape($school_addr); ?></div>
+                    <?php } ?>
+                </div>
+
+                <div class="idcard-vert-prev-title-bar" style="background: <?php echo $header_bg; ?>; filter: brightness(0.9);">
+                    <?php echo !empty($card->title) ? html_escape($card->title) : 'STAFF IDENTITY CARD'; ?>
+                </div>
+
+                <div class="idcard-vert-prev-body">
+                    <div class="idcard-vert-prev-photo" style="border-color: <?php echo $header_bg; ?>;">
+                        <img src="<?php echo $photo_url; ?>" alt="<?php echo html_escape($v_name); ?>">
+                    </div>
+
+                    <?php if ($card->enable_name == 1) { ?>
+                        <div class="idcard-vert-prev-name"><?php echo html_escape($v_name); ?></div>
+                    <?php } ?>
+
+                    <?php if ($card->enable_designation == 1 && !empty($v_designation)) { ?>
+                        <div class="idcard-vert-prev-role"><?php echo html_escape($v_designation); ?></div>
+                    <?php } ?>
+
+                    <table class="idcard-vert-prev-table">
+                        <?php if ($card->enable_staff_id == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('staff_id'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_employee_id); ?></td>
+                            </tr>
+                        <?php } ?>
+
+                        <?php if ($card->enable_staff_department == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('department'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_department); ?></td>
+                            </tr>
+                        <?php } ?>
+
+                        <?php if ($card->enable_fathers_name == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('father_name'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_father); ?></td>
+                            </tr>
+                        <?php } ?>
+
+                        <?php if ($card->enable_mothers_name == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('mother_name'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_mother); ?></td>
+                            </tr>
+                        <?php } ?>
+
+                        <?php if ($card->enable_date_of_joining == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('date_of_joining'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_doj); ?></td>
+                            </tr>
+                        <?php } ?>
+
+                        <?php if ($card->enable_staff_dob == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('date_of_birth'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_dob); ?></td>
+                            </tr>
+                        <?php } ?>
+
+                        <?php if ($card->enable_staff_phone == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('phone'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_phone); ?></td>
+                            </tr>
+                        <?php } ?>
+
+                        <?php if ($card->enable_permanent_address == 1) { ?>
+                            <tr>
+                                <td class="lbl"><?php echo $this->lang->line('address'); ?>:</td>
+                                <td class="val"><?php echo html_escape($v_address); ?></td>
+                            </tr>
+                        <?php } ?>
+                    </table>
+                </div>
+
+                <div class="idcard-vert-prev-footer">
+                    <div class="idcard-vert-prev-barcode">
+                        <?php if ($card->enable_staff_barcode == 1) { ?>
+                            <svg width="70" height="20" viewBox="0 0 70 20" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="70" height="20" fill="#fff"/>
+                                <rect x="2" width="2" height="18" fill="#000"/>
+                                <rect x="6" width="1" height="18" fill="#000"/>
+                                <rect x="9" width="3" height="18" fill="#000"/>
+                                <rect x="14" width="2" height="18" fill="#000"/>
+                                <rect x="18" width="1" height="18" fill="#000"/>
+                                <rect x="21" width="3" height="18" fill="#000"/>
+                                <rect x="26" width="2" height="18" fill="#000"/>
+                                <rect x="30" width="1" height="18" fill="#000"/>
+                                <rect x="33" width="3" height="18" fill="#000"/>
+                                <rect x="38" width="2" height="18" fill="#000"/>
+                                <rect x="42" width="1" height="18" fill="#000"/>
+                                <rect x="45" width="3" height="18" fill="#000"/>
+                                <rect x="50" width="2" height="18" fill="#000"/>
+                                <rect x="54" width="2" height="18" fill="#000"/>
+                                <rect x="58" width="1" height="18" fill="#000"/>
+                                <rect x="62" width="3" height="18" fill="#000"/>
+                                <rect x="67" width="1" height="18" fill="#000"/>
+                            </svg>
+                        <?php } ?>
+                    </div>
+
+                    <div class="idcard-vert-prev-sign">
+                        <?php if (!empty($sign_url)) { ?>
+                            <img src="<?php echo $sign_url; ?>" alt="Signature">
+                        <?php } ?>
+                        <div class="idcard-vert-prev-signtitle">Principal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <?php } else { ?>
+        <!-- Horizontal Staff ID Card Preview -->
+        <div class="idcard-horiz-prev">
+            <?php if (!empty($bg_url)) { ?>
+                <img class="idcard-horiz-prev-bg" src="<?php echo $bg_url; ?>" alt="">
+            <?php } ?>
+
+            <div class="idcard-horiz-prev-content">
+                <div class="idcard-horiz-prev-header" style="background: <?php echo $header_bg; ?>;">
+                    <div class="idcard-horiz-prev-hdr-left">
+                        <?php if (!empty($logo_url)) { ?>
+                            <img src="<?php echo $logo_url; ?>" alt="Logo">
+                        <?php } ?>
+                        <div>
+                            <div class="idcard-horiz-prev-schname"><?php echo html_escape($school_name); ?></div>
+                            <?php if (!empty($school_addr)) { ?>
+                                <div class="idcard-horiz-prev-schaddr"><?php echo html_escape($school_addr); ?></div>
+                            <?php } ?>
+                        </div>
+                    </div>
+                    <div class="idcard-horiz-prev-title-badge">
+                        <?php echo !empty($card->title) ? html_escape($card->title) : 'STAFF ID'; ?>
+                    </div>
+                </div>
+
+                <div class="idcard-horiz-prev-body">
+                    <div class="idcard-horiz-prev-photo-col">
+                        <div class="idcard-horiz-prev-photo" style="border-color: <?php echo $header_bg; ?>;">
+                            <img src="<?php echo $photo_url; ?>" alt="<?php echo html_escape($v_name); ?>">
+                        </div>
+                    </div>
+
+                    <div class="idcard-horiz-prev-info-col">
+                        <?php if ($card->enable_name == 1) { ?>
+                            <div class="idcard-horiz-prev-name"><?php echo html_escape($v_name); ?></div>
+                        <?php } ?>
+
+                        <?php if ($card->enable_designation == 1 && !empty($v_designation)) { ?>
+                            <div class="idcard-horiz-prev-role"><?php echo html_escape($v_designation); ?></div>
+                        <?php } ?>
+
+                        <table class="idcard-horiz-prev-table">
+                            <?php if ($card->enable_staff_id == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('staff_id'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_employee_id); ?></td>
+                                </tr>
+                            <?php } ?>
+
+                            <?php if ($card->enable_staff_department == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('department'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_department); ?></td>
+                                </tr>
+                            <?php } ?>
+
+                            <?php if ($card->enable_fathers_name == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('father_name'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_father); ?></td>
+                                </tr>
+                            <?php } ?>
+
+                            <?php if ($card->enable_mothers_name == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('mother_name'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_mother); ?></td>
+                                </tr>
+                            <?php } ?>
+
+                            <?php if ($card->enable_date_of_joining == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('date_of_joining'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_doj); ?></td>
+                                </tr>
+                            <?php } ?>
+
+                            <?php if ($card->enable_staff_dob == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('date_of_birth'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_dob); ?></td>
+                                </tr>
+                            <?php } ?>
+
+                            <?php if ($card->enable_staff_phone == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('phone'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_phone); ?></td>
+                                </tr>
+                            <?php } ?>
+
+                            <?php if ($card->enable_permanent_address == 1) { ?>
+                                <tr>
+                                    <td class="lbl"><?php echo $this->lang->line('address'); ?>:</td>
+                                    <td class="val"><?php echo html_escape($v_address); ?></td>
+                                </tr>
+                            <?php } ?>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="idcard-horiz-prev-footer">
+                    <div>
+                        <?php if ($card->enable_staff_barcode == 1) { ?>
+                            <svg width="80" height="18" viewBox="0 0 80 18" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="80" height="18" fill="#fff"/>
+                                <rect x="2" width="2" height="16" fill="#000"/>
+                                <rect x="6" width="1" height="16" fill="#000"/>
+                                <rect x="9" width="3" height="16" fill="#000"/>
+                                <rect x="14" width="2" height="16" fill="#000"/>
+                                <rect x="18" width="1" height="16" fill="#000"/>
+                                <rect x="22" width="3" height="16" fill="#000"/>
+                                <rect x="27" width="2" height="16" fill="#000"/>
+                                <rect x="31" width="1" height="16" fill="#000"/>
+                                <rect x="35" width="3" height="16" fill="#000"/>
+                                <rect x="40" width="2" height="16" fill="#000"/>
+                                <rect x="44" width="1" height="16" fill="#000"/>
+                                <rect x="48" width="3" height="16" fill="#000"/>
+                                <rect x="53" width="2" height="16" fill="#000"/>
+                                <rect x="58" width="2" height="16" fill="#000"/>
+                                <rect x="62" width="1" height="16" fill="#000"/>
+                                <rect x="66" width="3" height="16" fill="#000"/>
+                                <rect x="71" width="1" height="16" fill="#000"/>
+                                <rect x="75" width="2" height="16" fill="#000"/>
+                            </svg>
+                        <?php } ?>
+                    </div>
+
+                    <div class="idcard-horiz-prev-sign">
+                        <?php if (!empty($sign_url)) { ?>
+                            <img src="<?php echo $sign_url; ?>" alt="Signature">
+                        <?php } ?>
+                        <div class="idcard-horiz-prev-signtitle">Principal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php } ?>
+</div>
