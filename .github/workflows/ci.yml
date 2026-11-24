@@ -1,9 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches-ignore: [main]   # main is tested by the Deploy workflow (it calls this one)
-  pull_request:
+  # Automatic PR/branch triggers paused while GitHub Actions quota/billing is blocked.
+  # Uncomment these 3 lines to switch automatic GitHub CI back on:
+  # push:
+  #   branches-ignore: [main]   # main is tested by the Deploy workflow (it calls this one)
+  # pull_request:
   workflow_call:
   workflow_dispatch:
 
