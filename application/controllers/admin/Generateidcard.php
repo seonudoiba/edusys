@@ -67,12 +67,20 @@ class Generateidcard extends Admin_Controller
 
     public function generate($student, $class, $idcard)
     {
-        $idcardlist         = $this->Generateidcard_model->getidcardbyid($idcard);
-        $data['idcardlist'] = $idcardlist;
-        $resultlist         = $this->student_model->searchByClassStudent($class, $student);
-        $data['resultlist'] = $resultlist;
+        $idcardlist              = $this->Generateidcard_model->getidcardbyid($idcard);
+        $data['id_card']         = $idcardlist;
+        $data['idcardlist']      = $idcardlist;
+        $scan_type               = $this->sch_setting_detail->scan_code_type;
+        $std_arr                 = array($student);
+        $students                = $this->student_model->getStudentsByArray($std_arr);
+        if (!empty($students)) {
+            $students[0]->barcode = $this->customlib->generatebarcode($students[0]->admission_no, $scan_type);
+        }
+        $data['students']        = $students;
+        $data['sch_setting']     = $this->setting_model->get();
+        $data['sch_settingdata'] = $this->sch_setting_detail;
 
-        $this->load->view('admin/certificate/studentidcard', $data);
+        $this->load->view('admin/certificate/generatemultiple', $data);
     }
 
     public function generatemultiple()

@@ -167,8 +167,10 @@ class Certificate extends Admin_Controller
         $output = '';
         $data   = array();
 
-        $data['certificate'] = $this->certificate_model->certifiatebyid($id);
-        $preview             = $this->load->view('admin/certificate/preview_certificate', $data, true);
+        $data['certificate']    = $this->certificate_model->certifiatebyid($id);
+        $data['sch_setting']    = $this->setting_model->getSetting();
+        $data['sample_student'] = get_certificate_sample_student();
+        $preview                = $this->load->view('admin/certificate/preview_certificate', $data, true);
         echo $preview;
     }
 

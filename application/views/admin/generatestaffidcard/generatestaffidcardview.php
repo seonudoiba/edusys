@@ -204,26 +204,70 @@ $count++;
     var base_url = '<?php echo base_url() ?>';
     function Popup(data)
     {
-        var frame1 = $('<iframe />');
-        frame1[0].name = "frame1";
-        $("body").append(frame1);
-        var frameDoc = frame1[0].contentWindow ? frame1[0].contentWindow : frame1[0].contentDocument.document ? frame1[0].contentDocument.document : frame1[0].contentDocument;
-        frameDoc.document.open();
-        //Create a new HTML document.
-        frameDoc.document.write('<html>');
-        frameDoc.document.write('<head>');
-        frameDoc.document.write('<title></title>');       
-        frameDoc.document.write('</head>');
-        frameDoc.document.write('<body>');
-        frameDoc.document.write(data);
-        frameDoc.document.write('</body>');
-        frameDoc.document.write('</html>');
-        frameDoc.document.close();
-        setTimeout(function () {
-            window.frames["frame1"].focus();
-            window.frames["frame1"].print();
-            frame1.remove();
-        }, 500);
+        var printWin = window.open('', '_blank');
+        if (!printWin) {
+            alert('Popup blocked! Please allow popups for this site to print Staff ID cards.');
+            return false;
+        }
+
+        printWin.document.open();
+        if (data.indexOf('<!DOCTYPE') !== -1 || data.indexOf('<html') !== -1) {
+            printWin.document.write(data);
+        } else {
+            printWin.document.write('<!DOCTYPE html><html><head><title>Print Staff ID Cards</title></head><body>' + data + '</body></html>');
+        }
+        printWin.document.close();
+
+        // Ensure all images are loaded before triggering print dialog
+        var checkImagesAndPrint = function () {
+            var images = printWin.document.images;
+            var total = images.length;
+            if (total === 0) {
+                setTimeout(function () {
+                    printWin.focus();
+                    printWin.print();
+                }, 300);
+                return;
+            }
+
+            var loaded = 0;
+            var done = false;
+            var onImgDone = function () {
+                loaded++;
+                if (!done && loaded >= total) {
+                    done = true;
+                    setTimeout(function () {
+                        printWin.focus();
+                        printWin.print();
+                    }, 350);
+                }
+            };
+
+            for (var i = 0; i < total; i++) {
+                if (images[i].complete) {
+                    onImgDone();
+                } else {
+                    images[i].addEventListener('load', onImgDone);
+                    images[i].addEventListener('error', onImgDone);
+                }
+            }
+
+            // Fallback timeout
+            setTimeout(function () {
+                if (!done) {
+                    done = true;
+                    printWin.focus();
+                    printWin.print();
+                }
+            }, 3000);
+        };
+
+        if (printWin.document.readyState === 'complete') {
+            checkImagesAndPrint();
+        } else {
+            printWin.addEventListener('load', checkImagesAndPrint);
+        }
+
         return true;
     }
 </script>

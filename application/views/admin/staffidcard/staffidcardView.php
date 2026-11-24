@@ -4,8 +4,8 @@
     <section class="content">
         <div class="row">
             <?php
-if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
-    ?>
+            if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
+            ?>
                 <div class="col-md-4">
                     <!-- Horizontal Form -->
                     <div class="box box-primary">
@@ -13,26 +13,26 @@ if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
                             <h3 class="box-title"><?php echo $this->lang->line('add_staff_id_card'); ?></h3>
                         </div><!-- /.box-header -->
                         <!-- form start -->
-                        <form id="form1" enctype="multipart/form-data" action="<?php echo site_url('admin/staffidcard/create') ?>"  id="certificateform" name="certificateform" method="post" accept-charset="utf-8">
+                        <form id="form1" enctype="multipart/form-data" action="<?php echo site_url('admin/staffidcard/create') ?>" id="certificateform" name="certificateform" method="post" accept-charset="utf-8">
                             <div class="box-body">
                                 <?php if ($this->session->flashdata('msg')) {
-        ?>
+                                ?>
                                     <?php echo $this->session->flashdata('msg');
-        $this->session->unset_userdata('msg'); ?>
-                                <?php }?>
-                                 
+                                    $this->session->unset_userdata('msg'); ?>
+                                <?php } ?>
+
                                 <?php echo $this->customlib->getCSRF(); ?>
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('background_image'); ?></label>
-                                    <input id="documents" placeholder="" type="file" class="filestyle form-control" data-height="40"  name="background_image"><span class="text-danger"><?php echo form_error('background_image'); ?></span>
+                                    <input id="documents" placeholder="" type="file" class="filestyle form-control" data-height="40" name="background_image"><span class="text-danger"><?php echo form_error('background_image'); ?></span>
                                 </div>
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('logo'); ?></label>
-                                    <input id="logo_img" placeholder="" type="file" class="filestyle form-control" data-height="40"  name="logo_img"><span class="text-danger"><?php echo form_error('logo_img'); ?></span>
+                                    <input id="logo_img" placeholder="" type="file" class="filestyle form-control" data-height="40" name="logo_img"><span class="text-danger"><?php echo form_error('logo_img'); ?></span>
                                 </div>
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('signature'); ?></label>
-                                    <input id="sign_image" placeholder="" type="file" class="filestyle form-control" data-height="40"  name="sign_image">
+                                    <input id="sign_image" placeholder="" type="file" class="filestyle form-control" data-height="40" name="sign_image">
                                     <span class="text-danger"><?php echo form_error('sign_image'); ?></span>
                                 </div>
                                 <div class="form-group">
@@ -52,7 +52,7 @@ if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
                                 </div>
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('header_color'); ?></label>
-                                    <input id="header_color" name="header_color" placeholder="" type="text" class="form-control my-colorpicker1"  value="<?php echo set_value('header_color'); ?>" />
+                                    <input id="header_color" name="header_color" placeholder="" type="text" class="form-control my-colorpicker1" value="<?php echo set_value('header_color'); ?>" />
                                 </div>
                                 <div class="form-group switch-inline">
                                     <label><?php echo $this->lang->line('staff_name'); ?></label>
@@ -146,14 +146,14 @@ if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
                     </div>
                 </div><!--/.col (right) -->
                 <!-- left column -->
-            <?php }?>
+            <?php } ?>
             <div class="col-md-<?php
-if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
-    echo "8";
-} else {
-    echo "12";
-}
-?>">
+                                if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
+                                    echo "8";
+                                } else {
+                                    echo "12";
+                                }
+                                ?>">
                 <!-- general form elements -->
                 <div class="box box-primary" id="hroom">
                     <div class="box-header ptbnull">
@@ -162,66 +162,66 @@ if ($this->rbac->hasPrivilege('staff_id_card', 'can_add')) {
                     <div class="box-body">
                         <div class="mailbox-messages">
                             <div class="download_label"><?php echo $this->lang->line('staff_id_card_list'); ?></div>
-                        <div class="table-responsive overflow-visible">
-                            <table class="table table-striped table-bordered table-hover example">
-                                <thead>
-                                    <tr>
-                                        <th><?php echo $this->lang->line('id_card_title'); ?></th>
-                                        <th><?php echo $this->lang->line('background_image'); ?></th>
-                                         <th class="text text-center"><?php echo $this->lang->line('design_type'); ?></th>
-                                        <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($staffidcardlist)) {
-    ?>
-                                        <?php
-} else {
-    $count = 1;
-    foreach ($staffidcardlist as $staffidcard_value) {
-        ?>
-                                            <tr>
-                                                <td class="mailbox-name">
-                                                    <a style="cursor: pointer;" id="<?php echo $staffidcard_value->id ?>" data-toggle="popover" class="detail_popover" ><?php echo $staffidcard_value->title; ?></a>
-                                                </td>
-                                                <td class="mailbox-name">
-                                                    <?php if ($staffidcard_value->background != '' && !is_null($staffidcard_value->background)) {?>
-     <img class="object-fit-cover fit-image-40" src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/'.$staffidcard_value->background); ?>" width="40">
-                                                    <?php } else {?>
-                                                        <i class="fa fa-picture-o fa-3x" aria-hidden="true"></i>
-                                                    <?php }?>
-                                                </td>
+                            <div class="table-responsive overflow-visible">
+                                <table class="table table-striped table-bordered table-hover example">
+                                    <thead>
+                                        <tr>
+                                            <th><?php echo $this->lang->line('id_card_title'); ?></th>
+                                            <th><?php echo $this->lang->line('background_image'); ?></th>
+                                            <th class="text text-center"><?php echo $this->lang->line('design_type'); ?></th>
+                                            <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (empty($staffidcardlist)) {
+                                        ?>
+                                            <?php
+                                        } else {
+                                            $count = 1;
+                                            foreach ($staffidcardlist as $staffidcard_value) {
+                                            ?>
+                                                <tr>
+                                                    <td class="mailbox-name">
+                                                        <a style="cursor: pointer;" id="<?php echo $staffidcard_value->id ?>" data-toggle="popover" class="detail_popover"><?php echo $staffidcard_value->title; ?></a>
+                                                    </td>
+                                                    <td class="mailbox-name">
+                                                        <?php if ($staffidcard_value->background != '' && !is_null($staffidcard_value->background)) { ?>
+                                                            <img class="object-fit-cover fit-image-40" src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/' . $staffidcard_value->background); ?>" width="40">
+                                                        <?php } else { ?>
+                                                            <i class="fa fa-picture-o fa-3x" aria-hidden="true"></i>
+                                                        <?php } ?>
+                                                    </td>
                                                     <td class="mailbox-name text text-center">
-                                                    <?php echo ($staffidcard_value->enable_vertical_card) ? $this->lang->line('vertical') : $this->lang->line('horizontal') ?>
-                                                </td>
-                                                <td class="mailbox-date pull-right no-print white-space-nowrap">
-                                                    <a data-id="<?php echo $staffidcard_value->id ?>" class="btn btn-default btn-xs view_data"  data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
-                                                        <i class="fa fa-reorder"></i>
-                                                    </a>
-                                                    <?php
-if ($this->rbac->hasPrivilege('staff_id_card', 'can_edit')) {
-            ?>
-                                                        <a href="<?php echo base_url(); ?>admin/staffidcard/edit/<?php echo $staffidcard_value->id ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">
-                                                            <i class="fa fa-pencil"></i>
+                                                        <?php echo ($staffidcard_value->enable_vertical_card) ? $this->lang->line('vertical') : $this->lang->line('horizontal') ?>
+                                                    </td>
+                                                    <td class="mailbox-date pull-right no-print white-space-nowrap">
+                                                        <a data-id="<?php echo $staffidcard_value->id ?>" class="btn btn-default btn-xs view_data" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
+                                                            <i class="fa fa-reorder"></i>
                                                         </a>
                                                         <?php
-}
-        if ($this->rbac->hasPrivilege('staff_id_card', 'can_delete')) {
-            ?>
-                                                        <a href="<?php echo base_url(); ?>admin/staffidcard/delete/<?php echo $staffidcard_value->id ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');">
-                                                            <i class="fa fa-remove"></i>
-                                                        </a>
-                                                    <?php }?>
-                                                </td>
-                                            </tr>
-                                            <?php
-}
-    $count++;
-}
-?>
-                                </tbody>
-                            </table><!-- /.table -->
-                          </div>
+                                                        if ($this->rbac->hasPrivilege('staff_id_card', 'can_edit')) {
+                                                        ?>
+                                                            <a href="<?php echo base_url(); ?>admin/staffidcard/edit/<?php echo $staffidcard_value->id ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">
+                                                                <i class="fa fa-pencil"></i>
+                                                            </a>
+                                                        <?php
+                                                        }
+                                                        if ($this->rbac->hasPrivilege('staff_id_card', 'can_delete')) {
+                                                        ?>
+                                                            <a href="<?php echo base_url(); ?>admin/staffidcard/delete/<?php echo $staffidcard_value->id ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');">
+                                                                <i class="fa fa-remove"></i>
+                                                            </a>
+                                                        <?php } ?>
+                                                    </td>
+                                                </tr>
+                                        <?php
+                                            }
+                                            $count++;
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table><!-- /.table -->
+                            </div>
                         </div><!-- /.mail-box-messages -->
                     </div><!-- /.box-body -->
                 </div>
@@ -231,7 +231,7 @@ if ($this->rbac->hasPrivilege('staff_id_card', 'can_edit')) {
         <div class="row">
             <div class="col-md-12">
             </div><!--/.col (right) -->
-        </div>   <!-- /.row -->
+        </div> <!-- /.row -->
     </section><!-- /.content -->
 </div><!-- /.content-wrapper -->
 <!-- Modal -->
@@ -243,35 +243,41 @@ if ($this->rbac->hasPrivilege('staff_id_card', 'can_edit')) {
                 <h4 class="modal-title"><?php echo $this->lang->line('view_id_card'); ?></h4>
             </div>
             <div class="modal-body" id="certificate_detail">
-            <div class="modal-inner-loader"></div>
-            <div class="modal-inner-content">
+                <div class="modal-inner-loader"></div>
+                <div class="modal-inner-content">
 
-            </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
-    $(document).ready(function () {
-          $("#header_color").colorpicker();
-        $(document).on('click','.view_data',function(){
-           $('#certificateModal').modal("show");
-          var certificateid = $(this).data('id');
-           $.ajax({
+    $(document).ready(function() {
+        $("#header_color").colorpicker();
+        $(document).on('click', '.view_data', function() {
+            $('#certificateModal').modal("show");
+            var certificateid = $(this).data('id');
+            $.ajax({
                 url: "<?php echo base_url('admin/staffidcard/view') ?>",
                 method: "post",
-                data: {certificateid: certificateid},
-                 beforeSend: function() {
+                // data: {
+                //     certificateid: certificateid
+                // },
+                data: {
+                    certificateid: certificateid,
+                    staff_id: $(this).data('staff_id')
+                },
+                beforeSend: function() {
 
-                  },
-                success: function (data) {
-                 $('#certificateModal .modal-inner-content').html(data);
-                 $('#certificateModal .modal-inner-loader').addClass('displaynone');
+                },
+                success: function(data) {
+                    $('#certificateModal .modal-inner-content').html(data);
+                    $('#certificateModal .modal-inner-loader').addClass('displaynone');
 
-                 },
+                },
                 error: function(xhr) { // if error occured
-                 alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
+                    alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
                 },
                 complete: function() {
 
@@ -280,8 +286,8 @@ if ($this->rbac->hasPrivilege('staff_id_card', 'can_edit')) {
         });
     });
 
-    $('#certificateModal').on('hidden.bs.modal', function (e) {
+    $('#certificateModal').on('hidden.bs.modal', function(e) {
         $('#certificateModal .modal-inner-content').html("");
         $('#certificateModal .modal-inner-loader').removeClass('displaynone');
-     });
+    });
 </script>

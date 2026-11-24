@@ -80,16 +80,24 @@ class Generatecertificate extends Admin_Controller
     public function generate($student, $class, $certificate)
     {
         $certificateResult         = $this->Generatecertificate_model->getcertificatebyid($certificate);
+        $data['certificate']       = $certificateResult;
         $data['certificateResult'] = $certificateResult;
-        $resultlist                = $this->student_model->searchByClassStudent($class, $student);
-        $data['resultlist']        = $resultlist;
+        $std_arr                   = array($student);
+        $students                  = $this->student_model->getStudentsByArray($std_arr);
+        if (!empty($students)) {
+            foreach ($students as $key => $value) {
+                $students[$key]->name = $this->customlib->getFullName($value->firstname, $value->middlename, $value->lastname, $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname);
+            }
+        }
+        $data['students']      = $students;
+        $data['sch_setting']   = $this->sch_setting_detail;
+        $data['custom_fields'] = $this->customfield_model->get_custom_fields('students');
 
-        $this->load->view('admin/certificate/transfercertificate', $data);
+        $this->load->view('admin/certificate/printcertificate', $data);
     }
 
     public function generatemultiple()
     {
-
         $studentid           = $this->input->post('data');
         $student_array       = json_decode($studentid);
         $certificate_id      = $this->input->post('certificate_id');
@@ -100,16 +108,21 @@ class Generatecertificate extends Admin_Controller
         $data['sch_setting'] = $this->setting_model->get();
         $data['certificate'] = $this->Generatecertificate_model->getcertificatebyid($certificate_id);
 
-        foreach ($student_array as $key => $value) {
-            $std_arr[] = $value->student_id;
+        if (!empty($student_array)) {
+            foreach ($student_array as $key => $value) {
+                $std_arr[] = $value->student_id;
+            }
         }
         $data['students'] = $this->student_model->getStudentsByArray($std_arr);
-        foreach ($data['students'] as $key => $value) {
-            $data['students'][$key]->name = $this->customlib->getFullName($value->firstname, $value->middlename, $value->lastname, $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname);
+        if (!empty($data['students'])) {
+            foreach ($data['students'] as $key => $value) {
+                $data['students'][$key]->name = $this->customlib->getFullName($value->firstname, $value->middlename, $value->lastname, $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname);
+            }
         }
 
-        $data['sch_setting'] = $this->sch_setting_detail;
-        $certificates        = $this->load->view('admin/certificate/printcertificate', $data, true);
+        $data['custom_fields'] = $this->customfield_model->get_custom_fields('students');
+        $data['sch_setting']   = $this->sch_setting_detail;
+        $certificates          = $this->load->view('admin/certificate/printcertificate', $data, true);
         echo $certificates;
     }
 
