@@ -123,13 +123,13 @@ if (!function_exists('upload_copy_defaults')) {
 if (!function_exists('login_background_url')) {
     /**
      * The login pages' background image: the school's own (System Settings), or the EduSYS
-     * default (backend/images/login_default.jpg) when none is set.
+     * default (backend/images/login_default.png) when none is set.
      */
     function login_background_url($file)
     {
         $file = trim((string) $file);
         if ($file === '') {
-            $default = 'backend/images/login_default.jpg';
+            $default = 'backend/images/login_default.png';
             return base_url($default) . '?v=' . (int) @filemtime(FCPATH . $default);
         }
         return base_url('uploads/school_content/login_image/' . $file);
