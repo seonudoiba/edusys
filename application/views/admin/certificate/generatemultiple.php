@@ -492,27 +492,24 @@
             .cards-print-container {
                 padding: 0 !important;
                 margin: 0 !important;
-                gap: 3mm !important;
                 max-width: 100% !important;
-                display: flex !important;
-                flex-wrap: wrap !important;
-                justify-content: flex-start !important;
+                display: block !important;
             }
 
-            .idcard-vert {
-                box-shadow: none !important;
-                border: 0.5px dashed #cbd5e1 !important;
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                margin-bottom: 2mm !important;
-            }
-
+            .idcard-vert,
             .idcard-horiz {
                 box-shadow: none !important;
                 border: 0.5px dashed #cbd5e1 !important;
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
-                margin-bottom: 2mm !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                margin: 0 auto !important;
+            }
+
+            .cards-print-container > :last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
             }
         }
     </style>
