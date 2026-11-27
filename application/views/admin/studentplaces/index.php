@@ -91,7 +91,7 @@ $select = function ($name, $selected, $id = '') use ($groups, $e, $is_t) {
                         <?php if ($is_t) { ?>
                             <label style="font-weight:normal;margin:0"><input type="checkbox" name="charge" value="1" <?php echo $months ? 'checked' : 'disabled'; ?>> Charge newly added students this session's transport fees (<?php echo (int) $months; ?> month<?php echo $months === 1 ? '' : 's'; ?>)<?php if (!$months) { ?> <span class="text-muted">: none set up in Transport &gt; Fees Master</span><?php } ?></label>
                         <?php } else { ?>
-                            <span class="text-muted small">A room never gets more students than its beds.</span>
+                            <label style="font-weight:normal;margin:0"><input type="checkbox" name="charge" value="1" checked> Charge the room's hostel fee (its cost per bed, once this session) <span class="text-muted small">· a room never gets more students than its beds</span></label>
                         <?php } ?>
                         <button class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
                     </div>
