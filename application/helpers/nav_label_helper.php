@@ -95,6 +95,8 @@ if (!function_exists('nav_entry_label')) {
             'admin/gauthenticate/admin' => '2FA Settings',
             // Behaviour
             'behaviour/log' => 'Report Behaviour',
+            'admin/studentplaces/transport' => 'Assign Students',
+            'admin/studentplaces/hostel' => 'Assign Students',
             'behaviour/studentincidents' => 'Student Incidents',
             'behaviour/incidents' => 'Incident Types',
             'behaviour/report' => 'Behaviour Reports',

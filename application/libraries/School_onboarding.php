@@ -147,8 +147,8 @@ class School_onboarding
             ),
             'classes' => array(
                 'title' => 'Check your classes and arms',
-                'text' => 'Your account starts with Nursery 1-2, Primary 1-6, JSS 1-3 (arm A) and SS 1-3 (Science, Art, Commercial). Add the arms and classes you run; delete any you don\'t under Academics > Class.',
-                'url' => site_url('admin/onboarding/classes'),
+                'text' => 'Your account starts with Nursery 1-2, Primary 1-6, JSS 1-3 (arm A) and SS 1-3 (Science, Art, Commercial). Add the arms and classes you run; delete any you don\'t under Classes & Timetable > Classes.',
+                'url' => site_url('classes'),
                 'button' => 'Set up classes',
                 'privilege' => array('class', 'can_add'),
             ),

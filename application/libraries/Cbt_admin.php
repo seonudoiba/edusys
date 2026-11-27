@@ -163,7 +163,7 @@ class Cbt_admin
         }
         $minutes = max(1, min(600, (int) $f['minutes']));
         $this->db->insert('onlineexam', array('session_id' => (int) $f['session_id'], 'exam' => mb_substr(trim((string) $f['title']), 0, 250) ?: 'CBT',
-            'subject_id' => (int) $f['subject_id'] ?: null, 'attempt' => max(1, min(10, (int) $f['attempts'])), 'exam_from' => date('Y-m-d H:i:s', $from),
+            'subject_id' => (int) $f['subject_id'], 'attempt' => max(1, min(10, (int) $f['attempts'])), 'exam_from' => date('Y-m-d H:i:s', $from),
             'exam_to' => date('Y-m-d H:i:s', $to), 'duration' => sprintf('%02d:%02d:00', intdiv($minutes, 60), $minutes % 60), 'passing_percentage' => max(0, min(100, (float) $f['pass'])),
             'description' => (string) (isset($f['description']) ? $f['description'] : ''), 'publish_result' => 1, 'is_active' => 0, 'is_marks_display' => 1, 'is_neg_marking' => 0,
             'is_random_question' => 1, 'is_random_option' => 1, 'is_quiz' => 0, 'answer_word_count' => -1, 'max_tab_switches' => 3, 'block_copy' => 1, 'lock_device' => 1));
