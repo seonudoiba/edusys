@@ -2457,3 +2457,5 @@ $lang['class_results'] = "Results";
 $lang['comment_bank'] = "Comment Bank";
 $lang['cbt_by_class'] = "CBT Exams by Class";
 $lang['report_behaviour'] = "Report Behaviour";
+$lang['assign_students_transport'] = "Assign Students";
+$lang['assign_students_hostel'] = "Assign Students";

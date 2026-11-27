@@ -9,6 +9,8 @@
                         </div>
                     </div>
                     <div class="box-body">
+                        <?php $this->load->view('user/_my_place', array('kind' => 'transport', 'mine' => $my_transport)); ?>
+                        <?php if ($my_transport) { ?>
                         <div class="row">
                             <div class="col-lg-12 col-md-12 col-sm-12">
                                 <div class="row">
@@ -87,6 +89,7 @@ if (!empty($listroute['pickup_point'])) {
                                 </div>
                             </div>
                         </div><!--./row-->
+                        <?php } ?>
                     </div>
                 </div>
             </div>

@@ -117,6 +117,26 @@ if (!empty($student_data['image'])) {
             <small>Report cards</small><b><?php echo (int) $kpi_reportcards; ?></b>
             <span><?php echo $kpi_reportcards ? 'View or download' : 'None published yet'; ?></span>
         </a>
+        <?php
+        // the student's bus and hostel room (Student_places), when the school uses transport / hostel
+        $sp_ci = get_instance();
+        $sp_ci->load->library('Student_places');
+        if ($this->module_lib->hasActive('transport')) {
+            $my_bus = $sp_ci->student_places->transport($current_class->student_session_id); ?>
+            <a class="sd-kpi" href="<?php echo site_url('user/route'); ?>" style="animation-delay:.3s">
+                <div class="ic" style="background:linear-gradient(135deg,#fbbf24,#d97706)"><i class="fa fa-bus"></i></div>
+                <small>School bus</small><b style="font-size:17px"><?php echo $my_bus ? html_escape($my_bus['point']) : 'None'; ?></b>
+                <span><?php echo $my_bus ? html_escape('Route ' . $my_bus['route_title'] . (Student_places::time($my_bus['pickup_time']) ? ' · pickup ' . Student_places::time($my_bus['pickup_time']) : '')) : 'No route given'; ?></span>
+            </a>
+        <?php }
+        if ($this->module_lib->hasActive('hostel')) {
+            $my_room = $sp_ci->student_places->hostel($current_class->student_session_id); ?>
+            <a class="sd-kpi" href="<?php echo site_url('user/hostelroom'); ?>" style="animation-delay:.35s">
+                <div class="ic" style="background:linear-gradient(135deg,#f472b6,#db2777)"><i class="fa fa-bed"></i></div>
+                <small>Hostel</small><b style="font-size:17px"><?php echo $my_room ? 'Room ' . html_escape($my_room['room_no']) : 'None'; ?></b>
+                <span><?php echo $my_room ? html_escape($my_room['hostel_name']) : 'Not in the hostel'; ?></span>
+            </a>
+        <?php } ?>
     </div>
 </div>
 <?php if ($is_parent && count($children) > 1) { ?>

@@ -25,6 +25,8 @@ class Hostelroom extends Student_Controller
         $this->session->set_userdata('sub_menu', 'hostelroom/index');
         $hostelroomlist         = $this->hostelroom_model->lists();
         $data['hostelroomlist'] = $hostelroomlist;
+        $this->load->library('Student_places');
+        $data['my_hostel']      = $this->student_places->hostel($this->customlib->getStudentCurrentClsSection()->student_session_id);
         $this->load->view('layout/student/header');
         $this->load->view('user/hostelroom/create', $data);
         $this->load->view('layout/student/footer');

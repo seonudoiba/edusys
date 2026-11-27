@@ -23,6 +23,7 @@ $student_hostel  = $studentList['hostel_room_id'];
                         </div>
                     </div>
                     <div class="box-body">
+                        <?php $this->load->view('user/_my_place', array('kind' => 'hostel', 'mine' => $my_hostel)); ?>
                         <div class="table-responsive mailbox-messages">
                             <div class="download_label"><?php echo $this->lang->line('hostel_rooms'); ?></div>
                             <table class="table table-striped table-bordered table-hover example">
