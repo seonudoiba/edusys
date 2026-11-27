@@ -58,7 +58,14 @@ class Plan_limits
         if ($sub && !empty($sub['student_count'])) {
             $out['max_students'] = (int) $sub['student_count'];
         }
-        if ($sub && isset($sub['kind']) && $sub['kind'] === 'setup') {
+        if (!$sub) {
+            // Added by platform staff and nothing paid yet: staff only, like a school that paid only its setup fee.
+            $school = $this->CI->db->select('pay_before_portal, is_platform')->where('id', $school_id)->get('school')->row_array();
+            if ($school && (int) $school['pay_before_portal'] === 1 && empty($school['is_platform'])) {
+                $out['state'] = 'onboarding';
+                $out['unpaid'] = true;
+            }
+        } elseif (isset($sub['kind']) && $sub['kind'] === 'setup') {
             $out['state'] = 'onboarding'; // no end date until the first subscription payment
         } elseif ($sub) {
             $expires = strtotime($sub['created_at']) + (int) $sub['days'] * 86400;
@@ -235,6 +242,8 @@ class Plan_limits
                 $disable ? ' Renew before ' . date('d M Y', $c['grace_ends']) . ', when the school will be disabled.' : ' Please renew it.'), true);
         } elseif ($c['state'] === 'lapsed') {
             $out[] = array('danger', sprintf('Your subscription ended on %s. Please renew it.', date('d M Y', $c['expires_at'])), true);
+        } elseif ($c['state'] === 'onboarding') {
+            $out[] = array('warning', 'Students and parents can\'t sign in yet: the school\'s subscription is not paid. Staff can carry on setting the school up.', true);
         }
         if ($c['plan']) {
             $u = $this->usage($school_id);

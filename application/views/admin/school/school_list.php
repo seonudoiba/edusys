@@ -102,7 +102,9 @@ $url = function ($t) use ($q) { return site_url('admin/schools') . '?tab=' . $t 
                                     </td>
                                     <td><?php echo $s['plan_title'] ? $e($s['plan_title']) : '<span class="sl-sub">None</span>'; ?></td>
                                     <td>
-                                        <?php if ($s['expiry'] === 'onboarding') { ?>
+                                        <?php if ($s['expiry'] === 'unpaid') { ?>
+                                            <span class="label label-warning">Not paid: staff only</span>
+                                        <?php } elseif ($s['expiry'] === 'onboarding') { ?>
                                             <span class="label label-info">Setup paid, subscription due</span>
                                         <?php } elseif ($s['expires_at']) { ?>
                                             <?php echo $e(date('d M Y', strtotime($s['expires_at']))); ?>

@@ -157,7 +157,18 @@ $transfer_labels = array('pending' => 'label-warning', 'awaiting_receipt' => 'la
                 <div class="box box-primary">
                     <div class="box-header with-border"><h3 class="box-title">Subscription</h3></div>
                     <div class="box-body">
-                        <?php if ($s['expiry'] === 'onboarding') { $p = $s['paid_subscription']; ?>
+                        <?php if ($s['expiry'] === 'unpaid') { ?>
+                            <div class="alert alert-warning" style="margin-bottom:10px">
+                                <b>Not paid yet: staff only.</b> Staff can sign in and set the school up; students and parents can sign in once a subscription is paid
+                                (bill the school below; paying the invoice, an approved bank transfer, Mark paid or Record subscription opens it).
+                                <?php if ($this->rbac->hasPrivilege('school_billing', 'can_edit')) { ?>
+                                    <form method="post" action="<?php echo $action('open_portal'); ?>" style="margin-top:8px" onsubmit="return confirm('Let students and parents of this school sign in without a paid subscription?');">
+                                        <?php echo $token; ?>
+                                        <button class="btn btn-default btn-sm" type="submit"><i class="fa fa-unlock"></i> Let students and parents in without payment</button>
+                                    </form>
+                                <?php } ?>
+                            </div>
+                        <?php } elseif ($s['expiry'] === 'onboarding') { $p = $s['paid_subscription']; ?>
                             <div class="alert alert-info" style="margin-bottom:10px"><b>Setup fee paid on <?php echo $date($p['created_at']); ?>; subscription not paid yet.</b> Staff can sign in and set the school up; students and parents can't sign in until the owner pays the subscription (from their account) or you record one below.</div>
                         <?php } elseif ($s['paid_subscription']) { $p = $s['paid_subscription']; ?>
                             <div class="row">

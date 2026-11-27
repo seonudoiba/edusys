@@ -33,12 +33,13 @@ class Schools extends Admin_Controller
         $this->menu();
         $schools = $this->Platform_school_model->all();
         $tabs = array('all', 'waiting_approval', 'active', 'disabled', 'expiring', 'expired', 'onboarding', 'awaiting_payment');
+        // "Setup paid, subscription due" also lists schools added here and not paid yet (same rule: staff only)
         $tab = in_array($this->input->get('tab'), $tabs, true) ? $this->input->get('tab') : 'all';
         $q = trim((string) $this->input->get('q'));
 
         $shown = array_values(array_filter($schools, function ($s) use ($tab, $q) {
             if ($tab === 'expiring' || $tab === 'expired' || $tab === 'onboarding') {
-                if ($s['expiry'] !== $tab) {
+                if ($s['expiry'] !== $tab && !($tab === 'onboarding' && $s['expiry'] === 'unpaid')) {
                     return false;
                 }
             } elseif ($tab !== 'all' && $s['state'] !== $tab) {
@@ -188,6 +189,7 @@ class Schools extends Admin_Controller
             $data['status'] = 0;
             $data['payment_status'] = 1;
             $data['cron_flag'] = 0;
+            $data['pay_before_portal'] = 1; // students and parents sign in once a subscription is paid (or Open the portal)
             $this->db->insert('school', $data);
             $id = (int) $this->db->insert_id();
             $this->platform_audit->record('school.create', 'Added ' . $data['school_name'], $id);
@@ -248,6 +250,19 @@ class Schools extends Admin_Controller
         $this->db->where('id', (int) $school['id'])->update('school', array('status' => $enable ? 1 : 0));
         $this->platform_audit->record($enable ? 'school.enable' : 'school.disable', ($enable ? 'Enabled ' : 'Disabled ') . $school['school_name'], $school['id']);
         $this->back($school['id'], $enable ? 'School enabled: its users can log in again.' : 'School disabled: its site now shows "School unavailable" and nobody can log in.');
+    }
+
+    /**
+     * Lets the students and parents of a school added here sign in before it has paid (a free or
+     * agreed arrangement). Without this they can sign in once a subscription is paid.
+     */
+    public function open_portal($id = null)
+    {
+        $this->require_privilege('can_edit', 'school_billing');
+        $school = $this->checked_post($id);
+        $this->db->where('id', (int) $school['id'])->update('school', array('pay_before_portal' => 0));
+        $this->platform_audit->record('school.portal_open', 'Let the students and parents of ' . $school['school_name'] . ' sign in without a paid subscription', $school['id']);
+        $this->back($school['id'], 'Students and parents of ' . $school['school_name'] . ' can now sign in, without a paid subscription.');
     }
 
     /** A new one-time set-password link for one of the school's super admins. */
