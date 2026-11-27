@@ -73,7 +73,7 @@ class Onlineexam extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
         $questionList           = $this->onlineexam_model->get();
 
-        $data['questionList']   = $questionList; 
+        $data['questionList']   = $questionList;
         $subject_result         = $this->subject_model->get();
         $data['subjectlist']    = $subject_result;
         $questionOpt            = $this->customlib->getQuesOption();
@@ -86,14 +86,14 @@ class Onlineexam extends Admin_Controller
         $cbt_session = (int) $this->setting_model->getCurrentSession();
         list($data['cbt_per_class'], $data['cbt_no_class']) = $this->cbt_admin->per_class($cbt_session);
         $data['cbt_classes'] = $this->class_results->classes($cbt_session);
-        
+
         $this->load->view('layout/header', $data);
         $this->load->view('admin/onlineexam/index', $data);
         $this->load->view('layout/footer', $data);
     }
 
     public function getexamlist()
-    { 
+    {
         $questionList = $this->onlineexam_model->getexamlist();
         //echo $this->db->last_query();die;
         $subject_result = $this->subject_model->get();
@@ -159,13 +159,13 @@ class Onlineexam extends Admin_Controller
 
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
                     $download_btn = " <button type='button' data-toggle='tooltip' class='btn btn-default btn-xs download_exam' data-recordid=" . $subject_value->id . "  title=" . $this->lang->line('print') . " data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>'><i class='fa fa fa-print'></i></button>";
-                }else{
+                } else {
                     $download_btn = "";
                 }
 
                 if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
                     $editbtn = " <button type='button' data-toggle='tooltip' class='btn btn-default btn-xs question-btn-edit' data-recordid=" . $subject_value->id . "  title='" . $this->lang->line('edit_exam') . "'  ><i class='fa fa fa-pencil'></i></button>";
-                }else{
+                } else {
                     $editbtn = "";
                 }
 
@@ -189,7 +189,6 @@ class Onlineexam extends Admin_Controller
 
                         $question_list .= "<button class='btn btn-default btn-xs generate_rank' data-exam-title=" . $subject_value->exam . " data-recordid=" . $subject_value->id . " data-toggle='tooltip' title='" . $this->lang->line('generate_rank') . "' > <i class='fa fa-list-alt'></i></button> ";
                     }
-
                 }
 
                 // The exam link to share with students (cbt/<id>): sign in, then the exam opens.
@@ -288,17 +287,17 @@ class Onlineexam extends Admin_Controller
                 }
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
                     $download_btn = " <button type='button' data-toggle='tooltip' class='btn btn-default btn-xs download_exam' data-recordid=" . $subject_value->id . "  title=" . $this->lang->line('print') . " data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>'><i class='fa fa fa-print'></i></button>";
-                }else{
+                } else {
                     $download_btn = "";
                 }
                 if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
                     $editbtn = " <button type='button' data-toggle='tooltip' class='btn btn-default btn-xs question-btn-edit' data-recordid=" . $subject_value->id . "  title='" . $this->lang->line('edit_exam') . "'  ><i class='fa fa fa-pencil'></i></button>";
-                }else{
+                } else {
                     $editbtn = "";
                 }
                 if ($this->rbac->hasPrivilege('online_examination', 'can_delete')) {
                     $deletebtn = " <form method='post' action='" . site_url('admin/onlineexam/delete/' . (int) $subject_value->id) . "' style='display:inline' onsubmit='return confirm(" . htmlspecialchars(json_encode($this->lang->line('delete_confirm')), ENT_QUOTES) . ")'><button type='submit' class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('delete') . "'><i class='fa fa fa-remove'></i></button></form>";
-                }else{
+                } else {
                     $deletebtn = "";
                 }
 
@@ -318,7 +317,6 @@ class Onlineexam extends Admin_Controller
 
                         $question_list .= "<button type='button' class='btn btn-default btn-xs generate_rank' data-exam-title=" . $subject_value->exam . " data-recordid=" . $subject_value->id . " data-toggle='tooltip' title='" . $this->lang->line('generate_rank') . "' ><i class='fa fa-list-alt'></i></button> ";
                     }
-
                 }
                 $deleteexambtn = "<input type='checkbox' name='exam[]'' value=" . $subject_value->id . ">";
 
@@ -428,7 +426,6 @@ class Onlineexam extends Admin_Controller
                 /* If the query returns nothing, we throw an error message */
             } else {
                 $pag_content = '';
-
             }
             $no_of_paginations = ceil($result->total_row / $per_page);
 
@@ -449,7 +446,6 @@ class Onlineexam extends Admin_Controller
                 } else {
                     $end_loop = $no_of_paginations;
                 }
-
             }
 
             $pag_navigation .= "<ul class='pagination'>";
@@ -473,7 +469,6 @@ class Onlineexam extends Admin_Controller
                 } else {
                     $pag_navigation .= "<li p='$i' class='active_v'><a>{$i}</a></li>";
                 }
-
             }
 
             if ($next_btn && $cur_page < $no_of_paginations) {
@@ -569,7 +564,6 @@ class Onlineexam extends Admin_Controller
                     if ($each_student_value['onlineexam_student_session_id'] != 0) {
                         $all_students[] = $each_student_value['onlineexam_student_session_id'];
                     }
-
                 }
             }
 
@@ -580,7 +574,6 @@ class Onlineexam extends Admin_Controller
             }
             if (!empty($all_students)) {
                 $array_delete = array_diff($all_students, $students_id);
-
             }
             if (!empty($students_id)) {
                 $student_session_array = array();
@@ -642,25 +635,9 @@ class Onlineexam extends Admin_Controller
             if (!in_array($class_id, $allowed, true)) {
                 access_denied();
             }
-            $rows = $this->db->select('oes.id, oes.is_attempted')->from('onlineexam_students oes')
-                ->join('student_session ss', 'ss.id = oes.student_session_id')
-                ->where(array('oes.onlineexam_id' => $exam_id, 'ss.class_id' => $class_id, 'ss.session_id' => $session))->get()->result_array();
-            $ids = array();
-            $kept = 0;
-            $started = $rows ? array_map('intval', array_column($this->db->select('onlineexam_student_id')
-                ->where_in('onlineexam_student_id', array_map('intval', array_column($rows, 'id')))->get('onlineexam_attempts')->result_array(), 'onlineexam_student_id')) : array();
-            foreach ($rows as $r) {
-                if ((int) $r['is_attempted'] === 1 || in_array((int) $r['id'], $started, true)) {
-                    $kept++;
-                } else {
-                    $ids[] = (int) $r['id'];
-                }
-            }
-            if ($ids) {
-                $this->db->where('onlineexam_id', $exam_id)->where_in('id', $ids)->delete('onlineexam_students');
-            }
-            $msg = count($ids) . ' student(s) of ' . (isset($names[$class_id]) ? $names[$class_id] : 'the class') . ' taken off this exam.'
-                . ($kept ? ' ' . $kept . ' who started or sat it were kept.' : '');
+            $removed = $this->unassign_class_students($exam_id, $class_id);
+            $msg = $removed['removed'] . ' student(s) of ' . (isset($names[$class_id]) ? $names[$class_id] : 'the class') . ' taken off this exam.'
+                . ($removed['kept'] ? ' ' . $removed['kept'] . ' who started or sat it were kept.' : '');
             $this->session->set_flashdata('class_msg', array('type' => 'success', 'text' => $msg));
             redirect('admin/onlineexam/assign/' . $exam_id);
         }
@@ -686,8 +663,10 @@ class Onlineexam extends Admin_Controller
         foreach ($class_ids as $c) {
             $labels[] = isset($names[$c]) ? $names[$c] : $c;
         }
-        $this->session->set_flashdata('class_msg', array('type' => 'success',
-            'text' => count($rows) . ' student(s) assigned from ' . implode(', ', $labels) . ' (all sections).' . (count($rows) ? '' : ' They were already assigned.')));
+        $this->session->set_flashdata('class_msg', array(
+            'type' => 'success',
+            'text' => count($rows) . ' student(s) assigned from ' . implode(', ', $labels) . ' (all sections).' . (count($rows) ? '' : ' They were already assigned.')
+        ));
         redirect('admin/onlineexam/assign/' . $exam_id);
     }
 
@@ -732,10 +711,55 @@ class Onlineexam extends Admin_Controller
         return $out;
     }
 
+    /** Class ids that already have at least one student on this exam (current session). */
+    private function assigned_class_ids($exam_id)
+    {
+        $session = (int) $this->setting_model->getCurrentSession();
+        $rows = $this->db->select('ss.class_id')->from('onlineexam_students oes')
+            ->join('student_session ss', 'ss.id = oes.student_session_id')
+            ->where('oes.onlineexam_id', (int) $exam_id)
+            ->where('ss.session_id', $session)
+            ->group_by('ss.class_id')->get()->result_array();
+        return array_map('intval', array_column($rows, 'class_id'));
+    }
+
+    /**
+     * Takes a class off an exam, except students who have started or sat it.
+     * Returns how many were removed and how many were kept.
+     */
+    private function unassign_class_students($exam_id, $class_id)
+    {
+        $exam_id = (int) $exam_id;
+        $class_id = (int) $class_id;
+        $session = (int) $this->setting_model->getCurrentSession();
+        $rows = $this->db->select('oes.id, oes.is_attempted')->from('onlineexam_students oes')
+            ->join('student_session ss', 'ss.id = oes.student_session_id')
+            ->where(array('oes.onlineexam_id' => $exam_id, 'ss.class_id' => $class_id, 'ss.session_id' => $session))
+            ->get()->result_array();
+        $ids = array();
+        $kept = 0;
+        $started = $rows ? array_map('intval', array_column($this->db->select('onlineexam_student_id')
+            ->where_in('onlineexam_student_id', array_map('intval', array_column($rows, 'id')))->get('onlineexam_attempts')->result_array(), 'onlineexam_student_id')) : array();
+        foreach ($rows as $r) {
+            if ((int) $r['is_attempted'] === 1 || in_array((int) $r['id'], $started, true)) {
+                $kept++;
+            } else {
+                $ids[] = (int) $r['id'];
+            }
+        }
+        if ($ids) {
+            $this->db->where('onlineexam_id', $exam_id)->where_in('id', $ids)->delete('onlineexam_students');
+        }
+        return array('removed' => count($ids), 'kept' => $kept);
+    }
+
     public function getOnlineExamByID()
     {
-        $id = $this->input->post('recordid');
+        $id = (int) $this->input->post('recordid');
         $question_result = $this->onlineexam_model->get($id);
+        if ($question_result) {
+            $question_result->class_ids = $this->assigned_class_ids($id);
+        }
         echo json_encode(array('status' => 1, 'result' => $question_result));
     }
 
@@ -813,10 +837,8 @@ class Onlineexam extends Admin_Controller
 
                                 $dt_data[]          = $questionList_value;
                                 $recordsTotal_flter = count($dt_data);
-
                             }
                         }
-
                     } elseif ($this->sch_setting_detail->class_teacher == 'yes' && $this->sch_setting_detail->my_question == '0') {
 
                         $my_class = $this->class_model->get();
@@ -832,7 +854,6 @@ class Onlineexam extends Admin_Controller
                                 $recordsTotal_flter = count($dt_data);
                             }
                         }
-
                     } elseif ($this->sch_setting_detail->class_teacher == 'no' && $this->sch_setting_detail->my_question == '1') {
 
                         if ($this->customlib->getStaffID() == $questionList_value->staff_id) {
@@ -844,7 +865,6 @@ class Onlineexam extends Admin_Controller
                         $dt_data[]          = $questionList_value;
                         $recordsTotal_flter = count($dt_data);
                     }
-
                 }
                 $data['questionList'] = $dt_data;
             } else {
@@ -931,7 +951,6 @@ class Onlineexam extends Admin_Controller
         );
 
         echo json_encode($response);
-
     }
 
     /** Refuses the request unless the staff member has one of the permissions its method needs (PERMISSIONS). */
@@ -995,7 +1014,9 @@ class Onlineexam extends Admin_Controller
         $subject_id = (int) $this->input->post('subject_id');
         $marks = (float) $this->input->post('marks');
         $neg = max(0, (float) $this->input->post('neg_marks'));
-        $out = function ($status, $message) { $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => $status, 'message' => $message))); };
+        $out = function ($status, $message) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => $status, 'message' => $message)));
+        };
         if (!$exam || !$subject_id || $marks <= 0) {
             return $out('fail', !$exam ? 'That exam no longer exists.' : ($subject_id ? 'Marks for each question must be more than 0.' : 'Choose the subject.'));
         }
@@ -1021,8 +1042,14 @@ class Onlineexam extends Admin_Controller
             }
             $ids = array_map('intval', array_column($this->db->order_by('RAND()', '', false)->limit($n)->get()->result_array(), 'id'));
             foreach ($ids as $qid) {
-                $this->db->insert('onlineexam_questions', array('onlineexam_id' => (int) $exam['id'], 'question_id' => $qid, 'marks' => $marks, 'neg_marks' => $neg,
-                    'session_id' => $exam['session_id'], 'is_active' => 1));
+                $this->db->insert('onlineexam_questions', array(
+                    'onlineexam_id' => (int) $exam['id'],
+                    'question_id' => $qid,
+                    'marks' => $marks,
+                    'neg_marks' => $neg,
+                    'session_id' => $exam['session_id'],
+                    'is_active' => 1
+                ));
                 $in_exam[] = $qid;
                 $added++;
             }
@@ -1059,8 +1086,10 @@ class Onlineexam extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'Online_Examinations/Onlineexam');
         $photos = array();
         if ($rows) {
-            foreach ($this->db->select('onlineexam_student_id AS os, COUNT(*) AS n, MAX(id) AS last', false)->where_in('onlineexam_student_id', array_map('intval', array_column($rows, 'os_id')))
-                ->group_by('onlineexam_student_id')->get('onlineexam_snapshots')->result_array() as $p) {
+            foreach (
+                $this->db->select('onlineexam_student_id AS os, COUNT(*) AS n, MAX(id) AS last', false)->where_in('onlineexam_student_id', array_map('intval', array_column($rows, 'os_id')))
+                    ->group_by('onlineexam_student_id')->get('onlineexam_snapshots')->result_array() as $p
+            ) {
                 $photos[(int) $p['os']] = array((int) $p['n'], (int) $p['last']);
             }
         }
@@ -1088,8 +1117,11 @@ class Onlineexam extends Admin_Controller
             redirect($back);
         }
         $now = time();
-        $set = array('extra_minutes' => (int) $attempt['extra_minutes'] + $minutes, 'extra_by' => (int) $this->customlib->getStaffID() ?: null,
-            'extra_reason' => mb_substr(trim(($attempt['extra_reason'] ? $attempt['extra_reason'] . ' | ' : '') . $minutes . ' min: ' . $reason), 0, 255));
+        $set = array(
+            'extra_minutes' => (int) $attempt['extra_minutes'] + $minutes,
+            'extra_by' => (int) $this->customlib->getStaffID() ?: null,
+            'extra_reason' => mb_substr(trim(($attempt['extra_reason'] ? $attempt['extra_reason'] . ' | ' : '') . $minutes . ' min: ' . $reason), 0, 255)
+        );
         if ($attempt['submitted_at']) {
             $set['submitted_at'] = null;
             $set['forced_submit'] = null;
@@ -1157,17 +1189,36 @@ class Onlineexam extends Admin_Controller
         $rows = array();
         foreach ($r['students'] as $st) {
             $done = $st['status'] !== 'not_taken';
-            $rows[] = array($st['admission_no'], $st['name'], trim($st['class'] . ' ' . $st['section']), $status[$st['status']],
-                $done ? (float) $st['score'] . ' / ' . (float) $st['max_score'] : '', $done && $st['percentage'] !== null ? (float) $st['percentage'] . '%' : '',
+            $rows[] = array(
+                $st['admission_no'],
+                $st['name'],
+                trim($st['class'] . ' ' . $st['section']),
+                $status[$st['status']],
+                $done ? (float) $st['score'] . ' / ' . (float) $st['max_score'] : '',
+                $done && $st['percentage'] !== null ? (float) $st['percentage'] . '%' : '',
                 $st['status'] === 'done' && $st['passed'] !== null ? ((int) $st['passed'] ? 'Pass' : 'Fail') : '',
-                $done ? (int) $st['correct_count'] : '', $done ? (int) $st['wrong_count'] : '', $done ? (int) $st['unanswered_count'] : '',
-                implode(', ', array_map(function ($m) { return 'Q' . $m['no']; }, $st['missed'])));
+                $done ? (int) $st['correct_count'] : '',
+                $done ? (int) $st['wrong_count'] : '',
+                $done ? (int) $st['unanswered_count'] : '',
+                implode(', ', array_map(function ($m) {
+                    return 'Q' . $m['no'];
+                }, $st['missed']))
+            );
         }
         $rows[] = array();
         $rows[] = array('Question', 'Text', 'Type', 'Right answer', 'Got it right', 'Got it wrong', 'Left it out', '% right', 'Wrong answer chosen most');
         foreach ($r['questions'] as $q) {
-            $rows[] = array('Q' . $q['no'], $q['text'], $q['question_type'], $q['answer_text'], $q['stats']['correct'], $q['stats']['wrong'], $q['stats']['unanswered'],
-                $q['stats']['correct_pct'] === null ? '' : $q['stats']['correct_pct'] . '%', $q['stats']['top_wrong'] !== '' ? $q['stats']['top_wrong'] . ' (' . $q['stats']['top_wrong_count'] . ')' : '');
+            $rows[] = array(
+                'Q' . $q['no'],
+                $q['text'],
+                $q['question_type'],
+                $q['answer_text'],
+                $q['stats']['correct'],
+                $q['stats']['wrong'],
+                $q['stats']['unanswered'],
+                $q['stats']['correct_pct'] === null ? '' : $q['stats']['correct_pct'] . '%',
+                $q['stats']['top_wrong'] !== '' ? $q['stats']['top_wrong'] . ' (' . $q['stats']['top_wrong_count'] . ')' : ''
+            );
         }
         $headings = array('Admission no', 'Student', 'Class', 'Status', 'Score', '%', 'Result', 'Right', 'Wrong', 'Left out', 'Questions missed');
         $first = $rows ? array_shift($rows) : array();
@@ -1228,8 +1279,10 @@ class Onlineexam extends Admin_Controller
         $examid                 = $this->input->post('examid');
         $this->cbt_refresh($examid);
         $data['stored_scores']  = array();
-        foreach ($this->db->select('id, score')->where('onlineexam_id', (int) $examid)->where('scored_at IS NOT NULL', null, false)
-            ->get('onlineexam_students')->result_array() as $row) {
+        foreach (
+            $this->db->select('id, score')->where('onlineexam_id', (int) $examid)->where('scored_at IS NOT NULL', null, false)
+                ->get('onlineexam_students')->result_array() as $row
+        ) {
             $data['stored_scores'][(int) $row['id']] = (float) $row['score'];
         }
         $student_data           = $this->onlineexam_model->searchAllOnlineExamStudents($examid, null, null, 1);
@@ -1259,10 +1312,13 @@ class Onlineexam extends Admin_Controller
         $this->form_validation->set_rules('duration', $this->lang->line('time_duration'), 'trim|required|callback_validate_duration');
         $this->form_validation->set_rules('description', $this->lang->line('description'), 'trim|required');
         $this->form_validation->set_rules('passing_percentage', $this->lang->line('passing_percentage'), 'trim|required|xss_clean');
+        // every CBT has a subject (migration 317)
+        $this->form_validation->set_rules('subject_id', $this->lang->line('subject'), 'trim|required|integer|greater_than[0]');
         if ($this->form_validation->run() == false) {
             $msg = array(
                 'word_limit'         => form_error('word_limit'),
                 'exam'               => form_error('exam'),
+                'subject_id'         => form_error('subject_id'),
                 'attempt'            => form_error('attempt'),
                 'exam_from'          => form_error('exam_from'),
                 'duration'           => form_error('duration'),
@@ -1305,7 +1361,7 @@ class Onlineexam extends Admin_Controller
             $insert_data = array(
                 'answer_word_count'  => trim((string) $this->input->post('word_limit')) === '' ? -1 : (int) $this->input->post('word_limit'),
                 'exam'               => $this->input->post('exam'),
-                'subject_id'         => (int) $this->input->post('subject_id') ?: null,
+                'subject_id'         => (int) $this->input->post('subject_id'),
                 'attempt'            => $this->input->post('attempt'),
                 'exam_from'          => date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('exam_from'), false)),
                 'exam_to'            => date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('exam_to'), false)),
@@ -1343,7 +1399,23 @@ class Onlineexam extends Admin_Controller
                 $insert_data['id'] = $id;
             }
 
-            $this->onlineexam_model->add($insert_data);
+            // add() logs a row after the insert, so insert_id() here would be the log id, not the exam.
+            $saved_id = $this->onlineexam_model->add($insert_data);
+            if (!$saved_id) {
+                echo json_encode(array('status' => 0, 'error' => array('exam' => 'The exam could not be saved. Please try again.'), 'message' => ''));
+                return;
+            }
+
+            $allowed_classes = array_map('intval', array_column($this->class_model->get(), 'id'));
+            $class_ids = array_values(array_intersect(array_unique(array_filter(array_map('intval', (array) $this->input->post('class_ids')))), $allowed_classes));
+            $previous = array_values(array_intersect(array_unique(array_filter(array_map('intval', (array) $this->input->post('previous_class_ids')))), $allowed_classes));
+            // Only classes ticked now fill up: a class already on the exam (even with a few students
+            // picked on the Assign page) is left as it is; unticking one takes off who has not started.
+            $this->assign_classes_to_exam((int) $saved_id, array_diff($class_ids, $previous));
+            foreach (array_diff($previous, $class_ids) as $drop_class) {
+                $this->unassign_class_students((int) $saved_id, $drop_class);
+            }
+
             if ($id != 0) {
                 $exam_notification = $this->onlineexam_model->get_msnstatusByexam_id($id);
                 if ($is_active == 1 && $exam_notification['publish_exam_notification'] == 0) {
@@ -1362,7 +1434,6 @@ class Onlineexam extends Admin_Controller
                     $publish_exam_notification['id']                        = $id;
                     $publish_exam_notification['publish_exam_notification'] = '1';
                     $this->onlineexam_model->add($publish_exam_notification);
-
                 }
 
                 if ($publish_result == 1 && $exam_notification['publish_result_notification'] == 0) {
@@ -1382,7 +1453,6 @@ class Onlineexam extends Admin_Controller
                     $publish_result_notification['id']                          = $id;
                     $publish_result_notification['publish_result_notification'] = '1';
                     $this->onlineexam_model->add($publish_result_notification);
-
                 }
             }
 
@@ -1390,6 +1460,41 @@ class Onlineexam extends Admin_Controller
         }
 
         echo json_encode($array);
+    }
+
+    /**
+     * Adds every active student of the given classes (all sections, current session)
+     * to the exam, skipping anyone already on it. Used by add()/edit() and by
+     * assign_classes(). Returns how many rows were inserted.
+     */
+    private function assign_classes_to_exam($exam_id, array $class_ids)
+    {
+        $exam_id = (int) $exam_id;
+        if (!$exam_id || !$class_ids) {
+            return 0;
+        }
+        $allowed = array_map('intval', array_column($this->class_model->get(), 'id'));
+        $class_ids = array_values(array_intersect(array_map('intval', $class_ids), $allowed));
+        if (!$class_ids) {
+            return 0;
+        }
+        $session = (int) $this->setting_model->getCurrentSession();
+        $new = $this->db->select('ss.id')->from('student_session ss')
+            ->join('students s', 's.id = ss.student_id')
+            ->join('onlineexam_students oes', 'oes.student_session_id = ss.id AND oes.onlineexam_id = ' . $exam_id, 'left')
+            ->where('ss.session_id', $session)
+            ->where('s.is_active', 'yes')
+            ->where_in('ss.class_id', $class_ids)
+            ->where('oes.id IS NULL', null, false)
+            ->get()->result_array();
+        $rows = array();
+        foreach (array_unique(array_map('intval', array_column($new, 'id'))) as $ss_id) {
+            $rows[] = array('onlineexam_id' => $exam_id, 'student_session_id' => $ss_id);
+        }
+        if ($rows) {
+            $this->db->insert_batch('onlineexam_students', $rows);
+        }
+        return count($rows);
     }
 
     public function getRecord($id)
@@ -1545,8 +1650,10 @@ class Onlineexam extends Admin_Controller
             );
 
             $array = array('status' => 0, 'error' => $msg, 'message' => '');
-        } elseif (!$this->db->where('id', (int) $this->input->post('onlineexam_id'))->count_all_results('onlineexam')
-            || !$this->db->where('id', (int) $this->input->post('question_id'))->count_all_results('questions')) {
+        } elseif (
+            !$this->db->where('id', (int) $this->input->post('onlineexam_id'))->count_all_results('onlineexam')
+            || !$this->db->where('id', (int) $this->input->post('question_id'))->count_all_results('questions')
+        ) {
             $array = array('status' => 0, 'error' => array('question_id' => 'That exam or question no longer exists. Reload the page.'), 'message' => '');
         } else {
             $insert_data = array(
@@ -1633,7 +1740,6 @@ class Onlineexam extends Admin_Controller
             $question_result = $this->load->view('admin/onlineexam/_print', $data, true);
         } else {
             $question_result = $this->load->view('admin/onlineexam/_getstudentresult', $data, true);
-
         }
         echo json_encode(array('status' => 1, 'result' => $question_result));
     }
@@ -1650,8 +1756,8 @@ class Onlineexam extends Admin_Controller
         $questionOpt                 = $this->customlib->getQuesOption();
         $data['question_true_false'] = $this->config->item('question_true_false');
         $data['questionOpt']         = $questionOpt;
-        $data['onlineexamfooter']    = $this->setting_model->get_onlineexamfooter();      
-        
+        $data['onlineexamfooter']    = $this->setting_model->get_onlineexamfooter();
+
         $page                        = $this->load->view('admin/onlineexam/_download_exam', $data, true);
         echo json_encode(array('status' => 1, 'page' => $page, 'exam' => $exam));
     }
@@ -1735,7 +1841,6 @@ class Onlineexam extends Admin_Controller
                 $row[]     = $action;
                 $dt_data[] = $row;
             }
-
         }
         $json_data = array(
             "draw"            => intval($resultlist->draw),
@@ -1764,5 +1869,4 @@ class Onlineexam extends Admin_Controller
         }
         echo json_encode($array);
     }
-
 }

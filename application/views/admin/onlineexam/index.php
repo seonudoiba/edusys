@@ -6,35 +6,98 @@ $language      = $this->customlib->getLanguage();
 $language_name = $language["short_code"];
 ?>
 <style>
-     @media print {
-               .noprint {
-                  visibility: hidden;
-               }
-            }
+    @media print {
+        .noprint {
+            visibility: hidden;
+        }
+    }
 </style>
 
 <style>
-    .cbt-sec{margin-top:14px;border:1px solid #e5e9f0;border-radius:12px;padding:12px 14px;background:#f8fafc}
-    .cbt-sec > b{display:block;margin-bottom:6px}
-    .cbt-sec .checkbox-inline{display:block;margin:4px 0 0 0;padding-left:20px}
-    .cbt-sec-row{margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-    .cbt-sec-row label{margin:0;font-weight:500}
+    .cbt-sec {
+        margin-top: 14px;
+        border: 1px solid #e5e9f0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: #f8fafc
+    }
+
+    .cbt-sec>b {
+        display: block;
+        margin-bottom: 6px
+    }
+
+    .cbt-sec .checkbox-inline {
+        display: block;
+        margin: 4px 0 0 0;
+        padding-left: 20px
+    }
+
+    .cbt-sec-row {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px
+    }
+
+    .cbt-sec-row label {
+        margin: 0;
+        font-weight: 500
+    }
 </style>
 <div class="content-wrapper">
     <section class="content">
-        <?php if (!empty($cbt_classes)) { $this->load->view('admin/cbtexams/_style'); ?>
+        <?php if (!empty($cbt_classes)) {
+            $this->load->view('admin/cbtexams/_style'); ?>
             <div class="box box-primary" style="margin-bottom:16px">
-                <div class="box-header with-border"><h3 class="box-title"><i class="fa fa-th-large"></i> CBTs by class</h3><span class="text-muted" style="margin-left:8px;font-size:12.5px">open a class to see its subjects and each subject's CBTs by term</span></div>
+                <div class="box-header with-border">
+                    <h3 class="box-title"><i class="fa fa-th-large"></i> CBTs by class</h3><span class="text-muted" style="margin-left:8px;font-size:12.5px">open a class to see its subjects and each subject's CBTs by term</span>
+                </div>
                 <div class="box-body">
                     <style>
-                        .cbt-chips{display:flex;flex-wrap:wrap;gap:8px}
-                        .cbt-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e9f0;border-radius:12px;padding:7px 12px;background:#fff;color:#0f172a;font-weight:700;transition:border-color .15s,transform .15s}
-                        .cbt-chip:hover{border-color:#6d28d9;transform:translateY(-1px);color:#0f172a;text-decoration:none}
-                        .cbt-chip span{border-radius:99px;padding:1px 8px;font-size:11.5px;background:#f1f5f9;color:#64748b}
-                        .cbt-chip span.has{background:#ede9fe;color:#6d28d9}
+                        .cbt-chips {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 8px
+                        }
+
+                        .cbt-chip {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            border: 1px solid #e5e9f0;
+                            border-radius: 12px;
+                            padding: 7px 12px;
+                            background: #fff;
+                            color: #0f172a;
+                            font-weight: 700;
+                            transition: border-color .15s, transform .15s
+                        }
+
+                        .cbt-chip:hover {
+                            border-color: #6d28d9;
+                            transform: translateY(-1px);
+                            color: #0f172a;
+                            text-decoration: none
+                        }
+
+                        .cbt-chip span {
+                            border-radius: 99px;
+                            padding: 1px 8px;
+                            font-size: 11.5px;
+                            background: #f1f5f9;
+                            color: #64748b
+                        }
+
+                        .cbt-chip span.has {
+                            background: #ede9fe;
+                            color: #6d28d9
+                        }
                     </style>
                     <div class="cbt-chips">
-                        <?php foreach ($cbt_classes as $c) { $nn = isset($cbt_per_class[$c['id']]) ? $cbt_per_class[$c['id']] : 0; ?>
+                        <?php foreach ($cbt_classes as $c) {
+                            $nn = isset($cbt_per_class[$c['id']]) ? $cbt_per_class[$c['id']] : 0; ?>
                             <a class="cbt-chip" href="<?php echo site_url('admin/cbtexams/klass/' . (int) $c['id']); ?>" title="<?php echo (int) $c['students']; ?> students"><?php echo html_escape($c['name']); ?> <span class="<?php echo $nn ? 'has' : ''; ?>"><?php echo $nn; ?> CBT<?php echo $nn === 1 ? '' : 's'; ?></span></a>
                         <?php } ?>
                     </div>
@@ -44,11 +107,15 @@ $language_name = $language["short_code"];
         <?php if ($this->session->flashdata('bulk_questions')) { ?><div class="alert alert-success"><?php echo html_escape($this->session->flashdata('bulk_questions')); ?></div><?php } ?>
         <?php
         // At a glance: live, upcoming and closed exams, questions in the bank, answers waiting to be marked.
-        $ox_now = time(); $ox = array('live' => 0, 'upcoming' => 0, 'closed' => 0);
+        $ox_now = time();
+        $ox = array('live' => 0, 'upcoming' => 0, 'closed' => 0);
         foreach ((array) $questionList as $ox_e) {
             $ox_e = (array) $ox_e;
-            if (empty($ox_e['exam_from']) || empty($ox_e['exam_to'])) { continue; }
-            $ox_f = strtotime($ox_e['exam_from']); $ox_t = strtotime($ox_e['exam_to']);
+            if (empty($ox_e['exam_from']) || empty($ox_e['exam_to'])) {
+                continue;
+            }
+            $ox_f = strtotime($ox_e['exam_from']);
+            $ox_t = strtotime($ox_e['exam_to']);
             $ox[$ox_now > $ox_t ? 'closed' : ($ox_now >= $ox_f ? 'live' : 'upcoming')]++;
         }
         $ox_bank = (int) $this->db->count_all_results('questions');
@@ -62,14 +129,63 @@ $language_name = $language["short_code"];
         );
         ?>
         <style>
-            .ox-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
-            .ox-kpi{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e6eaf0;border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
-            .ox-kpi .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:17px;flex:none}
-            .ox-kpi b{display:block;font-size:22px;line-height:1.1;color:#101828}
-            .ox-kpi span{font-size:12px;color:#667085;font-weight:600}
-            .ox-kpi.live .ic i{animation:oxp 1.6s infinite}
-            @keyframes oxp{50%{opacity:.35}}
-            .ox-actions{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 16px}
+            .ox-kpis {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+                gap: 14px;
+                margin-bottom: 18px
+            }
+
+            .ox-kpi {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: #fff;
+                border: 1px solid #e6eaf0;
+                border-radius: 14px;
+                padding: 14px 16px;
+                box-shadow: 0 1px 2px rgba(16, 24, 40, .04)
+            }
+
+            .ox-kpi .ic {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                display: grid;
+                place-items: center;
+                font-size: 17px;
+                flex: none
+            }
+
+            .ox-kpi b {
+                display: block;
+                font-size: 22px;
+                line-height: 1.1;
+                color: #101828
+            }
+
+            .ox-kpi span {
+                font-size: 12px;
+                color: #667085;
+                font-weight: 600
+            }
+
+            .ox-kpi.live .ic i {
+                animation: oxp 1.6s infinite
+            }
+
+            @keyframes oxp {
+                50% {
+                    opacity: .35
+                }
+            }
+
+            .ox-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin: -4px 0 16px
+            }
         </style>
         <div class="ox-kpis">
             <?php foreach ($ox_tiles as $i => $t) { ?>
@@ -87,90 +203,90 @@ $language_name = $language["short_code"];
             <div class="col-md-12">
                 <div class="nav-tabs-custom theme-shadow">
                     <div class="box-header ptbnull">
-                            <h3 class="box-title titlefix pt5">  <?php echo $this->lang->line('online_exam_list'); ?></h3>
-                            <?php if ($this->rbac->hasPrivilege('online_examination', 'can_add')) {
-    ?>
+                        <h3 class="box-title titlefix pt5"> <?php echo $this->lang->line('online_exam_list'); ?></h3>
+                        <?php if ($this->rbac->hasPrivilege('online_examination', 'can_add')) {
+                        ?>
                             <button class="btn btn-primary btn-sm pull-right question-btn" data-recordid="0"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_exam'); ?></button>
                         <?php
-}
-?>
+                        }
+                        ?>
                     </div>
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab_1" data-toggle="tab"><?php echo $this->lang->line('upcoming_exams'); ?></a></li>
                         <li><a href="#tab_3" class="closed-exam" data-toggle="tab"><?php echo $this->lang->line('closed_exams'); ?></a></li>
                     </ul>
                     <div class="tab-content">
-                    <div class="tab-pane active" id="tab_1">
-                    <div class="box-body p0">
-                        <div class="mailbox-messages">
-                            <div class="table-responsive overflow-visible-lg">
-                                 <table class="table table-striped table-bordered table-hover exam-list" data-export-title="<?php echo $this->lang->line('online_exam_list'); ?>">
-                                <thead>
-                                    <tr>
-                                        <th><?php echo $this->lang->line('exam'); ?></th>
-                                        <th><?php echo $this->lang->line('quiz'); ?></th>
-                                        <th width="150"><?php echo $this->lang->line('questions'); ?></th>
-                                        <th><?php echo $this->lang->line('attempt'); ?></th>
-                                        <th><?php echo $this->lang->line('exam_from'); ?></th>
-                                        <th><?php echo $this->lang->line('exam_to') ?></th>
-                                        <th><?php echo $this->lang->line('duration') ?></th>
-                                        <th><?php echo $this->lang->line('exam_published'); ?></th>
-                                        <th><?php echo $this->lang->line('result_published'); ?></th>
-                                        <th><?php echo $this->lang->line('description'); ?></th>
-                                        <th class="pull-right noExport"><?php echo $this->lang->line('action'); ?></th>
-                                    </tr>
-                                </thead>
-                               <tbody>
-                               </tbody>
-                            </table>
-                         </div>
-                        </div>
-                    </div>
-                        </div>
-
-                          <div class="tab-pane" id="tab_3">
-                            <form action="<?php echo site_url('admin/onlineexam/ajax_delete') ?>" method="POST" id="deletebulk">
-                             <div class="box-body p0">
-                        <div class="mailbox-messages">
-                               <div class="checkbox" >
-                                     <label><input type="checkbox" name="checkAll"> <b><?php echo $this->lang->line('select_all'); ?></b> </label>
-
-                                    <?php if ($this->rbac->hasPrivilege('online_examination', 'can_delete')) {?>
-                                    <button type="submit" class="btn btn-primary btn-sm pull-right mb10" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i>  <?php echo $this->lang->line('please_wait'); ?>"> <?php echo $this->lang->line('delete') ?></button>
-                                    <?php }?>
+                        <div class="tab-pane active" id="tab_1">
+                            <div class="box-body p0">
+                                <div class="mailbox-messages">
+                                    <div class="table-responsive overflow-visible-lg">
+                                        <table class="table table-striped table-bordered table-hover exam-list" data-export-title="<?php echo $this->lang->line('online_exam_list'); ?>">
+                                            <thead>
+                                                <tr>
+                                                    <th><?php echo $this->lang->line('exam'); ?></th>
+                                                    <th><?php echo $this->lang->line('quiz'); ?></th>
+                                                    <th width="150"><?php echo $this->lang->line('questions'); ?></th>
+                                                    <th><?php echo $this->lang->line('attempt'); ?></th>
+                                                    <th><?php echo $this->lang->line('exam_from'); ?></th>
+                                                    <th><?php echo $this->lang->line('exam_to') ?></th>
+                                                    <th><?php echo $this->lang->line('duration') ?></th>
+                                                    <th><?php echo $this->lang->line('exam_published'); ?></th>
+                                                    <th><?php echo $this->lang->line('result_published'); ?></th>
+                                                    <th><?php echo $this->lang->line('description'); ?></th>
+                                                    <th class="pull-right noExport"><?php echo $this->lang->line('action'); ?></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            <div class="table-responsive overflow-visible-lg">
-                                 <table class="table table-striped table-bordered table-hover closed-exam-list" data-export-title="<?php echo $this->lang->line('online_exam_list'); ?>">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th><?php echo $this->lang->line('exam'); ?></th>
-                                        <th><?php echo $this->lang->line('quiz'); ?></th>
-                                        <th width="150"><?php echo $this->lang->line('questions'); ?></th>
-                                        <th><?php echo $this->lang->line('attempt'); ?></th>
-                                        <th><?php echo $this->lang->line('exam_from'); ?></th>
-                                        <th><?php echo $this->lang->line('exam_to') ?></th>
-                                        <th><?php echo $this->lang->line('duration') ?></th>
-                                        <th><?php echo $this->lang->line('exam_published'); ?></th>
-                                        <th><?php echo $this->lang->line('result_published'); ?></th>
-                                        <th><?php echo $this->lang->line('description'); ?></th>
-                                        <th class="pull-right noExport"><?php echo $this->lang->line('action'); ?></th>
-                                    </tr>
-                                </thead>
-                               <tbody>
-                               </tbody>
-                            </table>
-                         </div>
+                            </div>
                         </div>
-                    </div>
-                </form>
-                         </div>
+
+                        <div class="tab-pane" id="tab_3">
+                            <form action="<?php echo site_url('admin/onlineexam/ajax_delete') ?>" method="POST" id="deletebulk">
+                                <div class="box-body p0">
+                                    <div class="mailbox-messages">
+                                        <div class="checkbox">
+                                            <label><input type="checkbox" name="checkAll"> <b><?php echo $this->lang->line('select_all'); ?></b> </label>
+
+                                            <?php if ($this->rbac->hasPrivilege('online_examination', 'can_delete')) { ?>
+                                                <button type="submit" class="btn btn-primary btn-sm pull-right mb10" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i>  <?php echo $this->lang->line('please_wait'); ?>"> <?php echo $this->lang->line('delete') ?></button>
+                                            <?php } ?>
+                                        </div>
+                                        <div class="table-responsive overflow-visible-lg">
+                                            <table class="table table-striped table-bordered table-hover closed-exam-list" data-export-title="<?php echo $this->lang->line('online_exam_list'); ?>">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th><?php echo $this->lang->line('exam'); ?></th>
+                                                        <th><?php echo $this->lang->line('quiz'); ?></th>
+                                                        <th width="150"><?php echo $this->lang->line('questions'); ?></th>
+                                                        <th><?php echo $this->lang->line('attempt'); ?></th>
+                                                        <th><?php echo $this->lang->line('exam_from'); ?></th>
+                                                        <th><?php echo $this->lang->line('exam_to') ?></th>
+                                                        <th><?php echo $this->lang->line('duration') ?></th>
+                                                        <th><?php echo $this->lang->line('exam_published'); ?></th>
+                                                        <th><?php echo $this->lang->line('result_published'); ?></th>
+                                                        <th><?php echo $this->lang->line('description'); ?></th>
+                                                        <th class="pull-right noExport"><?php echo $this->lang->line('action'); ?></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    </section>
+</div>
+</section>
 </div>
 
 <?php
@@ -189,7 +305,7 @@ function findOption($questionOpt, $find)
 <div id="myModal" class="modal fade" role="dialog">
     <div class="modal-dialog modal-lg">
         <!-- Modal content-->
-        <div class="modal-content" >
+        <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title"><?php echo $this->lang->line('exam') ?></h4>
@@ -197,186 +313,214 @@ function findOption($questionOpt, $find)
             <form action="<?php echo site_url('admin/onlineexam/add'); ?>" method="POST" id="formsubject">
                 <div class="modal-body">
                     <input type="hidden" name="recordid" value="0">
-                <div class="row">
-                    <div class="col-sm-12">
-                    <div class="form-group">
-                  <label class="checkbox-inline"><input type="checkbox" class="is_quiz" value="1" name="is_quiz"><?php echo $this->lang->line('quiz'); ?></label>
-                  <span class="help-block"><?php echo $this->lang->line('check_on_quiz_message'); ?></span>
-                 </div>
-                     </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="checkbox-inline"><input type="checkbox" class="is_quiz" value="1" name="is_quiz"><?php echo $this->lang->line('quiz'); ?></label>
+                                <span class="help-block"><?php echo $this->lang->line('check_on_quiz_message'); ?></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="row">
-                    <div class="col-sm-8">
-                        <div class="form-group">
-                            <label for="exam"><?php echo $this->lang->line('exam_title'); ?></label><small class="req"> *</small>
-                            <input type="text" class="form-control" id="exam" name="exam">
-                            <span class="text text-danger exam_error"></span>
+                        <div class="col-sm-8">
+                            <div class="form-group">
+                                <label for="exam"><?php echo $this->lang->line('exam_title'); ?></label><small class="req"> *</small>
+                                <input type="text" class="form-control" id="exam" name="exam">
+                                <span class="text text-danger exam_error"></span>
+                            </div>
                         </div>
-                     </div>
-                    <div class="col-sm-4">
-                        <div class="form-group">
-                            <label for="exam_subject_id"><?php echo $this->lang->line('subject'); ?></label>
-                            <select class="form-control" id="exam_subject_id" name="subject_id">
-                                <option value="">None (several subjects)</option>
-                                <?php foreach ($subjectlist as $sub) { ?>
-                                    <option value="<?php echo (int) $sub['id']; ?>"><?php echo html_escape($sub['name'] . ($sub['code'] ? ' (' . $sub['code'] . ')' : '')); ?></option>
-                                <?php } ?>
-                            </select>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="exam_subject_id"><?php echo $this->lang->line('subject'); ?></label><small class="req"> *</small>
+                                <select class="form-control" id="exam_subject_id" name="subject_id" required>
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    <?php foreach ($subjectlist as $sub) { ?>
+                                        <option value="<?php echo (int) $sub['id']; ?>"><?php echo html_escape($sub['name'] . ($sub['code'] ? ' (' . $sub['code'] . ')' : '')); ?></option>
+                                    <?php } ?>
+                                </select>
+                                <span class="text text-danger subject_id_error"></span>
+                            </div>
                         </div>
-                     </div>
                     </div>
                     <div class="row">
-                <div class="col-sm-4">
-                    <div class="form-group">
-                        <label for="exam_from"><?php echo $this->lang->line('exam_from'); ?></label><small class="req"> *</small>
-                            <div class="input-group">
-                            <input class="form-control tddm200 datetime_twelve_hour" name="exam_from" type="text" id="exam_from" >
-                            <span class="input-group-addon" id="basic-addon2">
-                                <i class="fa fa-calendar">
-                                </i>
-                            </span>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="exam_from"><?php echo $this->lang->line('exam_from'); ?></label><small class="req"> *</small>
+                                <div class="input-group">
+                                    <input class="form-control tddm200 datetime_twelve_hour" name="exam_from" type="text" id="exam_from">
+                                    <span class="input-group-addon" id="basic-addon2">
+                                        <i class="fa fa-calendar">
+                                        </i>
+                                    </span>
+                                </div>
+                                <span class="text text-danger exam_from_error"></span>
+                            </div>
                         </div>
-                        <span class="text text-danger exam_from_error"></span>
-                    </div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="form-group">
-                        <label for="exam_to"><?php echo $this->lang->line('exam_to'); ?></label><small class="req"> *</small>
-                     <div class="input-group">
-                            <input class="form-control tddm200 datetime_twelve_hour" name="exam_to" type="text" id="exam_to" >
-                            <span class="input-group-addon" id="basic-addon2">
-                                <i class="fa fa-calendar">
-                                </i>
-                            </span>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="exam_to"><?php echo $this->lang->line('exam_to'); ?></label><small class="req"> *</small>
+                                <div class="input-group">
+                                    <input class="form-control tddm200 datetime_twelve_hour" name="exam_to" type="text" id="exam_to">
+                                    <span class="input-group-addon" id="basic-addon2">
+                                        <i class="fa fa-calendar">
+                                        </i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                    <div class="col-sm-4">
-                    <div class="form-group">
-                        <label for="auto_publish_date"><?php echo $this->lang->line('auto_result_publish_date') ?></label>
-                          <div class="input-group">
-                            <input class="form-control tddm200 datetime_twelve_hour" name="auto_publish_date" type="text" id="auto_publish_date" autocomplete="off">
-                            <span class="input-group-addon" id="basic-addon2">
-                                <i class="fa fa-calendar">
-                                </i>
-                            </span>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="auto_publish_date"><?php echo $this->lang->line('auto_result_publish_date') ?></label>
+                                <div class="input-group">
+                                    <input class="form-control tddm200 datetime_twelve_hour" name="auto_publish_date" type="text" id="auto_publish_date" autocomplete="off">
+                                    <span class="input-group-addon" id="basic-addon2">
+                                        <i class="fa fa-calendar">
+                                        </i>
+                                    </span>
+                                </div>
+                                <span class="help-block js-quiz-no-date" style="display:none;margin-bottom:0">Not used for a quiz: its result shows as soon as the student submits.</span>
+                            </div>
                         </div>
-                        <span class="help-block js-quiz-no-date" style="display:none;margin-bottom:0">Not used for a quiz: its result shows as soon as the student submits.</span>
-                    </div>
-                </div>
                     </div>
                     <div class="row">
-                <div class="col-sm-3">
-                    <div class="form-group">
-                        <label for="duration"><?php echo $this->lang->line('time_duration'); ?></label><small class="req"> *</small>
-                        <input type="text" class="form-control timepicker" id="duration" name="duration">
-                    </div>
-                </div>
-                <div class="col-sm-3">
-                    <div class="form-group">
-                        <label for="attempt"><?php echo $this->lang->line('attempt'); ?></label><small class="req"> *</small>
-                        <input type="number" min="1" class="form-control" id="attempt" name="attempt" value="1">
-                        <span class="text text-danger attempt_error"></span>
-                    </div>
-                </div>
-                <div class="col-sm-3">
-                      <div class="form-group">
-                        <label for="attempt"><?php echo $this->lang->line('passing_percentage'); ?></label><small class="req"> *</small>
-                        <input type="number" min="1" max="100" class="form-control" id="passing_percentage" name="passing_percentage">
-                        <span class="text text-danger passing_percentage_error"></span>
-                    </div>
-                </div>
-                    <div class="col-sm-3">
-                      <div class="form-group">
-                        <label for="word_limit"><?php echo $this->lang->line('answer_word_limit'); ?></label>
-                        <input type="number" min="-1" step="1" class="form-control" id="word_limit" value="-1" name="word_limit">
-                        <span class="text text-muted"><?php echo $this->lang->line('set_minus_one_for_no_limit'); ?> Applies to written (descriptive) answers.</span>
-                    </div>
-                </div>
-                    </div>
-                <div class="row">
-                   <div class="form-group col-sm-12">
-                                     <label class="checkbox-inline">
-<input type="checkbox" class="is_active" name="is_active" value="1">
-                                            <?php echo $this->lang->line('publish_exam'); ?>
-                                        </label>
-
-                                     <label class="checkbox-inline">
-<input type="checkbox" class="publish_result" name="publish_result" value="1">
-                                           <?php echo $this->lang->line('publish_result'); ?>
-                                        </label>
-
-                                     <label class="checkbox-inline">
-<input type="checkbox" class="is_neg_marking" name="is_neg_marking" value="1">
-                                           <?php echo $this->lang->line('negative_marking') ?>
-                                        </label>
-
-                                      <label class="checkbox-inline">
-<input type="checkbox" class="is_marks_display" name="is_marks_display" value="1">
-                                          <?php echo $this->lang->line('display_marks_in_exam'); ?>
-                                        </label>
-
-                                      <label class="checkbox-inline">
-<input type="checkbox" class="is_random_question" name="is_random_question" value="1">
-                                         <?php echo $this->lang->line('random_question_order'); ?>
-                                        </label>
-
-                                      <label class="checkbox-inline" title="Each student sees options A-E in a different order">
-<input type="checkbox" class="is_random_option" name="is_random_option" value="1">
-                                         Shuffle answer options
-                                        </label>
-
-                                      <label class="checkbox-inline" title="Students cannot copy, paste, right-click or select the questions">
-<input type="checkbox" class="block_copy" name="block_copy" value="1" checked>
-                                         Block copy, paste and right-click
-                                        </label>
-                                      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                                        <label for="max_tab_switches" style="margin:0;font-weight:500">Submit the exam when a student leaves the exam page</label>
-                                        <input type="number" id="max_tab_switches" name="max_tab_switches" class="form-control input-sm" style="width:80px" min="0" max="50" value="3">
-                                        <span class="text-muted small">times (0 = only record it). Every time is recorded and the student is warned.</span>
-                                      </div>
-                                      <div class="cbt-sec">
-                                        <b><i class="fa fa-shield"></i> Exam security</b>
-                                        <label class="checkbox-inline" title="Another device can't open the exam once it has started; the invigilator can move it"><input type="checkbox" name="lock_device" value="1"> Keep each student's exam on one device</label>
-                                        <label class="checkbox-inline" title="Phones (iPhone) can't go full screen: there only leaving the page is counted"><input type="checkbox" name="require_fullscreen" value="1"> Full screen (leaving it counts as leaving the page)</label>
-                                        <div class="cbt-sec-row">
-                                          <label>Each student answers <input type="number" name="questions_per_student" min="0" max="500" value="0" class="form-control input-sm" style="width:80px;display:inline-block"> of the questions</label>
-                                          <span class="text-muted small">0 = all. Each student gets their own random set, with the same mix of easy, medium and hard as the exam.</span>
-                                        </div>
-                                        <div class="cbt-sec-row">
-                                          <label>Exam PIN <input type="text" name="exam_pin" maxlength="12" class="form-control input-sm" style="width:120px;display:inline-block;letter-spacing:.15em" autocomplete="off"></label>
-                                          <button type="button" class="btn btn-default btn-xs" onclick="this.form.exam_pin.value=Math.random().toString().slice(2,8)">New PIN</button>
-                                          <span class="text-muted small">Read it out in the hall: the exam only starts with it. Empty = no PIN.</span>
-                                        </div>
-                                        <div class="cbt-sec-row">
-                                          <label style="display:block">Only on the school's network <span class="text-muted small">(IP addresses or prefixes, e.g. 102.89.34.12 or 102.89.; empty = anywhere)</span></label>
-                                          <input type="text" name="allowed_ips" maxlength="500" class="form-control input-sm" style="max-width:420px;display:inline-block">
-                                          <button type="button" class="btn btn-default btn-xs" onclick="var f=this.form.allowed_ips;f.value=(f.value?f.value+', ':'')+'<?php echo html_escape($this->cbt_integrity->client_ip()); ?>'">Add this network (<?php echo html_escape($this->cbt_integrity->client_ip()); ?>)</button>
-                                        </div>
-                                        <div class="cbt-sec-row">
-                                          <label class="checkbox-inline" style="margin:0"><input type="checkbox" name="webcam" value="1"> Webcam photos every <input type="number" name="webcam_minutes" min="1" max="30" value="3" class="form-control input-sm" style="width:60px;display:inline-block"> minutes</label>
-                                          <span class="text-muted small">Also when the student leaves the page. Only staff see them (Invigilate page). Get parents' consent before using this.</span>
-                                        </div>
-                                      </div>
-
-                </div>
-
-                </div>
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="form-group" >
-                            <label for="description"><?php echo $this->lang->line('description'); ?><small class="req"> *</small></label>
-                            <textarea class="form-control" id="description" name="description"></textarea>
-                            <span class="text text-danger description_error"></span>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="duration"><?php echo $this->lang->line('time_duration'); ?></label><small class="req"> *</small>
+                                <input type="text" class="form-control timepicker" id="duration" name="duration">
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="attempt"><?php echo $this->lang->line('attempt'); ?></label><small class="req"> *</small>
+                                <input type="number" min="1" class="form-control" id="attempt" name="attempt" value="1">
+                                <span class="text text-danger attempt_error"></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="attempt"><?php echo $this->lang->line('passing_percentage'); ?></label><small class="req"> *</small>
+                                <input type="number" min="1" max="100" class="form-control" id="passing_percentage" name="passing_percentage">
+                                <span class="text text-danger passing_percentage_error"></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label for="word_limit"><?php echo $this->lang->line('answer_word_limit'); ?></label>
+                                <input type="number" min="-1" step="1" class="form-control" id="word_limit" value="-1" name="word_limit">
+                                <span class="text text-muted"><?php echo $this->lang->line('set_minus_one_for_no_limit'); ?> Applies to written (descriptive) answers.</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('class'); ?></label>
+                                <div id="exam_class_previous"></div>
+                                <div id="exam_classes" style="max-height:160px;overflow:auto;border:1px solid #d2d6de;padding:8px 10px;border-radius:3px;background:#fff">
+                                    <?php if (empty($classList)) { ?>
+                                        <span class="text-muted">No classes yet.</span>
+                                    <?php } else { ?>
+                                        <label style="display:block;margin:0 0 6px;font-weight:600">
+                                            <input type="checkbox" id="exam_classes_all"> All classes
+                                        </label>
+                                        <?php foreach ($classList as $c) { ?>
+                                            <label style="display:block;margin:0 0 4px;font-weight:normal">
+                                                <input type="checkbox" class="js-exam-class" name="class_ids[]" value="<?php echo (int) $c['id']; ?>">
+                                                <?php echo html_escape($c['class']); ?>
+                                            </label>
+                                        <?php } ?>
+                                    <?php } ?>
+                                </div>
+                                <span class="help-block">Tick the classes that sit this exam. Every active student in them (all sections) is assigned when you save. On edit, unticking a class takes off students who have not started. You can still add or remove individuals on the Assign page.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-sm-12">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" class="is_active" name="is_active" value="1">
+                                <?php echo $this->lang->line('publish_exam'); ?>
+                            </label>
+
+                            <label class="checkbox-inline">
+                                <input type="checkbox" class="publish_result" name="publish_result" value="1">
+                                <?php echo $this->lang->line('publish_result'); ?>
+                            </label>
+
+                            <label class="checkbox-inline">
+                                <input type="checkbox" class="is_neg_marking" name="is_neg_marking" value="1">
+                                <?php echo $this->lang->line('negative_marking') ?>
+                            </label>
+
+                            <label class="checkbox-inline">
+                                <input type="checkbox" class="is_marks_display" name="is_marks_display" value="1">
+                                <?php echo $this->lang->line('display_marks_in_exam'); ?>
+                            </label>
+
+                            <label class="checkbox-inline">
+                                <input type="checkbox" class="is_random_question" name="is_random_question" value="1">
+                                <?php echo $this->lang->line('random_question_order'); ?>
+                            </label>
+
+                            <label class="checkbox-inline" title="Each student sees options A-E in a different order">
+                                <input type="checkbox" class="is_random_option" name="is_random_option" value="1">
+                                Shuffle answer options
+                            </label>
+
+                            <label class="checkbox-inline" title="Students cannot copy, paste, right-click or select the questions">
+                                <input type="checkbox" class="block_copy" name="block_copy" value="1" checked>
+                                Block copy, paste and right-click
+                            </label>
+                            <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                                <label for="max_tab_switches" style="margin:0;font-weight:500">Submit the exam when a student leaves the exam page</label>
+                                <input type="number" id="max_tab_switches" name="max_tab_switches" class="form-control input-sm" style="width:80px" min="0" max="50" value="3">
+                                <span class="text-muted small">times (0 = only record it). Every time is recorded and the student is warned.</span>
+                            </div>
+                            <div class="cbt-sec">
+                                <b><i class="fa fa-shield"></i> Exam security</b>
+                                <label class="checkbox-inline" title="Another device can't open the exam once it has started; the invigilator can move it"><input type="checkbox" name="lock_device" value="1"> Keep each student's exam on one device</label>
+                                <label class="checkbox-inline" title="Phones (iPhone) can't go full screen: there only leaving the page is counted"><input type="checkbox" name="require_fullscreen" value="1"> Full screen (leaving it counts as leaving the page)</label>
+                                <div class="cbt-sec-row">
+                                    <label>Each student answers <input type="number" name="questions_per_student" min="0" max="500" value="0" class="form-control input-sm" style="width:80px;display:inline-block"> of the questions</label>
+                                    <span class="text-muted small">0 = all. Each student gets their own random set, with the same mix of easy, medium and hard as the exam.</span>
+                                </div>
+                                <div class="cbt-sec-row">
+                                    <label>Exam PIN <input type="text" name="exam_pin" maxlength="12" class="form-control input-sm" style="width:120px;display:inline-block;letter-spacing:.15em" autocomplete="off"></label>
+                                    <button type="button" class="btn btn-default btn-xs" onclick="this.form.exam_pin.value=Math.random().toString().slice(2,8)">New PIN</button>
+                                    <span class="text-muted small">Read it out in the hall: the exam only starts with it. Empty = no PIN.</span>
+                                </div>
+                                <div class="cbt-sec-row">
+                                    <label style="display:block">Only on the school's network <span class="text-muted small">(IP addresses or prefixes, e.g. 102.89.34.12 or 102.89.; empty = anywhere)</span></label>
+                                    <input type="text" name="allowed_ips" maxlength="500" class="form-control input-sm" style="max-width:420px;display:inline-block">
+                                    <button type="button" class="btn btn-default btn-xs" onclick="var f=this.form.allowed_ips;f.value=(f.value?f.value+', ':'')+'<?php echo html_escape($this->cbt_integrity->client_ip()); ?>'">Add this network (<?php echo html_escape($this->cbt_integrity->client_ip()); ?>)</button>
+                                </div>
+                                <div class="cbt-sec-row">
+                                    <label class="checkbox-inline" style="margin:0"><input type="checkbox" name="webcam" value="1"> Webcam photos every <input type="number" name="webcam_minutes" min="1" max="30" value="3" class="form-control input-sm" style="width:60px;display:inline-block"> minutes</label>
+                                    <span class="text-muted small">Also when the student leaves the page. Only staff see them (Invigilate page). Get parents' consent before using this.</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label for="description"><?php echo $this->lang->line('description'); ?><small class="req"> *</small></label>
+                                <textarea class="form-control" id="description" name="description"></textarea>
+                                <span class="text text-danger description_error"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('saving') ?>"><?php echo $this->lang->line('save') ?></button>
                 </div>
             </form>
-           </div>
+        </div>
     </div>
 </div>
 
@@ -385,120 +529,123 @@ function findOption($questionOpt, $find)
         <!-- Modal content-->
         <div class="modal-content">
             <div class="modal-header">
-                <a  data-backdrop="static" data-keyboard="false" class="close" data-dismiss="modal">&times;</a>
+                <a data-backdrop="static" data-keyboard="false" class="close" data-dismiss="modal">&times;</a>
                 <h4 class="modal-title"><?php echo $this->lang->line('select_questions'); ?>
                     <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) { ?>
                         <a href="#" id="write_questions_link" class="btn btn-primary btn-xs" style="margin-left:10px"><i class="fa fa-list-ol"></i> Write new questions for this exam</a>
-                    <?php } ?></h4>
+                    <?php } ?>
+                </h4>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="modal_exam_id" value="0" id="modal_exam_id">
                 <input type="hidden" name="modal_is_quiz" value="0" id="modal_is_quiz">
                 <form action="" method="POST" accept-charset="utf-8" id="form_search">
-                <div class="row">
-                       <div class="col-md-6 col-sm-6">
-                        <div class="form-group">
-                            <label><?php echo $this->lang->line('seach_by_keyword'); ?></label>
-                            <input type="text" class="form-control" name="keyword" id="keyword" >
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('seach_by_keyword'); ?></label>
+                                <input type="text" class="form-control" name="keyword" id="keyword">
+                            </div>
                         </div>
-                     </div>
-                     <div class="col-md-3 col-sm-6">
-                        <div class="form-group">
-                            <label><?php echo $this->lang->line('question_type'); ?></label>
-                           <select class="form-control" name="question_type" id="question_type">
-                      <option value=""><?php echo $this->lang->line('select'); ?></option>
-                            <?php
-foreach ($question_type as $question_type_key => $question_type_value) {
-    ?>
-    <option value="<?php echo $question_type_key; ?>"><?php echo $question_type_value; ?></option>
-                                <?php
-}
-?>
-                        </select>
-                        </div>
-                     </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="form-group">
-                            <label><?php echo $this->lang->line('question_level'); ?></label>
-                            <select class="form-control" name="question_level" id="question_level">
-                       <option value=""><?php echo $this->lang->line('select'); ?></option>
-                            <?php
-foreach ($question_level as $question_level_key => $question_level_value) {
-    ?>
-    <option value="<?php echo $question_level_key; ?>"><?php echo $question_level_value; ?></option>
-                                <?php
-}
-?>
-                        </select>
-                        </div>
-                     </div>
-                     <div class="col-md-3 col-sm-6">
-                        <div class="form-group">
-                            <label><?php echo $this->lang->line('subject') ?></label>
-                            <select class="form-control" name="search_box" id="search_box" style="display: inline-block;">
-                                <option value=""><?php echo $this->lang->line('select') ?></option>
-                                        <?php
-foreach ($subjectlist as $subject_key => $subject_value) {
-    ?>
-                                    <option value="<?php echo $subject_value['id']; ?>"><?php echo $subject_value['name']; ?> <?php if($subject_value['code']){ echo '('.$subject_value['code'].')'; } ?></option>
-                                    <?php
-}
-?>
-
-                            </select>
-                        </div>
-                     </div>
-                      <div class="col-md-3 col-sm-6">
-                        <div class="form-group">
-                            <label><?php echo $this->lang->line('class') ?></label>
-                            <select class="form-control" name="class_id" id="class_id">
-                            <option value=""><?php echo $this->lang->line('select'); ?></option>
-                            <?php
-foreach ($classList as $class_key => $class_value) {
-    ?>
-    <option value="<?php echo $class_value['id']; ?>"><?php echo $class_value['class']; ?></option>
-                                <?php
-}
-?>
-                        </select>
-                        </div>
-                     </div>
                         <div class="col-md-3 col-sm-6">
-                        <div class="form-group">
-                            <label><?php echo $this->lang->line('section') ?></label>
-                          <select  id="section_id" name="section_id" class="form-control" >
-                         <option value=""><?php echo $this->lang->line('select'); ?></option>
-                    </select>
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('question_type'); ?></label>
+                                <select class="form-control" name="question_type" id="question_type">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    <?php
+                                    foreach ($question_type as $question_type_key => $question_type_value) {
+                                    ?>
+                                        <option value="<?php echo $question_type_key; ?>"><?php echo $question_type_value; ?></option>
+                                    <?php
+                                    }
+                                    ?>
+                                </select>
+                            </div>
                         </div>
-                     </div>
-                    <div class="col-md-2 col-sm-6">
-                        <label style="display: block; visibility:hidden;"><?php echo $this->lang->line('search'); ?></label>
-                        <button type="button" class="btn btn-info btn-sm post_search_submit"><?php echo $this->lang->line('search'); ?></button>
-                    </div>
-                 </form>
-                </div><!-- ./row -->
-                <div id="random_draw" style="background:#f8fafc;border:1px solid #e5e9f0;border-radius:12px;padding:10px 14px;margin:4px 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
-                    <div style="flex-basis:100%;font-weight:700"><i class="fa fa-random"></i> Random draw <small class="text-muted" style="font-weight:400">from the subject (and class) chosen above, questions not yet in this exam</small></div>
-                    <?php foreach ($question_level as $lk => $lv) { ?>
-                        <label style="margin:0;font-weight:500;font-size:12px"><?php echo html_escape($lv); ?><input type="number" min="0" max="200" value="0" class="form-control input-sm rd-level" data-level="<?php echo html_escape($lk); ?>" style="width:80px"></label>
-                    <?php } ?>
-                    <label style="margin:0;font-weight:500;font-size:12px">Marks each<input type="number" min="0.25" step="0.25" value="1" id="rd_marks" class="form-control input-sm" style="width:80px"></label>
-                    <label style="margin:0;font-weight:500;font-size:12px">Negative<input type="number" min="0" step="0.25" value="0" id="rd_neg" class="form-control input-sm" style="width:80px"></label>
-                    <button type="button" class="btn btn-primary btn-sm" id="rd_go"><i class="fa fa-magic"></i> Draw questions</button>
-                </div>
-                <div class="search_box_result quescroll">
-                </div>
-                <div class="row">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('question_level'); ?></label>
+                                <select class="form-control" name="question_level" id="question_level">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    <?php
+                                    foreach ($question_level as $question_level_key => $question_level_value) {
+                                    ?>
+                                        <option value="<?php echo $question_level_key; ?>"><?php echo $question_level_value; ?></option>
+                                    <?php
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('subject') ?></label>
+                                <select class="form-control" name="search_box" id="search_box" style="display: inline-block;">
+                                    <option value=""><?php echo $this->lang->line('select') ?></option>
+                                    <?php
+                                    foreach ($subjectlist as $subject_key => $subject_value) {
+                                    ?>
+                                        <option value="<?php echo $subject_value['id']; ?>"><?php echo $subject_value['name']; ?> <?php if ($subject_value['code']) {
+                                                                                                                                        echo '(' . $subject_value['code'] . ')';
+                                                                                                                                    } ?></option>
+                                    <?php
+                                    }
+                                    ?>
+
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('class') ?></label>
+                                <select class="form-control" name="class_id" id="class_id">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    <?php
+                                    foreach ($classList as $class_key => $class_value) {
+                                    ?>
+                                        <option value="<?php echo $class_value['id']; ?>"><?php echo $class_value['class']; ?></option>
+                                    <?php
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('section') ?></label>
+                                <select id="section_id" name="section_id" class="form-control">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-6">
+                            <label style="display: block; visibility:hidden;"><?php echo $this->lang->line('search'); ?></label>
+                            <button type="button" class="btn btn-info btn-sm post_search_submit"><?php echo $this->lang->line('search'); ?></button>
+                        </div>
+                </form>
+            </div><!-- ./row -->
+            <div id="random_draw" style="background:#f8fafc;border:1px solid #e5e9f0;border-radius:12px;padding:10px 14px;margin:4px 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+                <div style="flex-basis:100%;font-weight:700"><i class="fa fa-random"></i> Random draw <small class="text-muted" style="font-weight:400">from the subject (and class) chosen above, questions not yet in this exam</small></div>
+                <?php foreach ($question_level as $lk => $lv) { ?>
+                    <label style="margin:0;font-weight:500;font-size:12px"><?php echo html_escape($lv); ?><input type="number" min="0" max="200" value="0" class="form-control input-sm rd-level" data-level="<?php echo html_escape($lk); ?>" style="width:80px"></label>
+                <?php } ?>
+                <label style="margin:0;font-weight:500;font-size:12px">Marks each<input type="number" min="0.25" step="0.25" value="1" id="rd_marks" class="form-control input-sm" style="width:80px"></label>
+                <label style="margin:0;font-weight:500;font-size:12px">Negative<input type="number" min="0" step="0.25" value="0" id="rd_neg" class="form-control input-sm" style="width:80px"></label>
+                <button type="button" class="btn btn-primary btn-sm" id="rd_go"><i class="fa fa-magic"></i> Draw questions</button>
+            </div>
+            <div class="search_box_result quescroll">
+            </div>
+            <div class="row">
                 <div class="col-sm-12 col-md-5">
-                <div class="pt20 font-weight-bold"><?php echo $this->lang->line('showing'); ?> <span class="row_from"></span> <?php echo $this->lang->line('to'); ?> <span class="row_to"></span> <?php echo $this->lang->line('of'); ?> <span class="row_count"></span> <?php echo $this->lang->line('search'); ?></div>
+                    <div class="pt20 font-weight-bold"><?php echo $this->lang->line('showing'); ?> <span class="row_from"></span> <?php echo $this->lang->line('to'); ?> <span class="row_to"></span> <?php echo $this->lang->line('of'); ?> <span class="row_count"></span> <?php echo $this->lang->line('search'); ?></div>
                 </div>
                 <div class="col-sm-12 col-md-7 search_box_pagination">
 
                 </div>
-                </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <div id="myQuestionListModal" class="modal fade">
@@ -510,120 +657,134 @@ foreach ($classList as $class_key => $class_value) {
                 <h4 class="modal-title"></h4>
             </div>
             <div class="modal-body">
-               <div class="question_list_result quescroll">
-               </div>
-           </div><!-- ./row -->
-        </div>
+                <div class="question_list_result quescroll">
+                </div>
+            </div><!-- ./row -->
         </div>
     </div>
+</div>
 
 <div class="modal fade" id="mydeleteModal">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-        <form action="<?php echo site_url('admin/onlineexam/deleteExamQuestions') ?>" id="delete_question" method="POST">
-           <input type="hidden" value="0" id="question_id" name="question_id"/>
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel"><?php echo $this->lang->line('delete_question'); ?></h4>
-      </div>
-      <div class="modal-body">
-        <?php echo $this->lang->line('delete_confirm'); ?>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo $this->lang->line('close') ?></button>
-         <button type="submit" class="btn btn-primary pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i><?php echo $this->lang->line('please_wait'); ?>" value=""><?php echo $this->lang->line('delete'); ?></button>
-     </div>
-        </form>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="<?php echo site_url('admin/onlineexam/deleteExamQuestions') ?>" id="delete_question" method="POST">
+                <input type="hidden" value="0" id="question_id" name="question_id" />
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"><?php echo $this->lang->line('delete_question'); ?></h4>
+                </div>
+                <div class="modal-body">
+                    <?php echo $this->lang->line('delete_confirm'); ?>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo $this->lang->line('close') ?></button>
+                    <button type="submit" class="btn btn-primary pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i><?php echo $this->lang->line('please_wait'); ?>" value=""><?php echo $this->lang->line('delete'); ?></button>
+                </div>
+            </form>
+        </div>
     </div>
-    </div>
-  </div>
+</div>
 
 <!-- Modal -->
- <div id="myGenerateRankModal" class="modal fade" role="dialog">
-  <div class="modal-dialog modal-lg">
-    <!-- Modal content-->
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title"></h4>
-      </div>
-      <div class="modal-body modalminheight">
+<div id="myGenerateRankModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body modalminheight">
 
-      </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- Share the exam link (cbt/<id>): students sign in and the exam opens. -->
 <div id="shareExamModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Share exam link</h4>
-      </div>
-      <div class="modal-body">
-        <p>Send this link to the students. They open it, sign in with their <b>student</b> username and password, and the exam starts straight away. Only students assigned to the exam can take it, and only while it is open.</p>
-        <div class="alert alert-warning js-share-inactive" style="display:none">This exam is not active yet: edit the exam and tick <b>Publish Exam</b> so students can see it.</div>
-        <label for="share_link">Exam link</label>
-        <div class="input-group">
-          <input type="text" id="share_link" class="form-control" readonly onclick="this.select()">
-          <span class="input-group-btn"><button type="button" class="btn btn-primary js-copy" data-target="#share_link"><i class="fa fa-copy"></i> Copy link</button></span>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Share exam link</h4>
+            </div>
+            <div class="modal-body">
+                <p>Send this link to the students. They open it, sign in with their <b>student</b> username and password, and the exam starts straight away. Only students assigned to the exam can take it, and only while it is open.</p>
+                <div class="alert alert-warning js-share-inactive" style="display:none">This exam is not active yet: edit the exam and tick <b>Publish Exam</b> so students can see it.</div>
+                <label for="share_link">Exam link</label>
+                <div class="input-group">
+                    <input type="text" id="share_link" class="form-control" readonly onclick="this.select()">
+                    <span class="input-group-btn"><button type="button" class="btn btn-primary js-copy" data-target="#share_link"><i class="fa fa-copy"></i> Copy link</button></span>
+                </div>
+                <label for="share_message" style="margin-top:15px">Message to send <span class="text-muted" style="font-weight:normal">(WhatsApp, SMS, class group)</span></label>
+                <textarea id="share_message" class="form-control" rows="5" readonly onclick="this.select()"></textarea>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-success js-share-whatsapp" href="#" target="_blank" rel="noopener"><i class="fa fa-whatsapp"></i> Share on WhatsApp</a>
+                <button type="button" class="btn btn-default js-copy" data-target="#share_message"><i class="fa fa-copy"></i> Copy message</button>
+            </div>
         </div>
-        <label for="share_message" style="margin-top:15px">Message to send <span class="text-muted" style="font-weight:normal">(WhatsApp, SMS, class group)</span></label>
-        <textarea id="share_message" class="form-control" rows="5" readonly onclick="this.select()"></textarea>
-      </div>
-      <div class="modal-footer">
-        <a class="btn btn-success js-share-whatsapp" href="#" target="_blank" rel="noopener"><i class="fa fa-whatsapp"></i> Share on WhatsApp</a>
-        <button type="button" class="btn btn-default js-copy" data-target="#share_message"><i class="fa fa-copy"></i> Copy message</button>
-      </div>
     </div>
-  </div>
 </div>
 
 <script>
-    $(document).on('click', '.share_exam_link', function () {
-        var b = $(this), link = b.data('link');
-        var msg = 'Exam: ' + b.data('title') + '\n'
-            + 'Open the link, sign in with your student username and password, and the exam starts:\n' + link + '\n'
-            + 'Open from ' + b.data('from') + ' to ' + b.data('to') + '.';
+    $(document).on('click', '.share_exam_link', function() {
+        var b = $(this),
+            link = b.data('link');
+        var msg = 'Exam: ' + b.data('title') + '\n' +
+            'Open the link, sign in with your student username and password, and the exam starts:\n' + link + '\n' +
+            'Open from ' + b.data('from') + ' to ' + b.data('to') + '.';
         $('#share_link').val(link);
         $('#share_message').val(msg);
         $('.js-share-inactive').toggle(String(b.data('active')) !== '1');
         $('.js-share-whatsapp').attr('href', 'https://wa.me/?text=' + encodeURIComponent(msg));
         $('#shareExamModal').modal('show');
     });
-    $(document).on('click', '#shareExamModal .js-copy', function () {
-        var btn = $(this), field = $(btn.data('target'))[0], label = btn.html();
-        var done = function () { btn.html('<i class="fa fa-check"></i> Copied'); setTimeout(function () { btn.html(label); }, 1500); };
+    $(document).on('click', '#shareExamModal .js-copy', function() {
+        var btn = $(this),
+            field = $(btn.data('target'))[0],
+            label = btn.html();
+        var done = function() {
+            btn.html('<i class="fa fa-check"></i> Copied');
+            setTimeout(function() {
+                btn.html(label);
+            }, 1500);
+        };
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(field.value).then(done, function () { field.select(); document.execCommand('copy'); done(); });
+            navigator.clipboard.writeText(field.value).then(done, function() {
+                field.select();
+                document.execCommand('copy');
+                done();
+            });
         } else {
-            field.select(); document.execCommand('copy'); done();
+            field.select();
+            document.execCommand('copy');
+            done();
         }
     });
 </script>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
 
         CKEDITOR.env.isCompatible = true;
 
-          $('[id="description"]').ckeditor({
-                     toolbar: 'Admin_Exam',
-                     allowedContent : true,
+        $('[id="description"]').ckeditor({
+            toolbar: 'Admin_Exam',
+            allowedContent: true,
 
-                     enterMode : CKEDITOR.ENTER_BR,
-                     shiftEnterMode: CKEDITOR.ENTER_P,
-                     customConfig: baseurl+'backend/js/ckeditor_config.js',
-                });
+            enterMode: CKEDITOR.ENTER_BR,
+            shiftEnterMode: CKEDITOR.ENTER_P,
+            customConfig: baseurl + 'backend/js/ckeditor_config.js',
+        });
 
         $('.detail_popover').popover({
             placement: 'right',
             trigger: 'hover',
             container: 'body',
             html: true,
-            content: function () {
+            content: function() {
                 return $(this).closest('td').find('.fee_detail_popover').html();
             }
         });
@@ -631,51 +792,50 @@ foreach ($classList as $class_key => $class_value) {
 </script>
 
 <script type="text/javascript">
-$(document).on('submit','#delete_question',function(e) {
-    e.preventDefault();
-    var form = $(this);
-    var question_id=form.find("input[id='question_id']").val();
-    var url = form.attr('action');
-    var $this = form.find("button[type=submit]:focus");
-    $this.button('loading');
-    $.ajax({
-    url: url,
-    type: "POST",
-    data: new FormData(this),
-    dataType: 'json',
-    contentType: false,
-    cache: false,
-    processData: false,
-    beforeSend: function () {
-    $this.button('loading');
-    },
-    success: function (res)
-    {
-      $('.question_row_'+question_id).remove();
-      $this.button('reset');
-      if (res.status == 1) {
-      $('#mydeleteModal').modal('hide');
-        successMsg(res.message);
-      }
-    },
-    error: function (xhr) { // if error occured
-    alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
-    $this.button('reset');
-    },
-    complete: function () {
-    $this.button('reset');
-    }
+    $(document).on('submit', '#delete_question', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var question_id = form.find("input[id='question_id']").val();
+        var url = form.attr('action');
+        var $this = form.find("button[type=submit]:focus");
+        $this.button('loading');
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: new FormData(this),
+            dataType: 'json',
+            contentType: false,
+            cache: false,
+            processData: false,
+            beforeSend: function() {
+                $this.button('loading');
+            },
+            success: function(res) {
+                $('.question_row_' + question_id).remove();
+                $this.button('reset');
+                if (res.status == 1) {
+                    $('#mydeleteModal').modal('hide');
+                    successMsg(res.message);
+                }
+            },
+            error: function(xhr) { // if error occured
+                alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
+                $this.button('reset');
+            },
+            complete: function() {
+                $this.button('reset');
+            }
 
+        });
     });
-    });
 
-        $('#mydeleteModal').on('shown.bs.modal', function (e) {
-          var question_id = $(e.relatedTarget).data('onlineexamQuestionId');
-          $("#mydeleteModal input[id='question_id']").val(question_id);
+    $('#mydeleteModal').on('shown.bs.modal', function(e) {
+        var question_id = $(e.relatedTarget).data('onlineexamQuestionId');
+        $("#mydeleteModal input[id='question_id']").val(question_id);
 
-        })
+    })
 
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('#myModal,#mydeleteModal,#myGenerateRankModal').modal({
             backdrop: 'static',
             keyboard: false,
@@ -689,22 +849,24 @@ $(document).on('submit','#delete_question',function(e) {
 
         var date_format_js = '<?php echo $result = strtr($this->customlib->getSchoolDateFormat(), ['d' => 'dd', 'm' => 'MM', 'Y' => 'yyyy']) ?>';
 
-        $(function () {
-             var dateNow = new Date();
+        $(function() {
+            var dateNow = new Date();
             $('.timepicker').datetimepicker({
                 format: 'HH:mm:ss',
 
-             defaultDate:moment(dateNow).hours(0).minutes(0).seconds(0).milliseconds(0)
+                defaultDate: moment(dateNow).hours(0).minutes(0).seconds(0).milliseconds(0)
             });
         });
 
-        $('#myModal').on('hidden.bs.modal', function () {
+        $('#myModal').on('hidden.bs.modal', function() {
             $('.is_quiz').attr('checked', false);
 
             // Emptied for the next exam (not the security token; the description through CKEditor,
             // whose jQuery adapter broke the old chained reset before the defaults below ran).
             $(this).find('input, select').not('input:checkbox, input:radio, input[type=hidden]').val('');
-            if (window.CKEDITOR && CKEDITOR.instances['description']) { CKEDITOR.instances['description'].setData(''); }
+            if (window.CKEDITOR && CKEDITOR.instances['description']) {
+                CKEDITOR.instances['description'].setData('');
+            }
             // Back to the defaults of a new exam (an empty word limit was refused as required).
             $('#word_limit').val('-1');
             $('#attempt').val('1');
@@ -716,40 +878,92 @@ $(document).on('submit','#delete_question',function(e) {
             $('input[name=questions_per_student]').val('0');
             $('input[name=webcam_minutes]').val('3');
             $('input.publish_result, input#auto_publish_date').prop('disabled', false);
+            $('#exam_class_previous').empty();
+            $('#exam_classes_all').prop('checked', false);
         });
 
-        $('#myGenerateRankModal').on('hidden.bs.modal', function () {
+        $('#myGenerateRankModal').on('hidden.bs.modal', function() {
             $(".modal-body", this).html();
             $(".modal-title", this).html();
         });
 
-        $(document).on('click', '.question-btn', function () {
+        function setExamClasses(ids) {
+            var chosen = $.map(ids || [], function(id) { return String(id); });
+            $('#exam_class_previous').empty();
+            $('#exam_classes .js-exam-class').each(function() {
+                var on = $.inArray(String(this.value), chosen) !== -1;
+                $(this).prop('checked', on);
+                if (on) {
+                    $('#exam_class_previous').append($('<input>', {type: 'hidden', name: 'previous_class_ids[]', value: this.value}));
+                }
+            });
+            var boxes = $('#exam_classes .js-exam-class');
+            $('#exam_classes_all').prop('checked', boxes.length > 0 && boxes.filter(':checked').length === boxes.length);
+        }
+
+        $(document).on('click', '.question-btn', function() {
             var recordid = $(this).data('recordid');
             $('input[name=recordid]').val(recordid);
+            setExamClasses([]);
             $('#myModal').modal('show');
         });
 
-        $('#rd_go').on('click', function () {
-            var levels = {}, total = 0, btn = $(this);
-            $('.rd-level').each(function () { var n = parseInt(this.value, 10) || 0; levels[$(this).data('level')] = n; total += n; });
-            if (!$('#search_box').val()) { errorMsg('Choose the subject above first.'); return; }
-            if (!total) { errorMsg('Enter how many questions of each level to draw.'); return; }
-            btn.prop('disabled', true);
-            $.post(baseurl + 'admin/onlineexam/random_draw', { exam_id: $('#modal_exam_id').val(), subject_id: $('#search_box').val(), class_id: $('#class_id').val(),
-                levels: levels, marks: $('#rd_marks').val(), neg_marks: $('#rd_neg').val() }, function (r) {
-                if (r.status === 'success') { successMsg(r.message); $('.post_search_submit').trigger('click'); } else { errorMsg(r.message); }
-            }, 'json').fail(function () { errorMsg('Could not draw questions. Please try again.'); }).always(function () { btn.prop('disabled', false); });
+        $(document).on('change', '#exam_classes_all', function() {
+            $('#exam_classes .js-exam-class').prop('checked', this.checked);
+        });
+        $(document).on('change', '#exam_classes .js-exam-class', function() {
+            var boxes = $('#exam_classes .js-exam-class');
+            $('#exam_classes_all').prop('checked', boxes.length > 0 && boxes.filter(':checked').length === boxes.length);
         });
 
-        $('#myQuestionModal').on('show.bs.modal', function (e) {
+        $('#rd_go').on('click', function() {
+            var levels = {},
+                total = 0,
+                btn = $(this);
+            $('.rd-level').each(function() {
+                var n = parseInt(this.value, 10) || 0;
+                levels[$(this).data('level')] = n;
+                total += n;
+            });
+            if (!$('#search_box').val()) {
+                errorMsg('Choose the subject above first.');
+                return;
+            }
+            if (!total) {
+                errorMsg('Enter how many questions of each level to draw.');
+                return;
+            }
+            btn.prop('disabled', true);
+            $.post(baseurl + 'admin/onlineexam/random_draw', {
+                exam_id: $('#modal_exam_id').val(),
+                subject_id: $('#search_box').val(),
+                class_id: $('#class_id').val(),
+                levels: levels,
+                marks: $('#rd_marks').val(),
+                neg_marks: $('#rd_neg').val()
+            }, function(r) {
+                if (r.status === 'success') {
+                    successMsg(r.message);
+                    $('.post_search_submit').trigger('click');
+                } else {
+                    errorMsg(r.message);
+                }
+            }, 'json').fail(function() {
+                errorMsg('Could not draw questions. Please try again.');
+            }).always(function() {
+                btn.prop('disabled', false);
+            });
+        });
+
+        $('#myQuestionModal').on('show.bs.modal', function(e) {
 
             //get data-id attribute of the clicked element
             var exam_id = $(e.relatedTarget).data('recordid');
             var is_quiz = $(e.relatedTarget).data('is_quiz');
-            if(is_quiz == 1){
-                  $("select#question_type option[value*='descriptive']").prop('disabled',true);
-            }else{
-                  $("select#question_type option[value*='descriptive']").prop('disabled',false);
+            if (is_quiz == 1) {
+                $("select#question_type option[value*='descriptive']").prop('disabled', true);
+            } else {
+                $("select#question_type option[value*='descriptive']").prop('disabled', false);
 
             }
             $('#modal_exam_id').val(exam_id);
@@ -759,80 +973,84 @@ $(document).on('submit','#delete_question',function(e) {
             $('#write_questions_link').attr('href', '<?php echo site_url('admin/question/bulk'); ?>?exam=' + exam_id);
 
             //populate the textbox
-            getQuestionByExam(1, exam_id,is_quiz);
+            getQuestionByExam(1, exam_id, is_quiz);
 
         });
 
- $(document).on('click', '.generate_rank', function () {
-     var $this = $(this);
-     examid=$this.data('recordid');
-     examtitle=$this.data('examTitle');
-      $('#myGenerateRankModal').modal('show');
+        $(document).on('click', '.generate_rank', function() {
+            var $this = $(this);
+            examid = $this.data('recordid');
+            examtitle = $this.data('examTitle');
+            $('#myGenerateRankModal').modal('show');
 
-      var this_obj=$('#myGenerateRankModal');
-      $('.modal-title',this_obj).html('<?php echo $this->lang->line('generate_exam_rank'); ?>  ('+examtitle+')');
+            var this_obj = $('#myGenerateRankModal');
+            $('.modal-title', this_obj).html('<?php echo $this->lang->line('generate_exam_rank'); ?>  (' + examtitle + ')');
 
-   getRankRecord(examid,examtitle);
- });
-
-        $('#myQuestionModal').on('hidden.bs.modal', function (e) {
-                $(this).find("input,textarea,select").val('');
-                $('.search_box_result').html("");
-                $('.search_box_pagination').html("");
-                  table.ajax.reload( null, false );
+            getRankRecord(examid, examtitle);
         });
 
- $(document).on('click', '.download_exam', function () {
-            var $this=$(this);
+        $('#myQuestionModal').on('hidden.bs.modal', function(e) {
+            $(this).find("input,textarea,select").val('');
+            $('.search_box_result').html("");
+            $('.search_box_pagination').html("");
+            table.ajax.reload(null, false);
+        });
+
+        $(document).on('click', '.download_exam', function() {
+            var $this = $(this);
             var recordid = $(this).data('recordid');
             $.ajax({
                 type: 'POST',
                 url: baseurl + "admin/onlineexam/download_exam",
-                data: {'recordid': recordid},
+                data: {
+                    'recordid': recordid
+                },
                 dataType: 'JSON',
-                beforeSend: function () {
+                beforeSend: function() {
                     $this.button('loading');
                 },
-                success: function (data) {
+                success: function(data) {
 
-            Popup(data.page);
+                    Popup(data.page);
                     $this.button('reset');
                 },
-                error: function (xhr) { // if error occured
+                error: function(xhr) { // if error occured
                     alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
                     $this.button('reset');
                 },
-                complete: function () {
+                complete: function() {
                     $this.button('reset');
                 }
             });
         });
 
-        $(document).on('click', '.question-btn-edit', function () {
+        $(document).on('click', '.question-btn-edit', function() {
             var $this = $(this);
             var recordid = $this.data('recordid');
             $('input[name=recordid]').val(recordid);
             $.ajax({
                 type: 'POST',
                 url: baseurl + "admin/onlineexam/getOnlineExamByID",
-                data: {'recordid': recordid},
+                data: {
+                    'recordid': recordid
+                },
                 dataType: 'JSON',
-                beforeSend: function () {
+                beforeSend: function() {
                     $this.button('loading');
                 },
-                success: function (data) {
+                success: function(data) {
 
                     if (data.status) {
                         var date_exam_from = new Date(data.result.exam_from);
                         var newDate_exam_from = date_exam_from.toString(date_format_js);
                         var date_exam_to = new Date(data.result.exam_to);
 
-                        if(data.result.auto_publish_date != null && data.result.auto_publish_date != "" && data.result.auto_publish_date != "0000-00-00"){
-                          var date_auto_publish_date = new Date(data.result.auto_publish_date);
+                        if (data.result.auto_publish_date != null && data.result.auto_publish_date != "" && data.result.auto_publish_date != "0000-00-00") {
+                            var date_auto_publish_date = new Date(data.result.auto_publish_date);
 
-                         $('#auto_publish_date').data("DateTimePicker").date(date_auto_publish_date);
-                        }else{
-                            var newDate_auto_publish_date="";
+                            $('#auto_publish_date').data("DateTimePicker").date(date_auto_publish_date);
+                        } else {
+                            var newDate_auto_publish_date = "";
                         }
                         $('#word_limit').val(data.result.answer_word_count);
                         $('#duration').val(data.result.duration);
@@ -841,33 +1059,34 @@ $(document).on('submit','#delete_question',function(e) {
                         $('#exam_from').data("DateTimePicker").date(date_exam_from);
                         $('#exam').val(data.result.exam);
                         $('#exam_subject_id').val(data.result.subject_id ? String(data.result.subject_id) : '');
+                        setExamClasses(data.result.class_ids || []);
                         $('#attempt').val(data.result.attempt);
                         CKEDITOR.instances['description'].setData(data.result.description);
 
-                        var is_quiz=(data.result.is_quiz == 0)?false:true;
+                        var is_quiz = (data.result.is_quiz == 0) ? false : true;
 
-                        $('input[name=is_quiz]').prop('checked',is_quiz);
+                        $('input[name=is_quiz]').prop('checked', is_quiz);
 
                         quizDateState(is_quiz);
 
-                        var chk_status=(data.result.is_active == 0)?false:true;
+                        var chk_status = (data.result.is_active == 0) ? false : true;
 
-                        $('input[name=is_active]').prop('checked',chk_status);
+                        $('input[name=is_active]').prop('checked', chk_status);
 
-                        var chk_is_marks_display=(data.result.is_marks_display == 0)?false:true;
+                        var chk_is_marks_display = (data.result.is_marks_display == 0) ? false : true;
 
-                        $('input[name=is_marks_display]').prop('checked',chk_is_marks_display);
+                        $('input[name=is_marks_display]').prop('checked', chk_is_marks_display);
 
-                           var chk_is_neg_marking=(data.result.is_neg_marking == 0)?false:true;
+                        var chk_is_neg_marking = (data.result.is_neg_marking == 0) ? false : true;
 
-                        $('input[name=is_neg_marking]').prop('checked',chk_is_neg_marking);
+                        $('input[name=is_neg_marking]').prop('checked', chk_is_neg_marking);
 
-                          var chk_result_status=(data.result.publish_result == 0)?false:true;
+                        var chk_result_status = (data.result.publish_result == 0) ? false : true;
 
-                        $('input[name=publish_result]').prop('checked',chk_result_status);
+                        $('input[name=publish_result]').prop('checked', chk_result_status);
 
-                        var chk_is_random_question=(data.result.is_random_question == 0)?false:true;
-                        $('input[name=is_random_question]').prop('checked',chk_is_random_question);
+                        var chk_is_random_question = (data.result.is_random_question == 0) ? false : true;
+                        $('input[name=is_random_question]').prop('checked', chk_is_random_question);
                         $('input[name=is_random_option]').prop('checked', data.result.is_random_option == 1);
                         $('input[name=block_copy]').prop('checked', data.result.block_copy === undefined || data.result.block_copy == 1);
                         $('input[name=max_tab_switches]').val(data.result.max_tab_switches === undefined ? 3 : data.result.max_tab_switches);
@@ -882,18 +1101,18 @@ $(document).on('submit','#delete_question',function(e) {
                     }
                     $this.button('reset');
                 },
-                error: function (xhr) { // if error occured
+                error: function(xhr) { // if error occured
                     alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
                     $this.button('reset');
                 },
-                complete: function () {
+                complete: function() {
                     $this.button('reset');
                 }
             });
         });
     });
 
-    $(document).on('submit',"form#saverank",function(e){
+    $(document).on('submit', "form#saverank", function(e) {
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
         var form = $(this);
@@ -906,30 +1125,29 @@ $(document).on('submit','#delete_question',function(e) {
             url: url,
             data: form.serialize(), // serializes the form's elements.
             dataType: "JSON", // serializes the form's elements.
-            beforeSend: function () {
+            beforeSend: function() {
 
                 submit_button.button('loading');
             },
-            success: function (data)
-            {
+            success: function(data) {
                 successMsg(data.message);
-                var rank_modal_obj=$('#myGenerateRankModal');
-                var examtitle=$('.modal-title',rank_modal_obj).html();
-                var examid=$('#generate_exam_id',rank_modal_obj).val();
-                getRankRecord(examid,examtitle);
+                var rank_modal_obj = $('#myGenerateRankModal');
+                var examtitle = $('.modal-title', rank_modal_obj).html();
+                var examid = $('#generate_exam_id', rank_modal_obj).val();
+                getRankRecord(examid, examtitle);
             },
-            error: function (xhr) { // if error occured
+            error: function(xhr) { // if error occured
                 submit_button.button('reset');
                 alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
 
             },
-            complete: function () {
+            complete: function() {
                 submit_button.button('reset');
             }
         });
     });
 
-    $("form#formsubject").submit(function (e) {
+    $("form#formsubject").submit(function(e) {
         e.preventDefault(); // avoid to execute the actual submit of the form.
         var form = $(this);
         var url = form.attr('action');
@@ -944,37 +1162,36 @@ $(document).on('submit','#delete_question',function(e) {
             url: url,
             data: form.serialize(), // serializes the form's elements.
             dataType: "JSON", // serializes the form's elements.
-            beforeSend: function () {
+            beforeSend: function() {
                 $("[class$='_error']").html("");
                 submit_button.button('loading');
             },
-            success: function (data)
-            {
+            success: function(data) {
                 if (!data.status) {
-                   var message = "";
-            $.each(data.error, function (index, value) {
-            message += value;
-            });
-            errorMsg(message);
-            } else {
-            successMsg(data.message);
-            $('#myModal').modal('hide');
-            table.ajax.reload( null, false );
+                    var message = "";
+                    $.each(data.error, function(index, value) {
+                        message += value;
+                    });
+                    errorMsg(message);
+                } else {
+                    successMsg(data.message);
+                    $('#myModal').modal('hide');
+                    table.ajax.reload(null, false);
 
                 }
             },
-            error: function (xhr) { // if error occured
+            error: function(xhr) { // if error occured
                 submit_button.button('reset');
                 alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
 
             },
-            complete: function () {
+            complete: function() {
                 submit_button.button('reset');
             }
         });
     });
 
-    function getQuestionByExam(page, exam_id,is_quiz) {
+    function getQuestionByExam(page, exam_id, is_quiz) {
         var search = $("#search_box").val();
         var keyword = $('#form_search #keyword').val();
         var question_type = $('#form_search #question_type').val();
@@ -984,87 +1201,100 @@ $(document).on('submit','#delete_question',function(e) {
         $.ajax({
             type: "POST",
             url: base_url + 'admin/onlineexam/searchQuestionByExamID',
-            data: {'page': page, 'exam_id': exam_id, 'search': search,'keyword':keyword,'question_type':question_type,'question_level': question_level,'class_id':class_id,'section_id':section_id,'is_quiz':is_quiz}, // serializes the form's elements.
+            data: {
+                'page': page,
+                'exam_id': exam_id,
+                'search': search,
+                'keyword': keyword,
+                'question_type': question_type,
+                'question_level': question_level,
+                'class_id': class_id,
+                'section_id': section_id,
+                'is_quiz': is_quiz
+            }, // serializes the form's elements.
             dataType: "JSON", // serializes the form's elements.
-            beforeSend: function () {
-            },
-            success: function (data)
-            {
+            beforeSend: function() {},
+            success: function(data) {
                 $('.search_box_result').html(data.content);
                 $('.search_box_pagination').html(data.navigation);
                 $('.row_from').html(data.show_from);
                 $('.row_to').html(data.show_to);
                 $('.row_count').html(data.total_display);
-                if(data.show_to==0){
+                if (data.show_to == 0) {
                     $('.search_box_result').html('<div class="alert alert-danger"><?php echo $this->lang->line("no_record_found"); ?></div>');
                 }
             },
-            error: function (xhr) { // if error occured
-               alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
+            error: function(xhr) { // if error occured
+                alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
 
             },
-            complete: function () {
+            complete: function() {
 
             }
         });
     }
 
     /* Pagination Clicks   */
-    $(document).on('click', '.search_box_pagination li.activee', function (e) {
+    $(document).on('click', '.search_box_pagination li.activee', function(e) {
         var _exam_id = $('#modal_exam_id').val();
         var _is_quiz = $('#modal_is_quiz').val();
         var page = $(this).attr('p');
-        getQuestionByExam(page, _exam_id,_is_quiz);
+        getQuestionByExam(page, _exam_id, _is_quiz);
     });
 
-    $(document).on('click', '.post_search_submit', function (e) {
+    $(document).on('click', '.post_search_submit', function(e) {
         var _exam_id = $('#modal_exam_id').val();
-          var __is_quiz = $('#modal_is_quiz').val();
-        getQuestionByExam(1, _exam_id,__is_quiz);
+        var __is_quiz = $('#modal_is_quiz').val();
+        getQuestionByExam(1, _exam_id, __is_quiz);
     });
 
-    $(document).on('change', '.question_chk', function () {
+    $(document).on('change', '.question_chk', function() {
         var _exam_id = $('#modal_exam_id').val();
-        var ques_mark =$(this).closest('div.section-box').find("input[name='question_marks']").val();
-        var ques_neg_mark =$(this).closest('div.section-box').find("input[name='question_neg_marks']").val();
-        updateCheckbox($(this).val(), _exam_id,ques_mark,ques_neg_mark);
+        var ques_mark = $(this).closest('div.section-box').find("input[name='question_marks']").val();
+        var ques_neg_mark = $(this).closest('div.section-box').find("input[name='question_neg_marks']").val();
+        updateCheckbox($(this).val(), _exam_id, ques_mark, ques_neg_mark);
     });
 
-    function updateCheckbox(question_id, exam_id,ques_mark,ques_neg_mark) {
+    function updateCheckbox(question_id, exam_id, ques_mark, ques_neg_mark) {
         $.ajax({
             type: 'POST',
             url: base_url + 'admin/onlineexam/questionAdd',
             dataType: 'JSON',
-            data: {'question_id': question_id, 'onlineexam_id': exam_id,'ques_mark':ques_mark,'ques_neg_mark':ques_neg_mark},
-            beforeSend: function () {
+            data: {
+                'question_id': question_id,
+                'onlineexam_id': exam_id,
+                'ques_mark': ques_mark,
+                'ques_neg_mark': ques_neg_mark
+            },
+            beforeSend: function() {
 
             },
-            success: function (data) {
+            success: function(data) {
                 if (data.status) {
                     successMsg(data.message);
                 }
             },
-            error: function (xhr) { // if error occured
+            error: function(xhr) { // if error occured
                 alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
 
             },
-            complete: function () {
+            complete: function() {
 
             },
         });
     }
 
-    $('#myQuestionListModal').on('hidden.bs.modal', function () {
-         table.ajax.reload( null, false );
-        });
+    $('#myQuestionListModal').on('hidden.bs.modal', function() {
+        table.ajax.reload(null, false);
+    });
 
-    $(document).on('change', '#class_id', function (e) {
+    $(document).on('change', '#class_id', function(e) {
         $('#section_id').html("");
         var class_id = $(this).val();
         getSectionByClass(class_id, section_id);
     });
 
-       function getSectionByClass(class_id, section_id) {
+    function getSectionByClass(class_id, section_id) {
         if (class_id != "") {
             $('#section_id').html("");
             var base_url = '<?php echo base_url() ?>';
@@ -1072,14 +1302,15 @@ $(document).on('submit','#delete_question',function(e) {
             $.ajax({
                 type: "GET",
                 url: base_url + "sections/getByClass",
-                data: {'class_id': class_id},
+                data: {
+                    'class_id': class_id
+                },
                 dataType: "json",
-                beforeSend: function () {
+                beforeSend: function() {
                     $('#section_id').addClass('dropdownloading');
                 },
-                success: function (data) {
-                    $.each(data, function (i, obj)
-                    {
+                success: function(data) {
+                    $.each(data, function(i, obj) {
                         var sel = "";
                         if (section_id == obj.section_id) {
                             sel = "selected";
@@ -1088,81 +1319,83 @@ $(document).on('submit','#delete_question',function(e) {
                     });
                     $('#section_id').append(div_data);
                 },
-                complete: function () {
+                complete: function() {
                     $('#section_id').removeClass('dropdownloading');
                 }
             });
         }
     }
 
-           $(document).on('click', '.exam_ques_list', function () {
-            var $this=$(this);
-            var recordid = $(this).data('recordid');
-            $('input[name=recordid]').val(recordid);
-            $.ajax({
-                type: 'POST',
-                url: baseurl + "admin/onlineexam/getExamQuestions",
-                data: {'recordid': recordid},
-                dataType: 'JSON',
-                beforeSend: function () {
-                    $this.button('loading');
-                },
-                success: function (data) {
+    $(document).on('click', '.exam_ques_list', function() {
+        var $this = $(this);
+        var recordid = $(this).data('recordid');
+        $('input[name=recordid]').val(recordid);
+        $.ajax({
+            type: 'POST',
+            url: baseurl + "admin/onlineexam/getExamQuestions",
+            data: {
+                'recordid': recordid
+            },
+            dataType: 'JSON',
+            beforeSend: function() {
+                $this.button('loading');
+            },
+            success: function(data) {
 
                 $('#myQuestionListModal').modal('show');
                 $('#myQuestionListModal .modal-title').html(data.exam.exam);
                 $('#myQuestionListModal .question_list_result').html(data.result);
-                    $this.button('reset');
-                },
-                error: function (xhr) { // if error occured
-                    alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
-                    $this.button('reset');
-                },
-                complete: function () {
-                    $this.button('reset');
-                }
-            });
-        });
-
-        $(document).on('click', '.subject_pills li', function () {
-            var $this=$(this);
-            $this.addClass('active').siblings().removeClass('active');
-            var subject_pill_selected=($this.find('a').data('subjectId'));
-            if(subject_pill_selected != 0){
-
-            $("div[class*='subject_div_']").css("display","none");
-            $('.subject_div_'+subject_pill_selected).css("display","block");
-            }else{
-               $("div[class*='subject_div_']").css("display","block");
+                $this.button('reset');
+            },
+            error: function(xhr) { // if error occured
+                alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
+                $this.button('reset');
+            },
+            complete: function() {
+                $this.button('reset');
             }
         });
+    });
 
-    function getRankRecord(examid,examtitle){
-      var this_obj=$('#myGenerateRankModal');
+    $(document).on('click', '.subject_pills li', function() {
+        var $this = $(this);
+        $this.addClass('active').siblings().removeClass('active');
+        var subject_pill_selected = ($this.find('a').data('subjectId'));
+        if (subject_pill_selected != 0) {
+
+            $("div[class*='subject_div_']").css("display", "none");
+            $('.subject_div_' + subject_pill_selected).css("display", "block");
+        } else {
+            $("div[class*='subject_div_']").css("display", "block");
+        }
+    });
+
+    function getRankRecord(examid, examtitle) {
+        var this_obj = $('#myGenerateRankModal');
         $.ajax({
             type: "POST",
-            url: base_url+"/admin/onlineexam/rankgenerate",
-            data: {"examid":examid}, // serializes the form's elements.
+            url: base_url + "/admin/onlineexam/rankgenerate",
+            data: {
+                "examid": examid
+            }, // serializes the form's elements.
             dataType: "JSON", // serializes the form's elements.
-            beforeSend: function () {
-              this_obj.addClass('modal_loading');
+            beforeSend: function() {
+                this_obj.addClass('modal_loading');
             },
-            success: function (data)
-            {
-                $('.modal-body',this_obj).html(data.page);
+            success: function(data) {
+                $('.modal-body', this_obj).html(data.page);
                 this_obj.removeClass('modal_loading');
             },
-            error: function (xhr) { // if error occured
+            error: function(xhr) { // if error occured
                 this_obj.removeClass('modal_loading');
                 alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
 
             },
-            complete: function () {
-                  this_obj.removeClass('modal_loading');
+            complete: function() {
+                this_obj.removeClass('modal_loading');
             }
         });
-}
-
+    }
 </script>
 
 <script type="text/javascript">
@@ -1170,38 +1403,47 @@ $(document).on('submit','#delete_question',function(e) {
     function quizDateState(quiz) {
         $("input.publish_result").prop("disabled", quiz);
         $("input#auto_publish_date").prop("disabled", quiz);
-        if (quiz) { $("input#auto_publish_date").val(""); }
+        if (quiz) {
+            $("input#auto_publish_date").val("");
+        }
         $('.js-quiz-no-date').toggle(quiz);
     }
-    $(".is_quiz").change(function() { quizDateState(this.checked); });
-    $('#myModal').on('hidden.bs.modal', function () { quizDateState(false); });
+    $(".is_quiz").change(function() {
+        quizDateState(this.checked);
+    });
+    $('#myModal').on('hidden.bs.modal', function() {
+        quizDateState(false);
+    });
     // The calendar icon next to a date field opens its picker too.
-    $(document).on('click', '#myModal .input-group-addon', function () {
+    $(document).on('click', '#myModal .input-group-addon', function() {
         var input = $(this).siblings('input.datetime_twelve_hour');
-        if (!input.length || input.prop('disabled')) { return; }
+        if (!input.length || input.prop('disabled')) {
+            return;
+        }
         var picker = input.data('DateTimePicker');
         input.focus();
-        if (picker) { picker.show(); }
+        if (picker) {
+            picker.show();
+        }
     });
 </script>
 
 <script>
-       $(document).ready(function () {
-         initDatatable('exam-list','admin/onlineexam/getexamlist',[],[],100); // for upcoming exam datatable will be loaded by default
+    $(document).ready(function() {
+        initDatatable('exam-list', 'admin/onlineexam/getexamlist', [], [], 100); // for upcoming exam datatable will be loaded by default
 
-        $("a[href='#tab_3']").on('shown.bs.tab', function (e) {
-            initDatatable('closed-exam-list','admin/onlineexam/getclosedexamlist',[],[],100); // for closed exam
+        $("a[href='#tab_3']").on('shown.bs.tab', function(e) {
+            initDatatable('closed-exam-list', 'admin/onlineexam/getclosedexamlist', [], [], 100); // for closed exam
         });
     });
 </script>
 
 <script type="text/javascript">
-    $("#deletebulk").submit(function (e) {
+    $("#deletebulk").submit(function(e) {
         e.preventDefault(); // avoid to execute the actual submit of the form.
         var checkCount = $("input[name='exam[]']:checked").length;
 
-        if (checkCount == 0)
-        {
+        if (checkCount == 0) {
             alert("<?php echo $this->lang->line('atleast_one_student_should_be_select'); ?>");
 
         } else {
@@ -1216,14 +1458,13 @@ $(document).on('submit','#delete_question',function(e) {
                     url: url,
                     data: form.serialize(), // serializes the form's elements.
                     dataType: "JSON", // serializes the form's elements.
-                    beforeSend: function () {
+                    beforeSend: function() {
                         submit_button.button('loading');
                     },
-                    success: function (data)
-                    {
+                    success: function(data) {
                         var message = "";
                         if (!data.status) {
-                            $.each(data.error, function (index, value) {
+                            $.each(data.error, function(index, value) {
                                 message += value;
                             });
 
@@ -1234,11 +1475,11 @@ $(document).on('submit','#delete_question',function(e) {
                             location.reload();
                         }
                     },
-                    error: function (xhr) { // if error occured
+                    error: function(xhr) { // if error occured
                         submit_button.button('reset');
                         alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
                     },
-                    complete: function () {
+                    complete: function() {
                         submit_button.button('reset');
                     }
                 });
@@ -1246,15 +1487,17 @@ $(document).on('submit','#delete_question',function(e) {
         }
     });
 
-   $("input[name='checkAll']").click(function () {
-       $("input[name='exam[]']").not(this).prop('checked', this.checked);
-   });
+    $("input[name='checkAll']").click(function() {
+        $("input[name='exam[]']").not(this).prop('checked', this.checked);
+    });
 
-    function Popup(data)
-    {
+    function Popup(data) {
         var frame1 = $('<iframe />');
         frame1[0].name = "frame1";
-        frame1.css({"position": "absolute", "top": "-1000000px"});
+        frame1.css({
+            "position": "absolute",
+            "top": "-1000000px"
+        });
         $("body").append(frame1);
         var frameDoc = frame1[0].contentWindow ? frame1[0].contentWindow : frame1[0].contentDocument.document ? frame1[0].contentDocument.document : frame1[0].contentDocument;
         frameDoc.document.open();
@@ -1278,7 +1521,7 @@ $(document).on('submit','#delete_question',function(e) {
         frameDoc.document.write('</body>');
         frameDoc.document.write('</html>');
         frameDoc.document.close();
-        setTimeout(function () {
+        setTimeout(function() {
             window.frames["frame1"].focus();
             window.frames["frame1"].print();
             frame1.remove();
