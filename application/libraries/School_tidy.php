@@ -11,6 +11,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  *   - Visitor Book and Apply Leave are not in the student and parent portal
  *   - Behaviour > Report Behaviour (behaviour/log), first in the Behaviour menu
  *   - Transport > Assign Students and Hostel > Assign Students (admin/Studentplaces)
+ *   - the hostel and room fields on Add/Edit Student are on
  *
  * Call inside without_tenant (or with the school as tenant). Running it again changes nothing.
  */
@@ -24,6 +25,8 @@ class School_tidy
         $db = get_instance()->db;
         $school_id = (int) $school_id;
         $db->where('school_id', $school_id)->update('sch_settings', array_fill_keys(self::STAFF_FIELDS_OFF, 0));
+        // Hostel and room on Add/Edit Student (System Settings > System Fields can switch them off).
+        $db->where('school_id', $school_id)->update('sch_settings', array('hostel_id' => 1));
         $db->where('school_id', $school_id)->where_in('short_code', self::PORTAL_OFF)->update('permission_student', array('student' => 0, 'parent' => 0));
         $this->behaviour_menu($db, $school_id);
         $this->assign_menu($db, $school_id, 'transport', 'admin/studentplaces/transport', "('student', 'can_edit') || ('student_transport_fees', 'can_view')");
