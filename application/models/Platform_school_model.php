@@ -62,7 +62,7 @@ class Platform_school_model extends CI_Model
                 $c['expiring']++;
             } elseif ($s['expiry'] === 'expired') {
                 $c['expired']++;
-            } elseif ($s['expiry'] === 'onboarding') {
+            } elseif ($s['expiry'] === 'onboarding' || $s['expiry'] === 'unpaid') {
                 $c['onboarding']++;
             }
         }
@@ -220,7 +220,9 @@ class Platform_school_model extends CI_Model
         $s['expires_at'] = null;
         $s['days_left'] = null;
         $s['expiry'] = 'none';
-        if ($paid && $paid['kind'] === 'setup') {
+        if (!$paid && !empty($s['pay_before_portal']) && empty($s['is_platform'])) {
+            $s['expiry'] = 'unpaid'; // added by platform staff, nothing paid: staff only (Plan_limits)
+        } elseif ($paid && $paid['kind'] === 'setup') {
             $s['expiry'] = 'onboarding'; // setup fee paid, subscription not yet: no end date
         } elseif ($paid) {
             $expires = strtotime($paid['created_at']) + ((int) $paid['days']) * 86400;
