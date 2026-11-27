@@ -21,6 +21,8 @@ class Route extends Student_Controller
         $studentList                 = $this->student_model->get($student_id);
         $studentList['pickup_point'] = $this->pickuppoint_model->getPickupPointByRouteID($studentList['route_id']);
         $data['listroute']           = $studentList;
+        $this->load->library('Student_places');
+        $data['my_transport']        = $this->student_places->transport($this->customlib->getStudentCurrentClsSection()->student_session_id);
         $this->load->view('layout/student/header');
         $this->load->view('user/route/index', $data);
         $this->load->view('layout/student/footer');
