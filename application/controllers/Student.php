@@ -1541,6 +1541,18 @@ class Student extends Admin_Controller
 
             $data['admission_no'] = trim((string) $this->input->post('admission_no'));
 
+            // A new hostel room moves the hostel fee with it (Hostel_fees); a fee with payments keeps the room.
+            if (isset($data['hostel_room_id'])) {
+                $old_room = (int) $this->db->select('hostel_room_id')->where('id', (int) $id)->get('students')->row('hostel_room_id');
+                if ($old_room !== (int) $data['hostel_room_id']) {
+                    $this->load->library('Hostel_fees');
+                    if ($this->hostel_fees->move((int) $this->input->post('student_session_id'), $old_room, (int) $data['hostel_room_id']) === 'paid') {
+                        $data['hostel_room_id'] = $old_room;
+                        $hostel_kept = true;
+                    }
+                }
+            }
+
             $this->student_model->add($data);
             $data_new = array(
                 'student_id'            => $id,
@@ -1615,7 +1627,8 @@ class Student extends Admin_Controller
 
             }
 
-            $this->session->set_flashdata('msg', '<div student="alert alert-success text-left">' . $this->lang->line('update_message') . '</div>');
+            $this->session->set_flashdata('msg', '<div student="alert alert-success text-left">' . $this->lang->line('update_message') . '</div>'
+                . (!empty($hostel_kept) ? '<div class="alert alert-warning text-left">The hostel room was not changed: the hostel fee of this student already has payments.</div>' : ''));
             redirect('student/search');
         }
     }

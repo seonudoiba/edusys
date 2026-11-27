@@ -93,8 +93,12 @@ class Studentplaces extends Admin_Controller
     {
         $this->need('hostel');
         $rooms = $this->rooms();
+        $this->load->library('Hostel_fees');
+        $charge = (bool) $this->input->post('charge');
+        $session = (int) $this->setting_model->getCurrentSession();
         $done = 0;
         $full = array();
+        $kept = array();
         foreach ((array) $this->input->post('room') as $student_id => $room_id) {
             $st = $this->db->select('id, hostel_room_id, firstname, lastname')->where('id', (int) $student_id)->get('students')->row_array();
             if (!$st) {
@@ -111,6 +115,12 @@ class Studentplaces extends Admin_Controller
                 $full[] = trim($st['firstname'] . ' ' . $st['lastname']) . ' (room ' . $rooms[$room_id]['room_no'] . ' is full)';
                 continue;
             }
+            // the hostel fee follows the room; a student whose hostel fee has payments stays put
+            $ss = $this->db->select('id')->where(array('student_id' => (int) $st['id'], 'session_id' => $session))->get('student_session')->row_array();
+            if ($ss && $this->hostel_fees->move((int) $ss['id'], (int) $st['hostel_room_id'], $room_id, $charge) === 'paid') {
+                $kept[] = trim($st['firstname'] . ' ' . $st['lastname']);
+                continue;
+            }
             $this->db->where('id', (int) $st['id'])->update('students', array('hostel_room_id' => $room_id));
             if ((int) $st['hostel_room_id'] && isset($rooms[(int) $st['hostel_room_id']])) {
                 $rooms[(int) $st['hostel_room_id']]['used']--;
@@ -124,7 +134,10 @@ class Studentplaces extends Admin_Controller
         if ($full) {
             $msg .= ' Not placed: ' . implode(', ', $full) . '.';
         }
-        $this->session->set_flashdata('sp_msg', array($full ? 'warning' : 'success', $msg));
+        if ($kept) {
+            $msg .= ' Not moved (their hostel fee has payments): ' . implode(', ', $kept) . '.';
+        }
+        $this->session->set_flashdata('sp_msg', array($full || $kept ? 'warning' : 'success', $msg));
         redirect('admin/studentplaces/hostel?' . $this->back());
     }
 
