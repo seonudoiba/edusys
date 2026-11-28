@@ -145,6 +145,13 @@ class Cbt_admin
         $rows = $this->rows(array_unique($ids));
         foreach ($rows as $id => &$r) {
             $r['class_students'] = isset($given[$id]) ? $given[$id] : 0;
+            // A CBT shown here without a subject (made as "several subjects" and linked to this subject's
+            // report card) takes this subject, so drawing and writing its questions work.
+            if (!(int) $r['subject_id'] && (int) $subject_id) {
+                $this->db->where('id', (int) $id)->group_start()->where('subject_id IS NULL', null, false)->or_where('subject_id', 0)->group_end()
+                    ->update('onlineexam', array('subject_id' => (int) $subject_id));
+                $r['subject_id'] = (int) $subject_id;
+            }
         }
         unset($r);
         return $rows;
