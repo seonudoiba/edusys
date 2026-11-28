@@ -65,7 +65,21 @@ $here = $base . '/klass/' . $cid;
                 <div class="cr-box text-center" style="padding:36px">
                     <i class="fa fa-book fa-3x" style="color:var(--ui-brand,#1f4e79)"></i>
                     <h4 style="margin-top:12px">No subjects for <?php echo html_escape($class['class']); ?> yet</h4>
-                    <p class="cr-muted">Give the class a subject group in Classes &amp; Timetable &gt; Subject Groups; its subjects appear here.</p>
+                    <?php $sg_ci = get_instance(); $sg_groups = $sg_ci->class_results->subject_groups($sg_ci->current_session); ?>
+                    <?php if ($sg_groups) { ?>
+                        <p class="cr-muted">Choose the subject group <?php echo html_escape($class['class']); ?> takes: its subjects appear here, ready for scores.</p>
+                        <?php echo form_open('cbseexam/results/subject_group', array('style' => 'display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:6px')); ?>
+                            <input type="hidden" name="class_id" value="<?php echo (int) $cid; ?>">
+                            <select name="subject_group_id" class="form-control" required style="width:auto">
+                                <option value="">Choose a subject group</option>
+                                <?php foreach ($sg_groups as $gid => $g) { ?><option value="<?php echo (int) $gid; ?>"><?php echo html_escape($g['name'] . ' (' . count($g['subjects']) . ' subjects)'); ?></option><?php } ?>
+                            </select>
+                            <button class="btn btn-primary"><i class="fa fa-check"></i> Use it for <?php echo html_escape($class['class']); ?></button>
+                            <a class="btn btn-default" href="<?php echo site_url('admin/subjectgroup'); ?>" target="_blank" rel="noopener"><i class="fa fa-plus"></i> New subject group</a>
+                        <?php echo form_close(); ?>
+                    <?php } else { ?>
+                        <p class="cr-muted">There are no subject groups yet. Make one in <a href="<?php echo site_url('admin/subjectgroup'); ?>" target="_blank" rel="noopener">Classes &amp; Timetable &gt; Subject Groups <i class="fa fa-external-link"></i></a> (its name and subjects), then come back here.</p>
+                    <?php } ?>
                 </div>
             <?php } else { ?>
                 <div class="cr-subjects">

@@ -482,6 +482,7 @@ function findOption($questionOpt, $find)
                             <div class="cbt-sec">
                                 <b><i class="fa fa-shield"></i> Exam security</b>
                                 <label class="checkbox-inline" title="Another device can't open the exam once it has started; the invigilator can move it"><input type="checkbox" name="lock_device" value="1"> Keep each student's exam on one device</label>
+                                <label class="checkbox-inline" title="A calculator button on the exam screen; using it does not count as leaving the page"><input type="checkbox" name="calculator" value="1"> Show a calculator on the exam screen</label>
                                 <label class="checkbox-inline" title="Phones (iPhone) can't go full screen: there only leaving the page is counted"><input type="checkbox" name="require_fullscreen" value="1"> Full screen (leaving it counts as leaving the page)</label>
                                 <div class="cbt-sec-row">
                                     <label>Each student answers <input type="number" name="questions_per_student" min="0" max="500" value="0" class="form-control input-sm" style="width:80px;display:inline-block"> of the questions</label>
@@ -875,6 +876,7 @@ function findOption($questionOpt, $find)
             $('input[name=block_copy]').prop('checked', true);
             $('input[name=max_tab_switches]').val('3');
             $('input[name=lock_device]').prop('checked', true);
+            $('input[name=calculator]').prop('checked', false);
             $('input[name=questions_per_student]').val('0');
             $('input[name=webcam_minutes]').val('3');
             $('input.publish_result, input#auto_publish_date').prop('disabled', false);
@@ -1092,6 +1094,7 @@ function findOption($questionOpt, $find)
                         $('input[name=max_tab_switches]').val(data.result.max_tab_switches === undefined ? 3 : data.result.max_tab_switches);
                         $('input[name=lock_device]').prop('checked', data.result.lock_device == 1);
                         $('input[name=require_fullscreen]').prop('checked', data.result.require_fullscreen == 1);
+                        $('input[name=calculator]').prop('checked', data.result.calculator == 1);
                         $('input[name=questions_per_student]').val(data.result.questions_per_student || 0);
                         $('input[name=exam_pin]').val(data.result.exam_pin || '');
                         $('input[name=allowed_ips]').val(data.result.allowed_ips || '');

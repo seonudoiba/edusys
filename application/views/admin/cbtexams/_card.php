@@ -36,6 +36,7 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
     if ((int) $o['lock_device']) { $sec[] = 'one device'; }
     if ((int) $o['questions_per_student'] > 0 && (int) $o['questions_per_student'] < (int) $o['questions']) { $sec[] = (int) $o['questions_per_student'] . ' of ' . (int) $o['questions'] . ' questions each'; }
     if ((int) $o['require_fullscreen']) { $sec[] = 'full screen'; }
+    if (!empty($o['calculator'])) { $sec[] = 'calculator'; }
     if ((string) $o['allowed_ips'] !== '') { $sec[] = "school network only"; }
     if ((int) $o['webcam']) { $sec[] = 'webcam'; }
     if ((string) $o['exam_pin'] !== '') { $sec[] = 'PIN <b style="letter-spacing:.12em">' . html_escape($o['exam_pin']) . '</b>'; }
@@ -72,6 +73,7 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
                 <b style="display:block;margin-top:8px"><i class="fa fa-shield"></i> Exam security</b>
                 <label class="cbt-l" style="font-weight:500"><input type="checkbox" name="lock_device" value="1" <?php echo (int) $o['lock_device'] ? 'checked' : ''; ?>> One device per student</label>
                 <label class="cbt-l" style="font-weight:500"><input type="checkbox" name="require_fullscreen" value="1" <?php echo (int) $o['require_fullscreen'] ? 'checked' : ''; ?>> Full screen</label>
+                <label class="cbt-l" style="font-weight:500"><input type="checkbox" name="calculator" value="1" <?php echo !empty($o['calculator']) ? 'checked' : ''; ?>> Calculator on the exam screen</label>
                 <label class="cbt-l" style="font-weight:500"><input type="checkbox" name="webcam" value="1" <?php echo (int) $o['webcam'] ? 'checked' : ''; ?>> Webcam photos (parents' consent first)</label>
                 <div class="cbt-row"><label>Questions each<input type="number" name="questions_per_student" min="0" max="500" class="form-control input-sm" value="<?php echo (int) $o['questions_per_student']; ?>" title="0 = all; else each student's own random set"></label><label>Exam PIN<input name="exam_pin" maxlength="12" class="form-control input-sm" value="<?php echo html_escape((string) $o['exam_pin']); ?>" placeholder="none"></label></div>
                 <button class="btn btn-primary btn-xs btn-block">Save</button>
