@@ -13,8 +13,9 @@ $hidden = function () use ($o, $return, $class_id) {
     return '<input type="hidden" name="id" value="' . (int) $o['id'] . '"><input type="hidden" name="return" value="' . html_escape($return) . '"><input type="hidden" name="class_id" value="' . (int) $class_id . '">';
 };
 $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
+$results_url = site_url('admin/onlineexam/results/' . (int) $o['id']);
 ?>
-<div class="cbt-card">
+<a class="cbt-card" href="<?php echo $results_url; ?>" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;cursor:pointer;">
     <div class="cbt-head">
         <div>
             <b class="cbt-title"><?php echo html_escape($o['exam']); ?></b>
@@ -28,7 +29,7 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
         <div><b><?php echo (int) $o['taken']; ?>/<?php echo (int) $o['students']; ?></b><small>taken</small></div>
         <div><b><?php echo $o['average'] === null ? '–' : $o['average'] . '%'; ?></b><small>average</small></div>
     </div>
-    <div class="cbt-link"><i class="fa fa-file-text-o"></i>
+    <!-- <div class="cbt-link"><i class="fa fa-file-text-o"></i>
         <?php echo $o['link'] ? 'Scores go to the report card: <b>' . html_escape($o['link']['term_name'] . ' — ' . $o['link']['assessment']) . '</b> (scaled to ' . (float) $o['link']['maximum_marks'] . ')' : 'Practice: not on a report card'; ?>
     </div>
     <?php
@@ -43,8 +44,8 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
     if ($sec) { ?><div class="cbt-link"><i class="fa fa-shield"></i> <?php echo implode(' · ', $sec); ?></div><?php } ?>
     <?php if ($o['link'] && isset($o['link']['marks_status']) && $o['link']['marks_status'] === 'approved') { ?>
         <div class="cbt-link" style="background:#fef2f2;color:#b91c1c;border-color:#fecaca"><i class="fa fa-lock"></i> This subject's report card scores are approved and locked, so new CBT scores are not going in. Unlock them on the subject's Results page, then Pull scores.</div>
-    <?php } ?>
-    <div class="cbt-actions">
+    <?php } ?> -->
+    <!-- <div class="cbt-actions">
         <?php if ($can_q) { ?>
             <a class="btn btn-default btn-xs" href="<?php echo site_url('admin/question/bulk?exam=' . (int) $o['id'] . '&subject=' . (int) $o['subject_id'] . '&return=' . rawurlencode($return)); ?>"><i class="fa fa-pencil"></i> Write questions</a>
             <details class="cbt-pop"><summary class="btn btn-default btn-xs"><i class="fa fa-random"></i> From question bank</summary><div>
@@ -85,5 +86,5 @@ $dt = function ($v) { return date('Y-m-d\TH:i', strtotime($v)); };
         <?php if ($o['to_mark']) { ?><a class="btn btn-warning btn-xs" href="<?php echo site_url('admin/onlineexam/evalution/' . (int) $o['id']); ?>" title="Written answers wait for a teacher's mark; their scores go to the report card once marked"><i class="fa fa-check-square-o"></i> Mark written answers (<?php echo (int) $o['to_mark']; ?>)</a><?php } ?>
         <a class="btn btn-default btn-xs" href="<?php echo site_url('admin/onlineexam/results/' . (int) $o['id']); ?>"><i class="fa fa-bar-chart"></i> Results</a>
         <a class="btn btn-default btn-xs" href="<?php echo site_url('admin/onlineexam/invigilate/' . (int) $o['id']); ?>"><i class="fa fa-eye"></i> Invigilate</a>
-    </div>
-</div>
+    </div> -->
+</a>
