@@ -1059,7 +1059,55 @@ class Onlineexam extends Admin_Controller
         }
         $this->db->trans_complete();
         $msg = $added . ' question(s) added to the exam.' . ($short ? ' ' . implode('; ', $short) . '.' : '');
-        return $out($added ? 'success' : 'fail', $added ? $msg : 'No questions found. ' . implode('; ', $short));
+        if ($short) {
+            $msg .= ' ' . $this->draw_explain($exam, $subject_id, (int) $this->input->post('class_id'));
+        }
+        return $out($added ? 'success' : 'fail', $added ? $msg : 'No questions found. ' . implode('; ', $short) . '. ' . $this->draw_explain($exam, $subject_id, (int) $this->input->post('class_id')));
+    }
+
+    /**
+     * Why a draw came up short: what the question bank holds for the subject (all classes, the chosen
+     * class, by level) and how many are already in this exam.
+     */
+    private function draw_explain(array $exam, $subject_id, $class_id)
+    {
+        $subject = (string) $this->db->select('name')->where('id', (int) $subject_id)->get('subjects')->row('name');
+        $class = $class_id ? ((string) $this->db->select('class')->where('id', (int) $class_id)->get('classes')->row('class') ?: 'that class') : '';
+        $quiz = !empty($exam['is_quiz']);
+        $count = function ($with_class) use ($subject_id, $class_id, $quiz) {
+            $this->db->select('level, COUNT(*) AS n', false)->from('questions')->where('subject_id', (int) $subject_id);
+            if ($with_class) {
+                $this->db->where('class_id', (int) $class_id);
+            }
+            if ($quiz) {
+                $this->db->where('question_type !=', 'descriptive');
+            }
+            $by = array();
+            foreach ($this->db->group_by('level')->get()->result_array() as $r) {
+                $by[strtolower((string) $r['level'])] = (int) $r['n'];
+            }
+            return $by;
+        };
+        $all = $count(false);
+        if (!array_sum($all)) {
+            return 'The question bank has no ' . ($quiz ? 'objective ' : '') . $subject . ' questions yet: write or import them in Question Bank (or use Write questions on the CBT).';
+        }
+        $names = array('low' => 'easy', 'medium' => 'medium', 'high' => 'hard');
+        $list = function ($by) use ($names) {
+            $p = array();
+            foreach ($by as $l => $n) {
+                $p[] = $n . ' ' . (isset($names[$l]) ? $names[$l] : ($l === '' ? 'with no level' : $l));
+            }
+            return implode(', ', $p);
+        };
+        $s = 'The question bank has ' . array_sum($all) . ' ' . ($quiz ? 'objective ' : '') . $subject . ' question(s) (' . $list($all) . ')';
+        if ($class_id) {
+            $mine = $count(true);
+            $s .= '; ' . array_sum($mine) . ' of them for ' . $class . ($mine ? ' (' . $list($mine) . ')' : '') . (array_sum($mine) < array_sum($all) ? '. Set Class back to Select to draw from every class' : '');
+        }
+        $in = (int) $this->db->from('onlineexam_questions oq')->join('questions q', 'q.id = oq.question_id')
+            ->where(array('oq.onlineexam_id' => (int) $exam['id'], 'q.subject_id' => (int) $subject_id))->count_all_results();
+        return $s . ($in ? '; ' . $in . ' already in this exam.' : '.');
     }
 
     /**
