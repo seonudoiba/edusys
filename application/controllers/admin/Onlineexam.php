@@ -1513,7 +1513,9 @@ class Onlineexam extends Admin_Controller
                 }
             }
 
-            $array = array('status' => 1, 'error' => '', 'message' => $this->lang->line('success_message'));
+            // classes chosen but not published: students would be told it is not open
+            $note = (!$is_active && $class_ids) ? ' Students cannot open it yet: tick Publish Exam when it is ready.' : '';
+            $array = array('status' => 1, 'error' => '', 'message' => $this->lang->line('success_message') . $note);
         }
 
         echo json_encode($array);
