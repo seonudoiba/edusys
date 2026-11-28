@@ -1672,6 +1672,7 @@ class Exam extends MY_Addon_CBSEController
                     $this->cbseexam_exam_model->add_exam_class_section($exam_class_section);
                 }
                 $this->add_exam_subjects((int) $exam_id, (array) $this->input->post('subject_ids'), (int) $this->input->post('assessment_id'));
+                $this->sync_exam_students((int) $exam_id);
 
                 //================
                 if (isset($_POST['is_publish'])) {
@@ -1721,6 +1722,40 @@ class Exam extends MY_Addon_CBSEController
             $added++;
         }
         return $added;
+    }
+
+    /**
+     * The exam's students are the active students of its classes and sections (this session): the
+     * ones not on it yet are added; with $remove, students of sections taken off the exam go too,
+     * unless they already have marks in it. Run on Add Exam and Edit Exam.
+     */
+    private function sync_exam_students($exam_id, $remove = false)
+    {
+        $exam_id = (int) $exam_id;
+        $cs = array_map('intval', array_column($this->db->select('class_section_id')->where('cbse_exam_id', $exam_id)->get('cbse_exam_class_sections')->result_array(), 'class_section_id'));
+        $want = array();
+        if ($cs) {
+            $want = array_map('intval', array_column($this->db->select('ss.id')->from('class_sections cs')
+                ->join('student_session ss', 'ss.class_id = cs.class_id AND ss.section_id = cs.section_id')
+                ->join('students st', 'st.id = ss.student_id')
+                ->where_in('cs.id', $cs)->where('ss.session_id', (int) $this->current_session)->where('st.is_active', 'yes')
+                ->get()->result_array(), 'id'));
+        }
+        $rows = $this->db->select('id, student_session_id')->where('cbse_exam_id', $exam_id)->get('cbse_exam_students')->result_array();
+        $have = array_map('intval', array_column($rows, 'student_session_id'));
+        foreach (array_diff($want, $have) as $ss_id) {
+            $this->db->insert('cbse_exam_students', array('cbse_exam_id' => $exam_id, 'student_session_id' => (int) $ss_id, 'delete_student_id' => 0));
+        }
+        if ($remove) {
+            foreach ($rows as $r) {
+                if (in_array((int) $r['student_session_id'], $want, true)) {
+                    continue;
+                }
+                if ($this->db->where('cbse_exam_student_id', (int) $r['id'])->count_all_results('cbse_student_subject_marks') === 0) {
+                    $this->db->where('id', (int) $r['id'])->delete('cbse_exam_students');
+                }
+            }
+        }
     }
 
     public function get_editdetails()
@@ -2356,6 +2391,8 @@ class Exam extends MY_Addon_CBSEController
 
                     $this->cbseexam_exam_model->add_exam_class_section($exam_class_section);
                 }
+                // students follow the sections: new ones added, those of removed sections taken off (unless they have marks)
+                $this->sync_exam_students((int) $this->input->post('exam_id'), true);
             }
 
             //================
