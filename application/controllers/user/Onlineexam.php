@@ -302,7 +302,15 @@ class Onlineexam extends Student_Controller
         $class = $this->customlib->getStudentCurrentClsSection();
         $found = $class ? $this->cbt_attempt->enrolment((int) $exam_id, (int) $class->student_session_id) : null;
         if (!$found) {
-            $fail('This exam is not assigned to you.');
+            // say which: not published yet (the same exam for everyone), or not this student's
+            $exam = $this->db->select('id, is_active')->where('id', (int) $exam_id)->get('onlineexam')->row_array();
+            if (!$exam) {
+                $fail('This exam no longer exists.');
+            }
+            if (!(int) $exam['is_active']) {
+                $fail('This exam is not open yet: your teacher has not published it.');
+            }
+            $fail('This exam is not assigned to you. Ask your teacher to add your class (or you) to it.');
         }
         return $found;
     }
