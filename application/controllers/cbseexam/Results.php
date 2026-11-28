@@ -99,6 +99,21 @@ class Results extends MY_Addon_CBSEController
         $this->page('index', array('title' => 'Results', 'terms' => $terms, 'classes' => $classes, 'session_name' => $this->setting_model->getCurrentSessionName()));
     }
 
+    /** POST class_id, subject_group_id: every section of the class gets the subject group (this session). */
+    public function subject_group()
+    {
+        $class_id = (int) $this->input->post('class_id');
+        $groups = $this->class_results->subject_groups($this->current_session);
+        $group_id = (int) $this->input->post('subject_group_id');
+        if (!$this->rbac->hasPrivilege('subject_group', 'can_edit') && !$this->rbac->hasPrivilege('cbse_exam', 'can_add')) {
+            access_denied();
+        }
+        if ($class_id && isset($groups[$group_id])) {
+            $this->class_results->give_subject_group($group_id, $this->class_results->class_section_ids($class_id), $this->current_session);
+        }
+        redirect('cbseexam/results/klass/' . $class_id);
+    }
+
     /** A class: the subjects it offers (filter by section); tab reportcards: attendance, comments, results and publishing per term. */
     public function klass($class_id = 0)
     {

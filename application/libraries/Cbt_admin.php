@@ -219,6 +219,7 @@ class Cbt_admin
         if (!empty($f['security'])) {
             $set['lock_device'] = empty($f['lock_device']) ? 0 : 1;
             $set['require_fullscreen'] = empty($f['require_fullscreen']) ? 0 : 1;
+            $set['calculator'] = empty($f['calculator']) ? 0 : 1;
             $set['webcam'] = empty($f['webcam']) ? 0 : 1;
             $set['questions_per_student'] = max(0, min(500, (int) $f['questions_per_student']));
             $set['exam_pin'] = mb_substr(preg_replace('/\s+/', '', (string) $f['exam_pin']), 0, 12) ?: null;

@@ -290,6 +290,18 @@
                     </div>
                     </div>                    
                                     
+                    <div class="form-group">
+                        <label>Subject group</label><small class="req"> *</small>
+                        <?php if (empty($subject_groups)) { ?>
+                            <p class="text-danger" style="margin:0">No subject groups yet: make one in <a href="<?php echo site_url('admin/subjectgroup'); ?>" target="_blank" rel="noopener">Classes &amp; Timetable &gt; Subject Groups <i class="fa fa-external-link"></i></a> first (Results shows its subjects for the class).</p>
+                        <?php } else { ?>
+                            <select name="subject_group_id" id="exam_subject_group" class="form-control" required>
+                                <option value="">Choose the subject group the class takes</option>
+                                <?php foreach ($subject_groups as $gid => $g) { ?><option value="<?php echo (int) $gid; ?>" data-subjects="<?php echo html_escape(implode(',', $g['subjects'])); ?>"><?php echo html_escape($g['name'] . ' (' . count($g['subjects']) . ' subjects)'); ?></option><?php } ?>
+                            </select>
+                            <span class="help-block">The class gets this subject group for the session, and its subjects are ticked below. Results shows them for the class. Not listed? <a href="<?php echo site_url('admin/subjectgroup'); ?>" target="_blank" rel="noopener"><i class="fa fa-plus"></i> New subject group</a> (then reload this page).</span>
+                        <?php } ?>
+                    </div>
                                     <?php // Subjects of the exam, added with it (Exam::add_exam_subjects). ?>
                     <div class="form-group">
                         <label>Subjects <span class="text-muted" style="font-weight:normal">(optional: you can also add them later with Exam Subjects)</span></label>
@@ -1381,6 +1393,11 @@ $(document).on('change','.check_absent',function(){
 </div>
 <script>
     $('#exam_subjects_all').on('change', function () { $('.js-exam-subject:visible').prop('checked', this.checked); });
+    // a subject group ticks its subjects (they can still be changed)
+    $(document).on('change', '#exam_subject_group', function () {
+        var ids = String($(this).find(':selected').data('subjects') || '').split(',');
+        $('.js-exam-subject').each(function () { this.checked = $.inArray(this.value, ids) !== -1; });
+    });
     $('#exam_subjects_filter').on('input', function () {
         var q = this.value.toLowerCase();
         $('#exam_subjects_box label').each(function () { $(this).toggle(this.innerText.toLowerCase().indexOf(q) !== -1); });

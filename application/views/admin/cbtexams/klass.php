@@ -5,7 +5,7 @@
         <h3 style="margin:2px 0 16px;font-weight:800"><?php echo html_escape($class['class']); ?> <small class="cbt-muted">CBT exams</small></h3>
         <?php if ($cr_msg) { ?><div class="alert alert-<?php echo $cr_msg[0]; ?>"><?php echo html_escape($cr_msg[1]); ?></div><?php } ?>
         <?php if (!$subjects) { ?>
-            <div class="alert alert-info">No subjects for this class yet. Give it a subject group in Classes &amp; Timetable &gt; Subject Groups.</div>
+            <div class="alert alert-info">No subjects for this class yet. Give it a subject group in <a href="<?php echo site_url('admin/subjectgroup'); ?>" target="_blank" rel="noopener">Classes &amp; Timetable &gt; Subject Groups <i class="fa fa-external-link"></i></a>.</div>
         <?php } else { ?>
             <div class="cbt-grid">
                 <?php foreach ($subjects as $sid => $s) { $c = $counts[$sid]; ?>

@@ -1436,6 +1436,7 @@ class Onlineexam extends Admin_Controller
                 'max_tab_switches'   => max(0, min(50, (int) $this->input->post('max_tab_switches'))),
                 'lock_device'        => isset($_POST['lock_device']) ? 1 : 0,
                 'require_fullscreen' => isset($_POST['require_fullscreen']) ? 1 : 0,
+                'calculator'         => isset($_POST['calculator']) ? 1 : 0,
                 'questions_per_student' => max(0, min(500, (int) $this->input->post('questions_per_student'))),
                 'exam_pin'           => mb_substr(preg_replace('/\s+/', '', (string) $this->input->post('exam_pin')), 0, 12) ?: null,
                 'allowed_ips'        => Cbt_integrity::clean_ips($this->input->post('allowed_ips')) ?: null,

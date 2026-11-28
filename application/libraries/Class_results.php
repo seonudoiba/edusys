@@ -103,6 +103,38 @@ class Class_results
         return array_map('intval', array_column($this->db->select('id')->where('class_id', (int) $class_id)->get('class_sections')->result_array(), 'id'));
     }
 
+    /** The session's subject groups: id => [name, subject ids]. */
+    public function subject_groups($session_id)
+    {
+        $out = array();
+        foreach ($this->db->select('id, name')->where('session_id', (int) $session_id)->order_by('name')->get('subject_groups')->result_array() as $g) {
+            $out[(int) $g['id']] = array('name' => $g['name'], 'subjects' => array());
+        }
+        if ($out) {
+            foreach ($this->db->select('subject_group_id, subject_id')->where_in('subject_group_id', array_keys($out))->get('subject_group_subjects')->result_array() as $s) {
+                $out[(int) $s['subject_group_id']]['subjects'][] = (int) $s['subject_id'];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Gives class sections a subject group for the session (Results shows the group's subjects).
+     * Sections already in the group are left as they are. Returns how many were added.
+     */
+    public function give_subject_group($group_id, array $class_section_ids, $session_id)
+    {
+        $added = 0;
+        foreach (array_unique(array_map('intval', $class_section_ids)) as $cs) {
+            $has = $this->db->where(array('subject_group_id' => (int) $group_id, 'class_section_id' => $cs, 'session_id' => (int) $session_id))->count_all_results('subject_group_class_sections');
+            if (!$has) {
+                $this->db->insert('subject_group_class_sections', array('subject_group_id' => (int) $group_id, 'class_section_id' => $cs, 'session_id' => (int) $session_id, 'description' => '', 'is_active' => 1));
+                $added++;
+            }
+        }
+        return $added;
+    }
+
     // ------------------------------------------------------------------ the class's exam for a term
 
     /** The exam of a class for a term (its own, else an older one shared with other classes); null if none. */

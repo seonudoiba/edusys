@@ -143,6 +143,7 @@ textarea:focus,.opt:focus-within{outline:3px solid color-mix(in srgb,var(--brand
         <span><?php echo html_escape($student_name); ?> · <?php echo html_escape($student['admission_no']); ?> · <?php echo html_escape($student['class'] . ' ' . $student['section']); ?></span>
     </div>
     <button type="button" class="btn togglenav" id="togglenav" aria-controls="side" aria-expanded="false">Questions</button>
+    <?php if (!empty($exam['calculator'])) { ?><button type="button" class="calc-btn" id="calc_toggle" aria-controls="calc" aria-expanded="false" title="Calculator"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8"/></svg> Calculator</button><?php } ?>
     <div class="timer" id="timer" role="timer" aria-live="off" title="Time left">--:--</div>
     <div class="savestate" id="savestate" aria-live="polite"></div>
 </header>
@@ -590,5 +591,6 @@ $gate = $needs_pin || (int) $exam['require_fullscreen'] || (int) $exam['webcam']
     }
 })();
 </script>
+<?php if (!empty($exam['calculator'])) { $this->load->view('user/onlineexam/_calculator'); } ?>
 </body>
 </html>

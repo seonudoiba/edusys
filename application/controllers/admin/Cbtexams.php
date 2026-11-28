@@ -130,7 +130,7 @@ class Cbtexams extends Admin_Controller
         try {
             $this->cbt_admin->update($id, array('title' => $this->input->post('title'), 'from' => $this->input->post('from'), 'to' => $this->input->post('to'),
                 'minutes' => $this->input->post('minutes'), 'attempts' => $this->input->post('attempts'),
-                'security' => $this->input->post('security'), 'lock_device' => $this->input->post('lock_device'), 'require_fullscreen' => $this->input->post('require_fullscreen'),
+                'security' => $this->input->post('security'), 'lock_device' => $this->input->post('lock_device'), 'require_fullscreen' => $this->input->post('require_fullscreen'), 'calculator' => $this->input->post('calculator'),
                 'webcam' => $this->input->post('webcam'), 'questions_per_student' => $this->input->post('questions_per_student'), 'exam_pin' => $this->input->post('exam_pin')));
             if ($this->input->post('target') !== null) {
                 $t = (string) $this->input->post('target');

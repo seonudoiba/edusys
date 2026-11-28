@@ -29,6 +29,8 @@ class Exam extends MY_Addon_CBSEController
         $data['assessment_result'] = $this->cbseexam_assessment_model->get();
         $data['grade_result'] = $this->cbseexam_grade_model->getgradelist();
         $data['subject_list'] = $this->subject_model->get(); // Add Exam: the subjects to put in it
+        $this->load->library('Class_results');
+        $data['subject_groups'] = $this->class_results->subject_groups($this->current_session); // Add Exam: required (Results lists its subjects)
         $this->load->view('layout/header', $data);
         $this->load->view('cbseexam/exam/index', $data);
         $this->load->view('layout/footer', $data);
@@ -1627,8 +1629,11 @@ class Exam extends MY_Addon_CBSEController
         $this->form_validation->set_rules('exam_name', $this->lang->line('exam_name'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('grade_id', $this->lang->line('grade'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('assessment_id', $this->lang->line('assessment'), 'trim|required|xss_clean');
+        // the class's subjects on Results come from its subject group
+        $this->form_validation->set_rules('subject_group_id', 'Subject group', 'trim|required|integer', array('required' => 'Choose the subject group: Results shows its subjects for the class.'));
 
         if ($this->form_validation->run() == false) {
+            $msg['subject_group_id'] = form_error('subject_group_id');
             $msg['term'] = form_error('exam_term_id');
             $msg['class_id'] = form_error('class_id');
             $msg['section'] = form_error('section[]');
@@ -1662,6 +1667,13 @@ class Exam extends MY_Addon_CBSEController
                 'session_id' => $this->current_session,
             );
 
+            $this->load->library('Class_results');
+            $groups = $this->class_results->subject_groups($this->current_session);
+            $group_id = (int) $this->input->post('subject_group_id');
+            if (!isset($groups[$group_id])) {
+                echo json_encode(array('status' => 'fail', 'error' => array('subject_group_id' => 'Choose a subject group of this session.'), 'message' => ''));
+                return;
+            }
             if (!empty($_POST['section'])) {
                 $exam_id = $this->cbseexam_exam_model->add($data);
                 foreach ($_POST['section'] as $key => $value) {
@@ -1671,7 +1683,10 @@ class Exam extends MY_Addon_CBSEController
                     );
                     $this->cbseexam_exam_model->add_exam_class_section($exam_class_section);
                 }
-                $this->add_exam_subjects((int) $exam_id, (array) $this->input->post('subject_ids'), (int) $this->input->post('assessment_id'));
+                // the chosen sections take the subject group; the exam gets the ticked subjects (none ticked: the group's)
+                $this->class_results->give_subject_group($group_id, (array) $this->input->post('section'), $this->current_session);
+                $subject_ids = array_filter((array) $this->input->post('subject_ids'));
+                $this->add_exam_subjects((int) $exam_id, $subject_ids ?: $groups[$group_id]['subjects'], (int) $this->input->post('assessment_id'));
                 $this->sync_exam_students((int) $exam_id);
 
                 //================

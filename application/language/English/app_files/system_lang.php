@@ -2459,3 +2459,4 @@ $lang['cbt_by_class'] = "CBT Exams by Class";
 $lang['report_behaviour'] = "Report Behaviour";
 $lang['assign_students_transport'] = "Assign Students";
 $lang['assign_students_hostel'] = "Assign Students";
+$lang['error_occured'] = "An error occurred";
