@@ -714,13 +714,22 @@ class Onlineexam extends Admin_Controller
     /** Class ids that already have at least one student on this exam (current session). */
     private function assigned_class_ids($exam_id)
     {
+        // A class counts as on the exam (ticked in the form) when every active student of it is:
+        // a class with only some students picked on the Assign page shows unticked and is left alone.
         $session = (int) $this->setting_model->getCurrentSession();
-        $rows = $this->db->select('ss.class_id')->from('onlineexam_students oes')
-            ->join('student_session ss', 'ss.id = oes.student_session_id')
-            ->where('oes.onlineexam_id', (int) $exam_id)
-            ->where('ss.session_id', $session)
+        $rows = $this->db->select('ss.class_id, COUNT(*) AS total, SUM(oes.id IS NOT NULL) AS assigned', false)
+            ->from('student_session ss')
+            ->join('students st', 'st.id = ss.student_id')
+            ->join('onlineexam_students oes', 'oes.student_session_id = ss.id AND oes.onlineexam_id = ' . (int) $exam_id, 'left')
+            ->where('ss.session_id', $session)->where('st.is_active', 'yes')
             ->group_by('ss.class_id')->get()->result_array();
-        return array_map('intval', array_column($rows, 'class_id'));
+        $out = array();
+        foreach ($rows as $r) {
+            if ((int) $r['assigned'] > 0 && (int) $r['assigned'] >= (int) $r['total']) {
+                $out[] = (int) $r['class_id'];
+            }
+        }
+        return $out;
     }
 
     /**
@@ -1457,9 +1466,9 @@ class Onlineexam extends Admin_Controller
             $allowed_classes = array_map('intval', array_column($this->class_model->get(), 'id'));
             $class_ids = array_values(array_intersect(array_unique(array_filter(array_map('intval', (array) $this->input->post('class_ids')))), $allowed_classes));
             $previous = array_values(array_intersect(array_unique(array_filter(array_map('intval', (array) $this->input->post('previous_class_ids')))), $allowed_classes));
-            // Only classes ticked now fill up: a class already on the exam (even with a few students
-            // picked on the Assign page) is left as it is; unticking one takes off who has not started.
-            $this->assign_classes_to_exam((int) $saved_id, array_diff($class_ids, $previous));
+            // Every ticked class: all its active students are on the exam (those added since are added
+            // too). Unticking a class takes off its students who have not started.
+            $this->assign_classes_to_exam((int) $saved_id, $class_ids);
             foreach (array_diff($previous, $class_ids) as $drop_class) {
                 $this->unassign_class_students((int) $saved_id, $drop_class);
             }
